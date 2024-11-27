@@ -55,3 +55,8 @@
     @apply bg-background text-foreground;
   }
 }
+@layer utilities {
+  nav-links {
+    @apply text-gray-700 hover:text-primary;
+  }
+}
