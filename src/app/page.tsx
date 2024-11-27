@@ -1,9 +1,11 @@
-import { Button } from "~/components/ui/button";
+import HeroSection from "~/components/HeroSection";
+import NavigationBar from "~/components/NavigationBar";
 
 export default async function Home() {
   return (
-    <main className="bg-background flex min-h-screen flex-col items-center justify-center">
-      <Button variant="default">Click me</Button>
+    <main className="flex min-h-screen flex-col bg-white py-5">
+      <NavigationBar />
+      <HeroSection />
     </main>
   );
 }
