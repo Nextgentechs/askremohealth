@@ -1,7 +1,5 @@
 import React from "react";
 
-const HowItWorks = () => {
-  return <div>HowItWorks</div>;
-};
-
-export default HowItWorks;
+export default function HowItWorks() {
+  return <div> HowItWorks</div>;
+}

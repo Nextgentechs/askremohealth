@@ -11,63 +11,64 @@ import {
 } from "./ui/select";
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
-import SearchButton from "./Search";
+import { Button } from "./ui/button";
+import { Search } from "lucide-react";
 
-interface County {
+type County = {
   name: string;
   code: string;
-}
+};
 
-const HeroSection: React.FC = () => {
-  const counties: County[] = [
-    { name: "Machakos", code: "MA" },
-    { name: "Nyeri", code: "NY" },
-    { name: "Kiambu", code: "KI" },
-    { name: "Nakuru", code: "NA" },
-  ];
+const counties: County[] = [
+  { name: "Machakos", code: "MA" },
+  { name: "Nyeri", code: "NY" },
+  { name: "Kiambu", code: "KI" },
+  { name: "Nakuru", code: "NA" },
+];
 
-  const specialties = [
-    "Cardiology",
-    "Dermatology",
-    "Neurology",
-    "Pediatrics",
-    "Surgery",
-  ];
+const specialties: string[] = [
+  "Cardiology",
+  "Dermatology",
+  "Neurology",
+  "Pediatrics",
+  "Surgery",
+];
 
-  const cities = ["Nairobi", "Kisumu", "Narok", "Eldoret", "Mombasa", "Nyeri"];
+const cities: string[] = [
+  "Nairobi",
+  "Kisumu",
+  "Narok",
+  "Eldoret",
+  "Mombasa",
+  "Nyeri",
+];
 
+export default function HeroSection() {
   return (
-    <section className="relative flex flex-col bg-gradient-to-b from-[#FFFDFB] to-[#FFF7ED]">
-      <div
-        className="flex w-11/12 items-center justify-between rounded-r-full bg-gradient-to-r from-white to-[#FFEFE1] px-16"
-        style={{
-          background:
-            "linear-gradient(to top left, #FFEFE1 25%, white 100%), linear-gradient(to right, #FFEFE1 10%, #FFEFE1 10%, rgba(255, 234, 214, 0.8) 50%)",
-        }}
-      >
-        <div className="w-full md:w-4/5">
-          <h1 className="mb-4 text-5xl font-extrabold tracking-wide text-primary">
-            Solutions that help you and your loved ones enjoy <br />{" "}
-            <span className="bg-[#86B427] text-white">Good Health</span>
-            and <span className="bg-[#86B427] text-white">Long Life</span>
+    <section className="flex flex-col items-center">
+      <div className="flex w-11/12 items-center gap-8 pr-8 pt-12">
+        <div className="flex flex-col">
+          <h1 className="mb-4 whitespace-nowrap text-5xl font-extrabold leading-tight text-primary">
+            Solutions that help you and <br /> your loved ones enjoy <br />
+            <span className="bg-[##88B527] text-white">
+              Good Health
+            </span> and{" "}
+            <span className="bg-[##88B527] text-white">Long Life</span>
           </h1>
+
           <p className="py-2 text-base text-slate-500">
             We take the guesswork out of finding the right doctors, hospitals,
             and <br /> care for your family.
           </p>
         </div>
-        <div className="w-full md:w-1/2">
-          <Image
-            src={Doctor}
-            height={602}
-            width={528}
-            className="object-contain"
-            alt="Doctor Image"
-          />
+        <div className="flex justify-center">
+          <div className="flex h-[573px] w-[601px] items-center justify-center rounded-full bg-[#FFF7ED]">
+            <Image src={Doctor} className="object-contain" alt="Doctor Image" />
+          </div>
         </div>
       </div>
 
-      <div className="absolute left-16 top-[92%] mt-6 flex w-10/12 flex-wrap gap-4 rounded-2xl border-[1px] border-[#CCC8DA] bg-white px-6 py-8 shadow-md">
+      <div className="flex w-10/12 flex-wrap items-center justify-between gap-4 rounded-2xl border-[1px] border-[#CCC8DA] bg-white px-6 py-8 shadow-md">
         <div className="w-full sm:w-1/5">
           <Label htmlFor="specialty-select">Doctor Speciality</Label>
           <Select id="specialty-select">
@@ -124,10 +125,14 @@ const HeroSection: React.FC = () => {
             className="rounded-md border p-2 shadow-sm"
           />
         </div>
-        <SearchButton />
+        <Button
+          variant="default"
+          className="hover:bg-primary-dark mt-6 flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-white"
+        >
+          <Search color="white" />
+          <span>Search</span>
+        </Button>
       </div>
     </section>
   );
-};
-
-export default HeroSection;
+}
