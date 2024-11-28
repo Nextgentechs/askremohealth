@@ -1,7 +1,5 @@
 import React from "react";
 
-const FindDoctor = () => {
+export default function FindDoctor() {
   return <div>FindDoctor</div>;
-};
-
-export default FindDoctor;
+}
