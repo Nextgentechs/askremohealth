@@ -50,10 +50,10 @@ export default function HeroSection() {
         <div className="flex flex-col">
           <h1 className="mb-4 whitespace-nowrap text-5xl font-extrabold leading-tight text-primary">
             Solutions that help you and <br /> your loved ones enjoy <br />
-            <span className="bg-[##88B527] text-white">
+            <span className="bg-[#88B527] text-white">
               Good Health
             </span> and{" "}
-            <span className="bg-[##88B527] text-white">Long Life</span>
+            <span className="bg-[#88B527] text-white">Long Life</span>
           </h1>
 
           <p className="py-2 text-base text-slate-500">

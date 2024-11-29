@@ -13,7 +13,7 @@ import {
 
 export default function NavigationBar() {
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between px-16">
       <div className="flex items-center gap-4">
         <Logo />
         <NavigationMenu className="list-none">
@@ -32,7 +32,7 @@ export default function NavigationBar() {
             </Link>
           </NavigationMenuItem>
           <NavigationMenuItem>
-            <Link href="/how-it-works" legacyBehavior passHref>
+            <Link href="#how-it-works" legacyBehavior passHref>
               <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                 How it Works
               </NavigationMenuLink>
