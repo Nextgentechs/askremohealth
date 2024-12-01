@@ -1,6 +1,14 @@
 import React from "react";
+
 import Image from "next/image";
-import logo from "public/assets/logo.png";
+
 export default function Logo() {
-  return <Image src={logo} alt="askvirtualhealthcare logo" className="py-2" />;
+  return (
+    <Image
+      src="/assets/logo.svg"
+      alt="askvirtualhealthcare logo"
+      width={158}
+      height={48}
+    />
+  );
 }
