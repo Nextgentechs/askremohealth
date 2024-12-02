@@ -79,3 +79,9 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  .section-title {
+    @apply text-2xl font-bold text-primary sm:text-3xl xl:text-4xl;
+  }
+}
