@@ -1,6 +1,5 @@
-import HeroSection from '~/components/heroSection'
-
-import { SearchForm } from '~/components/heroSection'
+import HeroSection, { SearchForm } from '~/components/heroSection'
+import HowItWorks from '~/components/howItWorks'
 import NavigationBar from '~/components/navigationBar'
 
 export default async function Home() {
@@ -17,6 +16,10 @@ export default async function Home() {
         <div className="absolute inset-x-0 bottom-0 flex w-full translate-y-1/2 transform justify-center">
           <SearchForm />
         </div>
+      </div>
+
+      <div className="mx-auto flex w-full max-w-[1440px] flex-col items-center justify-center px-4 sm:px-6 lg:px-8 xl:px-16">
+        <HowItWorks />
       </div>
     </main>
   )

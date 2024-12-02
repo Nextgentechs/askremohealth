@@ -34,7 +34,7 @@ const cities = ['Nairobi', 'Kisumu', 'Narok', 'Eldoret', 'Mombasa', 'Nyeri']
 
 export function SearchForm() {
   return (
-    <Card className="mx-auto flex flex-col gap-8 border shadow-sm xl:flex-row xl:items-end xl:px-6 xl:py-12">
+    <Card className="mx-auto flex flex-col gap-8 border xl:flex-row xl:items-end xl:px-6 xl:py-12">
       <div className="grid min-w-80 gap-4 transition-all duration-300 sm:grid-cols-2 lg:grid-cols-4">
         <div className="md:w-[256px] 2xl:w-[256px]">
           <Label htmlFor="specialty">Doctor Specialty</Label>
