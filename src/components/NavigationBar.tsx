@@ -1,6 +1,6 @@
-"use client";
+'use client'
 
-import { Button } from "./ui/button";
+import { Button } from './ui/button'
 import {
   Book,
   Home,
@@ -9,44 +9,44 @@ import {
   LogIn,
   Menu,
   Stethoscope,
-} from "lucide-react";
+} from 'lucide-react'
 import {
   NavigationMenu,
   NavigationMenuItem,
   NavigationMenuLink,
   navigationMenuTriggerStyle,
-} from "./ui/navigation-menu";
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "./ui/sheet";
-import Link from "next/link";
-import Logo from "./Logo";
+} from './ui/navigation-menu'
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from './ui/sheet'
+import Link from 'next/link'
+import Logo from './logo'
 
 const navOptions = [
   {
-    label: "Home",
-    href: "/",
+    label: 'Home',
+    href: '/',
     icon: Home,
   },
   {
-    label: "Find a Doctor",
-    href: "/find-doctor",
+    label: 'Find a Doctor',
+    href: '/find-doctor',
     icon: Stethoscope,
   },
   {
-    label: "Find a Hospital",
-    href: "/find-hospital",
+    label: 'Find a Hospital',
+    href: '/find-hospital',
     icon: Hospital,
   },
   {
-    label: "Health Articles",
-    href: "/health-articles",
+    label: 'Health Articles',
+    href: '/health-articles',
     icon: Book,
   },
   {
-    label: "About Us",
-    href: "/about-us",
+    label: 'About Us',
+    href: '/about-us',
     icon: Info,
   },
-];
+]
 
 function AuthButtons({
   className,
@@ -63,7 +63,7 @@ function AuthButtons({
       </Link>
       <Button variant="default">Book Appointment</Button>
     </div>
-  );
+  )
 }
 
 function MobileMenu() {
@@ -89,7 +89,7 @@ function MobileMenu() {
         <AuthButtons className="flex flex-col items-start border-t px-4 pt-4" />
       </SheetContent>
     </Sheet>
-  );
+  )
 }
 
 export default function NavigationBar() {
@@ -116,5 +116,5 @@ export default function NavigationBar() {
         <MobileMenu />
       </div>
     </div>
-  );
+  )
 }

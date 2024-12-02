@@ -1,95 +1,61 @@
-"use client";
-import Image from "next/image";
-import React from "react";
-import Doctor from "public/assets/doctor.png";
+'use client'
+import Image from 'next/image'
+import React from 'react'
+import Doctor from 'public/assets/hero.webp'
 import {
   Select,
   SelectItem,
   SelectTrigger,
   SelectValue,
   SelectContent,
-} from "./ui/select";
-import { Label } from "./ui/label";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
-import { Search } from "lucide-react";
+} from './ui/select'
+import { Label } from './ui/label'
+import { Input } from './ui/input'
+import { Button } from './ui/button'
+import { Search } from 'lucide-react'
+import { Card } from './ui/card'
 
-type County = {
-  name: string;
-  code: string;
-};
+const counties = [
+  { name: 'Machakos', code: 'MA' },
+  { name: 'Nyeri', code: 'NY' },
+  { name: 'Kiambu', code: 'KI' },
+  { name: 'Nakuru', code: 'NA' },
+]
 
-const counties: County[] = [
-  { name: "Machakos", code: "MA" },
-  { name: "Nyeri", code: "NY" },
-  { name: "Kiambu", code: "KI" },
-  { name: "Nakuru", code: "NA" },
-];
+const specialties = [
+  'Cardiology',
+  'Dermatology',
+  'Neurology',
+  'Pediatrics',
+  'Surgery',
+]
 
-const specialties: string[] = [
-  "Cardiology",
-  "Dermatology",
-  "Neurology",
-  "Pediatrics",
-  "Surgery",
-];
+const cities = ['Nairobi', 'Kisumu', 'Narok', 'Eldoret', 'Mombasa', 'Nyeri']
 
-const cities: string[] = [
-  "Nairobi",
-  "Kisumu",
-  "Narok",
-  "Eldoret",
-  "Mombasa",
-  "Nyeri",
-];
-
-export default function HeroSection() {
+export function SearchForm() {
   return (
-    <section className="flex flex-col items-center">
-      <div className="flex w-11/12 items-center gap-8 pr-8 pt-12">
-        <div className="flex flex-col">
-          <h1 className="mb-4 whitespace-nowrap text-5xl font-extrabold leading-tight text-primary">
-            Solutions that help you and <br /> your loved ones enjoy <br />
-            <span className="bg-[#88B527] text-white">
-              Good Health
-            </span> and{" "}
-            <span className="bg-[#88B527] text-white">Long Life</span>
-          </h1>
-
-          <p className="py-2 text-base text-slate-500">
-            We take the guesswork out of finding the right doctors, hospitals,
-            and <br /> care for your family.
-          </p>
-        </div>
-        <div className="flex justify-center">
-          <div className="flex h-[573px] w-[601px] items-center justify-center rounded-full bg-[#FFF7ED]">
-            <Image src={Doctor} className="object-contain" alt="Doctor Image" />
-          </div>
-        </div>
-      </div>
-
-      <div className="flex w-10/12 flex-wrap items-center justify-between gap-4 rounded-2xl border-[1px] border-[#CCC8DA] bg-white px-6 py-8 shadow-md">
-        <div className="w-full sm:w-1/5">
-          <Label htmlFor="specialty-select">Doctor Speciality</Label>
-          <Select id="specialty-select">
-            <SelectTrigger>
-              <SelectValue placeholder="Select a speciality" />
+    <Card className="mx-auto flex flex-col gap-8 border shadow-sm xl:flex-row xl:items-end xl:px-6 xl:py-12">
+      <div className="grid min-w-80 gap-4 transition-all duration-300 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="md:w-[256px] 2xl:w-[256px]">
+          <Label htmlFor="specialty">Doctor Specialty</Label>
+          <Select>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select a specialty" />
             </SelectTrigger>
             <SelectContent>
-              {specialties.map((specialty, index) => (
-                <SelectItem key={index} value={specialty}>
+              {specialties.map((specialty) => (
+                <SelectItem key={specialty} value={specialty}>
                   {specialty}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
-
-        <div className="w-full sm:w-1/5">
-          <Label htmlFor="country-select">Country</Label>
-          <Select id="country-select">
-            <SelectTrigger>
-              <SelectValue placeholder="Select a country" />
+        <div className="xl:w-[256px]">
+          <Label htmlFor="county">In this county</Label>
+          <Select>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select a county" />
             </SelectTrigger>
             <SelectContent>
               {counties.map((county) => (
@@ -100,39 +66,70 @@ export default function HeroSection() {
             </SelectContent>
           </Select>
         </div>
-
-        <div className="w-full sm:w-1/5">
-          <Label htmlFor="city-select">City</Label>
-          <Select id="city-select">
-            <SelectTrigger>
-              <SelectValue placeholder="Select a city" />
+        <div className="xl:w-[256px]">
+          <Label htmlFor="city">In this city/town</Label>
+          <Select>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select a city/town" />
             </SelectTrigger>
             <SelectContent>
-              {cities.map((city, index) => (
-                <SelectItem key={index} value={city}>
+              {cities.map((city) => (
+                <SelectItem key={city} value={city}>
                   {city}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
-
-        <div className="w-full sm:w-1/5">
-          <Label htmlFor="search-input">Search</Label>
+        <div className="xl:w-[256px]">
+          <Label htmlFor="search">Or search by name</Label>
           <Input
             type="text"
-            placeholder="Doctor/Hospital"
-            className="rounded-md border p-2 shadow-sm"
+            id="search"
+            placeholder="Doctor or hospital name"
           />
         </div>
-        <Button
-          variant="default"
-          className="hover:bg-primary-dark mt-6 flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-white"
-        >
-          <Search color="white" />
-          <span>Search</span>
+      </div>
+
+      <div className="sm:ml-auto sm:max-w-[200px] lg:flex lg:justify-end">
+        <Button className="w-full">
+          <Search />
+          Search
         </Button>
       </div>
+    </Card>
+  )
+}
+
+export default function HeroSection() {
+  return (
+    <section className="mt-12 flex h-40 w-full gap-8 px-4 sm:h-56 sm:flex-row sm:justify-between sm:gap-12 lg:gap-16 lg:px-12 xl:mt-0 xl:h-[432px]">
+      <div className="flex flex-grow flex-col items-center justify-center text-center sm:items-start sm:text-left">
+        <h1 className="text-2xl font-extrabold leading-tight text-primary transition-all duration-300 sm:text-3xl lg:text-4xl 2xl:text-5xl">
+          <div className="whitespace-nowrap">Solutions that help you and</div>
+          <div className="whitespace-nowrap">your loved ones enjoy</div>
+          <span className="whitespace-nowrap">
+            <span className="text-custom-primary-green underline decoration-custom-primary-green decoration-wavy decoration-2 underline-offset-4">
+              Good Health
+            </span>{' '}
+            and{' '}
+            <span className="text-custom-primary-green underline decoration-custom-primary-green decoration-wavy decoration-2 underline-offset-4">
+              Long Life
+            </span>
+          </span>
+        </h1>
+        <p className="mt-4 text-muted-foreground sm:text-lg">
+          We take the guesswork out of finding the right doctors, hospitals, and
+          care for your family.
+        </p>
+      </div>
+
+      <Image
+        src={Doctor}
+        alt="Doctor Image"
+        className="hidden xl:block xl:h-[528px] xl:w-[520px] 2xl:h-[528px]"
+        priority
+      />
     </section>
-  );
+  )
 }
