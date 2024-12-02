@@ -114,6 +114,7 @@ export default function NavigationBar() {
       <div className="flex items-center gap-4">
         <AuthButtons className="hidden lg:flex lg:gap-4" />
         <MobileMenu />
+        {/* <ModeToggle /> */}
       </div>
     </div>
   )

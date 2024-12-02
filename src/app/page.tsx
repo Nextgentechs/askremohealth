@@ -1,6 +1,6 @@
-import HeroSection, { SearchForm } from '~/components/heroSection'
-import HowItWorks from '~/components/howItWorks'
-import NavigationBar from '~/components/navigationBar'
+import HeroSection, { SearchForm } from '~/components/hero-section'
+import HowItWorks from '~/components/how-it-works'
+import NavigationBar from '~/components/navigation-bar'
 
 export default async function Home() {
   return (
