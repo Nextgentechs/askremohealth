@@ -1,9 +1,23 @@
-import { Button } from "~/components/ui/button";
+import HeroSection from '~/components/heroSection'
+
+import { SearchForm } from '~/components/heroSection'
+import NavigationBar from '~/components/navigationBar'
 
 export default async function Home() {
   return (
-    <main className="bg-background flex min-h-screen flex-col items-center justify-center">
-      <Button variant="default">Click me</Button>
+    <main className="h-dvh w-full">
+      <div className="relative">
+        <div className="h-[500px] w-full bg-gradient-to-b from-white to-secondary xl:h-[600px]">
+          <div className="mx-auto flex h-full w-full max-w-[1440px] flex-col items-start justify-start rounded-sm px-4 pt-6 transition-all duration-300 sm:px-6 lg:px-8 xl:px-16">
+            <NavigationBar />
+            <HeroSection />
+          </div>
+        </div>
+
+        <div className="absolute inset-x-0 bottom-0 flex w-full translate-y-1/2 transform justify-center">
+          <SearchForm />
+        </div>
+      </div>
     </main>
-  );
+  )
 }

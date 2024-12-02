@@ -5,8 +5,8 @@
   :root {
     --background: 254 0% 96%;
     --foreground: 254 0% 10%;
-    --card: 254 0% 96%;
-    --card-foreground: 254 0% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 15%;
     --popover: 254 0% 96%;
     --popover-foreground: 254 95% 10%;
     --primary: 254 46.2% 33.5%;
@@ -22,7 +22,15 @@
     --border: 254 20% 82%;
     --input: 254 20% 50%;
     --ring: 254 46.2% 33.5%;
-    --radius: 1rem;
+    --radius: 0.5rem;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
   .dark {
     --background: 254 10% 6%;
@@ -44,7 +52,23 @@
     --border: 254 20% 18%;
     --input: 254 20% 18%;
     --ring: 254 46.2% 33.5%;
-    --radius: 1rem;
+    --radius: 0.5rem;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+@layer base {
+  * {
+    @apply scroll-smooth border-border;
+  }
+  body {
+    @apply text-foreground;
   }
 }
 @layer base {
