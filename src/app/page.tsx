@@ -7,7 +7,7 @@ import TopSpecialists from '~/components/top-specialists'
 
 export default async function Home() {
   return (
-    <main className="h-dvh w-full">
+    <main className="flex h-dvh w-full flex-col gap-16">
       <div className="relative">
         <div className="h-[500px] w-full bg-gradient-to-b from-white to-secondary xl:h-[600px]">
           <div className="mx-auto flex h-full w-full max-w-[1440px] flex-col items-start justify-start rounded-sm px-4 pt-6 transition-all duration-300 sm:px-6 lg:px-8 xl:px-16">

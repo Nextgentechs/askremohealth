@@ -18,7 +18,7 @@ import {
 } from './ui/navigation-menu'
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from './ui/sheet'
 import Link from 'next/link'
-import Logo from './logo'
+import Logo from './Logo'
 
 const navOptions = [
   {
