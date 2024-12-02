@@ -1,16 +1,23 @@
-import NavigationBar from "~/components/NavigationBar";
+import HeroSection from '~/components/heroSection'
+
+import { SearchForm } from '~/components/heroSection'
+import NavigationBar from '~/components/navigationBar'
 
 export default async function Home() {
   return (
     <main className="h-dvh w-full">
-      <div className="h-[656px] w-full bg-gradient-to-b from-white to-secondary">
-        <div className="mx-auto h-dvh w-full max-w-[1440px] px-4 pt-5 transition-all duration-300 sm:px-6 lg:px-8 xl:px-16">
-          <NavigationBar />
-          {/* <HeroSection /> */}
+      <div className="relative">
+        <div className="h-[500px] w-full bg-gradient-to-b from-white to-secondary xl:h-[600px]">
+          <div className="mx-auto flex h-full w-full max-w-[1440px] flex-col items-start justify-start rounded-sm px-4 pt-6 transition-all duration-300 sm:px-6 lg:px-8 xl:px-16">
+            <NavigationBar />
+            <HeroSection />
+          </div>
+        </div>
+
+        <div className="absolute inset-x-0 bottom-0 flex w-full translate-y-1/2 transform justify-center">
+          <SearchForm />
         </div>
       </div>
-
-      {/* <HowItWorks /> */}
     </main>
-  );
+  )
 }
