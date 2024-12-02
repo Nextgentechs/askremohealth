@@ -33,22 +33,22 @@
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
   .dark {
-    --background: 254 10% 6%;
-    --foreground: 254 3% 90%;
-    --card: 254 3% 6%;
-    --card-foreground: 254 3% 90%;
+    --background: 254 10% 5%;
+    --foreground: 254 5% 90%;
+    --card: 254 5% 1%;
+    --card-foreground: 254 5% 90%;
     --popover: 254 10% 5%;
-    --popover-foreground: 254 3% 90%;
+    --popover-foreground: 254 5% 90%;
     --primary: 254 46.2% 33.5%;
     --primary-foreground: 0 0% 100%;
     --secondary: 254 10% 10%;
     --secondary-foreground: 0 0% 100%;
     --muted: 216 10% 15%;
-    --muted-foreground: 254 3% 60%;
+    --muted-foreground: 254 5% 60%;
     --accent: 216 10% 15%;
-    --accent-foreground: 254 3% 90%;
+    --accent-foreground: 254 5% 90%;
     --destructive: 0 50% 30%;
-    --destructive-foreground: 254 3% 90%;
+    --destructive-foreground: 254 5% 90%;
     --border: 254 20% 18%;
     --input: 254 20% 18%;
     --ring: 254 46.2% 33.5%;
@@ -82,6 +82,6 @@
 
 @layer components {
   .section-title {
-    @apply text-2xl font-bold text-primary sm:text-3xl xl:text-4xl;
+    @apply text-2xl font-bold text-primary sm:text-3xl lg:text-4xl;
   }
 }

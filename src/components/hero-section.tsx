@@ -34,7 +34,7 @@ const cities = ['Nairobi', 'Kisumu', 'Narok', 'Eldoret', 'Mombasa', 'Nyeri']
 
 export function SearchForm() {
   return (
-    <Card className="mx-auto flex flex-col gap-8 border xl:flex-row xl:items-end xl:px-6 xl:py-12">
+    <Card className="mx-auto flex flex-col gap-8 border transition-all duration-300 xl:flex-row xl:items-end xl:px-6 xl:py-8 2xl:py-10">
       <div className="grid min-w-80 gap-4 transition-all duration-300 sm:grid-cols-2 lg:grid-cols-4">
         <div className="md:w-[256px] 2xl:w-[256px]">
           <Label htmlFor="specialty">Doctor Specialty</Label>
@@ -105,7 +105,7 @@ export default function HeroSection() {
   return (
     <section className="mt-12 flex h-40 w-full gap-8 px-4 sm:h-56 sm:flex-row sm:justify-between sm:gap-12 lg:gap-16 lg:px-12 xl:mt-0 xl:h-[432px]">
       <div className="flex flex-grow flex-col items-center justify-center text-center sm:items-start sm:text-left">
-        <h1 className="text-2xl font-extrabold leading-tight text-primary transition-all duration-300 sm:text-3xl lg:text-4xl 2xl:text-5xl">
+        <h1 className="text-2xl font-extrabold leading-tight text-primary transition-all duration-300 sm:text-3xl lg:text-3xl xl:text-5xl">
           <div className="whitespace-nowrap">Solutions that help you and</div>
           <div className="whitespace-nowrap">your loved ones enjoy</div>
           <span className="whitespace-nowrap">
