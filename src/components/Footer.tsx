@@ -10,29 +10,29 @@ const currentYear: number = new Date().getFullYear()
 
 export default function Footer() {
   return (
-    <footer className="bg-gradient-to-r from-white to-secondary px-16 py-[40px] text-muted-foreground sm:px-8 md:px-12 lg:px-16">
-      <div className="mx-auto grid max-w-screen-xl grid-cols-1 gap-16 sm:grid-cols-2 lg:grid-cols-5">
+    <footer className="relative h-[463px] overflow-hidden bg-gradient-to-r from-white to-secondary px-16 py-[60px] text-muted-foreground sm:px-8 md:px-12 lg:px-16">
+      <div className="relative z-10 mx-auto grid max-w-screen-xl grid-cols-1 gap-16 sm:grid-cols-2 lg:grid-cols-5">
         <div className="flex flex-col items-start">
           <div className="mb-6">
             <Logo />
           </div>
           <div className="flex space-x-4">
-            <Link href="#" className="text-xl hover:text-gray-400">
+            <Link href="#" className="text-xl">
               <Facebook />
             </Link>
-            <Link href="#" className="text-xl hover:text-gray-400">
+            <Link href="#" className="text-xl">
               <Twitter />
             </Link>
-            <Link href="#" className="text-xl hover:text-gray-400">
+            <Link href="#" className="text-xl">
               <Instagram />
             </Link>
-            <Link href="#" className="text-xl hover:text-gray-400">
+            <Link href="#" className="text-xl">
               <Youtube />
             </Link>
           </div>
 
-          <div className="mt-8 text-center text-sm text-gray-400">
-            <p>&copy; {currentYear}</p>
+          <div className="mt-8 text-center">
+            <p className="text-md">&copy; {currentYear}</p>
           </div>
         </div>
 
@@ -152,6 +152,8 @@ export default function Footer() {
           </ul>
         </div>
       </div>
+      <div className="absolute -bottom-3 left-[163px] top-[166px] z-0 h-[274px] w-[270px] rounded-full bg-gradient-to-br from-white to-secondary"></div>
+      <div className="absolute -bottom-3 left-[1201px] top-[256px] z-0 h-[274px] w-[270px] rounded-full bg-gradient-to-br from-white to-secondary"></div>
     </footer>
   )
 }
