@@ -1,16 +1,14 @@
 'use client'
 
 import React from 'react'
-import Image from 'next/image'
 import { Facebook, Twitter, Instagram, Youtube } from 'lucide-react'
 import Logo from './Logo'
-import { Button } from './ui/button'
 import Link from 'next/link'
 const currentYear: number = new Date().getFullYear()
 
 export default function Footer() {
   return (
-    <footer className="relative h-[463px] overflow-hidden bg-gradient-to-r from-white to-secondary px-16 py-[60px] text-muted-foreground sm:px-8 md:px-12 lg:px-16">
+    <footer className="relative bg-gradient-to-r from-white to-secondary px-16 py-[60px] text-muted-foreground sm:px-8 md:h-[463px] md:overflow-hidden md:px-12 lg:px-16">
       <div className="relative z-10 mx-auto grid max-w-screen-xl grid-cols-1 gap-16 sm:grid-cols-2 lg:grid-cols-5">
         <div className="flex flex-col items-start">
           <div className="mb-6">
