@@ -1,6 +1,6 @@
-import React from "react";
+import React from 'react'
 
-import Image from "next/image";
+import Image from 'next/image'
 
 export default function Logo() {
   return (
@@ -10,5 +10,5 @@ export default function Logo() {
       width={158}
       height={48}
     />
-  );
+  )
 }
