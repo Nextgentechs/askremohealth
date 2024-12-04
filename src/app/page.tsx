@@ -1,5 +1,6 @@
 import HeroSection, { SearchForm } from '~/components/hero-section'
 import HowItWorks from '~/components/how-it-works'
+import MedicalSpecialist from '~/components/medical-specialists'
 import NavigationBar from '~/components/navigation-bar'
 
 export default async function Home() {
@@ -18,8 +19,9 @@ export default async function Home() {
         </div>
       </div>
 
-      <div className="mx-auto flex w-full max-w-[1440px] flex-col items-center justify-center px-4 sm:px-6 lg:px-8 xl:px-16">
+      <div className="mx-auto flex w-full flex-col items-center justify-center">
         <HowItWorks />
+        <MedicalSpecialist/>
       </div>
     </main>
   )
