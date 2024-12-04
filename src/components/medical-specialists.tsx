@@ -23,7 +23,7 @@ function Specialty({ specialty, icon }: (typeof specialities)[0][0]) {
       <CardContent className="flex flex-col items-center justify-center gap-2 px-6 py-4 pb-0">
         <Image src={icon} alt={specialty} width={40} height={40} />
         <span
-          className={`text-center text-sm ${mouseOver ? 'text-primary' : ''}`}
+          className={`text-center text-sm ${mouseOver ? 'text-secondary-foreground' : ''}`}
         >
           {specialty}
         </span>
