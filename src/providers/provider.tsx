@@ -8,7 +8,7 @@ export default function Provider({ children }: { children: React.ReactNode }) {
     <ThemeProvider
       attribute="class"
       defaultTheme="system"
-      enableSystem
+      enableSystem={false}
       disableTransitionOnChange
     >
       <TRPCReactProvider>{children}</TRPCReactProvider>
