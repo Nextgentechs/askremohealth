@@ -63,7 +63,7 @@ export default function HowItWorks() {
   return (
     <section
       id="how-it-works"
-      className="mx-auto flex flex-col items-center gap-8 pb-16 pt-64 sm:pt-52 lg:pt-40"
+      className="mx-auto flex flex-col items-center gap-8 pb-16 pt-60 sm:pt-48 lg:pt-36"
     >
       <h2 className="section-title">How It works</h2>
 
