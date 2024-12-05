@@ -64,7 +64,7 @@ export default function TopSpecialists() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {specialists.map((specialist, index) => (
           <SpecialistCard key={index} specialist={specialist} />
         ))}
