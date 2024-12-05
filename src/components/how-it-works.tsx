@@ -67,7 +67,7 @@ export default function HowItWorks() {
     >
       <h2 className="section-title">How It works</h2>
 
-      <div className="grid grid-rows-3 gap-6 md:grid-cols-3 md:grid-rows-1">
+      <div className="grid grid-rows-3 gap-5 md:grid-cols-3 md:grid-rows-1">
         {howItWorks.map((item, index) => (
           <HowItWorksCard key={index} item={item} />
         ))}
