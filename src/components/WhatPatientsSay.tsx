@@ -9,6 +9,7 @@ import {
   type CarouselApi,
 } from './ui/carousel'
 import patientsData from '~/data/whatpatientsay'
+import { Star } from 'lucide-react'
 
 function PatientData({
   rating,
@@ -16,16 +17,17 @@ function PatientData({
   name,
   occupation,
 }: (typeof patientsData)[0][0]) {
-  const [mouseOver, setMouseOver] = useState(false)
+  const ratingStars = (rating: number) => {
+    const fullStars = Math.floor(rating)
+    return Array.from({ length: fullStars }, (_, index) => (
+      <Star key={index} fill="#FDC14B" strokeWidth={0} />
+    ))
+  }
   return (
-    <Card
-      onMouseEnter={() => setMouseOver(true)}
-      onMouseLeave={() => setMouseOver(false)}
-      className="border-[1px] border-border p-4"
-    >
-      <CardHeader>
-        <p>{rating}</p>
-        <CardTitle className="text-left text-sm md:text-base">
+    <Card className="border-[1px] border-border p-4">
+      <CardHeader className="flex items-start justify-center gap-4">
+        <div className="flex px-6 pt-6">{ratingStars(rating)}</div>
+        <CardTitle className="px-6 text-left text-sm md:text-base">
           {description}
         </CardTitle>
       </CardHeader>
@@ -56,7 +58,7 @@ function WhatPatientsSayCarousel() {
     })
   }, [api])
   return (
-    <div className="flex w-full flex-col gap-8">
+    <div className="flex flex-col gap-8">
       <Carousel setApi={setApi}>
         <CarouselContent className="py-2">
           {Array.from({ length: patientsData.length }).map(
@@ -79,7 +81,7 @@ function WhatPatientsSayCarousel() {
           <button
             key={index}
             className={`mx-1 h-3 w-3 rounded-full transition-colors duration-300 ${
-              current - 1 === index ? 'bg-primary' : 'bg-gray-300'
+              current - 1 === index ? 'bg-violet-600' : 'bg-violet-200'
             }`}
             aria-label={`Go to slide ${index + 1}`}
           />
