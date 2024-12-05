@@ -12,18 +12,18 @@ function SpecialistCard({
   specialist: (typeof specialists)[number]
 }) {
   return (
-    <Card className="overflow-hidden border p-0 shadow-sm">
+    <Card className="shadow-sms overflow-hidden border p-0">
       <CardContent className="p-0">
         <Image
           src={specialist.photoUrl}
           alt={specialist.name}
-          width={316}
+          width={335}
           height={303}
-          className="h-[303px] w-[316px] object-cover"
+          className="size-auto object-cover"
         />
 
         <div className="flex flex-col items-start gap-2 p-5">
-          <h3 className="text-base font-semibold text-primary">
+          <h3 className="text-base font-medium text-primary">
             {specialist.title} {specialist.name}
           </h3>
           <Badge variant="secondary" className="w-fit">
@@ -71,7 +71,7 @@ export default function TopSpecialists() {
       </div>
 
       <Button variant={'link'}>
-        <span>Explore more doctors</span>
+        <span>Explore More Doctors</span>
         <ArrowRight />
       </Button>
     </section>

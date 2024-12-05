@@ -1,5 +1,6 @@
 import HeroSection, { SearchForm } from '~/components/hero-section'
 import HowItWorks from '~/components/how-it-works'
+import LatestArticles from '~/components/latest-articles'
 import MedicalSpecialist from '~/components/medical-specialists'
 import NavigationBar from '~/components/navigation-bar'
 import TopSpecialists from '~/components/top-specialists'
@@ -24,6 +25,7 @@ export default async function Home() {
         <HowItWorks />
         <MedicalSpecialist />
         <TopSpecialists />
+        <LatestArticles />
       </div>
     </main>
   )

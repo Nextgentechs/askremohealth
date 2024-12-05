@@ -90,6 +90,6 @@
   }
 
   .section-description {
-    @apply text-sm text-muted-foreground transition-all duration-300 lg:text-base;
+    @apply text-center text-sm text-muted-foreground transition-all duration-300 lg:text-base;
   }
 }
