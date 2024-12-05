@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { Facebook, Twitter, Instagram, Youtube } from 'lucide-react'
-import Logo from './Logo'
+import Logo from './logo'
 import Link from 'next/link'
 const currentYear: number = new Date().getFullYear()
 
