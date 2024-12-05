@@ -1,66 +1,93 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from './ui/card'
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
+  type CarouselApi,
 } from './ui/carousel'
+import patientsData from '~/data/whatpatientsay'
 
-type Specialty = {
-  rating: number
-  description: string
-  name: string
-  occupation: string
+function PatientData({
+  rating,
+  description,
+  name,
+  occupation,
+}: (typeof patientsData)[0][0]) {
+  const [mouseOver, setMouseOver] = useState(false)
+  return (
+    <Card
+      onMouseEnter={() => setMouseOver(true)}
+      onMouseLeave={() => setMouseOver(false)}
+      className="border-[1px] border-border p-4"
+    >
+      <CardHeader>
+        <p>{rating}</p>
+        <CardTitle className="text-left text-sm md:text-base">
+          {description}
+        </CardTitle>
+      </CardHeader>
+      <CardContent />
+      <CardFooter className="flex flex-col items-end gap-2">
+        <p className="text-base font-semibold">{name}</p>
+        <p className="text-sm font-normal">{occupation}</p>
+      </CardFooter>
+    </Card>
+  )
 }
 
-const specialities: Specialty[] = [
-  {
-    rating: 5,
-    description:
-      '"Excellent service! Booking an appointment was so easy, and the doctor was incredibly professional and caring."',
-    name: 'Alfred Mulaki',
-    occupation: 'Patient',
-  },
-  {
-    rating: 5,
-    description:
-      '"Excellent service! Booking an appointment was so easy, and the doctor was incredibly professional and caring."',
-    name: 'Alfred Mulaki',
-    occupation: 'Patient',
-  },
-  {
-    rating: 5,
-    description:
-      '"Excellent service! Booking an appointment was so easy, and the doctor was incredibly professional and caring."',
-    name: 'Alfred Mulaki',
-    occupation: 'Patient',
-  },
-  {
-    rating: 5,
-    description:
-      '"Excellent service! Booking an appointment was so easy, and the doctor was incredibly professional and caring."',
-    name: 'Alfred Mulaki',
-    occupation: 'Patient',
-  },
-  {
-    rating: 5,
-    description:
-      '"Excellent service! Booking an appointment was so easy, and the doctor was incredibly professional and caring."',
-    name: 'Alfred Mulaki',
-    occupation: 'Patient',
-  },
-  {
-    rating: 5,
-    description:
-      '"Excellent service! Booking an appointment was so easy, and the doctor was incredibly professional and caring."',
-    name: 'Alfred Mulaki',
-    occupation: 'Patient',
-  },
-]
+function WhatPatientsSayCarousel() {
+  const [api, setApi] = useState<CarouselApi>()
+  const [current, setCurrent] = useState(0)
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    if (!api) {
+      return
+    }
+
+    setCount(api.scrollSnapList().length)
+    setCurrent(api.selectedScrollSnap() + 1)
+
+    api.on('select', () => {
+      setCurrent(api.selectedScrollSnap() + 1)
+    })
+  }, [api])
+  return (
+    <div className="flex w-full flex-col gap-8">
+      <Carousel setApi={setApi}>
+        <CarouselContent className="py-2">
+          {Array.from({ length: patientsData.length }).map(
+            (_, carouselIndex) => (
+              <CarouselItem
+                key={carouselIndex}
+                className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3"
+              >
+                {patientsData[carouselIndex]?.map((patientData, index) => (
+                  <PatientData key={index} {...patientData} />
+                ))}
+              </CarouselItem>
+            ),
+          )}
+        </CarouselContent>
+      </Carousel>
+
+      <div className="mt-4 flex justify-center">
+        {Array.from({ length: count }).map((_, index) => (
+          <button
+            key={index}
+            className={`mx-1 h-3 w-3 rounded-full transition-colors duration-300 ${
+              current - 1 === index ? 'bg-primary' : 'bg-gray-300'
+            }`}
+            aria-label={`Go to slide ${index + 1}`}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
 
 export default function WhatPatientsSay() {
   return (
@@ -74,7 +101,8 @@ export default function WhatPatientsSay() {
           received.
         </p>
       </div>
-      <Carousel
+      <WhatPatientsSayCarousel />
+      {/* <Carousel
         opts={{
           align: 'start',
         }}
@@ -101,7 +129,7 @@ export default function WhatPatientsSay() {
         </CarouselContent>
         <CarouselPrevious />
         <CarouselNext />
-      </Carousel>
+      </Carousel> */}
     </div>
   )
 }
