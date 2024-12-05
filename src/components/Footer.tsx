@@ -1,157 +1,144 @@
 'use client'
 
 import React from 'react'
-import { Facebook, Twitter, Instagram, Youtube } from 'lucide-react'
 import Logo from './logo'
 import Link from 'next/link'
-const currentYear: number = new Date().getFullYear()
+import { Facebook, Instagram, Twitter, YouTube } from './icons'
+
+const footerNavOptions = {
+  patients: [
+    {
+      header: 'For Patients',
+      links: [
+        { title: 'Account Signup', href: '/signup' },
+        { title: 'Login', href: '/login' },
+        { title: 'Doctors', href: '/doctors' },
+        { title: 'Hospitals', href: '/hospitals' },
+        { title: 'Labortories', href: '/labortories' },
+        { title: 'Pharmacies', href: '/pharmacies' },
+        { title: 'FAQ', href: '/faq' },
+      ],
+    },
+  ],
+
+  doctors: [
+    {
+      header: 'For Doctors',
+      links: [
+        { title: 'Login', href: '/login' },
+        { title: 'How to register', href: '/how-to-register' },
+        { title: 'Promote your practice', href: '/promote-your-practice' },
+        { title: 'FAQ', href: '/faq' },
+      ],
+    },
+  ],
+
+  facilities: [
+    {
+      header: 'For Healthcare Facilities',
+      links: [
+        { title: 'Login', href: '/login' },
+        { title: 'How to register', href: '/how-to-register' },
+        { title: 'Promote your facility', href: '/promote-your-facility' },
+        { title: 'FAQ', href: '/faq' },
+      ],
+    },
+  ],
+
+  ourCompany: [
+    {
+      header: 'Our Company',
+      links: [
+        { title: 'About Us', href: '/about-us' },
+        { title: 'Contact Us', href: '/contact-us' },
+        { title: 'Terms of Service', href: '/terms-of-service' },
+        { title: 'Privacy Policy', href: '/privacy-policy' },
+      ],
+    },
+  ],
+}
+
+function SocialIcon({
+  href,
+  icon,
+  label,
+}: {
+  href: string
+  icon: React.ReactNode
+  label: string
+}) {
+  return (
+    <Link
+      href={href}
+      className="flex size-10 items-center justify-center rounded-full hover:bg-accent"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={label}
+    >
+      {React.cloneElement(icon as React.ReactElement, {
+        className: 'size-6',
+      })}
+    </Link>
+  )
+}
 
 export default function Footer() {
   return (
-    <footer className="relative bg-gradient-to-r from-white to-secondary px-16 py-[60px] text-muted-foreground sm:px-8 md:h-[463px] md:overflow-hidden md:px-12 lg:px-16">
-      <div className="relative z-10 mx-auto grid max-w-screen-xl grid-cols-1 gap-16 sm:grid-cols-2 lg:grid-cols-5">
-        <div className="flex flex-col items-start">
-          <div className="mb-6">
-            <Logo />
+    <footer className="w-full bg-secondary py-16">
+      <div className="container grid grid-cols-2 justify-between gap-4 gap-y-6 md:grid-cols-4 lg:grid-cols-5">
+        {Object.entries(footerNavOptions).map(
+          ([categoryKey, categoryValue]) => (
+            <div key={categoryKey} className="flex flex-col">
+              {categoryValue.map((category, index) => (
+                <div key={index} className="flex flex-col">
+                  <h3 className="mb-2 text-lg font-semibold text-primary">
+                    {category.header}
+                  </h3>
+                  {category.links.map((link, linkIndex) => (
+                    <Link
+                      key={linkIndex}
+                      href={link.href}
+                      className="mb-1 text-sm text-muted-foreground underline-offset-4 hover:text-primary hover:underline"
+                    >
+                      {link.title}
+                    </Link>
+                  ))}
+                </div>
+              ))}
+            </div>
+          ),
+        )}
+        <div className="flex flex-col items-start gap-8">
+          <Logo />
+
+          <div className="flex flex-row gap-2 border-y border-border py-4">
+            <SocialIcon
+              href="https://facebook.com"
+              icon={<Facebook />}
+              label="Facebook"
+            />
+            <SocialIcon
+              href="https://twitter.com"
+              icon={<Twitter />}
+              label="Twitter"
+            />
+            <SocialIcon
+              href="https://instagram.com"
+              icon={<Instagram />}
+              label="Instagram"
+            />
+            <SocialIcon
+              href="https://youtube.com"
+              icon={<YouTube />}
+              label="YouTube"
+            />
           </div>
-          <div className="flex space-x-4">
-            <Link href="#" className="text-xl">
-              <Facebook />
-            </Link>
-            <Link href="#" className="text-xl">
-              <Twitter />
-            </Link>
-            <Link href="#" className="text-xl">
-              <Instagram />
-            </Link>
-            <Link href="#" className="text-xl">
-              <Youtube />
-            </Link>
+
+          <div className="text-center text-sm text-muted-foreground">
+            &copy; {new Date().getFullYear()} Askvirtualhealthcare
           </div>
-
-          <div className="mt-8 text-center">
-            <p className="text-md">&copy; {currentYear}</p>
-          </div>
-        </div>
-
-        <div className="flex flex-col space-y-4">
-          <h4 className="text-xl font-bold text-primary">For Patients</h4>
-          <ul className="flex flex-col gap-1">
-            <li>
-              <Link href="#" className="text-muted-foreground">
-                Account Signup/Login
-              </Link>
-            </li>
-            <li>
-              <Link href="#" className="text-muted-foreground">
-                Doctors
-              </Link>
-            </li>
-            <li>
-              <Link href="#" className="text-muted-foreground">
-                Hospitals and Clinics
-              </Link>
-            </li>
-            <li>
-              <Link href="#" className="text-muted-foreground">
-                Laboratories
-              </Link>
-            </li>
-            <li>
-              <Link href="#" className="text-muted-foreground">
-                Drug Stores
-              </Link>
-            </li>
-            <li>
-              <Link href="#" className="text-muted-foreground">
-                Home care
-              </Link>
-            </li>
-          </ul>
-        </div>
-
-        <div className="flex flex-col space-y-4">
-          <h4 className="text-xl font-bold text-primary">For Doctors</h4>
-          <ul className="flex flex-col gap-1">
-            <li>
-              <Link href="#" className="text-muted-foreground">
-                Account Signup/Login
-              </Link>
-            </li>
-            <li>
-              <Link href="#" className="text-muted-foreground">
-                How to register
-              </Link>
-            </li>
-            <li>
-              <Link href="#" className="text-muted-foreground">
-                Promote your practice
-              </Link>
-            </li>
-            <li>
-              <Link href="#" className="text-muted-foreground">
-                Help center
-              </Link>
-            </li>
-          </ul>
-        </div>
-
-        <div className="flex flex-col space-y-4">
-          <h4 className="text-xl font-bold text-primary">
-            For Healthcare Facilities
-          </h4>
-          <ul className="flex flex-col gap-1">
-            <li>
-              <Link href="#" className="text-muted-foreground">
-                Account Signup/Login
-              </Link>
-            </li>
-            <li>
-              <Link href="#" className="text-muted-foreground">
-                How to register
-              </Link>
-            </li>
-            <li>
-              <Link href="#" className="text-muted-foreground">
-                Promote your practice
-              </Link>
-            </li>
-            <li>
-              <Link href="#" className="text-muted-foreground">
-                Help center
-              </Link>
-            </li>
-          </ul>
-        </div>
-
-        <div className="flex flex-col space-y-4">
-          <h4 className="text-xl font-bold text-primary">Our Company</h4>
-          <ul className="flex flex-col gap-1">
-            <li>
-              <Link href="#" className="text-muted-foreground">
-                Contact Us
-              </Link>
-            </li>
-            <li>
-              <Link href="#" className="text-muted-foreground">
-                About Us
-              </Link>
-            </li>
-            <li>
-              <Link href="#" className="text-muted-foreground">
-                FAQs
-              </Link>
-            </li>
-            <li>
-              <Link href="#" className="text-muted-foreground">
-                Careers
-              </Link>
-            </li>
-          </ul>
         </div>
       </div>
-      <div className="absolute -bottom-3 left-[163px] top-[166px] z-0 h-[274px] w-[270px] rounded-full bg-gradient-to-br from-white to-secondary"></div>
-      <div className="absolute -bottom-3 left-[1201px] top-[256px] z-0 h-[274px] w-[270px] rounded-full bg-gradient-to-br from-white to-secondary"></div>
     </footer>
   )
 }
