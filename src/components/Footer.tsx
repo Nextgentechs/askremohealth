@@ -84,7 +84,7 @@ function SocialIcon({
 
 export default function Footer() {
   return (
-    <footer className="w-full bg-secondary py-16">
+    <footer className="w-full border-t border-border bg-gradient-to-b from-white to-secondary py-16">
       <div className="container grid grid-cols-2 justify-between gap-4 gap-y-6 md:grid-cols-4 lg:grid-cols-5">
         {Object.entries(footerNavOptions).map(
           ([categoryKey, categoryValue]) => (
