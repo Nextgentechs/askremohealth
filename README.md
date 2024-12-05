@@ -1,36 +1,59 @@
-# ASKVIRTUALHEALTHCARE
+# AskVirtualHealthcare
 
-<p align="center">
-  <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/t3-oss/create-t3-app/99286f37324330ecdf75132fae1f246440a88035/www/public/images/t3-light.svg">
-  <img src="https://raw.githubusercontent.com/t3-oss/create-t3-app/99286f37324330ecdf75132fae1f246440a88035/www/public/images/t3-dark.svg" width="130" alt="Logo for T3">
-</picture>
-</p>
+## Tech Stack and Philosophy
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+This project is mainly build in typescript using the following tools and services:
 
-## Start the app
+- [Next.js](https://nextjs.org): Next.js enables you to create high-quality
+  web applications with the power of React components.
+- [Neon](https://neon.tech): A fully managed serverless Postgress database provider with autoscaling and branching enabling creating development branches with copies of data and schema from the production database instaneously.
+- [tRPC](https://trpc.io): Easily build & consume fully typesafe APIs without schemas or code generation.
 
-To start the development server run `npm run start`. Open your browser and navigate to http://localhost:3000/. Happy coding!
+We believe in [Backends for Frontends pattern](https://learn.microsoft.com/en-us/azure/architecture/patterns/backends-for-frontends) and develop with the idea of a tight integration between the front end and the backend. This is especially important in our approach which involves ideas such as:
 
-## What's next? How do I make an app with this?
+- Using tRPC and it's [React Query Integration](https://trpc.io/docs/client/react) to have full type inference and ready to go server state management on our expo app without any extra boiler plate.
+- Using [Server Components](https://nextjs.org/docs/app/building-your-application/rendering/server-components) to write UI that is automatically rendered and cached on the server and avoid unnecessary data fetching on the client.
+- Using [Server Actions and Mutations](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations) to directly invoke server code from the client eliminating the need for complex state management and API calls in the client.
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+## Prerequisites
 
-## Learn More
+Before you begin, ensure you have the following installed:
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+- [Node.js](https://nodejs.org/)(v18 or later)
+- [npm](https://www.npmjs.com/)
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+## Installation
 
-## How do I deploy this?
+1. Clone the repository by running the following:
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+```bash
+git@github.com:Nextgentechs/askvirtualhealthcare.git
+```
+
+2. Navigate to the project directory:
+
+```bash
+cd askvirtualhealthcare
+```
+
+3. Install dependencies
+
+```bash
+npm install
+```
+
+
+#### Good to Know
+
+This application is built using the [Next.js](https://nextjs.org) framework and hosted on [Vercel](https://vercel.com).
+
+If you are new to [tRPC](https://trpc.io) or have any questions please reach out to get a brief walkthrough.
+
+#### Running the app
+
+```bash
+npm run dev
+```
+
+This will start a server available on `localhost:3000` unless you are simultaneously running another app that is using that port in which case you might have a different port.
