@@ -5,7 +5,7 @@ import NavigationBar from '~/components/navigation-bar'
 import LatestArticles from '~/components/latest-articles'
 import TopSpecialists from '~/components/top-specialists'
 import WhatPatientsSay from '~/components/what-patients-say'
-import Footer from '~/components/footer-temp'
+import Footer from '~/components/footer'
 
 export default async function Home() {
   return (
