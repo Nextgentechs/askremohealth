@@ -58,7 +58,7 @@ function SpecialistsCarousel() {
             (_, carouselIndex) => (
               <CarouselItem
                 key={carouselIndex}
-                className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 md:gap-4 lg:grid-cols-6 lg:gap-6 xl:gap-8"
+                className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 md:gap-4 lg:grid-cols-6 lg:gap-5"
               >
                 {specialities[carouselIndex]?.map((specialty, index) => (
                   <Specialty key={index} {...specialty} />
