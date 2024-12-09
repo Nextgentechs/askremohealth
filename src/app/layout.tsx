@@ -3,7 +3,7 @@ import '~/styles/globals.css'
 import { GeistSans } from 'geist/font/sans'
 import { type Metadata } from 'next'
 import Provider from '~/providers/provider'
-import Footer from '~/components/Footer'
+import Footer from '~/components/footer'
 import NavigationBar from '~/components/navigation-bar'
 
 export const metadata: Metadata = {
