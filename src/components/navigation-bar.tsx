@@ -58,7 +58,7 @@ function AuthButtons({
         href="/login"
         className="inline-flex h-10 items-center justify-center py-2 text-sm font-medium text-primary underline-offset-4 hover:underline"
       >
-        <LogIn className="mr-2 text-lg font-medium xl:text-sm" />
+        <LogIn className="mr-2 text-sm font-medium xl:text-sm" />
         Log in
       </Link>
       <Button variant="default">Book Appointment</Button>
