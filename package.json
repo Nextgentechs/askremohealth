@@ -1,10 +1,10 @@
 {
   "name": "ask-virtual-healthcare",
-  "private":"true",
+  "private": "true",
   "workspaces": [
     "apps/*"
   ],
- "scripts": {
+  "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
     "start": "turbo run start",
@@ -13,7 +13,9 @@
     "format": "prettier --plugin-search-dir . --write ."
   },
   "devDependencies": {
-    "turbo": "latest"
+    "turbo": "latest",
+    "prettier": "^3.4.1",
+    "prettier-plugin-tailwindcss": "^0.6.9"
   },
   "packageManager": "npm@10.9.0"
 }
