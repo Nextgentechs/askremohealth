@@ -18,7 +18,7 @@ export default function RootLayout({
     <html lang="en" className={GeistSans.className} suppressHydrationWarning>
       <body className="bg-background text-foreground antialiased">
         <Provider>
-          <div className="px-4 pt-2 transition-all duration-300 sm:px-6 sm:pt-4 lg:px-8 lg:pt-6 xl:px-16">
+          <div className="px-4 pt-2 transition-all duration-300 sm:px-6 max-w-[1440px] mx-auto sm:pt-4 lg:px-8 lg:pt-6 xl:px-16">
             <NavigationBar />
           </div>
           {children}
