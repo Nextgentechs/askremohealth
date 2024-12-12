@@ -76,7 +76,7 @@
 }
 @layer base {
   * {
-    @apply scroll-smooth border-border;
+    @apply border-border scroll-smooth;
   }
   body {
     @apply text-foreground;
@@ -99,10 +99,10 @@
   }
 
   .section-title {
-    @apply text-2xl font-bold text-primary transition-all duration-300 md:text-3xl;
+    @apply text-primary text-2xl font-bold transition-all duration-300 md:text-3xl;
   }
 
   .section-description {
-    @apply text-sm text-muted-foreground transition-all duration-300 lg:text-base;
+    @apply text-muted-foreground text-sm transition-all duration-300 lg:text-base;
   }
 }
