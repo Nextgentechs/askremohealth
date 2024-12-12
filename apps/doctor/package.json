@@ -11,6 +11,7 @@
     "start": "vite"
   },
   "devDependencies": {
+    "@repo/eslint-config": "*",
     "@tanstack/router-plugin": "^1.87.7",
     "@types/node": "^22.10.2",
     "@types/react": "^18.3.3",
