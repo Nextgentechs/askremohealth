@@ -11,7 +11,7 @@ const config = {
     'plugin:@typescript-eslint/stylistic-type-checked',
   ],
   rules: {
-    /**updated */
+    /**update later */
     '@typescript-eslint/no-unsafe-assignment': 'off',
     '@typescript-eslint/no-unsafe-member-access': 'off',
     '@typescript-eslint/no-redundant-type-constituents': 'off',
