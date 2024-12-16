@@ -1,9 +1,9 @@
-import HeroSection, { SearchForm } from '~/components/hero-section'
-import HowItWorks from '~/components/how-it-works'
-import MedicalSpecialist from '~/components/medical-specialists'
-import LatestArticles from '~/components/latest-articles'
-import TopSpecialists from '~/components/top-specialists'
-import WhatPatientsSay from '~/components/what-patients-say'
+import HeroSection, { SearchForm } from '@web/components/hero-section'
+import HowItWorks from '@web/components/how-it-works'
+import MedicalSpecialist from '@web/components/medical-specialists'
+import LatestArticles from '@web/components/latest-articles'
+import TopSpecialists from '@web/components/top-specialists'
+import WhatPatientsSay from '@web/components/what-patients-say'
 
 export default async function Home() {
   return (

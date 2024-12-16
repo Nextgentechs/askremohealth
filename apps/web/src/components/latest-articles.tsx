@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import articles from '~/data/articles'
+import articles from '@web/data/articles'
 import { Card, CardContent, CardFooter } from './ui/card'
 import { Avatar, AvatarImage } from './ui/avatar'
 import {
