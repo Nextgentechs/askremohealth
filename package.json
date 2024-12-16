@@ -2,8 +2,9 @@
   "name": "ask-virtual-healthcare",
   "private": "true",
   "workspaces": [
-    "apps/*",
-    "packages/*"
+    "apps/web",
+    "apps/doctor",
+    "packages/eslint-config"
   ],
   "scripts": {
     "build": "turbo run build",
@@ -14,10 +15,10 @@
     "format": "prettier --plugin-search-dir . --write ."
   },
   "devDependencies": {
-    "turbo": "latest",
     "prettier": "^3.4.1",
     "prettier-plugin-tailwindcss": "^0.6.9",
-    "typescript": "^5.5.3"
+    "turbo": "latest",
+    "typescript": "^5.7.2"
   },
   "packageManager": "npm@10.9.0"
 }
