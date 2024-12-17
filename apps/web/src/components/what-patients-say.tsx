@@ -9,7 +9,7 @@ import {
 } from './ui/carousel'
 import Autoplay from 'embla-carousel-autoplay'
 import { StarRating } from './star-rating'
-import testimonials from '~/data/testimonials'
+import testimonials from '@web/data/testimonials'
 import { Card, CardContent, CardFooter, CardHeader } from './ui/card'
 
 function TestimonialCard(testimonial: (typeof testimonials)[0][0]) {

@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { Card, CardContent } from './ui/card'
 import Image from 'next/image'
 
-import specialities from '~/data/specialities'
+import specialities from '@web/data/specialities'
 import {
   Carousel,
   CarouselContent,
