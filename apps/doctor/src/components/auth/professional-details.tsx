@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
-import { z } from 'zod'
+import { FormProvider, useForm, useFormContext } from 'react-hook-form'
+import { set, z } from 'zod'
 import {
   Card,
   CardContent,
@@ -17,52 +17,108 @@ import {
 } from '../ui/select'
 import { Input } from '../ui/input'
 import { Button } from '../ui/button'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { useContext } from 'react'
+import { ChevronDown, ChevronLeft, ChevronRight, X } from 'lucide-react'
+import { useContext, useState } from 'react'
 import { AuthContext } from '@/context/auth-context'
 import { Label } from '../ui/label'
+import { api } from '@/lib/trpc'
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
+import { Checkbox } from '../ui/checkbox'
 
 const professionalDetailsSchema = z.object({
   specialty: z.string(),
-  subSpecialty: z.string(),
+  subSpecialty: z.array(z.string()),
   experience: z.string().refine((value) => parseInt(value) > 0, {
     message: 'Experience must be greater than 0',
   }),
-  registerionNumber: z.string(),
+  registrationNumber: z.string(),
   medicalLicense: z
-    .instanceof(File)
+    .string()
     .optional()
-    .refine((file) => file && file.size <= 5 * 1024 * 1024, {
-      message: 'Medical license must be less than 5MB',
-    })
-    .refine((file) => file && ['application/pdf'].includes(file.type), {
-      message: 'Medical license must be a PDF file',
-    }),
-  academicCertification: z
-    .instanceof(File)
-    .optional()
-    .refine((file) => file && file.size <= 5 * 1024 * 1024, {
-      message: 'Academic certification must be less than 5MB',
-    })
-    .refine((file) => file && ['application/pdf'].includes(file.type), {
-      message: 'Academic certification must be a PDF file',
-    }),
+    .refine(
+      (base64) => {
+        if (!base64) return true
+        const sizeInBytes = (base64.length * 3) / 4
+        return sizeInBytes <= 5 * 1024 * 1024
+      },
+      {
+        message: 'Medical license must be less than 5MB',
+      },
+    ),
   facility: z.string(),
 })
 export type ProfessionalDetails = z.infer<typeof professionalDetailsSchema>
 
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = (error) => reject(error)
+  })
+}
+
+function SubSpecialtySelect({ specialty }: { specialty: string }) {
+  const [open, setOpen] = useState(false)
+  const { setValue, watch } = useFormContext<ProfessionalDetails>()
+  const selectedSubSpecialties = watch('subSpecialty')
+
+  const { data: subspecialties } = api.specialties.listSubSpecialties.useQuery({
+    specialityId: specialty,
+  })
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          onClick={() => setOpen(!open)}
+          className="flex items-end justify-end disabled:cursor-not-allowed"
+          disabled={!specialty}
+        >
+          <ChevronDown />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-full">
+        <div className="flex flex-col">
+          {subspecialties?.map((option) => (
+            <div
+              className="mb-1 flex w-full cursor-pointer flex-row gap-4 text-sm"
+              key={option.id}
+            >
+              <Checkbox
+                checked={selectedSubSpecialties.includes(option.id)}
+                onCheckedChange={(checked) => {
+                  setValue(
+                    'subSpecialty',
+                    checked
+                      ? [...selectedSubSpecialties, option.id]
+                      : selectedSubSpecialties.filter((id) => id !== option.id),
+                  )
+                }}
+              />
+              <span> {option.name}</span>
+            </div>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
 export default function ProffesionalDetails() {
+  const [selectedSpecialty, setSelectedSpecialty] = useState('')
   const { formData, updateFormData, nextStep, prevStep } =
     useContext(AuthContext)
-  const {
-    handleSubmit,
-    setValue,
-    register,
-    formState: { errors },
-  } = useForm<ProfessionalDetails>({
+  const methods = useForm<ProfessionalDetails>({
     resolver: zodResolver(professionalDetailsSchema),
     defaultValues: formData,
   })
+
+  const [specialties] = api.specialties.listSpecialties.useSuspenseQuery()
+  const [facilities] = api.facilities.list.useSuspenseQuery()
 
   const onSubmit = (values: ProfessionalDetails) => {
     updateFormData(values)
@@ -75,58 +131,55 @@ export default function ProffesionalDetails() {
         <CardDescription>Step 2/3</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+        <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-8">
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="specialty">Specialty</Label>
-              <Select onValueChange={(value) => setValue('specialty', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="specialty1">Specialty 1</SelectItem>
-                  <SelectItem value="specialty 2">Specialty 2</SelectItem>
-                </SelectContent>
-              </Select>
-              {errors.specialty && (
-                <p className="text-destructive text-[0.8rem] font-medium">
-                  {errors.specialty.message}
-                </p>
-              )}
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="subSpecialty">Sub Specialty</Label>
               <Select
-                onValueChange={(value) => setValue('subSpecialty', value)}
+                onValueChange={(value) => {
+                  setSelectedSpecialty(value)
+                  methods.setValue('specialty', value)
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="subSpecialty1">Sub-Specialty 1</SelectItem>
-                  <SelectItem value="subSpecialty2">Sub-Specialty 2</SelectItem>
+                  {specialties?.map((specialty) => (
+                    <SelectItem key={specialty.id} value={specialty.id}>
+                      {specialty.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
-              {errors.subSpecialty && (
-                <p className="text-destructive text-[0.8rem] font-medium">
-                  {errors.subSpecialty.message}
-                </p>
-              )}
+
+              <p className="text-destructive text-[0.8rem] font-medium">
+                {methods.formState.errors.specialty?.message}
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="subSpecialty">Sub Specialty</Label>
+              <FormProvider {...methods}>
+                <SubSpecialtySelect specialty={selectedSpecialty} />
+              </FormProvider>
+
+              <p className="text-destructive text-[0.8rem] font-medium">
+                {methods.formState.errors.subSpecialty?.message}
+              </p>
             </div>
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="experience">Years of Experience</Label>
               <Input
-                {...register('experience')}
+                {...methods.register('experience')}
                 id="experience"
                 type="number"
               />
-              {errors.experience && (
-                <p className="text-destructive text-[0.8rem] font-medium">
-                  {errors.experience.message}
-                </p>
-              )}
+
+              <p className="text-destructive text-[0.8rem] font-medium">
+                {methods.formState.errors.experience?.message}
+              </p>
             </div>
 
             <div className="flex flex-col gap-2">
@@ -134,15 +187,14 @@ export default function ProffesionalDetails() {
                 Medical Registration Number
               </Label>
               <Input
-                {...register('registerionNumber')}
+                {...methods.register('registrationNumber')}
                 id="registerionNumber"
                 type="text"
               />
-              {errors.registerionNumber && (
-                <p className="text-destructive text-[0.8rem] font-medium">
-                  {errors.registerionNumber.message}
-                </p>
-              )}
+
+              <p className="text-destructive text-[0.8rem] font-medium">
+                {methods.formState.errors.registrationNumber?.message}
+              </p>
             </div>
 
             <div className="flex flex-col gap-2">
@@ -150,55 +202,45 @@ export default function ProffesionalDetails() {
               <Input
                 type="file"
                 accept=".pdf"
-                value=""
-                onChange={(e) => {
+                // value={formData.medicalLicense?.name}
+                onChange={async (e) => {
                   const file = e.target.files?.[0]
-                  setValue('medicalLicense', file)
+                  if (file) {
+                    try {
+                      const base64String = await fileToBase64(file)
+                      methods.setValue('medicalLicense', base64String)
+                    } catch (error) {
+                      console.error('Error converting file to base64:', error)
+                    }
+                  }
                 }}
               />
-              {errors.medicalLicense && (
-                <p className="text-destructive text-[0.8rem] font-medium">
-                  {errors.medicalLicense.message}
-                </p>
-              )}
-            </div>
 
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="academicCertification">
-                Academic Certificate
-              </Label>
-              <Input
-                type="file"
-                accept=".pdf"
-                value=""
-                onChange={(e) => {
-                  const file = e.target.files?.[0]
-                  setValue('academicCertification', file)
-                }}
-              />
-              {errors.academicCertification && (
-                <p className="text-destructive text-[0.8rem] font-medium">
-                  {errors.academicCertification.message}
-                </p>
-              )}
+              <p className="text-destructive text-[0.8rem] font-medium">
+                {methods.formState.errors.medicalLicense?.message}
+              </p>
             </div>
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="facility">Facility</Label>
-              <Select onValueChange={(value) => setValue('facility', value)}>
+              <Select
+                onValueChange={(value) => methods.setValue('facility', value)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="subSpecialty1">Facilityy 1</SelectItem>
-                  <SelectItem value="subSpecialty2">Facility 2</SelectItem>
+                  {facilities.map((facility) => (
+                    <SelectItem key={facility.id} value={facility.id}>
+                      {facility.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
-              {errors.facility && (
-                <p className="text-destructive text-[0.8rem] font-medium">
-                  {errors.facility.message}
-                </p>
-              )}
+
+              <p className="text-destructive text-[0.8rem] font-medium">
+                {methods.formState.errors.facility?.message}
+              </p>
             </div>
           </div>
 
