@@ -160,7 +160,7 @@ export default function PersonalDetails() {
               </p>
             </div>
 
-            <div className="flex flex-col gap-2">
+            <div className="col-span-2 flex flex-col gap-2">
               <Label htmlFor="bio" className="">
                 Bio
               </Label>

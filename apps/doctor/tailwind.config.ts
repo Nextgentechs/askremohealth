@@ -16,7 +16,17 @@ export default {
         '2xl': '1440px',
       },
     },
+
     extend: {
+      keyframes: {
+        'streaming-progress': {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(500%)' },
+        },
+      },
+      animation: {
+        'streaming-progress': 'streaming-progress 1.5s linear infinite',
+      },
       fontFamily: {
         geist: ['Geist', 'sans serif'],
       },
