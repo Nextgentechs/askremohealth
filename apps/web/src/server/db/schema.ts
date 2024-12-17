@@ -7,7 +7,6 @@ import {
   timestamp,
   uuid,
   varchar,
-  time,
   boolean,
 } from 'drizzle-orm/pg-core'
 
@@ -97,7 +96,7 @@ export const doctors = pgTable('doctor', {
     onDelete: 'set null',
   }),
   subSpecialties: jsonb('sub_specialties')
-    .$type<Array<{ id: string; name: string }>>()
+    .$type<Array<{ id: string }>>()
     .default([]),
   experience: integer('experience'),
   licenseNumber: varchar('registration_number'),
@@ -136,9 +135,17 @@ export const operatingHours = pgTable('operating_hours', {
   doctorId: uuid('doctor_id')
     .notNull()
     .references(() => doctors.id, { onDelete: 'cascade' }),
-  day: weekDayEnum('day').notNull(),
-  opening: time('opening').notNull(),
-  closing: time('closing').notNull(),
+  schedule: jsonb('schedule')
+    .$type<
+      Array<{
+        day: string
+        opening: string | null
+        closing: string | null
+        isOpen: boolean
+      }>
+    >()
+    .default([]),
+
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
     .defaultNow()
     .notNull(),
