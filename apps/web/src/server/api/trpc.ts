@@ -6,11 +6,56 @@
  * TL;DR - This is where all the tRPC server stuff is created and plugged in. The pieces you will
  * need to use are documented accordingly near the end.
  */
-import { initTRPC } from '@trpc/server'
+import { initTRPC, TRPCError } from '@trpc/server'
 import superjson from 'superjson'
 import { ZodError } from 'zod'
+import { jwtVerify } from 'jose'
 
 import { db } from '@web/server/db'
+import { type User } from 'lucia'
+import { type Session } from 'lucia'
+import { session } from 'src/lib/lucia'
+import { env } from '@web/env'
+
+type SessionData =
+  | { user: User; session: Session }
+  | { user: User | null; session: null }
+
+type CreateContextOptions = SessionData
+
+async function createSession(request?: Request): Promise<SessionData> {
+  const authSession = await session()
+  if (authSession.user) return authSession
+
+  const token = request?.headers.get('Authorization')?.split(' ')[1]
+  if (!token) return { user: null, session: null }
+
+  try {
+    const secret = new TextEncoder().encode(env.JWT_SECRET)
+    const payload = await jwtVerify(token, secret, { algorithms: ['HS256'] })
+    if (!payload) return { user: null, session: null }
+
+    return {
+      user: {
+        id: payload.payload.id as string,
+        isAdmin: payload.payload.isAdmin as boolean,
+        role: payload.payload.role as 'patient' | 'doctor' | 'admin',
+      },
+      session: null,
+    }
+  } catch (error) {
+    console.error(error)
+    return { user: null, session: null }
+  }
+}
+
+const createInnerTRPCContext = (opts: CreateContextOptions) => {
+  return {
+    user: opts.user,
+    session: opts.session,
+    db,
+  }
+}
 
 /**
  * 1. CONTEXT
@@ -25,11 +70,22 @@ import { db } from '@web/server/db'
  * @see https://trpc.io/docs/server/context
  */
 
-export const createTRPCContext = async (opts: { headers: Headers }) => {
-  return {
-    db,
-    ...opts,
-  }
+export const createTRPCContext = async (opts: {
+  req?: Request
+  auth: Session | null
+}) => {
+  const session = await createSession(opts.req)
+
+  const source = opts.req?.headers.get('user-agent')
+
+  console.log(
+    '>>> tRPC Request from',
+    source,
+    'by',
+    session.user?.id ?? 'unknown',
+  )
+
+  return createInnerTRPCContext({ ...session })
 }
 
 /**
@@ -105,3 +161,43 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
  * are logged in.
  */
 export const publicProcedure = t.procedure.use(timingMiddleware)
+
+/**
+ * Reusable middleware that enforces users are logged in before running the
+ * procedure
+ */
+const authMiddleware = t.middleware(({ ctx, next }) => {
+  if (!ctx.user) throw new TRPCError({ code: 'UNAUTHORIZED' })
+  return next({ ctx: { session: ctx.session, user: ctx.user } })
+})
+
+/**
+ * this filters out queries and mutations that are only accessible to doctors
+ */
+
+const doctorMiddleware = t.middleware(({ ctx, next }) => {
+  if (!ctx.user) throw new TRPCError({ code: 'UNAUTHORIZED' })
+  if (ctx.user.role !== 'doctor') throw new TRPCError({ code: 'FORBIDDEN' })
+  return next({ ctx: { session: ctx.session, user: ctx.user } })
+})
+
+const adminMiddleware = t.middleware(({ ctx, next }) => {
+  if (!ctx.user) throw new TRPCError({ code: 'UNAUTHORIZED' })
+  if (!ctx.user.isAdmin) throw new TRPCError({ code: 'FORBIDDEN' })
+  return next({ ctx: { session: ctx.session, user: ctx.user } })
+})
+/**
+ * Authenticated procedure
+ *
+ * If you want a query or mutation to ONLY be accessible to logged in users, use
+ * this. It verifies the session is valid and guarantees ctx.session.user is not
+ * null
+ *
+ * @see https://trpc.io/docs/procedures
+ */
+export const procedure = t.procedure.use(authMiddleware).use(timingMiddleware)
+export const doctorProcedure = t.procedure
+  .use(doctorMiddleware)
+  .use(timingMiddleware)
+
+export const adminProcedure = t.procedure.use(adminMiddleware)

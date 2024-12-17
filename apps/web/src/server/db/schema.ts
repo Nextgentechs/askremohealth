@@ -1,3 +1,4 @@
+import { type InferSelectModel } from 'drizzle-orm'
 import {
   integer,
   jsonb,
@@ -11,6 +12,7 @@ import {
 } from 'drizzle-orm/pg-core'
 
 export const roleEnum = pgEnum('role', ['patient', 'doctor', 'admin'])
+
 export const weekDayEnum = pgEnum('week_day', [
   'monday',
   'tuesday',
@@ -61,7 +63,9 @@ export const users = pgTable('user', {
   updatedAt: timestamp('updated_at')
     .notNull()
     .$onUpdate(() => new Date()),
+  isAdmin: boolean('is_admin').default(false),
 })
+export type User = InferSelectModel<typeof users>
 
 export const sessions = pgTable('sessions', {
   id: varchar('id').primaryKey(),
@@ -74,6 +78,7 @@ export const sessions = pgTable('sessions', {
     mode: 'date',
   }).notNull(),
 })
+export type Session = InferSelectModel<typeof sessions>
 
 export const patients = pgTable('patient', {
   id: uuid('id')
@@ -109,9 +114,9 @@ export const certificates = pgTable('certificate', {
     .references(() => doctors.id, { onDelete: 'cascade' }),
   name: varchar('name').notNull(),
   url: varchar('url').notNull(),
-  issuedBy: varchar('issued_by').notNull(),
-  issuedAt: timestamp('issued_at').notNull(),
-  expiryDate: timestamp('expiry_date').notNull(),
+  issuedBy: varchar('issued_by'),
+  issuedAt: timestamp('issued_at'),
+  expiryDate: timestamp('expiry_date'),
 })
 
 export const facilities = pgTable('facility', {
