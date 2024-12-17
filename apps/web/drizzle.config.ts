@@ -1,12 +1,11 @@
-import { type Config } from "drizzle-kit";
+import { type Config } from 'drizzle-kit'
 
-import { env } from "~/env";
+import { env } from '@web/env'
 
 export default {
-  schema: "./src/server/db/schema.ts",
-  dialect: "postgresql",
+  schema: './src/server/db/schema.ts',
+  dialect: 'postgresql',
   dbCredentials: {
     url: env.DATABASE_URL,
   },
-  tablesFilter: ["askvirtualhealthcare_*"],
-} satisfies Config;
+} satisfies Config

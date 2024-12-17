@@ -1,6 +1,6 @@
 'use client'
 
-import { TRPCReactProvider } from '~/trpc/react'
+import { TRPCReactProvider } from '@web/trpc/react'
 import { ThemeProvider } from './theme-provider'
 
 export default function Provider({ children }: { children: React.ReactNode }) {

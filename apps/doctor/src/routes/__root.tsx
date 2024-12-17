@@ -1,7 +1,13 @@
-import * as React from 'react'
-import { GeistSans } from 'geist/font/sans'
-import { Link, Outlet, createRootRoute } from '@tanstack/react-router'
+import { trpcQueryUtils } from '@/lib/trpc'
+import { Outlet, createRootRoute } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/router-devtools'
+import { Toaster } from '@/components/ui/toaster'
+import { Suspense } from 'react'
+import LinearProgressBar from '@/components/linear-progress'
+
+export interface RouterAppContext {
+  trpcQueryUtils: typeof trpcQueryUtils
+}
 
 export const Route = createRootRoute({
   component: RootComponent,
@@ -9,9 +15,11 @@ export const Route = createRootRoute({
 
 function RootComponent() {
   return (
-    <>
+    <Suspense fallback={<LinearProgressBar />}>
       <Outlet />
+      <LinearProgressBar />
+      <Toaster />
       <TanStackRouterDevtools position="bottom-right" />
-    </>
+    </Suspense>
   )
 }
