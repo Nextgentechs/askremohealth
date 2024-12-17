@@ -13,15 +13,13 @@ export default function FacilityHours() {
 
   const operatingHours = watch('operatingHours')
 
-  console.log('operatingHours', operatingHours)
-
   const handleEdit = (day: string) => {
     setEditingDay(day === editingDay ? null : day)
   }
 
   const handleChange = (
     dayIndex: number,
-    field: 'from' | 'to' | 'isOpen',
+    field: 'opening' | 'closing' | 'isOpen',
     value: string | boolean,
   ) => {
     const newHours = [...operatingHours]
@@ -46,23 +44,25 @@ export default function FacilityHours() {
                 <div className="flex flex-1 flex-row gap-4">
                   <Input
                     type="time"
-                    value={dayHours.from}
+                    value={dayHours.opening}
                     onChange={(e) =>
-                      handleChange(index, 'from', e.target.value)
+                      handleChange(index, 'opening', e.target.value)
                     }
                     className="w-24"
                   />
                   <Input
                     type="time"
-                    value={dayHours.to}
-                    onChange={(e) => handleChange(index, 'to', e.target.value)}
+                    value={dayHours.closing}
+                    onChange={(e) =>
+                      handleChange(index, 'closing', e.target.value)
+                    }
                     className="w-24"
                   />
                 </div>
               ) : (
                 <div className="flex-1">
                   {dayHours.isOpen
-                    ? `${dayHours.from} - ${dayHours.to}`
+                    ? `${dayHours.opening} - ${dayHours.closing}`
                     : 'Closed'}
                 </div>
               )}

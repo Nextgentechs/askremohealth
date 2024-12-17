@@ -24,7 +24,7 @@ export const queryClient = new QueryClient()
 export const api = createTRPCReact<APIRouter>({ abortOnUnmount: true })
 
 const options = {
-  url: getApiUrl('/trpc'),
+  url: getApiUrl('/api/trpc'),
   fetch(url: string | URL | Request, options: RequestInit | undefined) {
     return fetch(url, { ...options, credentials: 'include' })
   },

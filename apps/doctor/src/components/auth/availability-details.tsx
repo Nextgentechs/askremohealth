@@ -21,6 +21,8 @@ import { ChevronLeft } from 'lucide-react'
 import { useContext } from 'react'
 import { AuthContext } from '@/context/auth-context'
 import { Label } from '../ui/label'
+import { api } from '@/lib/trpc'
+import { useToast } from '@/hooks/use-toast'
 
 export const operatingHoursSchema = z.object({
   day: z.enum([
@@ -32,8 +34,8 @@ export const operatingHoursSchema = z.object({
     'Saturday',
     'Sunday',
   ]),
-  from: z.string(),
-  to: z.string(),
+  opening: z.string(),
+  closing: z.string(),
   isOpen: z.boolean(),
 })
 const availabilityDetailsSchema = z.object({
@@ -48,10 +50,28 @@ export default function AvailabilityDetails() {
     resolver: zodResolver(availabilityDetailsSchema),
     defaultValues: formData,
   })
+  const { toast } = useToast()
+
+  const { mutate, isPending } = api.auth.signup.useMutation({
+    onSuccess: () => {
+      toast({
+        description: 'Registration successful',
+        variant: 'default',
+      })
+    },
+    onError: (err) => {
+      toast({
+        description: err.message,
+        variant: 'destructive',
+      })
+      console.error(err)
+    },
+  })
 
   const onSubmit = (values: AvailabilityDetails) => {
-    console.log('third step values', values)
-    console.log('formData', formData)
+    const finalValues = { ...formData, ...values }
+    console.log(finalValues)
+    mutate(finalValues)
   }
   return (
     <Card className="m-auto w-full max-w-5xl">
@@ -101,7 +121,10 @@ export default function AvailabilityDetails() {
               <span>Back</span>
             </Button>
             <Button type="submit">
-              <span> Complete Registration</span>
+              <span>
+                {' '}
+                {isPending ? 'Processing...' : 'Complete Registration'}
+              </span>
             </Button>
           </div>
         </form>

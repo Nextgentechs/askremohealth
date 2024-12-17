@@ -15,6 +15,7 @@ import { Button } from '../ui/button'
 import { ChevronRight } from 'lucide-react'
 import { Label } from '../ui/label'
 import { Textarea } from '../ui/textarea'
+
 const personalDetailsSchema = z
   .object({
     firstName: z
@@ -23,10 +24,30 @@ const personalDetailsSchema = z
     lastName: z
       .string()
       .min(2, { message: 'Last name must be at least 2 characters long' }),
+    dob: z.string().min(2, { message: 'Date of Birth is required' }),
     email: z.string().email({ message: 'Invalid email address' }),
-    phone: z.string().regex(/^\d{10,12}$/, {
-      message: 'Phone number must be between 10-12 digits',
-    }),
+    phone: z
+      .string()
+      .refine((val) => /^\d{10}$/.test(val) || /^254\d{9}$/.test(val), {
+        message:
+          'Phone number must be 10 digits starting with 07 or 01, or 12 digits starting with 254',
+      })
+      .refine(
+        (val) =>
+          val.startsWith('07') ||
+          val.startsWith('01') ||
+          val.startsWith('2547') ||
+          val.startsWith('2541'),
+        {
+          message: 'Phone number must start with 07, 01, 2547, or 2541',
+        },
+      )
+      .transform((val) => {
+        if (val.startsWith('0')) {
+          return `254${val.slice(1)}`
+        }
+        return val
+      }),
     password: z
       .string()
       .min(8, { message: 'Password must be at least 8 characters long' }),
@@ -74,51 +95,46 @@ export default function PersonalDetails() {
             <div className="flex flex-col gap-2">
               <Label htmlFor="firstName">First Name</Label>
               <Input {...register('firstName')} id="firstName" type="text" />
-              {errors.firstName && (
-                <p className="text-destructive text-[0.8rem] font-medium">
-                  {errors.firstName.message}
-                </p>
-              )}
+
+              <p className="text-destructive text-[0.8rem] font-medium">
+                {errors.firstName?.message}
+              </p>
             </div>
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="lastName">Last Name</Label>
               <Input {...register('lastName')} id="lastName" type="text" />
-              {errors.lastName && (
-                <p className="text-destructive text-[0.8rem] font-medium">
-                  {errors.lastName.message}
-                </p>
-              )}
+
+              <p className="text-destructive text-[0.8rem] font-medium">
+                {errors.lastName?.message}
+              </p>
             </div>
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="email">Email</Label>
               <Input {...register('email')} id="email" type="email" />
-              {errors.email && (
-                <p className="text-destructive text-[0.8rem] font-medium">
-                  {errors.email.message}
-                </p>
-              )}
+
+              <p className="text-destructive text-[0.8rem] font-medium">
+                {errors.email?.message}
+              </p>
             </div>
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="phone">Phone Number</Label>
               <Input {...register('phone')} id="phone" type="tel" />
-              {errors.phone && (
-                <p className="text-destructive text-[0.8rem] font-medium">
-                  {errors.phone.message}
-                </p>
-              )}
+
+              <p className="text-destructive text-[0.8rem] font-medium">
+                {errors.phone?.message}
+              </p>
             </div>
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="password">Password</Label>
               <Input {...register('password')} id="password" type="password" />
-              {errors.password && (
-                <p className="text-destructive text-[0.8rem] font-medium">
-                  {errors.password.message}
-                </p>
-              )}
+
+              <p className="text-destructive text-[0.8rem] font-medium">
+                {errors.password?.message}
+              </p>
             </div>
 
             <div className="flex flex-col gap-2">
@@ -130,24 +146,30 @@ export default function PersonalDetails() {
                 id="confirmPassword"
                 type="password"
               />
-              {errors.confirmPassword && (
-                <p className="text-destructive text-[0.8rem] font-medium">
-                  {errors.confirmPassword.message}
-                </p>
-              )}
+
+              <p className="text-destructive text-[0.8rem] font-medium">
+                {errors.confirmPassword?.message}
+              </p>
             </div>
 
-            <div className="col-span-2">
-              <Label htmlFor="bio" className="mb-2 block">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="email">Date of Birth</Label>
+              <Input {...register('dob')} id="dob" type="date" />
+              <p className="text-destructive text-[0.8rem] font-medium">
+                {errors.dob?.message}
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="bio" className="">
                 Bio
               </Label>
 
               <Textarea {...register('bio')} id="bio" />
-              {errors.bio && (
-                <p className="text-destructive text-[0.8rem] font-medium">
-                  {errors.bio.message}
-                </p>
-              )}
+
+              <p className="text-destructive text-[0.8rem] font-medium">
+                {errors.bio?.message}
+              </p>
             </div>
           </div>
 
