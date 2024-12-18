@@ -4,6 +4,7 @@ import {
   doctors,
   operatingHours,
   profilePictures,
+  type User,
   users,
 } from '@web/server/db/schema'
 import bcrypt from 'bcrypt'
@@ -12,6 +13,54 @@ import { put } from '@vercel/blob'
 import { eq } from 'drizzle-orm'
 import { doctorSignupSchema } from '../schema'
 import sharp from 'sharp'
+import { z } from 'zod'
+import { lucia } from '@web/lib/lucia'
+import { cookies } from 'next/headers'
+import { type JWTPayload, SignJWT } from 'jose'
+import { env } from '@web/env'
+
+export async function sign<T extends JWTPayload>({
+  payload,
+  sub,
+  exp,
+}: {
+  payload: T
+  sub: string
+  exp: `${number} ${
+    | 'seconds'
+    | 'secs'
+    | 's'
+    | 'minutes'
+    | 'mins'
+    | 'm'
+    | 'hours'
+    | 'hrs'
+    | 'h'
+    | 'days'
+    | 'd'
+    | 'weeks'
+    | 'w'
+    | 'years'
+    | 'yrs'
+    | 'y'}`
+}) {
+  const token = new SignJWT(payload)
+    .setAudience('https://askvirtualhealthcare.com')
+    .setIssuer('https://askvirtualhealthcare.com')
+    .setSubject(sub)
+    .setIssuedAt()
+    .setExpirationTime(exp)
+    .setProtectedHeader({ alg: 'HS256' })
+
+  return await token.sign(new TextEncoder().encode(env.JWT_SECRET))
+}
+
+export async function createAuthorizationToken(payload: User) {
+  return {
+    accessToken: await sign({ payload, sub: payload.id, exp: '10 minutes' }),
+    refreshToken: await sign({ payload, sub: payload.id, exp: '180 days' }),
+  }
+}
 
 export const authRouter = createTRPCRouter({
   doctorSignup: publicProcedure
@@ -116,5 +165,45 @@ export const authRouter = createTRPCRouter({
       })
 
       return { success: true }
+    }),
+
+  doctorLogin: publicProcedure
+    .input(
+      z.object({
+        phone: z.string(),
+        password: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const user = await ctx.db.query.users.findFirst({
+        where: (user) => eq(user.phone, input.phone),
+      })
+
+      if (!user) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User not found',
+        })
+      }
+
+      const passwordMatch = await bcrypt.compare(input.password, user.password)
+
+      if (!passwordMatch) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'Invalid password',
+        })
+      }
+
+      const session = await lucia.createSession(user.id, {})
+      const cookie = lucia.createSessionCookie(session.id)
+      const cookieStore = await cookies()
+      cookieStore.set(cookie.name, cookie.value, cookie.attributes)
+
+      const authorizationToken = await createAuthorizationToken(user)
+
+      if (authorizationToken) return { success: true, authorizationToken }
+
+      return { success: false }
     }),
 })
