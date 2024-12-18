@@ -38,6 +38,7 @@ export const operatingHoursSchema = z.object({
   closing: z.string(),
   isOpen: z.boolean(),
 })
+
 const availabilityDetailsSchema = z.object({
   appointmentDuration: z.string(),
   operatingHours: z.array(operatingHoursSchema),
@@ -52,7 +53,7 @@ export default function AvailabilityDetails() {
   })
   const { toast } = useToast()
 
-  const { mutate, isPending } = api.auth.signup.useMutation({
+  const { mutate, isPending } = api.auth.doctorSignup.useMutation({
     onSuccess: () => {
       toast({
         description: 'Registration successful',
@@ -70,7 +71,6 @@ export default function AvailabilityDetails() {
 
   const onSubmit = (values: AvailabilityDetails) => {
     const finalValues = { ...formData, ...values }
-    console.log(finalValues)
     mutate(finalValues)
   }
   return (

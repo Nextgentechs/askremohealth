@@ -15,6 +15,7 @@ import { Button } from '../ui/button'
 import { ChevronRight } from 'lucide-react'
 import { Label } from '../ui/label'
 import { Textarea } from '../ui/textarea'
+import { fileToBase64 } from '@/lib/utils'
 
 const personalDetailsSchema = z
   .object({
@@ -58,6 +59,21 @@ const personalDetailsSchema = z
       .string()
       .min(10, { message: 'Bio must be at least 10 characters long' })
       .max(256, { message: 'Bio must be at most 256 characters long' }),
+
+    profilePicture: z
+      .string()
+      .optional()
+      .refine(
+        (base64) => {
+          if (!base64) return true
+          const base64Data = base64.split(',')[1] || base64
+          const sizeInBytes = (base64Data.length * 3) / 4
+          return sizeInBytes <= 5 * 1024 * 1024
+        },
+        {
+          message: 'Photo must be less than 5MB',
+        },
+      ),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Passwords do not match',
@@ -72,6 +88,7 @@ export default function PersonalDetails() {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<PersonalDetails>({
     resolver: zodResolver(personalDetailsSchema),
@@ -157,6 +174,29 @@ export default function PersonalDetails() {
               <Input {...register('dob')} id="dob" type="date" />
               <p className="text-destructive text-[0.8rem] font-medium">
                 {errors.dob?.message}
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="profilePicture">Profile Picture</Label>
+              <Input
+                id="profilePicture"
+                type="file"
+                accept="image/*"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0]
+                  if (file) {
+                    try {
+                      const base64String = await fileToBase64(file)
+                      setValue('profilePicture', base64String)
+                    } catch (err) {
+                      console.error('Error converting file to base64:', err)
+                    }
+                  }
+                }}
+              />
+              <p className="text-destructive text-[0.8rem] font-medium">
+                {errors.profilePicture?.message}
               </p>
             </div>
 

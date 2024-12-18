@@ -21,6 +21,9 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { useForm } from 'react-hook-form'
+import { api } from '@/lib/trpc'
+import { useToast } from '@/hooks/use-toast'
+import { Loader } from 'lucide-react'
 
 export const Route = createFileRoute('/auth/login')({
   component: RouteComponent,
@@ -35,7 +38,28 @@ function RouteComponent() {
 }
 
 const loginSchema = z.object({
-  email: z.string().email(),
+  phone: z
+    .string()
+    .refine((val) => /^\d{10}$/.test(val) || /^254\d{9}$/.test(val), {
+      message:
+        'Phone number must be 10 digits starting with 07 or 01, or 12 digits starting with 254',
+    })
+    .refine(
+      (val) =>
+        val.startsWith('07') ||
+        val.startsWith('01') ||
+        val.startsWith('2547') ||
+        val.startsWith('2541'),
+      {
+        message: 'Phone number must start with 07, 01, 2547, or 2541',
+      },
+    )
+    .transform((val) => {
+      if (val.startsWith('0')) {
+        return `254${val.slice(1)}`
+      }
+      return val
+    }),
   password: z.string().min(8),
 })
 
@@ -43,13 +67,30 @@ function LoginForm() {
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: '',
+      phone: '',
       password: '',
     },
   })
 
+  const { toast } = useToast()
+  const { mutate, isPending } = api.auth.doctorLogin.useMutation({
+    onSuccess: () => {
+      toast({
+        description: 'Login successful',
+        variant: 'default',
+      })
+    },
+    onError: (err) => {
+      toast({
+        description: err.message,
+        variant: 'destructive',
+      })
+      console.error(err)
+    },
+  })
+
   function onSubmit(values: z.infer<typeof loginSchema>) {
-    console.log(values)
+    mutate(values)
   }
 
   return (
@@ -57,15 +98,15 @@ function LoginForm() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <FormField
           control={form.control}
-          name="email"
+          name="phone"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>Phone Number</FormLabel>
               <FormControl>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
+                  id="phone"
+                  type="tel"
+                  placeholder="e.g. 254712344567"
                   required
                   {...field}
                 />
@@ -99,6 +140,7 @@ function LoginForm() {
         />
 
         <Button type="submit" className="w-full">
+          {isPending && <Loader className={`animate-spin`} />}
           Login
         </Button>
       </form>
@@ -112,7 +154,7 @@ function LoginCard() {
       <CardHeader>
         <CardTitle className="text-2xl">Login</CardTitle>
         <CardDescription>
-          Enter your email below to login to your account
+          Enter your phone and password below to log in
         </CardDescription>
       </CardHeader>
       <CardContent>

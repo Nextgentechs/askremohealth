@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FormProvider, useForm, useFormContext } from 'react-hook-form'
-import { set, z } from 'zod'
+import { z } from 'zod'
 import {
   Card,
   CardContent,
@@ -24,6 +24,7 @@ import { Label } from '../ui/label'
 import { api } from '@/lib/trpc'
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
 import { Checkbox } from '../ui/checkbox'
+import { fileToBase64 } from '@/lib/utils'
 
 const professionalDetailsSchema = z.object({
   specialty: z.string(),
@@ -48,15 +49,6 @@ const professionalDetailsSchema = z.object({
   facility: z.string(),
 })
 export type ProfessionalDetails = z.infer<typeof professionalDetailsSchema>
-
-const fileToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.readAsDataURL(file)
-    reader.onload = () => resolve(reader.result as string)
-    reader.onerror = (error) => reject(error)
-  })
-}
 
 function SubSpecialtySelect({ specialty }: { specialty: string }) {
   const [open, setOpen] = useState(false)
