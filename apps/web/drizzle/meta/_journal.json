@@ -36,6 +36,13 @@
       "when": 1734455832639,
       "tag": "0004_next_darkstar",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1734511313286,
+      "tag": "0005_good_deathstrike",
+      "breakpoints": true
     }
   ]
 }

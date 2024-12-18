@@ -106,6 +106,17 @@ export const doctors = pgTable('doctor', {
   bio: varchar('bio'),
 })
 
+export const profilePictures = pgTable('profile_picture', {
+  id: uuid('id')
+    .primaryKey()
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  url: varchar('url').notNull(),
+  path: varchar('path').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
+})
+
 export const certificates = pgTable('certificate', {
   id: uuid('id').primaryKey().notNull().defaultRandom(),
   doctorId: uuid('doctor_id')
