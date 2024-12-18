@@ -17,7 +17,6 @@ function RootComponent() {
   return (
     <Suspense fallback={<LinearProgressBar />}>
       <Outlet />
-      <LinearProgressBar />
       <Toaster />
       <TanStackRouterDevtools position="bottom-right" />
     </Suspense>
