@@ -1,55 +1,21 @@
-import { z } from 'zod'
 import { createTRPCRouter, publicProcedure } from '../trpc'
 import {
   certificates,
   doctors,
   operatingHours,
+  profilePictures,
   users,
 } from '@web/server/db/schema'
 import bcrypt from 'bcrypt'
 import { TRPCError } from '@trpc/server'
 import { put } from '@vercel/blob'
 import { eq } from 'drizzle-orm'
-
-const operatingHoursSchema = z.object({
-  day: z.enum([
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
-    'Sunday',
-  ]),
-  opening: z.string(),
-  closing: z.string(),
-  isOpen: z.boolean(),
-})
-
-const signupSchema = z.object({
-  firstName: z.string(),
-  lastName: z.string(),
-  email: z.string().email().optional(),
-  phone: z.string(),
-  password: z.string().min(8),
-  confirmPassword: z.string().min(8),
-  bio: z.string().optional(),
-  dob: z.string(),
-  specialty: z.string(),
-  subSpecialty: z.array(z.string()),
-  experience: z.string().transform((val) => parseInt(val)),
-  facility: z.string(),
-  registrationNumber: z.string(),
-  appointmentDuration: z.string(),
-  operatingHours: z.array(operatingHoursSchema),
-  medicalLicense: z.string().optional(),
-})
+import { doctorSignupSchema } from '../schema'
+import sharp from 'sharp'
 
 export const authRouter = createTRPCRouter({
-  /**Doctor's Auth */
-
-  signup: publicProcedure
-    .input(signupSchema)
+  doctorSignup: publicProcedure
+    .input(doctorSignupSchema)
     .mutation(async ({ ctx, input }) => {
       const user = await ctx.db.query.users.findFirst({
         where: (user) => eq(user.phone, input.phone),
@@ -118,6 +84,33 @@ export const authRouter = createTRPCRouter({
             doctorId: user.id,
             name: pathname,
             url,
+          })
+        }
+
+        if (input.profilePicture) {
+          const base64Data = input.profilePicture.replace(
+            /^data:image\/\w+;base64,/,
+            '',
+          )
+          const buffer = await sharp(Buffer.from(base64Data, 'base64'))
+            .resize(400, 400, {
+              fit: 'cover',
+              position: 'center',
+            })
+            .webp({ quality: 80 })
+            .toBuffer()
+
+          const fileName = `profile-picture-${user.id}.webp`
+
+          const { url, pathname } = await put(fileName, buffer, {
+            access: 'public',
+            contentType: `image/webp`,
+          })
+
+          await trx.insert(profilePictures).values({
+            id: user.id,
+            url,
+            path: pathname,
           })
         }
       })
