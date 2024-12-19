@@ -112,7 +112,7 @@ const data = {
   navMain: [
     {
       title: 'Dashboard',
-      url: '/dashboard',
+      url: '/dashboard/upcomming-appointments',
       icon: House,
     },
     {
