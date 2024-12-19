@@ -43,6 +43,13 @@
       "when": 1734511313286,
       "tag": "0005_good_deathstrike",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1734592935690,
+      "tag": "0006_cooing_mentor",
+      "breakpoints": true
     }
   ]
 }
