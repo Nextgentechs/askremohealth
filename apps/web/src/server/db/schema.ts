@@ -32,6 +32,11 @@ export const appointmentsStatusEnum = pgEnum('appointment_status', [
   'in_progress',
 ])
 
+export const appointmentTypesEnum = pgEnum('appointment_type', [
+  'online',
+  'physical',
+])
+
 export const specialties = pgTable('specialty', {
   id: uuid('id').primaryKey().notNull().defaultRandom(),
   name: varchar('name').notNull(),
@@ -178,6 +183,7 @@ export const appointments = pgTable('appointment', {
     .notNull()
     .references(() => facilities.id, { onDelete: 'cascade' }),
   appointmentDate: timestamp('appointment_date').notNull(),
+  type: appointmentTypesEnum('type').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at')
     .notNull()
