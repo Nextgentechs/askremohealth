@@ -26,23 +26,7 @@ export async function sign<T extends JWTPayload>({
 }: {
   payload: T
   sub: string
-  exp: `${number} ${
-    | 'seconds'
-    | 'secs'
-    | 's'
-    | 'minutes'
-    | 'mins'
-    | 'm'
-    | 'hours'
-    | 'hrs'
-    | 'h'
-    | 'days'
-    | 'd'
-    | 'weeks'
-    | 'w'
-    | 'years'
-    | 'yrs'
-    | 'y'}`
+  exp: string
 }) {
   const token = new SignJWT(payload)
     .setAudience('https://askvirtualhealthcare.com')

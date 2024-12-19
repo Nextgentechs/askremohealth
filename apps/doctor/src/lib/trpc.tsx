@@ -12,6 +12,7 @@ import {
 import superjson from 'superjson'
 import { routeTree } from '@/routeTree.gen'
 export type { RouterInputs, RouterOutputs } from '@web/server/api'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 function getApiUrl(pathname: string) {
   const url = new URL(import.meta.env.VITE_PUBLIC_API_URL!)
@@ -19,7 +20,7 @@ function getApiUrl(pathname: string) {
   return url.toString()
 }
 
-export const queryClient = new QueryClient()
+export const queryClient = new QueryClient({})
 
 export const api = createTRPCReact<APIRouter>({ abortOnUnmount: true })
 
@@ -55,6 +56,10 @@ export function createRouter() {
         <api.Provider client={trpcClient} queryClient={queryClient}>
           <QueryClientProvider client={queryClient}>
             {children}
+            <ReactQueryDevtools
+              position="bottom"
+              buttonPosition="bottom-left"
+            />
           </QueryClientProvider>
         </api.Provider>
       )

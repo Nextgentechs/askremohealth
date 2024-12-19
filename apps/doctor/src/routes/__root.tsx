@@ -1,15 +1,16 @@
 import { trpcQueryUtils } from '@/lib/trpc'
-import { Outlet, createRootRoute } from '@tanstack/react-router'
+import { Outlet } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/router-devtools'
 import { Toaster } from '@/components/ui/toaster'
 import { Suspense } from 'react'
 import LinearProgressBar from '@/components/linear-progress'
+import { createRootRouteWithContext } from '@tanstack/react-router'
 
 export interface RouterAppContext {
   trpcQueryUtils: typeof trpcQueryUtils
 }
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<RouterAppContext>()({
   component: RootComponent,
 })
 
@@ -17,9 +18,8 @@ function RootComponent() {
   return (
     <Suspense fallback={<LinearProgressBar />}>
       <Outlet />
-      <LinearProgressBar />
       <Toaster />
-      <TanStackRouterDevtools position="bottom-right" />
+      <TanStackRouterDevtools position="bottom-right" initialIsOpen={false} />
     </Suspense>
   )
 }
