@@ -146,7 +146,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <Logo />
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="mt-4">
         <SidebarGroup>
           <SidebarMenu>
             {data.navMain.map((item) => (

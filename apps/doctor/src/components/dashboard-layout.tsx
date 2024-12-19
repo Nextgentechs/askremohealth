@@ -14,7 +14,7 @@ import { BellDot, Moon } from 'lucide-react'
 
 function DashboardHeader() {
   return (
-    <header className="flex h-16 shrink-0 flex-row items-center justify-between gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+    <header className="flex h-16 shrink-0 flex-row items-center justify-between gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
       <div className="flex items-center gap-2 px-4">
         <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="mr-2 h-4" />
@@ -29,7 +29,7 @@ function DashboardHeader() {
 
       <div className="flex items-center gap-2 px-4">
         <Button variant={'ghost'} size={'icon'} className="rounded-full">
-          <BellDot className="" />
+          <BellDot />
         </Button>
         <Button variant={'ghost'} size={'icon'} className="rounded-full">
           <Moon />
@@ -45,7 +45,9 @@ export default function DashboardLayout() {
       <AppSidebar />
       <SidebarInset className="flex flex-col gap-4">
         <DashboardHeader />
-        <Outlet />
+        <div className="container mx-auto max-w-6xl flex-1">
+          <Outlet />
+        </div>
       </SidebarInset>
     </SidebarProvider>
   )
