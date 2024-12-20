@@ -11,8 +11,9 @@ import {
   BreadcrumbSeparator,
 } from './ui/breadcrumb'
 import { Button } from './ui/button'
-import { BellDot, Moon } from 'lucide-react'
+import { BellDot } from 'lucide-react'
 import { useRouterState } from '@tanstack/react-router'
+import { ModeToggle } from './mode-toggle'
 
 function DashboardHeader() {
   const routerState = useRouterState()
@@ -54,7 +55,7 @@ function DashboardHeader() {
           <BellDot />
         </Button>
         <Button variant={'ghost'} size={'icon'} className="rounded-full">
-          <Moon />
+          <ModeToggle />
         </Button>
       </div>
     </header>
