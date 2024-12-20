@@ -23,6 +23,8 @@ import { AuthContext } from '@/context/auth-context'
 import { Label } from '../ui/label'
 import { api } from '@/lib/trpc'
 import { useToast } from '@/hooks/use-toast'
+import { useRouter } from '@tanstack/react-router'
+import { useSearch } from '@tanstack/react-router'
 
 export const operatingHoursSchema = z.object({
   day: z.enum([
@@ -46,6 +48,10 @@ const availabilityDetailsSchema = z.object({
 export type AvailabilityDetails = z.infer<typeof availabilityDetailsSchema>
 
 export default function AvailabilityDetails() {
+  const router = useRouter()
+  const search = useSearch({ from: '/auth' })
+  const utils = api.useUtils()
+
   const { formData, prevStep } = useContext(AuthContext)
   const methods = useForm<AvailabilityDetails>({
     resolver: zodResolver(availabilityDetailsSchema),
@@ -53,26 +59,29 @@ export default function AvailabilityDetails() {
   })
   const { toast } = useToast()
 
-  const { mutate, isPending } = api.auth.doctorSignup.useMutation({
-    onSuccess: () => {
+  const { mutateAsync, isPending } = api.auth.doctorSignup.useMutation()
+
+  const onSubmit = methods.handleSubmit(async (values) => {
+    try {
+      const finalValues = { ...formData, ...values }
+      await mutateAsync(finalValues)
+      await utils.invalidate()
+      await utils.users.currentUser.refetch()
+      await router.invalidate()
+      router.navigate({ to: search.redirect })
       toast({
-        description: 'Registration successful',
+        description: 'Signup successful',
         variant: 'default',
       })
-    },
-    onError: (err) => {
+    } catch (err) {
       toast({
         description: err.message,
         variant: 'destructive',
       })
       console.error(err)
-    },
+    }
   })
 
-  const onSubmit = (values: AvailabilityDetails) => {
-    const finalValues = { ...formData, ...values }
-    mutate(finalValues)
-  }
   return (
     <Card className="m-auto w-full max-w-5xl">
       <CardHeader>
@@ -80,7 +89,7 @@ export default function AvailabilityDetails() {
         <CardDescription>Step 3/3</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-8">
+        <form onSubmit={onSubmit} className="space-y-8">
           <div className="grid w-full grid-cols-2 justify-between gap-4">
             <div>
               <Label htmlFor="appointmentDuration">
