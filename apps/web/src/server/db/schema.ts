@@ -90,6 +90,7 @@ export const patients = pgTable('patient', {
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
   emergencyContact: varchar('emergency_contact'),
+  lastAppointment: timestamp('last_appointment'),
 })
 
 export const doctors = pgTable('doctor', {

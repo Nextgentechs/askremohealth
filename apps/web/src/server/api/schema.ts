@@ -1,5 +1,15 @@
 import { z } from 'zod'
 
+export enum AppointmentStatus {
+  Scheduled = 'scheduled',
+  Pending = 'pending',
+  Completed = 'completed',
+  Cancelled = 'cancelled',
+  Rescheduled = 'rescheduled',
+  Missed = 'missed',
+  InProgress = 'in_progress',
+}
+
 export const operatingHoursSchema = z.object({
   day: z.enum([
     'Monday',
