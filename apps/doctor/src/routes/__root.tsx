@@ -1,12 +1,22 @@
 import { trpcQueryUtils } from '@/lib/trpc'
 import { Outlet } from '@tanstack/react-router'
-import { TanStackRouterDevtools } from '@tanstack/router-devtools'
 import { Toaster } from '@/components/ui/toaster'
-import { Suspense } from 'react'
+import React, { Suspense } from 'react'
 import LinearProgressBar from '@/components/linear-progress'
 import { createRootRouteWithContext } from '@tanstack/react-router'
 import { ProgressBar } from '@/components/progress-bar'
 import { ThemeProvider } from '@/context/theme-provider'
+
+const env = import.meta.env.NODE_ENV
+
+const TanStackRouterDevtools =
+  env === 'production'
+    ? () => null
+    : React.lazy(() =>
+        import('@tanstack/router-devtools').then((res) => ({
+          default: res.TanStackRouterDevtools,
+        })),
+      )
 
 export interface RouterAppContext {
   trpcQueryUtils: typeof trpcQueryUtils

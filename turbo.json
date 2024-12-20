@@ -18,7 +18,8 @@
     "POSTGRES_URL_NON_POOLING",
     "DATABASE_URL_UNPOOLED",
     "POSTGRES_PRISMA_URL",
-    "POSTGRES_URL"
+    "POSTGRES_URL",
+    "NODE_ENV"
   ],
   "tasks": {
     "build": {
