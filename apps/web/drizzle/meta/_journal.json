@@ -50,6 +50,13 @@
       "when": 1734592935690,
       "tag": "0006_cooing_mentor",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1734678251003,
+      "tag": "0007_wealthy_salo",
+      "breakpoints": true
     }
   ]
 }
