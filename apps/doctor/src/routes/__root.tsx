@@ -6,6 +6,7 @@ import { Suspense } from 'react'
 import LinearProgressBar from '@/components/linear-progress'
 import { createRootRouteWithContext } from '@tanstack/react-router'
 import { ProgressBar } from '@/components/progress-bar'
+import { ThemeProvider } from '@/context/theme-provider'
 
 export interface RouterAppContext {
   trpcQueryUtils: typeof trpcQueryUtils
@@ -17,11 +18,13 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 
 function RootComponent() {
   return (
-    <Suspense fallback={<LinearProgressBar />}>
-      <ProgressBar />
-      <Outlet />
-      <Toaster />
-      <TanStackRouterDevtools position="bottom-right" initialIsOpen={false} />
-    </Suspense>
+    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+      <Suspense fallback={<LinearProgressBar />}>
+        <ProgressBar />
+        <Outlet />
+        <Toaster />
+        <TanStackRouterDevtools position="bottom-right" initialIsOpen={false} />
+      </Suspense>
+    </ThemeProvider>
   )
 }
