@@ -1,3 +1,4 @@
+import ConsultationSettings from '@/components/profile/consultation-settings'
 import PersonalInfo from '@/components/profile/personal-info'
 import ProfessionalInfo from '@/components/profile/professional-info'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -26,7 +27,7 @@ function RouteComponent() {
           <ProfessionalInfo />
         </TabsContent>
         <TabsContent value="consultationSettings">
-          <div>Consultation settings</div>
+          <ConsultationSettings />
         </TabsContent>
       </Tabs>
     </div>
