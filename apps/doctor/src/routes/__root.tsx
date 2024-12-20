@@ -7,10 +7,8 @@ import { createRootRouteWithContext } from '@tanstack/react-router'
 import { ProgressBar } from '@/components/progress-bar'
 import { ThemeProvider } from '@/context/theme-provider'
 
-const env = import.meta.env.NODE_ENV
-
 const TanStackRouterDevtools =
-  env === 'production'
+  process.env.NODE_ENV === 'production'
     ? () => null
     : React.lazy(() =>
         import('@tanstack/router-devtools').then((res) => ({
