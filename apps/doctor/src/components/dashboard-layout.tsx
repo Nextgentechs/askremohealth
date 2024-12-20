@@ -16,9 +16,10 @@ import { useRouterState } from '@tanstack/react-router'
 
 function DashboardHeader() {
   const routerState = useRouterState()
+
   const pathSegments = useMemo(() => {
-    return routerState.location.pathname.split('/').filter(Boolean)
-  }, [routerState.location.pathname])
+    return routerState.resolvedLocation.pathname.split('/').filter(Boolean)
+  }, [routerState.resolvedLocation.pathname])
 
   const formattedPaths = useMemo(() => {
     return pathSegments.map((segment) =>
