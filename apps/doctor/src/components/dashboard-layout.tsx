@@ -66,7 +66,7 @@ export default function DashboardLayout() {
       <AppSidebar />
       <SidebarInset className="flex flex-col gap-4">
         <DashboardHeader />
-        <div className="container mx-auto max-w-6xl flex-1">
+        <div className="container mx-auto mt-4 max-w-6xl flex-1">
           <Outlet />
         </div>
       </SidebarInset>
