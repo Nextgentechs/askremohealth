@@ -97,5 +97,50 @@ export const appointmentsRouter = createTRPCRouter({
           },
         })
       }),
+
+    patients: publicProcedure
+      .input(
+        z.object({
+          page: z.number().default(1),
+          limit: z.number().default(10),
+        }),
+      )
+      .query(async ({ ctx, input }) => {
+        const offset = (input.page - 1) * input.limit
+        const patients = await ctx.db.query.appointments.findMany({
+          where: (appointment) => eq(appointment.doctorId, ctx.user!.id),
+          columns: {
+            patientId: true,
+          },
+          with: {
+            patient: {
+              columns: {
+                lastAppointment: true,
+              },
+              with: {
+                user: {
+                  columns: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    phone: true,
+                    email: true,
+                    dob: true,
+                  },
+                },
+              },
+            },
+          },
+          limit: input.limit,
+          offset,
+        })
+        return patients.map((patient) => ({
+          name: `${patient.patient.user.firstName} ${patient.patient.user.lastName}`,
+          lastAppointment: patient.patient.lastAppointment,
+          phone: patient.patient.user.phone,
+          email: patient.patient.user.email,
+          dob: patient.patient.user.dob,
+        }))
+      }),
   },
 })
