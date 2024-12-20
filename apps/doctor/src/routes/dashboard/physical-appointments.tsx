@@ -52,7 +52,7 @@ export const Route = createFileRoute('/dashboard/physical-appointments')({
   component: RouteComponent,
 })
 
-const appointmentStatusOptions = Object.values(AppointmentStatus).map(
+export const appointmentStatusOptions = Object.values(AppointmentStatus).map(
   (status) => ({
     label: status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' '),
     value: status as AppointmentStatus,
@@ -60,11 +60,12 @@ const appointmentStatusOptions = Object.values(AppointmentStatus).map(
 )
 
 function Filters() {
+  const searchParams = useSearch({ from: '/dashboard/physical-appointments' })
+  const navigate = useNavigate({ from: '/dashboard/physical-appointments' })
+
   const handleFilterChange = (values: string[]) => {
     console.log(values)
   }
-  const searchParams = useSearch({ from: '/dashboard/physical-appointments' })
-  const navigate = useNavigate({ from: '/dashboard/physical-appointments' })
   return (
     <div>
       <div className="flex w-full flex-row justify-between">
@@ -101,7 +102,7 @@ function RouteComponent() {
   return (
     <div className="flex flex-col gap-4">
       <Filters />
-      <DataTable columns={columns} data={loaderData} />
+      <DataTable columns={allAppointmentsColumns} data={loaderData} />
     </div>
   )
 }
@@ -109,7 +110,7 @@ function RouteComponent() {
 type PhysicalAppointment =
   RouterOutputs['appointments']['doctor']['listAll'][number]
 
-const columns: ColumnDef<PhysicalAppointment>[] = [
+export const allAppointmentsColumns: ColumnDef<PhysicalAppointment>[] = [
   {
     accessorKey: 'appointmentDate',
     header: 'Appointment Date',
