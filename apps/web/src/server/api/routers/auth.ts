@@ -146,6 +146,11 @@ export const authRouter = createTRPCRouter({
             path: pathname,
           })
         }
+
+        const session = await lucia.createSession(user.id, {})
+        const cookie = lucia.createSessionCookie(session.id)
+        const cookieStore = await cookies()
+        cookieStore.set(cookie.name, cookie.value, cookie.attributes)
       })
 
       return { success: true }

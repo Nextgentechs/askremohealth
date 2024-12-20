@@ -77,33 +77,31 @@ function LoginForm() {
   })
 
   const { toast } = useToast()
-  const { mutate, isPending } = api.auth.doctorLogin.useMutation({
-    onSuccess: () => {
+  const { mutateAsync, isPending } = api.auth.doctorLogin.useMutation()
+
+  const onSubmit = form.handleSubmit(async (values) => {
+    try {
+      await mutateAsync(values)
+      await utils.invalidate()
+      await utils.users.currentUser.refetch()
+      await router.invalidate()
+      router.navigate({ to: search.redirect })
       toast({
-        description: 'Login successful,redirecting...',
+        description: 'Login successful',
         variant: 'default',
       })
-      utils.invalidate()
-      utils.users.currentUser.refetch()
-      router.invalidate()
-      router.navigate({ to: search.redirect })
-    },
-    onError: (err) => {
+    } catch (err) {
       toast({
         description: err.message,
         variant: 'destructive',
       })
       console.error(err)
-    },
+    }
   })
-
-  function onSubmit(values: z.infer<typeof loginSchema>) {
-    mutate(values)
-  }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={onSubmit} className="space-y-8">
         <FormField
           control={form.control}
           name="phone"

@@ -3,6 +3,7 @@ import logo from '@/assets/logo.svg'
 import { AuthProvider } from '@/context/auth-context'
 import { ModeToggle } from '@/components/mode-toggle'
 import { z } from 'zod'
+import LinearProgressBar from '@/components/linear-progress'
 
 const searchSchema = z.object({
   redirect: z.string().default('/dashboard/upcomming-appointments'),
@@ -16,6 +17,7 @@ export const Route = createFileRoute('/auth')({
     }
   },
   component: RouteComponent,
+  pendingComponent: () => <LinearProgressBar />,
 })
 
 function RouteComponent() {
