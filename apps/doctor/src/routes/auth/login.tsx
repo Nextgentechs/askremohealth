@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useRouter, useSearch } from '@tanstack/react-router'
 
 import { Button } from '@/components/ui/button'
 import { z } from 'zod'
@@ -64,6 +64,10 @@ const loginSchema = z.object({
 })
 
 function LoginForm() {
+  const router = useRouter()
+  const search = useSearch({ from: '/auth' })
+  const utils = api.useUtils()
+
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -76,9 +80,13 @@ function LoginForm() {
   const { mutate, isPending } = api.auth.doctorLogin.useMutation({
     onSuccess: () => {
       toast({
-        description: 'Login successful',
+        description: 'Login successful,redirecting...',
         variant: 'default',
       })
+      utils.invalidate()
+      utils.users.currentUser.refetch()
+      router.invalidate()
+      router.navigate({ to: search.redirect })
     },
     onError: (err) => {
       toast({

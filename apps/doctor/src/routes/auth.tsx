@@ -1,10 +1,20 @@
-import { createFileRoute, Outlet } from '@tanstack/react-router'
+import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 import logo from '@/assets/logo.svg'
-import { Button } from '@/components/ui/button'
-import { Moon } from 'lucide-react'
 import { AuthProvider } from '@/context/auth-context'
+import { ModeToggle } from '@/components/mode-toggle'
+import { z } from 'zod'
+
+const searchSchema = z.object({
+  redirect: z.string().default('/dashboard/upcomming-appointments'),
+})
 
 export const Route = createFileRoute('/auth')({
+  validateSearch: searchSchema,
+  beforeLoad: async ({ context, search }) => {
+    if (await context.trpcQueryUtils.users.currentUser.ensureData()) {
+      throw redirect({ to: search.redirect })
+    }
+  },
   component: RouteComponent,
 })
 
@@ -23,9 +33,7 @@ function Navbar() {
   return (
     <div className="inline-flex h-fit w-full justify-between px-8 pt-5">
       <img src={logo} />
-      <Button variant={'outline'} size={'icon'} className="rounded-full shadow">
-        <Moon />
-      </Button>
+      <ModeToggle />
     </div>
   )
 }
