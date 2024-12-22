@@ -18,7 +18,7 @@ export const lucia = new Lucia(adapter, {
   sessionExpiresIn: new TimeSpan(180, 'd'),
   sessionCookie: {
     attributes: {
-      sameSite: 'strict',
+      sameSite: 'none',
       secure: process.env.NODE_ENV === 'production',
     },
   },
