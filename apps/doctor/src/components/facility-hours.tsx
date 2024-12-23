@@ -60,7 +60,7 @@ export default function FacilityHours() {
                   />
                 </div>
               ) : (
-                <div className="flex-1">
+                <div className="flex-1 text-sm">
                   {dayHours.isOpen
                     ? `${dayHours.opening} - ${dayHours.closing}`
                     : 'Closed'}
