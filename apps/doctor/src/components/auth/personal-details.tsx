@@ -101,7 +101,7 @@ export default function PersonalDetails() {
   }
 
   return (
-    <Card className="m-auto mt-10 w-full max-w-4xl md:mt-0">
+    <Card className="mx-auto my-10 w-full max-w-4xl md:my-auto">
       <CardHeader>
         <CardTitle>Personal Details</CardTitle>
         <CardDescription>Step 1/3</CardDescription>

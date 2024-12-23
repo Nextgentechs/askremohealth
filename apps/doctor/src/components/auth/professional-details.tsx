@@ -17,7 +17,7 @@ import {
 } from '../ui/select'
 import { Input } from '../ui/input'
 import { Button } from '../ui/button'
-import { ChevronDown, ChevronLeft, ChevronRight, X } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useContext, useState } from 'react'
 import { AuthContext } from '@/context/auth-context'
 import { Label } from '../ui/label'
@@ -117,14 +117,14 @@ export default function ProffesionalDetails() {
     nextStep()
   }
   return (
-    <Card className="m-auto w-full max-w-4xl">
+    <Card className="mx-auto my-10 w-full max-w-4xl md:my-auto">
       <CardHeader>
         <CardTitle>Proffesional Details</CardTitle>
         <CardDescription>Step 2/3</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-8">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2 sm:gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="specialty">Specialty</Label>
               <Select

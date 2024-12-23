@@ -85,14 +85,14 @@ export default function AvailabilityDetails() {
   })
 
   return (
-    <Card className="m-auto w-full max-w-5xl">
+    <Card className="mx-auto my-10 w-full max-w-4xl md:my-auto">
       <CardHeader>
         <CardTitle>Availability Details</CardTitle>
         <CardDescription>Step 3/3</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={onSubmit} className="space-y-8">
-          <div className="grid w-full grid-cols-2 justify-between gap-4">
+          <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2 sm:gap-4">
             <div>
               <Label htmlFor="appointmentDuration">
                 Average Appointment Duration
@@ -123,7 +123,7 @@ export default function AvailabilityDetails() {
           </div>
 
           <div className="flex w-full flex-col items-start gap-4 border-t px-2 pt-4">
-            <div className="flex flex-row items-center justify-center gap-1">
+            <div className="flex flex-row items-start justify-start gap-1">
               <Checkbox required />
               <label
                 htmlFor="terms"
