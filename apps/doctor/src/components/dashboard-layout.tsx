@@ -54,7 +54,12 @@ function DashboardHeader() {
         <Button variant={'ghost'} size={'icon'} className="rounded-full">
           <BellDot />
         </Button>
-        <Button variant={'ghost'} size={'icon'} className="rounded-full">
+        <Button
+          variant={'ghost'}
+          size={'icon'}
+          className="rounded-full"
+          asChild
+        >
           <ModeToggle />
         </Button>
       </div>
