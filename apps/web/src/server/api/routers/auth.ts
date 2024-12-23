@@ -1,4 +1,4 @@
-import { createTRPCRouter, publicProcedure } from '../trpc'
+import { createTRPCRouter, procedure, publicProcedure } from '../trpc'
 import {
   certificates,
   doctors,
@@ -162,5 +162,12 @@ export const authRouter = createTRPCRouter({
 
         return { success: true }
       }),
+
+    signOut: procedure.mutation(async ({ ctx }) => {
+      if (ctx.session) await lucia.invalidateSession(ctx.session.id)
+      const cookie = lucia.createBlankSessionCookie()
+      const cookieStore = await cookies()
+      cookieStore.set(cookie.name, cookie.value, cookie.attributes)
+    }),
   },
 })
