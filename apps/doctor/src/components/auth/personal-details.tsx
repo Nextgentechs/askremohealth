@@ -101,14 +101,14 @@ export default function PersonalDetails() {
   }
 
   return (
-    <Card className="m-auto w-full max-w-4xl">
+    <Card className="m-auto mt-10 w-full max-w-4xl md:mt-0">
       <CardHeader>
         <CardTitle>Personal Details</CardTitle>
         <CardDescription>Step 1/3</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2 sm:gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="firstName">First Name</Label>
               <Input {...register('firstName')} id="firstName" type="text" />
