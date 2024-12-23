@@ -15,6 +15,12 @@ import { ChevronDown, CloudUpload } from 'lucide-react'
 import { Checkbox } from '../ui/checkbox'
 import { Input } from '../ui/input'
 import { Badge } from '../ui/badge'
+import { FormProvider, useForm } from 'react-hook-form'
+import {
+  ProfessionalDetails,
+  professionalDetailsSchema,
+} from '../auth/professional-details'
+import { zodResolver } from '@hookform/resolvers/zod'
 
 function SubSpecialtySelect({ specialty }: { specialty: string }) {
   const [open, setOpen] = useState(false)
@@ -55,9 +61,23 @@ function SubSpecialtySelect({ specialty }: { specialty: string }) {
 }
 
 function ProfessionalInfoForm() {
-  const [selectedSpecialty, setSelectedSpecialty] = useState('')
+  const [doctor] = api.users.doctor.current.useSuspenseQuery()
+  const [selectedSpecialty, setSelectedSpecialty] = useState(
+    doctor?.specialty?.id,
+  )
   const { data: specialties } = api.specialties.listSpecialties.useQuery()
   const { data: facilities } = api.facilities.list.useQuery()
+
+  const methods = useForm<ProfessionalDetails>({
+    resolver: zodResolver(professionalDetailsSchema),
+    defaultValues: {
+      experience: doctor?.experience?.toString() ?? '0',
+      registrationNumber: doctor?.licenseNumber ?? '',
+      specialty: doctor?.specialty?.id,
+      facility: doctor?.facility?.id,
+    },
+  })
+
   return (
     <Card className="w-full shadow-sm">
       <CardHeader></CardHeader>
@@ -69,10 +89,11 @@ function ProfessionalInfoForm() {
               <Select
                 onValueChange={(value) => {
                   setSelectedSpecialty(value)
+                  methods.setValue('specialty', value)
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select" />
+                  <SelectValue placeholder={doctor?.specialty?.name} />
                 </SelectTrigger>
                 <SelectContent>
                   {specialties?.map((specialty) => (
@@ -83,46 +104,57 @@ function ProfessionalInfoForm() {
                 </SelectContent>
               </Select>
 
-              {/* <p className="text-destructive text-[0.8rem] font-medium">
+              <p className="text-destructive text-[0.8rem] font-medium">
                 {methods.formState.errors.specialty?.message}
-              </p> */}
+              </p>
             </div>
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="subSpecialty">Sub Specialty</Label>
+              <FormProvider {...methods}>
+                <SubSpecialtySelect specialty={selectedSpecialty ?? ''} />
+              </FormProvider>
 
-              <SubSpecialtySelect specialty={selectedSpecialty} />
-
-              {/* <p className="text-destructive text-[0.8rem] font-medium">
+              <p className="text-destructive text-[0.8rem] font-medium">
                 {methods.formState.errors.subSpecialty?.message}
-              </p> */}
+              </p>
             </div>
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="experience">Years of Experience</Label>
-              <Input id="experience" type="number" />
+              <Input
+                {...methods.register('experience')}
+                id="experience"
+                type="number"
+              />
 
-              {/* <p className="text-destructive text-[0.8rem] font-medium">
+              <p className="text-destructive text-[0.8rem] font-medium">
                 {methods.formState.errors.experience?.message}
-              </p> */}
+              </p>
             </div>
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="registerionNumber">
                 Medical Registration Number
               </Label>
-              <Input id="registerionNumber" type="text" />
+              <Input
+                {...methods.register('registrationNumber')}
+                id="registerionNumber"
+                type="text"
+              />
 
-              {/* <p className="text-destructive text-[0.8rem] font-medium">
+              <p className="text-destructive text-[0.8rem] font-medium">
                 {methods.formState.errors.registrationNumber?.message}
-              </p> */}
+              </p>
             </div>
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="facility">Facility</Label>
-              <Select>
+              <Select
+                onValueChange={(value) => methods.setValue('facility', value)}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select" />
+                  <SelectValue placeholder={doctor?.facility?.name} />
                 </SelectTrigger>
                 <SelectContent>
                   {facilities?.map((facility) => (
@@ -133,9 +165,9 @@ function ProfessionalInfoForm() {
                 </SelectContent>
               </Select>
 
-              {/* <p className="text-destructive text-[0.8rem] font-medium">
+              <p className="text-destructive text-[0.8rem] font-medium">
                 {methods.formState.errors.facility?.message}
-              </p> */}
+              </p>
             </div>
           </div>
 
@@ -189,7 +221,7 @@ export default function ProfessionalInfo() {
   return (
     <div className="flex flex-col gap-6">
       <ProfessionalInfoForm />
-      <RegulatoryCertificates />
+      {/* <RegulatoryCertificates /> */}
     </div>
   )
 }

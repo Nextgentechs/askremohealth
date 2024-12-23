@@ -11,5 +11,6 @@ export const Route = createFileRoute('/dashboard')({
       })
     }
   },
+
   component: DashboardLayout,
 })

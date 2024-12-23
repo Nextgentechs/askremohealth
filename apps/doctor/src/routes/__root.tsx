@@ -22,6 +22,7 @@ export interface RouterAppContext {
 
 export const Route = createRootRouteWithContext<RouterAppContext>()({
   component: RootComponent,
+  pendingComponent: () => <LinearProgressBar />,
 })
 
 function RootComponent() {

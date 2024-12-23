@@ -17,7 +17,7 @@ import { Label } from '../ui/label'
 import { Textarea } from '../ui/textarea'
 import { fileToBase64 } from '@/lib/utils'
 
-const personalDetailsSchema = z
+export const personalDetailsSchema = z
   .object({
     firstName: z
       .string()

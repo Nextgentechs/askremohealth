@@ -4,20 +4,32 @@ import { Card, CardContent, CardFooter, CardHeader } from '../ui/card'
 import { Label } from '../ui/label'
 import { Input } from '../ui/input'
 import { Textarea } from '../ui/textarea'
+import { useForm } from 'react-hook-form'
+import {
+  PersonalDetails,
+  personalDetailsSchema,
+} from '../auth/personal-details'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { api, RouterOutputs } from '@/lib/trpc'
 
-function ProfilePhoto() {
+function ProfilePhoto({
+  doctor,
+}: {
+  doctor: RouterOutputs['users']['doctor']['current']
+}) {
   return (
     <Card className="col-span-1 w-full shadow-sm">
       <CardHeader></CardHeader>
       <CardContent>
         <img
           className="size-72 rounded-full"
-          src="https://do5q0y4otbt6jaho.public.blob.vercel-storage.com/profile-picture-0019313a-9160-4621-80ce-4f55725d410c-ycFnHZ1PvU8jkdVLJy9dmhKStNYE3Y.webp"
+          src={doctor?.user.profilePicture.url}
+          alt={doctor?.user.firstName}
         />
       </CardContent>
 
       <CardFooter className="justify-between pt-6">
-        <Button className=" " variant={'outline'} size={'sm'}>
+        <Button className=" " variant={'outline'} size={'sm'} disabled>
           <Upload />
           <span>Upload New</span>
         </Button>
@@ -31,7 +43,26 @@ function ProfilePhoto() {
   )
 }
 
-function PersonalInfoForm() {
+function PersonalInfoForm({
+  doctor,
+}: {
+  doctor: RouterOutputs['users']['doctor']['current']
+}) {
+  const {
+    register,
+    formState: { errors },
+  } = useForm<PersonalDetails>({
+    resolver: zodResolver(personalDetailsSchema),
+    defaultValues: {
+      firstName: doctor?.user.firstName,
+      lastName: doctor?.user.lastName,
+      email: doctor?.user.email ?? '',
+      phone: doctor?.user.phone ?? '',
+      dob: doctor?.user.dob ? doctor.user.dob.toISOString().split('T')[0] : '',
+      bio: doctor?.bio ?? '',
+    },
+  })
+
   return (
     <Card className="col-span-2 pt-6">
       <CardContent>
@@ -39,46 +70,70 @@ function PersonalInfoForm() {
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="firstName">First Name</Label>
-              <Input id="firstName" type="text" />
+              <Input {...register('firstName')} id="firstName" type="text" />
 
-              {/* <p className="text-destructive text-[0.8rem] font-medium">
-                  {errors.firstName?.message}
-                </p> */}
+              <p className="text-destructive text-[0.8rem] font-medium">
+                {errors.firstName?.message}
+              </p>
             </div>
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="lastName">Last Name</Label>
-              <Input id="lastName" type="text" />
+              <Input {...register('lastName')} id="lastName" type="text" />
 
-              {/* <p className="text-destructive text-[0.8rem] font-medium">
-                  {errors.lastName?.message}
-                </p> */}
+              <p className="text-destructive text-[0.8rem] font-medium">
+                {errors.lastName?.message}
+              </p>
             </div>
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" />
+              <Input {...register('email')} id="email" type="email" />
 
-              {/* <p className="text-destructive text-[0.8rem] font-medium">
-                  {errors.email?.message}
-                </p> */}
+              <p className="text-destructive text-[0.8rem] font-medium">
+                {errors.email?.message}
+              </p>
             </div>
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="phone">Phone Number</Label>
-              <Input id="phone" type="tel" />
+              <Input {...register('phone')} id="phone" type="tel" />
 
-              {/* <p className="text-destructive text-[0.8rem] font-medium">
-                  {errors.phone?.message}
-                </p> */}
+              <p className="text-destructive text-[0.8rem] font-medium">
+                {errors.phone?.message}
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="password">Password</Label>
+              <Input {...register('password')} id="password" type="password" />
+
+              <p className="text-destructive text-[0.8rem] font-medium">
+                {errors.password?.message}
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="confirmPassword" className="">
+                Confirm Password
+              </Label>
+              <Input
+                {...register('confirmPassword')}
+                id="confirmPassword"
+                type="password"
+              />
+
+              <p className="text-destructive text-[0.8rem] font-medium">
+                {errors.confirmPassword?.message}
+              </p>
             </div>
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="email">Date of Birth</Label>
-              <Input id="dob" type="date" />
-              {/* <p className="text-destructive text-[0.8rem] font-medium">
-                  {errors.dob?.message}
-                </p> */}
+              <Input {...register('dob')} id="dob" type="date" />
+              <p className="text-destructive text-[0.8rem] font-medium">
+                {errors.dob?.message}
+              </p>
             </div>
 
             <div className="col-span-2 flex flex-col gap-2">
@@ -86,18 +141,15 @@ function PersonalInfoForm() {
                 Bio
               </Label>
 
-              <Textarea id="bio" />
+              <Textarea {...register('bio')} id="bio" />
 
-              {/* <p className="text-destructive text-[0.8rem] font-medium">
-                  {errors.bio?.message}
-                </p> */}
+              <p className="text-destructive text-[0.8rem] font-medium">
+                {errors.bio?.message}
+              </p>
             </div>
           </div>
 
-          <div className="flex justify-between">
-            <Button variant="outline" size={'sm'}>
-              Edit
-            </Button>
+          <div className="flex justify-end">
             <Button type="submit" size={'sm'} disabled>
               Save Changes
             </Button>
@@ -109,10 +161,12 @@ function PersonalInfoForm() {
 }
 
 export default function PersonalInfo() {
+  const [doctor] = api.users.doctor.current.useSuspenseQuery()
+
   return (
     <div className="grid grid-cols-3 gap-4">
-      <ProfilePhoto />
-      <PersonalInfoForm />
+      <ProfilePhoto doctor={doctor} />
+      <PersonalInfoForm doctor={doctor} />
     </div>
   )
 }
