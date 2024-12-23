@@ -77,7 +77,7 @@ function LoginForm() {
   })
 
   const { toast } = useToast()
-  const { mutateAsync, isPending } = api.auth.doctorLogin.useMutation()
+  const { mutateAsync, isPending } = api.auth.doctor.login.useMutation()
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {

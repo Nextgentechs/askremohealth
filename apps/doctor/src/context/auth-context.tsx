@@ -2,7 +2,7 @@ import { ReactNode } from '@tanstack/react-router'
 import React, { createContext } from 'react'
 import { RouterInputs } from '@/lib/trpc'
 
-type SignupSchema = RouterInputs['auth']['doctorSignup']
+type SignupSchema = RouterInputs['auth']['doctor']['signup']
 
 type AuthContext = {
   formData: SignupSchema
