@@ -100,9 +100,20 @@ function RouteComponent() {
     from: '/dashboard/physical-appointments',
   })
   return (
-    <div className="flex flex-col gap-4">
-      <Filters />
-      <DataTable columns={allAppointmentsColumns} data={loaderData} />
+    <div className="flex flex-col gap-6">
+      <div>
+        <h1 className="text-foreground text-xl font-semibold tracking-wide">
+          Physical Appointments
+        </h1>
+        <p className="text-muted-foreground text-sm">
+          Manage all your physical appointments here
+        </p>
+      </div>
+
+      <div className="flex flex-col gap-4">
+        <Filters />
+        <DataTable columns={allAppointmentsColumns} data={loaderData} />
+      </div>
     </div>
   )
 }
