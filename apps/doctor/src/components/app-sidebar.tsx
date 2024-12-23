@@ -23,7 +23,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 import Logo from './logo'
-import { Link, useRouterState } from '@tanstack/react-router'
+import { Link, useRouter, useRouterState } from '@tanstack/react-router'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,8 +37,20 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
 import { api } from '@/lib/trpc'
 
 export function NavUser() {
+  const router = useRouter()
   const { isMobile } = useSidebar()
   const [doctor] = api.users.doctor.current.useSuspenseQuery()
+
+  const { mutateAsync } = api.auth.doctor.signOut.useMutation()
+  const utils = api.useUtils()
+
+  const handleSignout = async () => {
+    await mutateAsync()
+    await utils.users.currentUser.refetch()
+    await utils.invalidate()
+    await router.invalidate()
+    router.navigate({ to: '/auth/login' })
+  }
 
   return (
     <SidebarMenu>
@@ -96,7 +108,7 @@ export function NavUser() {
                   My Profile
                 </DropdownMenuItem>
               </Link>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSignout}>
                 <LogOut />
                 Log out
               </DropdownMenuItem>
