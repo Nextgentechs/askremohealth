@@ -24,7 +24,6 @@ import { Label } from '../ui/label'
 import { api } from '@/lib/trpc'
 import { useToast } from '@/hooks/use-toast'
 import { useRouter } from '@tanstack/react-router'
-import { useSearch } from '@tanstack/react-router'
 
 export const operatingHoursSchema = z.object({
   day: z.enum([
@@ -49,7 +48,6 @@ export type AvailabilityDetails = z.infer<typeof availabilityDetailsSchema>
 
 export default function AvailabilityDetails() {
   const router = useRouter()
-  const search = useSearch({ from: '/auth' })
   const utils = api.useUtils()
 
   const { formData, prevStep } = useContext(AuthContext)
@@ -59,7 +57,14 @@ export default function AvailabilityDetails() {
   })
   const { toast } = useToast()
 
-  const { mutateAsync, isPending } = api.auth.doctorSignup.useMutation()
+  const { mutateAsync, isPending } = api.auth.doctor.signup.useMutation({
+    onSuccess: () => {
+      toast({
+        description: 'Signup successful,Redirecting to login ...',
+        variant: 'default',
+      })
+    },
+  })
 
   const onSubmit = methods.handleSubmit(async (values) => {
     try {
@@ -68,11 +73,7 @@ export default function AvailabilityDetails() {
       await utils.invalidate()
       await utils.users.currentUser.refetch()
       await router.invalidate()
-      router.navigate({ to: search.redirect })
-      toast({
-        description: 'Signup successful',
-        variant: 'default',
-      })
+      router.navigate({ to: '/auth/login' })
     } catch (err) {
       toast({
         description: err.message,

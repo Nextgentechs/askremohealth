@@ -7,7 +7,6 @@ import { cookies } from 'next/headers'
 import { cache } from 'react'
 import { type User as DatabaseUserAttributes } from 'src/server/db/schema'
 
-// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 const adapter = new DrizzlePostgreSQLAdapter(db, sessions, users)
 
 export const lucia = new Lucia(adapter, {
@@ -19,7 +18,7 @@ export const lucia = new Lucia(adapter, {
   sessionCookie: {
     attributes: {
       sameSite: 'none',
-      secure: process.env.NODE_ENV === 'production',
+      secure: true,
     },
   },
 })
