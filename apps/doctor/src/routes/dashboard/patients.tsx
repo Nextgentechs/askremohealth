@@ -50,15 +50,25 @@ const patientsTableColumns: ColumnDef<Patient>[] = [
 function RouteComponent() {
   const loaderData = useLoaderData({ from: '/dashboard/patients' })
   return (
-    <div className="flex flex-col gap-4">
-      <div className="w-full max-w-72">
-        <Label hidden className="sr-only">
-          Patient
-        </Label>
-        <Input placeholder="Search patient..." />
+    <div className="flex flex-col gap-6">
+      <div>
+        <h1 className="text-foreground text-xl font-semibold tracking-wide">
+          Patients
+        </h1>
+        <p className="text-muted-foreground text-sm">
+          View and manage all your patients here
+        </p>
       </div>
 
-      <DataTable columns={patientsTableColumns} data={loaderData} />
+      <div className="flex flex-col gap-4">
+        <div className="w-full max-w-72">
+          <Label hidden className="sr-only">
+            Patient
+          </Label>
+          <Input placeholder="Search patient..." />
+        </div>
+        <DataTable columns={patientsTableColumns} data={loaderData} />
+      </div>
     </div>
   )
 }

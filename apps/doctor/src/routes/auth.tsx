@@ -33,7 +33,7 @@ function RouteComponent() {
 
 function Navbar() {
   return (
-    <div className="inline-flex h-fit w-full justify-between px-8 pt-5">
+    <div className="inline-flex h-fit w-full justify-between px-2 pt-5 sm:px-4 md:px-8">
       <img src={logo} />
       <ModeToggle />
     </div>
