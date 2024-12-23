@@ -25,7 +25,7 @@ function OnlineStatus() {
         <h4 className="text-sm">Online consultation status</h4>
         <p className="text-xs text-green-500">Available</p>
       </div>
-      <Switch />
+      <Switch checked />
     </div>
   )
 }
@@ -37,7 +37,7 @@ function PhysicalStatus() {
         <h4 className="text-sm">Physical consultation status</h4>
         <p className="text-xs text-red-500">Unavailable</p>
       </div>
-      <Switch />
+      <Switch checked />
     </div>
   )
 }

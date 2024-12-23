@@ -26,7 +26,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
 import { Checkbox } from '../ui/checkbox'
 import { fileToBase64 } from '@/lib/utils'
 
-const professionalDetailsSchema = z.object({
+export const professionalDetailsSchema = z.object({
   specialty: z.string(),
   subSpecialty: z.array(z.string()),
   experience: z.string().refine((value) => parseInt(value) > 0, {

@@ -24,6 +24,7 @@ import { Label } from '../ui/label'
 import { api } from '@/lib/trpc'
 import { useToast } from '@/hooks/use-toast'
 import { useRouter } from '@tanstack/react-router'
+import { Checkbox } from '../ui/checkbox'
 
 export const operatingHoursSchema = z.object({
   day: z.enum([
@@ -60,7 +61,7 @@ export default function AvailabilityDetails() {
   const { mutateAsync, isPending } = api.auth.doctor.signup.useMutation({
     onSuccess: () => {
       toast({
-        description: 'Signup successful,Redirecting to login ...',
+        description: 'Signup successful,log in to continue!',
         variant: 'default',
       })
     },
@@ -119,6 +120,29 @@ export default function AvailabilityDetails() {
             <FormProvider {...methods}>
               <FacilityHours />
             </FormProvider>
+          </div>
+
+          <div className="flex w-full flex-col items-start gap-4 border-t px-2 pt-4">
+            <div className="flex flex-row items-center justify-center gap-1">
+              <Checkbox required />
+              <label
+                htmlFor="terms"
+                className="text-muted-foreground text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                I confirm that I am a licensed medical practitioner and all
+                information provided is accurate and up to date
+              </label>
+            </div>
+
+            <div className="flex flex-row items-center justify-center gap-1">
+              <Checkbox required />
+              <label
+                htmlFor="terms"
+                className="text-muted-foreground text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                I consent to credential verification and background checks
+              </label>
+            </div>
           </div>
 
           <div className="flex flex-row justify-between">

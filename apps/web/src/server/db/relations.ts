@@ -7,6 +7,7 @@ import {
   facilities,
   operatingHours,
   patients,
+  profilePictures,
   specialties,
   subSpecialties,
   users,
@@ -20,6 +21,10 @@ export const userRelations = relations(users, ({ one }) => ({
   patient: one(patients, {
     fields: [users.id],
     references: [patients.id],
+  }),
+  profilePicture: one(profilePictures, {
+    fields: [users.id],
+    references: [profilePictures.id],
   }),
 }))
 
