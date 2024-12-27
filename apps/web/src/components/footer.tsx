@@ -86,28 +86,6 @@ export default function Footer() {
   return (
     <footer className="w-full border-t border-border bg-gradient-to-b from-white to-secondary py-16">
       <div className="container grid grid-cols-2 justify-between gap-4 gap-y-6 md:grid-cols-4 lg:grid-cols-5">
-        {Object.entries(footerNavOptions).map(
-          ([categoryKey, categoryValue]) => (
-            <div key={categoryKey} className="flex flex-col">
-              {categoryValue.map((category, index) => (
-                <div key={index} className="flex flex-col">
-                  <h3 className="mb-2 text-lg font-semibold text-primary">
-                    {category.header}
-                  </h3>
-                  {category.links.map((link, linkIndex) => (
-                    <Link
-                      key={linkIndex}
-                      href={link.href}
-                      className="mb-1 text-sm text-muted-foreground underline-offset-4 hover:text-primary hover:underline"
-                    >
-                      {link.title}
-                    </Link>
-                  ))}
-                </div>
-              ))}
-            </div>
-          ),
-        )}
         <div className="flex flex-col items-start gap-8">
           <Logo />
 
@@ -138,6 +116,29 @@ export default function Footer() {
             &copy; {new Date().getFullYear()} Askvirtualhealthcare
           </div>
         </div>
+
+        {Object.entries(footerNavOptions).map(
+          ([categoryKey, categoryValue]) => (
+            <div key={categoryKey} className="flex flex-col justify-between">
+              {categoryValue.map((category, index) => (
+                <div key={index} className="flex flex-col">
+                  <h3 className="mb-2 text-lg font-semibold text-primary">
+                    {category.header}
+                  </h3>
+                  {category.links.map((link, linkIndex) => (
+                    <Link
+                      key={linkIndex}
+                      href={link.href}
+                      className="mb-1 text-sm text-muted-foreground underline-offset-4 hover:text-primary hover:underline"
+                    >
+                      {link.title}
+                    </Link>
+                  ))}
+                </div>
+              ))}
+            </div>
+          ),
+        )}
       </div>
     </footer>
   )

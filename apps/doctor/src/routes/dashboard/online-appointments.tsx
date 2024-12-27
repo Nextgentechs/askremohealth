@@ -56,7 +56,7 @@ function RouteComponent() {
           Online Appointments
         </h1>
         <p className="text-muted-foreground text-sm">
-          Manage all your online appointments here
+          Manage all your previous and upcomming online appointments here
         </p>
       </div>
 

@@ -36,7 +36,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
 import { api } from '@/lib/trpc'
 
-export function NavUser() {
+function NavUser() {
   const router = useRouter()
   const { isMobile } = useSidebar()
   const [doctor] = api.users.doctor.current.useSuspenseQuery()

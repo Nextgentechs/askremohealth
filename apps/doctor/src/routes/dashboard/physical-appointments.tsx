@@ -106,7 +106,7 @@ function RouteComponent() {
           Physical Appointments
         </h1>
         <p className="text-muted-foreground text-sm">
-          Manage all your physical appointments here
+          Manage all your previous and upcomming physical appointments here
         </p>
       </div>
 
