@@ -3,9 +3,9 @@
 import { Button } from './ui/button'
 import {
   Book,
+  BriefcaseMedical,
   Home,
   Hospital,
-  Info,
   LogIn,
   Menu,
   Stethoscope,
@@ -42,9 +42,10 @@ const navOptions = [
     icon: Book,
   },
   {
-    label: 'About Us',
-    href: '/about-us',
-    icon: Info,
+    label: 'For Doctors',
+    href: 'https://doctor.askvirtualhealthcare.com',
+    icon: BriefcaseMedical,
+    external: true,
   },
 ]
 
@@ -80,6 +81,9 @@ function MobileMenu() {
               key={option.label}
               href={option.href}
               className="inline-flex h-9 items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+              {...(option.external
+                ? { target: '_blank', rel: 'noopener noreferrer' }
+                : {})}
             >
               <option.icon className="size-4" />
               <span>{option.label}</span>
