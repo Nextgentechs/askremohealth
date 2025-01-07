@@ -23,7 +23,7 @@ function ProfilePhoto({
       <CardContent>
         <img
           className="size-72 rounded-full"
-          src={doctor?.user.profilePicture.url}
+          src={doctor?.user?.profilePicture?.url}
           alt={doctor?.user.firstName}
         />
       </CardContent>
