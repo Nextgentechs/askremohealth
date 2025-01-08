@@ -88,6 +88,8 @@ export const createTRPCContext = async (opts: {
   return createInnerTRPCContext({ ...session })
 }
 
+export type Context = Awaited<ReturnType<typeof createTRPCContext>>
+
 /**
  * 2. INITIALIZATION
  *
@@ -95,7 +97,7 @@ export const createTRPCContext = async (opts: {
  * ZodErrors so that you get typesafety on the frontend if your procedure fails due to validation
  * errors on the backend.
  */
-const t = initTRPC.context<typeof createTRPCContext>().create({
+const t = initTRPC.context<Context>().create({
   transformer: superjson,
   errorFormatter({ shape, error }) {
     return {

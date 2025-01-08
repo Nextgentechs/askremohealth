@@ -15,6 +15,7 @@ import sharp from 'sharp'
 import { z } from 'zod'
 import { lucia } from '@web/lib/lucia'
 import { cookies } from 'next/headers'
+import { FacilityService } from '@web/server/services/facilities'
 
 export const authRouter = createTRPCRouter({
   doctor: {
@@ -54,13 +55,15 @@ export const authRouter = createTRPCRouter({
             })
           }
 
+          const facility = await FacilityService.register(ctx, input.facility)
+
           await trx.insert(doctors).values({
             id: user.id,
             bio: input.bio,
             specialty: input.specialty,
             subSpecialties: input.subSpecialty.map((id) => ({ id })),
             experience: input.experience,
-            facility: input.facility,
+            facility: facility?.placeId,
             licenseNumber: input.registrationNumber,
           })
 
