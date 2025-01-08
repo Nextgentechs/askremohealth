@@ -1,6 +1,6 @@
 'use client'
 import Image from 'next/image'
-import React from 'react'
+import React, { useState } from 'react'
 import Doctor from 'public/assets/hero.webp'
 import {
   Select,
@@ -14,25 +14,18 @@ import { Input } from './ui/input'
 import { Button } from './ui/button'
 import { Search } from 'lucide-react'
 import { Card } from './ui/card'
-
-const counties = [
-  { name: 'Machakos', code: 'MA' },
-  { name: 'Nyeri', code: 'NY' },
-  { name: 'Kiambu', code: 'KI' },
-  { name: 'Nakuru', code: 'NA' },
-]
-
-const specialties = [
-  'Cardiology',
-  'Dermatology',
-  'Neurology',
-  'Pediatrics',
-  'Surgery',
-]
-
-const cities = ['Nairobi', 'Kisumu', 'Narok', 'Eldoret', 'Mombasa', 'Nyeri']
+import { api } from '@web/trpc/react'
 
 export function SearchForm() {
+  const [selectedCounty, setSelectedCounty] = useState<string | undefined>(
+    undefined,
+  )
+  const [specialties] = api.specialties.listSpecialties.useSuspenseQuery()
+  const [counties] = api.locations.counties.useSuspenseQuery()
+  const { data: towns } = api.locations.towns.useQuery({
+    countyCode: selectedCounty,
+  })
+
   return (
     <Card className="mx-auto flex flex-col gap-8 border shadow-sm transition-all duration-300 xl:flex-row xl:items-end xl:px-6 xl:py-8 2xl:py-10">
       <div className="grid min-w-80 gap-4 transition-all duration-300 sm:grid-cols-2 lg:grid-cols-4">
@@ -44,8 +37,8 @@ export function SearchForm() {
             </SelectTrigger>
             <SelectContent>
               {specialties.map((specialty) => (
-                <SelectItem key={specialty} value={specialty}>
-                  {specialty}
+                <SelectItem key={specialty.id} value={specialty.id}>
+                  {specialty.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -53,7 +46,10 @@ export function SearchForm() {
         </div>
         <div className="xl:w-[256px]">
           <Label htmlFor="county">In this county</Label>
-          <Select>
+          <Select
+            onValueChange={(value) => setSelectedCounty(value)}
+            value={selectedCounty}
+          >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select a county" />
             </SelectTrigger>
@@ -73,9 +69,9 @@ export function SearchForm() {
               <SelectValue placeholder="Select a city/town" />
             </SelectTrigger>
             <SelectContent>
-              {cities.map((city) => (
-                <SelectItem key={city} value={city}>
-                  {city}
+              {towns?.map((town) => (
+                <SelectItem key={town.id} value={town.id ?? ''}>
+                  {town.name}
                 </SelectItem>
               ))}
             </SelectContent>
