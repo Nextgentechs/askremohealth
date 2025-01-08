@@ -1,5 +1,5 @@
 'use client'
-
+import { NuqsAdapter } from 'nuqs/adapters/next/app'
 import { TRPCReactProvider } from '@web/trpc/react'
 import { ThemeProvider } from './theme-provider'
 
@@ -11,7 +11,9 @@ export default function Provider({ children }: { children: React.ReactNode }) {
       enableSystem={false}
       disableTransitionOnChange
     >
-      <TRPCReactProvider>{children}</TRPCReactProvider>
+      <TRPCReactProvider>
+        <NuqsAdapter>{children}</NuqsAdapter>
+      </TRPCReactProvider>
     </ThemeProvider>
   )
 }
