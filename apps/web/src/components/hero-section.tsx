@@ -20,8 +20,8 @@ export function SearchForm() {
   const [selectedCounty, setSelectedCounty] = useState<string | undefined>(
     undefined,
   )
-  const [specialties] = api.specialties.listSpecialties.useSuspenseQuery()
-  const [counties] = api.locations.counties.useSuspenseQuery()
+  const { data: specialties } = api.specialties.listSpecialties.useQuery()
+  const { data: counties } = api.locations.counties.useQuery()
   const { data: towns } = api.locations.towns.useQuery({
     countyCode: selectedCounty,
   })
@@ -36,7 +36,7 @@ export function SearchForm() {
               <SelectValue placeholder="Select a specialty" />
             </SelectTrigger>
             <SelectContent>
-              {specialties.map((specialty) => (
+              {specialties?.map((specialty) => (
                 <SelectItem key={specialty.id} value={specialty.id}>
                   {specialty.name}
                 </SelectItem>
@@ -54,7 +54,7 @@ export function SearchForm() {
               <SelectValue placeholder="Select a county" />
             </SelectTrigger>
             <SelectContent>
-              {counties.map((county) => (
+              {counties?.map((county) => (
                 <SelectItem key={county.code} value={county.code}>
                   {county.name}
                 </SelectItem>

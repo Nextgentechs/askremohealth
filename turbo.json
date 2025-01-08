@@ -19,7 +19,8 @@
     "DATABASE_URL_UNPOOLED",
     "POSTGRES_PRISMA_URL",
     "POSTGRES_URL",
-    "NODE_ENV"
+    "NODE_ENV",
+    "GOOGLE_API_KEY"
   ],
   "tasks": {
     "build": {
