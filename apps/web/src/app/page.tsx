@@ -1,10 +1,10 @@
-import HeroSection, { SearchForm } from '@web/components/hero-section'
+import HeroSection from '@web/components/hero-section'
 import HowItWorks from '@web/components/how-it-works'
 import MedicalSpecialist from '@web/components/medical-specialists'
 import LatestArticles from '@web/components/latest-articles'
 import TopSpecialists from '@web/components/top-specialists'
 import WhatPatientsSay from '@web/components/what-patients-say'
-
+import { SearchForm } from '@web/components/search-form'
 export default async function Home() {
   return (
     <main className="h-full w-full">

@@ -98,7 +98,7 @@ function MobileMenu() {
 
 export default function NavigationBar() {
   return (
-    <div className="flex w-full flex-row items-center justify-between">
+    <div className="flex w-full flex-row items-center justify-between lg:px-5">
       <Logo />
 
       <NavigationMenu className="hidden list-none gap-1 xl:flex">
