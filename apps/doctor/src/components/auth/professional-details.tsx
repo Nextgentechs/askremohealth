@@ -110,7 +110,12 @@ export default function ProffesionalDetails() {
   })
 
   const [specialties] = api.specialties.listSpecialties.useSuspenseQuery()
-  const [facilities] = api.facilities.list.useSuspenseQuery()
+  const [facilities] = api.facilities.findByLocation.useSuspenseQuery({
+    location: {
+      lat: formData.town.latitude,
+      lng: formData.town.longitude,
+    },
+  })
 
   const onSubmit = (values: ProfessionalDetails) => {
     updateFormData(values)
@@ -222,8 +227,8 @@ export default function ProffesionalDetails() {
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent>
-                  {facilities.map((facility) => (
-                    <SelectItem key={facility.id} value={facility.id}>
+                  {facilities?.map((facility) => (
+                    <SelectItem key={facility.id} value={facility.id ?? ''}>
                       {facility.name}
                     </SelectItem>
                   ))}
