@@ -1,4 +1,10 @@
 DO $$ BEGIN
+ CREATE TYPE "public"."appointment_type" AS ENUM('online', 'physical');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
  CREATE TYPE "public"."appointment_status" AS ENUM('scheduled', 'pending', 'completed', 'cancelled', 'rescheduled', 'missed', 'in_progress');
 EXCEPTION
  WHEN duplicate_object THEN null;
@@ -27,8 +33,9 @@ CREATE TABLE IF NOT EXISTS "appointment" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"doctor_id" uuid NOT NULL,
 	"patient_id" uuid NOT NULL,
-	"facility_id" uuid NOT NULL,
+	"facility_id" varchar NOT NULL,
 	"appointment_date" timestamp NOT NULL,
+	"type" "appointment_type" NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp NOT NULL,
 	"notes" varchar,
@@ -40,9 +47,9 @@ CREATE TABLE IF NOT EXISTS "certificate" (
 	"doctor_id" uuid NOT NULL,
 	"name" varchar NOT NULL,
 	"url" varchar NOT NULL,
-	"issued_by" varchar NOT NULL,
-	"issued_at" timestamp NOT NULL,
-	"expiry_date" timestamp NOT NULL
+	"issued_by" varchar,
+	"issued_at" timestamp,
+	"expiry_date" timestamp
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "doctor" (
@@ -51,19 +58,20 @@ CREATE TABLE IF NOT EXISTS "doctor" (
 	"sub_specialties" jsonb DEFAULT '[]'::jsonb,
 	"experience" integer,
 	"registration_number" varchar,
-	"hospital_id" uuid,
+	"hospital_id" varchar,
 	"bio" varchar
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "facility" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"place_id" varchar PRIMARY KEY NOT NULL,
 	"name" varchar NOT NULL,
+	"location" jsonb,
+	"address" varchar NOT NULL,
 	"county" varchar NOT NULL,
 	"town" varchar NOT NULL,
-	"address" varchar NOT NULL,
 	"phone" varchar,
-	"email" varchar,
 	"website" varchar,
+	"verified" boolean DEFAULT false,
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
@@ -79,16 +87,23 @@ CREATE TABLE IF NOT EXISTS "notification" (
 CREATE TABLE IF NOT EXISTS "operating_hours" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"doctor_id" uuid NOT NULL,
-	"day" "week_day" NOT NULL,
-	"opening" time NOT NULL,
-	"closing" time NOT NULL,
+	"schedule" jsonb DEFAULT '[]'::jsonb,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "patient" (
 	"id" uuid PRIMARY KEY NOT NULL,
-	"emergency_contact" varchar
+	"emergency_contact" varchar,
+	"last_appointment" timestamp
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "profile_picture" (
+	"id" uuid PRIMARY KEY NOT NULL,
+	"url" varchar NOT NULL,
+	"path" varchar NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "review" (
@@ -132,10 +147,10 @@ CREATE TABLE IF NOT EXISTS "user" (
 	"dob" timestamp,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp NOT NULL,
+	"is_admin" boolean DEFAULT false,
 	CONSTRAINT "user_phone_unique" UNIQUE("phone")
 );
 --> statement-breakpoint
-DROP TABLE "askvirtualhealthcare_post";--> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "appointment_log" ADD CONSTRAINT "appointment_log_appointment_id_appointment_id_fk" FOREIGN KEY ("appointment_id") REFERENCES "public"."appointment"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
@@ -155,7 +170,7 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "appointment" ADD CONSTRAINT "appointment_facility_id_facility_id_fk" FOREIGN KEY ("facility_id") REFERENCES "public"."facility"("id") ON DELETE cascade ON UPDATE no action;
+ ALTER TABLE "appointment" ADD CONSTRAINT "appointment_facility_id_facility_place_id_fk" FOREIGN KEY ("facility_id") REFERENCES "public"."facility"("place_id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -179,7 +194,7 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "doctor" ADD CONSTRAINT "doctor_hospital_id_facility_id_fk" FOREIGN KEY ("hospital_id") REFERENCES "public"."facility"("id") ON DELETE set null ON UPDATE no action;
+ ALTER TABLE "doctor" ADD CONSTRAINT "doctor_hospital_id_facility_place_id_fk" FOREIGN KEY ("hospital_id") REFERENCES "public"."facility"("place_id") ON DELETE set null ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -198,6 +213,12 @@ END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "patient" ADD CONSTRAINT "patient_id_user_id_fk" FOREIGN KEY ("id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "profile_picture" ADD CONSTRAINT "profile_picture_id_user_id_fk" FOREIGN KEY ("id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;

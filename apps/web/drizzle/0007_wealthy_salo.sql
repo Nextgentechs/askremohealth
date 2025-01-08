@@ -1,1 +1,0 @@
-ALTER TABLE "patient" ADD COLUMN "last_appointment" timestamp;
