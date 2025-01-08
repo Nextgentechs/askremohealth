@@ -1,6 +1,6 @@
 import DoctorCard from '@web/components/doctor-card'
 import DoctorFilters from '@web/components/doctor-filters'
-import { SearchForm } from '@web/components/hero-section'
+import { SearchForm } from '@web/components/search-form'
 import {
   Breadcrumb,
   BreadcrumbItem,
