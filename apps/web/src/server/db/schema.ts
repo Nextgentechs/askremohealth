@@ -106,7 +106,7 @@ export const doctors = pgTable('doctor', {
     .default([]),
   experience: integer('experience'),
   licenseNumber: varchar('registration_number'),
-  facility: uuid('hospital_id').references(() => facilities.id, {
+  facility: varchar('hospital_id').references(() => facilities.placeId, {
     onDelete: 'set null',
   }),
   bio: varchar('bio'),
@@ -136,14 +136,15 @@ export const certificates = pgTable('certificate', {
 })
 
 export const facilities = pgTable('facility', {
-  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  placeId: varchar('place_id').primaryKey(),
   name: varchar('name').notNull(),
+  location: jsonb('location').$type<{ lat: number; lng: number }>(),
+  address: varchar('address').notNull(),
   county: varchar('county').notNull(),
   town: varchar('town').notNull(),
-  address: varchar('address').notNull(),
   phone: varchar('phone'),
-  email: varchar('email'),
   website: varchar('website'),
+  verified: boolean('verified').default(false),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 })
 
@@ -180,9 +181,9 @@ export const appointments = pgTable('appointment', {
   patientId: uuid('patient_id')
     .notNull()
     .references(() => patients.id, { onDelete: 'cascade' }),
-  facilityId: uuid('facility_id')
+  facility: varchar('facility_id')
     .notNull()
-    .references(() => facilities.id, { onDelete: 'cascade' }),
+    .references(() => facilities.placeId, { onDelete: 'cascade' }),
   appointmentDate: timestamp('appointment_date').notNull(),
   type: appointmentTypesEnum('type').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
