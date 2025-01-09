@@ -1,10 +1,9 @@
 'use client'
 
-import React, { Fragment, useState } from 'react'
+import React, { useState } from 'react'
 import { Card } from './ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
-import { StarRating } from './star-rating'
-import { Banknote, Hospital, MapPin, Stethoscope } from 'lucide-react'
+import { Stethoscope } from 'lucide-react'
 import {
   Carousel,
   CarouselContent,
@@ -24,6 +23,7 @@ import { api, type RouterOutputs } from '@web/trpc/react'
 import { useDoctorSearchParams } from './search-form'
 import { getScheduleForWeek } from '@web/lib/utils'
 import { Skeleton } from './ui/skeleton'
+import DoctorDetails from './doctor-details'
 
 type ScheduleDay = {
   date: Date
@@ -37,88 +37,13 @@ type ScheduleDay = {
 export type OperatingHours =
   RouterOutputs['doctors']['list']['doctors'][number]['operatingHours'][number]
 
-function DoctorDetails({
-  doctor,
+function TimeSlotCard({
+  days,
+  doctorId,
 }: {
-  doctor: RouterOutputs['doctors']['list']['doctors'][number]
+  days: ScheduleDay[]
+  doctorId: string
 }) {
-  return (
-    <div className="flex w-full max-w-xs flex-col gap-6">
-      <div className="flex flex-row gap-3">
-        <Avatar className="size-24 shrink-0 md:hidden md:size-28">
-          <AvatarImage src={doctor.user.profilePicture?.url} />
-          <AvatarFallback>
-            {doctor.user.firstName.charAt(0)}
-            {doctor.user.lastName.charAt(0)}
-          </AvatarFallback>
-        </Avatar>
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-col items-start gap-0.5">
-            <Link
-              href={`/doctors/${doctor.id}`}
-              className="font-medium text-primary underline-offset-4 hover:underline"
-            >
-              {doctor.title ?? 'Dr'}. {doctor.user.firstName}{' '}
-              {doctor.user.lastName}
-            </Link>
-            <p className="break-words text-muted-foreground">
-              {doctor.specialty?.name}
-            </p>
-          </div>
-          <div className="flex flex-row gap-2">
-            <StarRating
-              totalStars={5}
-              initialRating={doctor.reviewStats.averageRating}
-              readOnly
-            />
-            <span className="text-sm tracking-wide text-muted-foreground">
-              ({doctor.reviewStats.totalReviews} Reviews)
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-row items-start gap-2 text-sm font-normal">
-          <Stethoscope className="size-5 shrink-0" />
-          <div>
-            <span className="">Specialized in</span>{' '}
-            {doctor.subSpecialties.map((subspecialty, index) => (
-              <Fragment key={subspecialty.id}>
-                <Link
-                  href={``}
-                  className="text-sm text-primary underline-offset-4 hover:underline"
-                >
-                  {subspecialty.name}
-                </Link>
-                {index < doctor.subSpecialties.length - 1 && ', '}
-              </Fragment>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex flex-row items-start gap-2 text-sm font-normal">
-          <Hospital className="size-5 shrink-0" />
-          <span className="break-words">{doctor.facility?.name}</span>
-        </div>
-
-        <div className="flex flex-row items-start gap-2 text-sm font-normal">
-          <MapPin className="size-5 shrink-0" />
-          <span className="break-words">{doctor.facility?.address}</span>
-        </div>
-
-        <div className="flex flex-row items-start gap-2 text-sm font-normal">
-          <Banknote className="size-5 shrink-0" />
-          <span className="break-words">
-            Consultation Fee: Ksh. {doctor.consultationFee ?? 'N/A'}
-          </span>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function TimeSlotCard({ days }: { days: ScheduleDay[] }) {
   const [showMore, setShowMore] = useState<Record<number, boolean>>({})
 
   return (
@@ -137,7 +62,7 @@ function TimeSlotCard({ days }: { days: ScheduleDay[] }) {
               .slice(0, showMore[dayIndex] ? undefined : 5)
               .map((slot, index) => (
                 <Link
-                  href={'/'}
+                  href={`/doctor/${doctorId}/book?date=${day.date.toISOString()}&time=${slot.time}`}
                   className={`${slot.available ? 'hover:underline' : 'cursor-not-allowed line-through'} inline-flex h-fit items-center justify-center p-0 text-xs font-medium text-primary underline-offset-4 transition-colors`}
                   key={index}
                 >
@@ -176,8 +101,10 @@ function TimeSlotCard({ days }: { days: ScheduleDay[] }) {
 
 function TimeSlotCarousel({
   operatingHours,
+  doctorId,
 }: {
   operatingHours: OperatingHours[]
+  doctorId: string
 }) {
   const schedule = getScheduleForWeek(operatingHours)
 
@@ -196,7 +123,7 @@ function TimeSlotCarousel({
         <CarouselContent>
           {pairedDays.map((dayPair, index) => (
             <CarouselItem key={index}>
-              <TimeSlotCard days={dayPair} />
+              <TimeSlotCard days={dayPair} doctorId={doctorId} />
             </CarouselItem>
           ))}
         </CarouselContent>
@@ -232,8 +159,8 @@ function EmptyDoctors() {
   )
 }
 
-export default function DoctorList() {
-  const [searchParams, setSearchParams] = useDoctorSearchParams()
+function useDoctorList() {
+  const [searchParams] = useDoctorSearchParams()
   const page = Number(searchParams.page)
 
   const transformedExperiences = searchParams.experiences?.map((range) => {
@@ -247,7 +174,7 @@ export default function DoctorList() {
     }
   })
 
-  const { data, isLoading } = api.doctors.list.useQuery({
+  return api.doctors.list.useQuery({
     county: searchParams.county ?? undefined,
     town: searchParams.town ?? undefined,
     query: searchParams.query ?? undefined,
@@ -260,6 +187,12 @@ export default function DoctorList() {
     page,
     limit: 10,
   })
+}
+
+export default function DoctorList() {
+  const [searchParams, setSearchParams] = useDoctorSearchParams()
+  const { data, isLoading } = useDoctorList()
+  const page = Number(searchParams.page)
   const totalPages = Math.ceil((data?.count ?? 0) / 10)
 
   if (isLoading) {
@@ -293,7 +226,10 @@ export default function DoctorList() {
             </Avatar>
             <DoctorDetails doctor={doctor} />
           </div>
-          <TimeSlotCarousel operatingHours={doctor.operatingHours} />
+          <TimeSlotCarousel
+            operatingHours={doctor.operatingHours}
+            doctorId={doctor.id}
+          />
         </Card>
       ))}
 
