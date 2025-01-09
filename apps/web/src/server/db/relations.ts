@@ -46,6 +46,7 @@ export const doctorRelations = relations(doctors, ({ one, many }) => ({
   certificates: many(certificates),
   operatingHours: many(operatingHours),
   appointments: many(appointments),
+  reviews: many(reviews),
 }))
 
 export const patientRelations = relations(patients, ({ one, many }) => ({
@@ -117,5 +118,9 @@ export const reviewRelations = relations(reviews, ({ one }) => ({
   appointment: one(appointments, {
     fields: [reviews.appointmentId],
     references: [appointments.id],
+  }),
+  doctor: one(doctors, {
+    fields: [reviews.doctorId],
+    references: [doctors.id],
   }),
 }))
