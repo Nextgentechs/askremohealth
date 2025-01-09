@@ -5,7 +5,7 @@ import { type Context } from '../api/trpc'
 
 const googleMapsClient = new Client({})
 
-export class FacilityService {
+export class Facility {
   static async register(ctx: Context, placeId: string) {
     const existingFacility = await ctx.db.query.facilities.findFirst({
       where: (f, { eq }) => eq(f.placeId, placeId),

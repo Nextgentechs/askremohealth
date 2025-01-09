@@ -271,4 +271,58 @@ export const doctorsRouter = createTRPCRouter({
         count: totalCount[0]?.value ?? 0,
       }
     }),
+  details: publicProcedure.input(z.string()).query(async ({ ctx, input }) => {
+    const doctor = await ctx.db.query.doctors.findFirst({
+      where: eq(doctorsTable.id, input),
+      with: {
+        user: {
+          columns: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+          with: {
+            profilePicture: true,
+          },
+        },
+        facility: {
+          columns: {
+            placeId: true,
+            name: true,
+            address: true,
+            town: true,
+            county: true,
+          },
+        },
+        specialty: true,
+        operatingHours: true,
+        reviews: true,
+      },
+    })
+
+    const subSpecialties = await ctx.db.query.subSpecialties.findMany({
+      where: (subSpecialty, { inArray }) =>
+        inArray(
+          subSpecialty.id,
+          (doctor?.subSpecialties as Array<{ id: string }>).map((s) => s.id),
+        ),
+    })
+
+    const reviews = doctor?.reviews
+      .map((r) => r.rating)
+      .filter((r) => r !== null)
+
+    const averageRating = reviews?.length
+      ? reviews.reduce((acc, rating) => acc + rating, 0) / reviews.length
+      : 0
+
+    return {
+      ...doctor,
+      subSpecialties,
+      reviewStats: {
+        averageRating,
+        totalReviews: reviews?.length ?? 0,
+      },
+    }
+  }),
 })
