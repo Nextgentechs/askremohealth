@@ -1,0 +1,1 @@
+ALTER TABLE "operating_hours" ADD COLUMN "consultation_duration" integer;

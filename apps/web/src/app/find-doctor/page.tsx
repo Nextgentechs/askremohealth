@@ -1,5 +1,5 @@
-import DoctorCard from '@web/components/doctor-card'
 import DoctorFilters from '@web/components/doctor-filters'
+import DoctorList from '@web/components/doctor-list'
 import { SearchForm } from '@web/components/search-form'
 import {
   Breadcrumb,
@@ -9,15 +9,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@web/components/ui/breadcrumb'
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from '@web/components/ui/pagination'
 import React from 'react'
 
 export default function FindDoctor() {
@@ -41,28 +32,7 @@ export default function FindDoctor() {
       <div className="mb-10 flex flex-row gap-10 2xl:px-2">
         <DoctorFilters />
 
-        <div className="flex w-full flex-col gap-6">
-          {Array.from({ length: 10 }).map((_, index) => (
-            <DoctorCard key={index} />
-          ))}
-
-          <Pagination className="py-5">
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious href="#" />
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationLink href="#">1</PaginationLink>
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationEllipsis />
-              </PaginationItem>
-              <PaginationItem>
-                <PaginationNext href="#" />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
+        <DoctorList />
       </div>
     </main>
   )
