@@ -188,9 +188,6 @@ export const appointments = pgTable('appointment', {
   patientId: uuid('patient_id')
     .notNull()
     .references(() => patients.id, { onDelete: 'cascade' }),
-  facility: varchar('facility_id')
-    .notNull()
-    .references(() => facilities.placeId, { onDelete: 'cascade' }),
   appointmentDate: timestamp('appointment_date').notNull(),
   type: appointmentTypesEnum('type').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -215,6 +212,9 @@ export const reviews = pgTable('review', {
   appointmentId: uuid('appointment_id')
     .notNull()
     .references(() => appointments.id, { onDelete: 'cascade' }),
+  doctorId: uuid('doctor_id').references(() => doctors.id, {
+    onDelete: 'cascade',
+  }),
   rating: integer('rating').notNull(),
   comment: varchar('comment'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
