@@ -29,7 +29,7 @@ type FilterInput = {
   town?: string
 }
 
-export class DoctorService {
+export class Doctors {
   static buildDoctorFilters(input: FilterInput) {
     return or(
       input.specialty ? eq(doctorsTable.specialty, input.specialty) : undefined,
