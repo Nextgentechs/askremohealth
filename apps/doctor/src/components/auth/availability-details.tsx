@@ -17,7 +17,7 @@ import {
 } from '../ui/select'
 import FacilityHours from '../facility-hours'
 import { Button } from '../ui/button'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Loader2 } from 'lucide-react'
 import { useContext } from 'react'
 import { AuthContext } from '@/context/auth-context'
 import { Label } from '../ui/label'
@@ -25,6 +25,7 @@ import { api } from '@/lib/trpc'
 import { useToast } from '@/hooks/use-toast'
 import { useRouter } from '@tanstack/react-router'
 import { Checkbox } from '../ui/checkbox'
+import { Input } from '../ui/input'
 
 export const operatingHoursSchema = z.object({
   day: z.enum([
@@ -42,6 +43,7 @@ export const operatingHoursSchema = z.object({
 })
 
 const availabilityDetailsSchema = z.object({
+  consultationFee: z.string(),
   appointmentDuration: z.string(),
   operatingHours: z.array(operatingHoursSchema),
 })
@@ -93,28 +95,43 @@ export default function AvailabilityDetails() {
       <CardContent>
         <form onSubmit={onSubmit} className="space-y-8">
           <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2 sm:gap-4">
-            <div>
-              <Label htmlFor="appointmentDuration">
-                Average Appointment Duration
-              </Label>
-              <Select
-                onValueChange={(value) =>
-                  methods.setValue('appointmentDuration', value)
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="30">30 minutes</SelectItem>
-                  <SelectItem value="45">45 minutes</SelectItem>
-                </SelectContent>
-              </Select>
-              {methods.formState.errors.appointmentDuration && (
+            <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="consultationFee">Consultation Fee (Ksh.)</Label>
+                <Input
+                  {...methods.register('consultationFee')}
+                  id="consultationFee"
+                  type="number"
+                />
+
                 <p className="text-destructive text-[0.8rem] font-medium">
-                  {methods.formState.errors.appointmentDuration.message}
+                  {methods.formState.errors.consultationFee?.message}
                 </p>
-              )}
+              </div>
+
+              <div>
+                <Label htmlFor="appointmentDuration">
+                  Average Appointment Duration
+                </Label>
+                <Select
+                  onValueChange={(value) =>
+                    methods.setValue('appointmentDuration', value)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="30">30 minutes</SelectItem>
+                    <SelectItem value="45">45 minutes</SelectItem>
+                  </SelectContent>
+                </Select>
+                {methods.formState.errors.appointmentDuration && (
+                  <p className="text-destructive text-[0.8rem] font-medium">
+                    {methods.formState.errors.appointmentDuration.message}
+                  </p>
+                )}
+              </div>
             </div>
 
             <FormProvider {...methods}>
@@ -155,10 +172,14 @@ export default function AvailabilityDetails() {
               <span>Back</span>
             </Button>
             <Button type="submit">
-              <span>
-                {' '}
-                {isPending ? 'Processing...' : 'Complete Registration'}
-              </span>
+              {isPending ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Processing...
+                </span>
+              ) : (
+                <span>Complete Registration</span>
+              )}
             </Button>
           </div>
         </form>

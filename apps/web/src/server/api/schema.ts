@@ -26,6 +26,7 @@ export const operatingHoursSchema = z.object({
 })
 
 export const doctorSignupSchema = z.object({
+  title: z.string().optional(),
   firstName: z.string(),
   lastName: z.string(),
   email: z.string().email().optional(),
@@ -39,8 +40,10 @@ export const doctorSignupSchema = z.object({
   experience: z.string().transform((val) => parseInt(val)),
   facility: z.string(),
   registrationNumber: z.string(),
-  appointmentDuration: z.string(),
+  appointmentDuration: z.string().transform((val) => parseInt(val)),
   operatingHours: z.array(operatingHoursSchema),
   medicalLicense: z.string().optional(),
   profilePicture: z.string().optional(),
+  consultationFee: z.string().transform((val) => parseInt(val)),
+  gender: z.enum(['male', 'female']).optional(),
 })

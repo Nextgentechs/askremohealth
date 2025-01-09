@@ -65,11 +65,15 @@ export const authRouter = createTRPCRouter({
             experience: input.experience,
             facility: facility?.placeId,
             licenseNumber: input.registrationNumber,
+            gender: input.gender,
+            title: input.title,
+            consultationFee: input.consultationFee,
           })
 
           await trx.insert(operatingHours).values({
             doctorId: user.id,
             schedule: input.operatingHours,
+            consultationDuration: input.appointmentDuration,
           })
 
           if (input.medicalLicense) {
