@@ -25,12 +25,16 @@ export class FacilityService {
           'formatted_phone_number',
           'website',
           'address_components',
+          'types',
         ],
         key: env.GOOGLE_MAPS_API_KEY,
       },
     })
 
     const place = details.data.result
+
+    const type = place.types?.[0] ?? null
+
     const addressComponents = place.address_components ?? []
 
     const county =
@@ -52,6 +56,7 @@ export class FacilityService {
       .values({
         name: place.name ?? '',
         placeId,
+        type,
         location: place.geometry?.location ?? null,
         address: place.formatted_address ?? '',
         county,
@@ -68,23 +73,60 @@ export class FacilityService {
     location: { lat: number; lng: number },
     radius: number,
   ) {
-    const nearbyPlaces = await googleMapsClient.placesNearby({
+    const hospitalPlaces = await googleMapsClient.placesNearby({
       params: {
         location,
         radius,
+        type: 'hospital',
+        key: env.GOOGLE_MAPS_API_KEY,
+      },
+    })
+
+    const healthPlaces = await googleMapsClient.placesNearby({
+      params: {
+        location,
+        radius,
+        keyword: 'clinic|medical center|laboratory|health center',
         type: 'health',
         key: env.GOOGLE_MAPS_API_KEY,
       },
     })
 
-    return nearbyPlaces.data.results.map((place) => ({
+    const allPlaces = [
+      ...hospitalPlaces.data.results,
+      ...healthPlaces.data.results,
+    ]
+
+    const uniquePlaces = Array.from(
+      new Map(allPlaces.map((place) => [place.place_id, place])).values(),
+    )
+
+    const healthcareTypes = new Set([
+      'hospital',
+      'doctor',
+      'health',
+      'clinic',
+      'medical_clinic',
+      'dentist',
+      'physiotherapist',
+      'pharmacy',
+      'laboratory',
+      'medical_office',
+      'healthcare',
+    ])
+
+    const filteredPlaces = uniquePlaces.filter((place) =>
+      place?.types?.some((type) => healthcareTypes.has(type)),
+    )
+
+    return filteredPlaces.map((place) => ({
       id: place.place_id,
       name: place.name,
       address: place.vicinity,
       location: place.geometry?.location,
       rating: place.rating ?? null,
       userRatingsTotal: place.user_ratings_total ?? 0,
-      types: place.types,
+      types: place?.types?.filter((type) => healthcareTypes.has(type)),
       openNow: place.opening_hours?.open_now,
       photos: place.photos?.map((photo) => photo.photo_reference),
     }))
