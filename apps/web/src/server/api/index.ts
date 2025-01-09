@@ -6,6 +6,7 @@ import { facilitiesRouter } from './routers/facilities'
 import { appointmentsRouter } from './routers/appointments'
 import { usersRouter } from './routers/users'
 import { locationsRouter } from './routers/location'
+import { doctorsRouter } from './routers/doctors'
 
 /**
  * This is the primary router for your server.
@@ -19,6 +20,7 @@ export const appRouter = createTRPCRouter({
   appointments: appointmentsRouter,
   users: usersRouter,
   locations: locationsRouter,
+  doctors: doctorsRouter,
 })
 
 // export type definition of API

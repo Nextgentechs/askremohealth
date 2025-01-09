@@ -15,7 +15,12 @@ import { Input } from './ui/input'
 import { Button } from './ui/button'
 import { Search } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { parseAsArrayOf, parseAsString, useQueryStates } from 'nuqs'
+import {
+  parseAsArrayOf,
+  parseAsString,
+  parseAsInteger,
+  useQueryStates,
+} from 'nuqs'
 
 export function useDoctorSearchParams() {
   return useQueryStates({
@@ -27,6 +32,7 @@ export function useDoctorSearchParams() {
     experiences: parseAsArrayOf(parseAsString),
     genders: parseAsArrayOf(parseAsString),
     entities: parseAsArrayOf(parseAsString),
+    page: parseAsInteger.withDefault(1),
   })
 }
 
