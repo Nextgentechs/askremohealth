@@ -25,8 +25,19 @@ import { api } from '@/lib/trpc'
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
 import { Checkbox } from '../ui/checkbox'
 import { fileToBase64 } from '@/lib/utils'
+import { Skeleton } from '../ui/skeleton'
 
 export const professionalDetailsSchema = z.object({
+  county: z.string().min(1, { message: 'County is required' }),
+  town: z
+    .object({
+      id: z.string().min(1, { message: 'Town is required' }),
+      latitude: z.number(),
+      longitude: z.number(),
+    })
+    .refine((data) => data.latitude !== 0 && data.longitude !== 0, {
+      message: 'Town is required',
+    }),
   specialty: z.string(),
   subSpecialty: z.array(z.string()),
   experience: z.string().refine((value) => parseInt(value) > 0, {
@@ -50,14 +61,27 @@ export const professionalDetailsSchema = z.object({
 })
 export type ProfessionalDetails = z.infer<typeof professionalDetailsSchema>
 
+function SelectSkeleton() {
+  return (
+    <div className="p-2">
+      <Skeleton className="mb-2 h-4 w-full rounded-sm" />
+      <Skeleton className="mb-2 h-4 w-full rounded-sm" />
+      <Skeleton className="mb-2 h-4 w-full rounded-sm" />
+      <Skeleton className="mb-2 h-4 w-full rounded-sm" />
+      <Skeleton className="h-4 w-full rounded-sm" />
+    </div>
+  )
+}
+
 function SubSpecialtySelect({ specialty }: { specialty: string }) {
   const [open, setOpen] = useState(false)
   const { setValue, watch } = useFormContext<ProfessionalDetails>()
   const selectedSubSpecialties = watch('subSpecialty')
 
-  const { data: subspecialties } = api.specialties.listSubSpecialties.useQuery({
-    specialityId: specialty,
-  })
+  const { data: subspecialties, isPending } =
+    api.specialties.listSubSpecialties.useQuery({
+      specialityId: specialty,
+    })
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -75,25 +99,31 @@ function SubSpecialtySelect({ specialty }: { specialty: string }) {
       </PopoverTrigger>
       <PopoverContent className="w-full">
         <div className="flex flex-col">
-          {subspecialties?.map((option) => (
-            <div
-              className="mb-1 flex w-full cursor-pointer flex-row gap-4 text-sm"
-              key={option.id}
-            >
-              <Checkbox
-                checked={selectedSubSpecialties.includes(option.id)}
-                onCheckedChange={(checked) => {
-                  setValue(
-                    'subSpecialty',
-                    checked
-                      ? [...selectedSubSpecialties, option.id]
-                      : selectedSubSpecialties.filter((id) => id !== option.id),
-                  )
-                }}
-              />
-              <span> {option.name}</span>
-            </div>
-          ))}
+          {isPending ? (
+            <SelectSkeleton />
+          ) : (
+            subspecialties?.map((option) => (
+              <div
+                className="mb-1 flex w-full cursor-pointer flex-row gap-4 text-sm"
+                key={option.id}
+              >
+                <Checkbox
+                  checked={selectedSubSpecialties.includes(option.id)}
+                  onCheckedChange={(checked) => {
+                    setValue(
+                      'subSpecialty',
+                      checked
+                        ? [...selectedSubSpecialties, option.id]
+                        : selectedSubSpecialties.filter(
+                            (id) => id !== option.id,
+                          ),
+                    )
+                  }}
+                />
+                <span> {option.name}</span>
+              </div>
+            ))
+          )}
         </div>
       </PopoverContent>
     </Popover>
@@ -102,6 +132,7 @@ function SubSpecialtySelect({ specialty }: { specialty: string }) {
 
 export default function ProffesionalDetails() {
   const [selectedSpecialty, setSelectedSpecialty] = useState('')
+
   const { formData, updateFormData, nextStep, prevStep } =
     useContext(AuthContext)
   const methods = useForm<ProfessionalDetails>({
@@ -109,12 +140,21 @@ export default function ProffesionalDetails() {
     defaultValues: formData,
   })
 
-  const [specialties] = api.specialties.listSpecialties.useSuspenseQuery()
-  const [facilities] = api.facilities.findByLocation.useSuspenseQuery({
-    location: {
-      lat: formData.town.latitude,
-      lng: formData.town.longitude,
-    },
+  const selectedCounty = methods.watch('county')
+  const selectedTown = methods.watch('town')
+
+  const { data: specialties, isPending: isPendingSpecialties } =
+    api.specialties.listSpecialties.useQuery()
+  const { data: facilities, isPending: isPendingFacilities } =
+    api.facilities.findByLocation.useQuery({
+      location: {
+        lat: selectedTown.latitude,
+        lng: selectedTown.longitude,
+      },
+    })
+  const { data: counties } = api.locations.counties.useQuery()
+  const { data: towns } = api.locations.towns.useQuery({
+    countyCode: selectedCounty,
   })
 
   const onSubmit = (values: ProfessionalDetails) => {
@@ -142,11 +182,15 @@ export default function ProffesionalDetails() {
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent>
-                  {specialties?.map((specialty) => (
-                    <SelectItem key={specialty.id} value={specialty.id}>
-                      {specialty.name}
-                    </SelectItem>
-                  ))}
+                  {isPendingSpecialties ? (
+                    <SelectSkeleton />
+                  ) : (
+                    specialties?.map((specialty) => (
+                      <SelectItem key={specialty.id} value={specialty.id}>
+                        {specialty.name}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
 
@@ -163,6 +207,88 @@ export default function ProffesionalDetails() {
 
               <p className="text-destructive text-[0.8rem] font-medium">
                 {methods.formState.errors.subSpecialty?.message}
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="county">County</Label>
+              <Select
+                onValueChange={(value) => {
+                  methods.setValue('county', value)
+                }}
+                value={selectedCounty}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a county" />
+                </SelectTrigger>
+                <SelectContent>
+                  {counties?.map((county) => (
+                    <SelectItem key={county.code} value={county.code}>
+                      {county.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <p className="text-destructive text-[0.8rem] font-medium">
+                {methods.formState.errors.county?.message}
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="city">City/Town</Label>
+              <Select
+                onValueChange={(value) => {
+                  const town = towns?.find((t) => t.id === value)
+                  if (town) {
+                    methods.setValue('town', {
+                      id: town.id ?? '',
+                      latitude: town.location?.lat ?? 0,
+                      longitude: town.location?.lng ?? 0,
+                    })
+                  }
+                }}
+              >
+                <SelectTrigger disabled={!selectedCounty} className="w-full">
+                  <SelectValue placeholder="Select a city/town" />
+                </SelectTrigger>
+                <SelectContent>
+                  {towns?.map((town) => (
+                    <SelectItem key={town.id} value={town.id ?? ''}>
+                      {town.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <p className="text-destructive text-[0.8rem] font-medium">
+                {methods.formState.errors.town?.message}
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="facility">Facility</Label>
+              <Select
+                onValueChange={(value) => methods.setValue('facility', value)}
+              >
+                <SelectTrigger disabled={!selectedTown}>
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent>
+                  {isPendingFacilities ? (
+                    <SelectSkeleton />
+                  ) : (
+                    facilities?.map((facility) => (
+                      <SelectItem key={facility.id} value={facility.id ?? ''}>
+                        {facility.name}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+
+              <p className="text-destructive text-[0.8rem] font-medium">
+                {methods.formState.errors.facility?.message}
               </p>
             </div>
 
@@ -215,28 +341,6 @@ export default function ProffesionalDetails() {
 
               <p className="text-destructive text-[0.8rem] font-medium">
                 {methods.formState.errors.medicalLicense?.message}
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="facility">Facility</Label>
-              <Select
-                onValueChange={(value) => methods.setValue('facility', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select" />
-                </SelectTrigger>
-                <SelectContent>
-                  {facilities?.map((facility) => (
-                    <SelectItem key={facility.id} value={facility.id ?? ''}>
-                      {facility.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <p className="text-destructive text-[0.8rem] font-medium">
-                {methods.formState.errors.facility?.message}
               </p>
             </div>
           </div>
