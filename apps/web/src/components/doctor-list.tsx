@@ -142,7 +142,7 @@ function TimeSlotCarousel({
 function DoctorCardSkeleton() {
   return (
     <Card className="flex h-64 w-full flex-col justify-between gap-8 rounded-xl border border-none p-0 shadow-sm sm:flex-row lg:flex-row">
-      <Skeleton className="h-full w-full" />
+      <Skeleton className="h-full w-full rounded-xl" />
     </Card>
   )
 }

@@ -80,3 +80,32 @@ export function getScheduleForWeek(operatingHours: OperatingHours[]) {
 
   return schedule
 }
+
+export function formatMoney(amount: number | null | undefined) {
+  if (!amount) return 'Ksh. 0'
+
+  return `Ksh. ${new Intl.NumberFormat('en-KE').format(amount)}`
+}
+
+export function getTimeRange(
+  time: string | null,
+  duration: number | null | undefined,
+) {
+  if (!time || !duration) return
+  const [start, period] = time.split(' ')
+  const [hour, minute] = start?.split(':').map(Number) ?? []
+
+  let endHour = hour
+  let endMinute = (minute ?? 0) + duration
+  if (endMinute >= 60) {
+    endHour = (endHour ?? 0) + Math.floor(endMinute / 60)
+    endMinute %= 60
+  }
+
+  const endPeriod = (endHour ?? 0) >= 12 ? 'PM' : period
+
+  return {
+    start: time,
+    end: `${(endHour ?? 0) > 12 ? (endHour ?? 0) - 12 : (endHour ?? 0)}:${endMinute.toString().padStart(2, '0')} ${endPeriod}`,
+  }
+}
