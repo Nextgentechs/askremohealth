@@ -6,6 +6,20 @@ export default {
   content: ['./src/**/*.tsx'],
   theme: {
     extend: {
+      keyframes: {
+        'streaming-progress': {
+          '0%': {
+            transform: 'translateX(-100%)',
+          },
+          '100%': {
+            transform: 'translateX(500%)',
+          },
+        },
+      },
+      animation: {
+        'streaming-progress': 'streaming-progress 1.5s linear infinite',
+      },
+
       fontFamily: {
         sans: ['var(--font-geist-sans)', ...fontFamily.sans],
       },

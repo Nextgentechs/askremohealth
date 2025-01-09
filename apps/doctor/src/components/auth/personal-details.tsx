@@ -1,6 +1,6 @@
 import { AuthContext } from '@/context/auth-context'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useContext, useState } from 'react'
+import { useContext } from 'react'
 import { useForm, SubmitHandler } from 'react-hook-form'
 import { z } from 'zod'
 import {
@@ -23,16 +23,17 @@ import {
   SelectValue,
   SelectTrigger,
 } from '../ui/select'
-import { api } from '@/lib/trpc'
 
 export const personalDetailsSchema = z
   .object({
+    title: z.string().optional(),
     firstName: z
       .string()
       .min(2, { message: 'First name must be at least 2 characters long' }),
     lastName: z
       .string()
       .min(2, { message: 'Last name must be at least 2 characters long' }),
+    gender: z.enum(['male', 'female']),
     dob: z.string().min(2, { message: 'Date of Birth is required' }),
     email: z.string().email({ message: 'Invalid email address' }),
     phone: z
@@ -63,16 +64,7 @@ export const personalDetailsSchema = z
     confirmPassword: z.string().min(8, {
       message: 'Confirm password must be at least 8 characters long',
     }),
-    county: z.string().min(1, { message: 'County is required' }),
-    town: z
-      .object({
-        id: z.string().min(1, { message: 'Town is required' }),
-        latitude: z.number(),
-        longitude: z.number(),
-      })
-      .refine((data) => data.latitude !== 0 && data.longitude !== 0, {
-        message: 'Town is required',
-      }),
+
     bio: z
       .string()
       .min(10, { message: 'Bio must be at least 10 characters long' })
@@ -102,9 +94,6 @@ export type PersonalDetails = z.infer<typeof personalDetailsSchema>
 
 export default function PersonalDetails() {
   const { formData, updateFormData, nextStep } = useContext(AuthContext)
-  const [selectedCounty, setSelectedCounty] = useState<string | undefined>(
-    undefined,
-  )
 
   const {
     register,
@@ -114,11 +103,6 @@ export default function PersonalDetails() {
   } = useForm<PersonalDetails>({
     resolver: zodResolver(personalDetailsSchema),
     defaultValues: formData,
-  })
-
-  const [counties] = api.locations.counties.useSuspenseQuery()
-  const { data: towns } = api.locations.towns.useQuery({
-    countyCode: selectedCounty,
   })
 
   const onSubmit: SubmitHandler<PersonalDetails> = (data) => {
@@ -150,6 +134,41 @@ export default function PersonalDetails() {
 
               <p className="text-destructive text-[0.8rem] font-medium">
                 {errors.lastName?.message}
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="title">Title</Label>
+              <Input
+                {...register('title')}
+                id="title"
+                type="text"
+                placeholder="e.g. Dr, Prof, etc."
+              />
+
+              <p className="text-destructive text-[0.8rem] font-medium">
+                {errors.title?.message}
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="gender">Gender</Label>
+              <Select
+                onValueChange={(value) => {
+                  setValue('gender', value as 'male' | 'female')
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="male">Male</SelectItem>
+                  <SelectItem value="female">Female</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <p className="text-destructive text-[0.8rem] font-medium">
+                {errors.gender?.message}
               </p>
             </div>
 
@@ -223,63 +242,6 @@ export default function PersonalDetails() {
               />
               <p className="text-destructive text-[0.8rem] font-medium">
                 {errors.profilePicture?.message}
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="county">County</Label>
-              <Select
-                onValueChange={(value) => {
-                  setSelectedCounty(value)
-                  setValue('county', value)
-                }}
-                value={selectedCounty}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a county" />
-                </SelectTrigger>
-                <SelectContent>
-                  {counties.map((county) => (
-                    <SelectItem key={county.code} value={county.code}>
-                      {county.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <p className="text-destructive text-[0.8rem] font-medium">
-                {errors.county?.message}
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="city">City/Town</Label>
-              <Select
-                onValueChange={(value) => {
-                  const town = towns?.find((t) => t.id === value)
-                  if (town) {
-                    setValue('town', {
-                      id: town.id ?? '',
-                      latitude: town.location?.lat ?? 0,
-                      longitude: town.location?.lng ?? 0,
-                    })
-                  }
-                }}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a city/town" />
-                </SelectTrigger>
-                <SelectContent>
-                  {towns?.map((town) => (
-                    <SelectItem key={town.id} value={town.id ?? ''}>
-                      {town.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <p className="text-destructive text-[0.8rem] font-medium">
-                {errors.town?.message}
               </p>
             </div>
 

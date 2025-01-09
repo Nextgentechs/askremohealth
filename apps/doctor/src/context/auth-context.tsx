@@ -49,6 +49,9 @@ const initialState: SignupSchema = {
     latitude: 0,
     longitude: 0,
   },
+  consultationFee: '0',
+  title: '',
+  gender: undefined,
 }
 
 export const AuthContext = createContext<AuthContext>({

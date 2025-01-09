@@ -7,7 +7,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from './ui/select'
-import { useState } from 'react'
 import { Skeleton } from './ui/skeleton'
 import { api } from '@web/trpc/react'
 import { Card } from './ui/card'
@@ -15,6 +14,27 @@ import { Label } from './ui/label'
 import { Input } from './ui/input'
 import { Button } from './ui/button'
 import { Search } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import {
+  parseAsArrayOf,
+  parseAsString,
+  parseAsInteger,
+  useQueryStates,
+} from 'nuqs'
+
+export function useDoctorSearchParams() {
+  return useQueryStates({
+    specialty: parseAsString,
+    county: parseAsString,
+    town: parseAsString,
+    query: parseAsString,
+    subSpecialties: parseAsArrayOf(parseAsString),
+    experiences: parseAsArrayOf(parseAsString),
+    genders: parseAsArrayOf(parseAsString),
+    entities: parseAsArrayOf(parseAsString),
+    page: parseAsInteger.withDefault(1),
+  })
+}
 
 function SelectSkeleton() {
   return (
@@ -29,26 +49,40 @@ function SelectSkeleton() {
 }
 
 export function SearchForm() {
-  const [selectedCounty, setSelectedCounty] = useState<string | undefined>(
-    undefined,
-  )
+  const [{ query, county, specialty, town }, setSearchParams] =
+    useDoctorSearchParams()
+
   const { data: specialties, isLoading: specialtiesLoading } =
     api.specialties.listSpecialties.useQuery()
   const { data: counties, isLoading: countiesLoading } =
     api.locations.counties.useQuery()
   const { data: towns, isLoading: townsLoading } = api.locations.towns.useQuery(
-    { countyCode: selectedCounty },
-    { enabled: !!selectedCounty },
+    { countyCode: county ?? undefined },
+    { enabled: !!county },
   )
+
+  const router = useRouter()
+  const handleSearch = () => {
+    const params = new URLSearchParams()
+    if (query) params.append('query', query)
+    if (county) params.append('county', county)
+    if (specialty) params.append('specialty', specialty)
+    if (town) params.append('town', town)
+
+    router.push(`/find-doctor?${params.toString()}`)
+  }
 
   return (
     <Card className="mx-auto flex flex-col gap-8 border shadow-sm transition-all duration-300 xl:flex-row xl:items-end xl:px-6 xl:py-8 2xl:py-10">
       <div className="grid min-w-80 gap-4 transition-all duration-300 sm:grid-cols-2 lg:grid-cols-4">
         <div className="md:w-[256px] 2xl:w-[256px]">
           <Label htmlFor="specialty">Doctor Specialty</Label>
-          <Select>
+          <Select
+            onValueChange={(value) => setSearchParams({ specialty: value })}
+            value={specialty ?? undefined}
+          >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select a specialty" />
+              <SelectValue placeholder="Select a specialty"></SelectValue>
             </SelectTrigger>
             <SelectContent>
               {specialtiesLoading ? (
@@ -66,8 +100,8 @@ export function SearchForm() {
         <div className="xl:w-[256px]">
           <Label htmlFor="county">In this county</Label>
           <Select
-            onValueChange={(value) => setSelectedCounty(value)}
-            value={selectedCounty}
+            onValueChange={(value) => setSearchParams({ county: value })}
+            value={county ?? undefined}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select a county" />
@@ -87,11 +121,14 @@ export function SearchForm() {
         </div>
         <div className="xl:w-[256px]">
           <Label htmlFor="city">In this city/town</Label>
-          <Select disabled={!selectedCounty}>
+          <Select
+            value={town ?? undefined}
+            onValueChange={(value) => setSearchParams({ town: value })}
+          >
             <SelectTrigger className="w-full">
               <SelectValue
                 placeholder={
-                  selectedCounty ? 'Select a city/town' : 'No county selected'
+                  county ? 'Select a city/town' : 'No county selected'
                 }
               />
             </SelectTrigger>
@@ -114,12 +151,14 @@ export function SearchForm() {
             type="text"
             id="search"
             placeholder="Doctor or hospital name"
+            value={query ?? ''}
+            onChange={(e) => setSearchParams({ query: e.target.value })}
           />
         </div>
       </div>
 
       <div className="sm:ml-auto sm:max-w-[200px] lg:flex lg:justify-end">
-        <Button className="w-full">
+        <Button className="w-full" onClick={handleSearch}>
           <Search />
           Search
         </Button>
