@@ -215,6 +215,9 @@ export const reviews = pgTable('review', {
   appointmentId: uuid('appointment_id')
     .notNull()
     .references(() => appointments.id, { onDelete: 'cascade' }),
+  doctorId: uuid('doctor_id').references(() => doctors.id, {
+    onDelete: 'cascade',
+  }),
   rating: integer('rating').notNull(),
   comment: varchar('comment'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
