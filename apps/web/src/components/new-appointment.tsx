@@ -21,7 +21,7 @@ function DoctorCard() {
   return (
     <Card
       key={doctorDetails.id}
-      className="flex h-fit w-full max-w-lg flex-col justify-between gap-8 rounded-xl border shadow-sm sm:flex-row lg:flex-row"
+      className="hidden h-fit w-full max-w-md flex-col justify-between gap-8 rounded-xl border shadow-sm transition-all duration-300 sm:flex-row lg:flex lg:flex-row xl:max-w-lg 2xl:max-w-xl"
     >
       <div className="flex flex-1 flex-row gap-5 md:gap-8 xl:gap-10">
         <Avatar className="hidden md:block md:size-28">
@@ -42,7 +42,7 @@ function AppointmentType() {
     <Card className="rounded-xl border shadow-sm">
       <RadioGroup
         defaultValue="in-person"
-        className="flex flex-row justify-between"
+        className="flex flex-col justify-between gap-4 sm:flex-row"
       >
         <div className="flex items-center space-x-2">
           <RadioGroupItem value="in-person" id="in-person" />
@@ -66,11 +66,11 @@ function PatientInformation() {
   return (
     <Card className="flex flex-col rounded-xl border px-0 shadow-sm">
       <CardHeader className="flex w-full items-start border-b px-6 pb-6">
-        <CardTitle className="text-lg font-semibold">
+        <CardTitle className="text-lg font-semibold md:text-xl">
           Patient Information
         </CardTitle>
       </CardHeader>
-      <CardContent className="grid w-full grid-cols-2 gap-6 pt-6">
+      <CardContent className="grid w-full gap-6 pt-6 sm:grid-cols-2">
         <div className="flex w-full flex-col items-start gap-2">
           <Label className="text-foreground" htmlFor="firstName">
             First Name
@@ -127,7 +127,7 @@ function NotesForDoctor() {
   return (
     <Card className="flex flex-col rounded-xl border px-0 shadow-sm">
       <CardHeader className="flex w-full items-start border-b px-6 pb-6">
-        <CardTitle className="text-lg font-semibold">
+        <CardTitle className="text-lg font-semibold md:text-xl">
           Notes for Doctor
         </CardTitle>
       </CardHeader>
@@ -150,7 +150,7 @@ function AppointmentDetails() {
   return (
     <Card className="flex flex-col rounded-xl border px-0 shadow-sm">
       <CardHeader className="flex w-full items-start border-b px-6 pb-6">
-        <CardTitle className="text-lg font-semibold">
+        <CardTitle className="text-lg font-semibold md:text-xl">
           Appointment Details
         </CardTitle>
       </CardHeader>
@@ -217,7 +217,7 @@ function BookingForm() {
 
 export default function NewAppointment() {
   return (
-    <div className="flex flex-row gap-8">
+    <div className="flex flex-col gap-8 md:flex-row">
       <DoctorCard />
       <BookingForm />
     </div>
