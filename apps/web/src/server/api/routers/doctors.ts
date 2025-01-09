@@ -272,7 +272,6 @@ export const doctorsRouter = createTRPCRouter({
       }
     }),
   details: publicProcedure.input(z.string()).query(async ({ ctx, input }) => {
-    console.log('doctor id', input)
     const doctor = await ctx.db.query.doctors.findFirst({
       where: eq(doctorsTable.id, input),
       with: {
