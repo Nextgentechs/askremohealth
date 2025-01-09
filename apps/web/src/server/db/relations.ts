@@ -73,10 +73,7 @@ export const appointmentRelations = relations(
       fields: [appointments.patientId],
       references: [patients.id],
     }),
-    facility: one(facilities, {
-      fields: [appointments.facility],
-      references: [facilities.placeId],
-    }),
+
     logs: many(appointmentLogs),
     review: one(reviews, {
       fields: [appointments.id],

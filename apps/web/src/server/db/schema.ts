@@ -188,9 +188,6 @@ export const appointments = pgTable('appointment', {
   patientId: uuid('patient_id')
     .notNull()
     .references(() => patients.id, { onDelete: 'cascade' }),
-  facility: varchar('facility_id')
-    .notNull()
-    .references(() => facilities.placeId, { onDelete: 'cascade' }),
   appointmentDate: timestamp('appointment_date').notNull(),
   type: appointmentTypesEnum('type').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
