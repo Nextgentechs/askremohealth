@@ -32,6 +32,8 @@ export const appointmentsStatusEnum = pgEnum('appointment_status', [
   'in_progress',
 ])
 
+export const genderEnum = pgEnum('gender', ['male', 'female'])
+
 export const appointmentTypesEnum = pgEnum('appointment_type', [
   'online',
   'physical',
@@ -110,6 +112,9 @@ export const doctors = pgTable('doctor', {
     onDelete: 'set null',
   }),
   bio: varchar('bio'),
+  gender: genderEnum('gender'),
+  title: varchar('title'),
+  consultationFee: integer('consultation_fee'),
 })
 
 export const profilePictures = pgTable('profile_picture', {
@@ -146,6 +151,7 @@ export const facilities = pgTable('facility', {
   website: varchar('website'),
   verified: boolean('verified').default(false),
   createdAt: timestamp('created_at').notNull().defaultNow(),
+  type: varchar('type'),
 })
 
 export const operatingHours = pgTable('operating_hours', {
@@ -153,6 +159,7 @@ export const operatingHours = pgTable('operating_hours', {
   doctorId: uuid('doctor_id')
     .notNull()
     .references(() => doctors.id, { onDelete: 'cascade' }),
+  consultationDuration: integer('consultation_duration'),
   schedule: jsonb('schedule')
     .$type<
       Array<{
