@@ -1,12 +1,12 @@
 import { createTRPCRouter, publicProcedure } from '../trpc'
 import { z } from 'zod'
-import { FacilityService } from '@web/server/services/facilities'
+import { Facility } from '@web/server/services/facilities'
 
 export const facilitiesRouter = createTRPCRouter({
   registerFacility: publicProcedure
     .input(z.object({ placeId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      return FacilityService.register(ctx, input.placeId)
+      return Facility.register(ctx, input.placeId)
     }),
 
   findByLocation: publicProcedure
@@ -20,6 +20,6 @@ export const facilitiesRouter = createTRPCRouter({
       }),
     )
     .query(async ({ input }) => {
-      return FacilityService.findNearby(input.location, input.searchRadius)
+      return Facility.findNearby(input.location, input.searchRadius)
     }),
 })
