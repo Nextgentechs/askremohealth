@@ -1,4 +1,4 @@
-import NewAppointment from '@web/components/new-appointment'
+import CreateAppointment from '@web/components/create-appointment'
 import {
   Breadcrumb,
   BreadcrumbPage,
@@ -11,7 +11,7 @@ import React from 'react'
 
 export default function Page() {
   return (
-    <main className="container mx-auto mb-24 mt-12 flex min-h-screen w-full flex-col gap-12">
+    <main className="container mx-auto mb-48 mt-12 flex min-h-screen w-full flex-col gap-12">
       <Breadcrumb className="lg:ps-3">
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -27,7 +27,7 @@ export default function Page() {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <NewAppointment />
+      <CreateAppointment />
     </main>
   )
 }

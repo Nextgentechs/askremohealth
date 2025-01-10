@@ -12,6 +12,7 @@ export function generateTimeSlots(
   closing: string,
   duration: number,
   bookedSlots: Date[],
+  date: Date,
 ) {
   const slots = []
   const [openHour = 0, openMinute = 0] = opening.split(':').map(Number)
@@ -19,6 +20,7 @@ export function generateTimeSlots(
 
   let currentHour = openHour
   let currentMinute = openMinute
+  const now = new Date()
 
   while (
     currentHour < closeHour ||
@@ -27,15 +29,29 @@ export function generateTimeSlots(
     if (currentHour !== 13) {
       const timeString = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`
 
-      const slotTime = new Date()
+      const slotTime = new Date(date)
       slotTime.setHours(currentHour, currentMinute, 0, 0)
-      const isBooked = bookedSlots.some(
-        (bookedSlot) => bookedSlot.getTime() === slotTime.getTime(),
-      )
+
+      const isPastSlot =
+        date.getDate() === now.getDate() &&
+        date.getMonth() === now.getMonth() &&
+        date.getFullYear() === now.getFullYear() &&
+        slotTime < now
+
+      const isBooked = bookedSlots.some((bookedSlot) => {
+        const bookedTime = new Date(bookedSlot)
+        return (
+          bookedTime.getFullYear() === slotTime.getFullYear() &&
+          bookedTime.getMonth() === slotTime.getMonth() &&
+          bookedTime.getDate() === slotTime.getDate() &&
+          bookedTime.getHours() === slotTime.getHours() &&
+          bookedTime.getMinutes() === slotTime.getMinutes()
+        )
+      })
 
       slots.push({
         time: `${timeString} ${currentHour >= 12 ? 'PM' : 'AM'}`,
-        available: !isBooked,
+        available: !isBooked && !isPastSlot,
       })
     }
 
@@ -49,7 +65,10 @@ export function generateTimeSlots(
   return slots
 }
 
-export function getScheduleForWeek(operatingHours: OperatingHours[]) {
+export function getScheduleForWeek(
+  operatingHours: OperatingHours[],
+  bookedSlots: Date[],
+) {
   const today = new Date()
   const schedule = []
 
@@ -72,7 +91,8 @@ export function getScheduleForWeek(operatingHours: OperatingHours[]) {
           daySchedule.opening ?? '',
           daySchedule.closing ?? '',
           operatingHours[0]?.consultationDuration ?? 30,
-          [],
+          bookedSlots,
+          date,
         ),
       })
     }
@@ -108,4 +128,33 @@ export function getTimeRange(
     start: time,
     end: `${(endHour ?? 0) > 12 ? (endHour ?? 0) - 12 : (endHour ?? 0)}:${endMinute.toString().padStart(2, '0')} ${endPeriod}`,
   }
+}
+
+export function convertTo24Hour(time: string) {
+  const [time12, period] = time.split(' ')
+  if (!time12 || !period) throw new Error('Invalid time format')
+
+  const [hours, minutes] = time12.split(':')
+  if (!hours || !minutes) throw new Error('Invalid time format')
+
+  let hour24 = parseInt(hours)
+
+  if (period === 'PM' && hour24 !== 12) hour24 += 12
+  if (period === 'AM' && hour24 === 12) hour24 = 0
+
+  return `${hour24.toString().padStart(2, '0')}:${minutes}`
+}
+
+export function combineDateTime(date: string, time: string) {
+  const baseDate = new Date(date)
+
+  const [hours, minutes] = convertTo24Hour(time).split(':')
+  if (!hours || !minutes) throw new Error('Invalid time format')
+
+  baseDate.setHours(parseInt(hours))
+  baseDate.setMinutes(parseInt(minutes))
+  baseDate.setSeconds(0)
+  baseDate.setMilliseconds(0)
+
+  return baseDate
 }

@@ -62,7 +62,7 @@ export const users = pgTable('user', {
   lastName: varchar('last_name').notNull(),
   email: varchar('email'),
   phone: varchar('phone').unique(),
-  password: varchar('password').notNull(),
+  password: varchar('password'),
   role: roleEnum('role').notNull(),
   dob: timestamp('dob'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -70,6 +70,7 @@ export const users = pgTable('user', {
     .notNull()
     .$onUpdate(() => new Date()),
   isAdmin: boolean('is_admin').default(false),
+  hasAccount: boolean('has_account').default(false),
 })
 export type User = InferSelectModel<typeof users>
 

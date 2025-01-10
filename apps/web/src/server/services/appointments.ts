@@ -1,0 +1,158 @@
+import { appointments, patients, type users } from '../db/schema'
+import { db } from '../db'
+import { type InferSelectModel } from 'drizzle-orm'
+import { User } from './users'
+import { TRPCError } from '@trpc/server'
+import { type NewAppointmentSchema } from '../api/schema'
+import { AppointmentStatus } from '../utils'
+import { type AppointmentInput } from '../api/routers/appointments'
+
+export default class Appointments {
+  static async createNewUserAppointment(input: NewAppointmentSchema) {
+    const user = await User.createUser({
+      firstName: input.firstName,
+      lastName: input.lastName,
+      email: input.email,
+      phone: input.phone,
+      role: 'patient',
+      dob: new Date(input.dob),
+    })
+
+    if (!user) {
+      throw new TRPCError({
+        code: 'NOT_IMPLEMENTED',
+        message: 'Failed to create user',
+      })
+    }
+
+    await db.insert(patients).values({
+      id: user.id,
+      lastAppointment: input.date,
+    })
+
+    await db.insert(appointments).values({
+      doctorId: input.doctorId,
+      patientId: user.id,
+      appointmentDate: input.date,
+      notes: input.notes,
+      type: input.appointmentType,
+      status: AppointmentStatus.SCHEDULED,
+    })
+
+    return { success: true }
+  }
+
+  static async createDoctorAppointment(
+    user: InferSelectModel<typeof users>,
+    date: Date,
+    appointmentType: 'online' | 'physical',
+    doctorId: string,
+    notes?: string,
+  ) {
+    const patient = await db.query.patients.findFirst({
+      where: (patient, { eq }) => eq(patient.id, user.id),
+    })
+
+    if (!patient) {
+      await Promise.all([
+        db.insert(patients).values({
+          id: user.id,
+          lastAppointment: date,
+        }),
+        db.insert(appointments).values({
+          doctorId: doctorId,
+          patientId: user.id,
+          appointmentDate: date,
+          notes: notes,
+          type: appointmentType,
+          status: AppointmentStatus.SCHEDULED,
+        }),
+      ])
+
+      return { success: true }
+    }
+
+    await db.insert(appointments).values({
+      doctorId: doctorId,
+      patientId: user.id,
+      appointmentDate: date,
+      notes: notes,
+      type: appointmentType,
+      status: AppointmentStatus.SCHEDULED,
+    })
+
+    return { success: true }
+  }
+
+  static async upcomming(doctorId: string, type: 'physical' | 'online') {
+    return await db.query.appointments.findMany({
+      where: (appontment, { and, eq, gte }) =>
+        and(
+          eq(appontment.doctorId, doctorId),
+          eq(appontment.type, type),
+          gte(appontment.appointmentDate, new Date()),
+        ),
+      columns: {
+        id: true,
+        appointmentDate: true,
+        status: true,
+        notes: true,
+      },
+      with: {
+        patient: {
+          with: {
+            user: {
+              columns: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                phone: true,
+              },
+            },
+          },
+        },
+      },
+    })
+  }
+
+  static async list(doctorId: string, input: AppointmentInput) {
+    return await db.query.appointments.findMany({
+      where: (appontment, { and, eq, gte }) =>
+        and(
+          eq(appontment.doctorId, doctorId),
+          eq(appontment.type, input.type),
+          input.status ? eq(appontment.status, input.status) : undefined,
+          input.patientId
+            ? eq(appontment.patientId, input.patientId)
+            : undefined,
+          gte(appontment.appointmentDate, input.startDate),
+          gte(appontment.appointmentDate, input.endDate),
+        ),
+      columns: {
+        id: true,
+        appointmentDate: true,
+        status: true,
+        notes: true,
+      },
+      with: {
+        doctor: {
+          columns: {
+            id: true,
+          },
+        },
+        patient: {
+          with: {
+            user: {
+              columns: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                phone: true,
+              },
+            },
+          },
+        },
+      },
+    })
+  }
+}

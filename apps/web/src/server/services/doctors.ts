@@ -1,21 +1,5 @@
-import { type Context } from '../api/trpc'
-import {
-  doctors as doctorsTable,
-  facilities,
-  users,
-} from '@web/server/db/schema'
-import {
-  count,
-  exists,
-  inArray,
-  gte,
-  sql,
-  eq,
-  or,
-  between,
-  and,
-  ilike,
-} from 'drizzle-orm'
+import { doctors as doctorsTable, facilities } from '@web/server/db/schema'
+import { count, inArray, gte, sql, eq, or, between, and } from 'drizzle-orm'
 import { db } from '@web/server/db'
 
 type FilterInput = {
@@ -30,65 +14,9 @@ type FilterInput = {
 }
 
 export class Doctors {
-  static buildDoctorFilters(input: FilterInput) {
-    return or(
-      input.specialty ? eq(doctorsTable.specialty, input.specialty) : undefined,
-      input.subSpecialties?.length
-        ? sql`${doctorsTable.subSpecialties}::jsonb ?| array[${sql.join(input.subSpecialties)}]`
-        : undefined,
-      input.experiences?.length
-        ? or(
-            ...input.experiences.map((range) =>
-              range.max
-                ? between(doctorsTable.experience, range.min, range.max)
-                : gte(doctorsTable.experience, range.min),
-            ),
-          )
-        : undefined,
-      input.genders?.length
-        ? inArray(doctorsTable.gender, input.genders)
-        : undefined,
-      input.entities?.length || input.town || input.county
-        ? exists(
-            db
-              .select()
-              .from(facilities)
-              .where(
-                and(
-                  eq(facilities.placeId, doctorsTable.facility),
-                  input.entities?.length
-                    ? inArray(facilities.type, input.entities)
-                    : undefined,
-                  input.town ? eq(facilities.town, input.town) : undefined,
-                  input.county
-                    ? eq(facilities.county, input.county)
-                    : undefined,
-                ),
-              ),
-          )
-        : undefined,
-      input.query
-        ? exists(
-            db
-              .select()
-              .from(users)
-              .where(
-                and(
-                  eq(users.id, doctorsTable.id),
-                  or(
-                    ilike(users.firstName, `%${input.query}%`),
-                    ilike(users.lastName, `%${input.query}%`),
-                  ),
-                ),
-              ),
-          )
-        : undefined,
-    )
-  }
-
-  static async getUpcomingAppointments(ctx: Context, doctorIds: string[]) {
+  static async getUpcomingAppointments(doctorIds: string[]) {
     const today = new Date()
-    return ctx.db.query.appointments.findMany({
+    return db.query.appointments.findMany({
       where: (appointment, { and, gte, inArray }) =>
         and(
           inArray(appointment.doctorId, doctorIds),
@@ -102,8 +30,8 @@ export class Doctors {
     })
   }
 
-  static async getDoctorRatings(ctx: Context, doctorIds: string[]) {
-    return ctx.db.query.appointments.findMany({
+  static async getDoctorRatings(doctorIds: string[]) {
+    return db.query.appointments.findMany({
       where: (appointment, { inArray }) =>
         inArray(appointment.doctorId, doctorIds),
       with: {
@@ -119,23 +47,71 @@ export class Doctors {
     })
   }
 
-  static async list(
-    ctx: Context,
-    input: FilterInput & { page: number; limit: number },
-  ) {
+  static buildWhereConditions(input: FilterInput) {
+    const conditions = []
+
+    if (input.specialty) {
+      conditions.push(eq(doctorsTable.specialty, input.specialty))
+    }
+
+    //FIXME: This is not working as expected
+    if (input.subSpecialties?.length) {
+      conditions.push(
+        sql`EXISTS (
+      SELECT 1 FROM jsonb_array_elements(${doctorsTable.subSpecialties}) as sub
+      WHERE sub->>'id' = ANY(${sql`ARRAY[${sql.join(input.subSpecialties)}]`})
+    )`,
+      )
+    }
+
+    if (input.experiences?.length) {
+      conditions.push(
+        or(
+          ...input.experiences.map((range) =>
+            range.max
+              ? between(doctorsTable.experience, range.min, range.max)
+              : gte(doctorsTable.experience, range.min),
+          ),
+        ),
+      )
+    }
+
+    if (input.genders?.length) {
+      conditions.push(inArray(doctorsTable.gender, input.genders))
+    }
+
+    if (input.entities?.length || input.town || input.county) {
+      const facilityConditions = []
+
+      if (input.entities?.length) {
+        facilityConditions.push(inArray(facilities.type, input.entities))
+      }
+      if (input.town) {
+        facilityConditions.push(eq(facilities.town, input.town))
+      }
+      if (input.county) {
+        facilityConditions.push(eq(facilities.county, input.county))
+      }
+
+      conditions.push(and(...facilityConditions))
+    }
+
+    return conditions.length ? and(...conditions) : undefined
+  }
+
+  static async list(input: FilterInput & { page: number; limit: number }) {
     const { page, limit } = input
     const offset = (page - 1) * limit
 
-    const filters = this.buildDoctorFilters(input)
-
-    const totalCount = await ctx.db
-      .select({ value: count() })
+    const totalCount = await db
+      .select({ count: count() })
       .from(doctorsTable)
-      .where(filters)
-      .then((res) => res[0]?.value ?? 0)
+      .where(this.buildWhereConditions(input))
 
-    const doctors = await ctx.db.query.doctors.findMany({
-      where: () => filters,
+    const doctors = await db.query.doctors.findMany({
+      where: this.buildWhereConditions(input),
+      limit,
+      offset,
       with: {
         user: {
           columns: {
@@ -159,28 +135,30 @@ export class Doctors {
         specialty: true,
         operatingHours: true,
       },
-      limit,
-      offset,
     })
 
-    const [upcomingAppointments, doctorRatings] = await Promise.all([
-      this.getUpcomingAppointments(
-        ctx,
-        doctors.map((d) => d.id),
-      ),
-      this.getDoctorRatings(
-        ctx,
-        doctors.map((d) => d.id),
-      ),
-    ])
+    const upcomingAppointments = await this.getUpcomingAppointments(
+      doctors.map((d) => d.id),
+    )
+
+    const reviews = await db.query.reviews.findMany({
+      where: (review) =>
+        inArray(
+          review.doctorId,
+          doctors.map((d) => d.id),
+        ),
+      columns: {
+        doctorId: true,
+        rating: true,
+      },
+    })
 
     const subSpecialtyIds = doctors.flatMap((d) =>
       (d.subSpecialties as Array<{ id: string }>).map((s) => s.id),
     )
 
-    const subspecialties = await ctx.db.query.subSpecialties.findMany({
-      where: (subSpecialty, { inArray }) =>
-        inArray(subSpecialty.id, subSpecialtyIds),
+    const subspecialties = await db.query.subSpecialties.findMany({
+      where: (subSpecialty) => inArray(subSpecialty.id, subSpecialtyIds),
     })
 
     const doctorsWithAllData = doctors.map((doctor) => {
@@ -188,13 +166,10 @@ export class Doctors {
         .filter((apt) => apt.doctorId === doctor.id)
         .map((apt) => apt.appointmentDate)
 
-      const reviews = doctorRatings
-        .filter((apt) => apt.doctorId === doctor.id)
-        .map((apt) => apt.review?.rating)
-        .filter((rating): rating is number => rating !== null)
-
-      const averageRating = reviews.length
-        ? reviews.reduce((acc, rating) => acc + rating, 0) / reviews.length
+      const doctorReviews = reviews.filter((r) => r.doctorId === doctor.id)
+      const averageRating = doctorReviews.length
+        ? doctorReviews.reduce((acc, r) => acc + r.rating, 0) /
+          doctorReviews.length
         : 0
 
       return {
@@ -207,14 +182,14 @@ export class Doctors {
         bookedSlots,
         reviewStats: {
           averageRating,
-          totalReviews: reviews.length,
+          totalReviews: doctorReviews.length,
         },
       }
     })
 
     return {
       doctors: doctorsWithAllData,
-      count: totalCount,
+      count: totalCount[0]?.count ?? 0,
     }
   }
 }
