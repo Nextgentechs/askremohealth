@@ -1,8 +1,8 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
-import { useParams, useSearchParams } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { api } from '@web/trpc/react'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
 import DoctorDetails from './doctor-details'
@@ -17,6 +17,7 @@ import { useForm, FormProvider, useFormContext } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { combineDateTime, formatMoney, getTimeRange } from '@web/lib/utils'
 import { useToast } from '@web/hooks/use-toast'
+import AppointmentConfirmation from './appointment-confirmation'
 
 function useDoctorDetails() {
   const { doctor } = useParams<{ doctor: string }>()
@@ -295,6 +296,7 @@ const appointmentSchema = z.object({
 })
 
 function BookingForm() {
+  const [isOpen, setIsOpen] = useState(false)
   const searchParams = useSearchParams()
   const { toast } = useToast()
   const [doctorDetails] = useDoctorDetails()
@@ -309,6 +311,7 @@ function BookingForm() {
   const { mutateAsync, isPending } =
     api.appointments.patients.create.useMutation()
 
+  const router = useRouter()
   const utils = api.useUtils()
   const onSubmit = async (data: z.infer<typeof appointmentSchema>) => {
     try {
@@ -322,13 +325,12 @@ function BookingForm() {
       }
 
       await mutateAsync(finalData)
-      await utils.doctors.invalidate()
-      await utils.appointments.invalidate()
       form.reset()
-      toast({
-        title: 'Appointment booked successfully',
-        description: 'Your appointment has been booked successfully',
-      })
+      setIsOpen(true)
+      await utils.doctors.invalidate()
+      setTimeout(() => {
+        router.push('/find-doctor')
+      }, 5000)
     } catch (error) {
       console.error(error)
       toast({
@@ -340,26 +342,29 @@ function BookingForm() {
   }
 
   return (
-    <form
-      onSubmit={form.handleSubmit(onSubmit)}
-      className="flex flex-1 flex-col gap-6"
-    >
-      <div className="flex flex-col gap-6">
-        <FormProvider {...form}>
-          <AppointmentType />
-          <PatientInformation />
-          <NotesForDoctor />
-          <AppointmentDetails />
-        </FormProvider>
-      </div>
+    <>
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="flex flex-1 flex-col gap-6"
+      >
+        <div className="flex flex-col gap-6">
+          <FormProvider {...form}>
+            <AppointmentType />
+            <PatientInformation />
+            <NotesForDoctor />
+            <AppointmentDetails />
+          </FormProvider>
+        </div>
 
-      <div className="flex justify-end">
-        <Button type="submit" className="w-fit" disabled={isPending}>
-          {isPending && <Loader className={`animate-spin`} />}
-          Book Appointment
-        </Button>
-      </div>
-    </form>
+        <div className="flex justify-end">
+          <Button type="submit" className="w-fit" disabled={isPending}>
+            {isPending && <Loader className={`animate-spin`} />}
+            Book Appointment
+          </Button>
+        </div>
+      </form>
+      <AppointmentConfirmation isOpen={isOpen} setIsOpen={setIsOpen} />
+    </>
   )
 }
 
