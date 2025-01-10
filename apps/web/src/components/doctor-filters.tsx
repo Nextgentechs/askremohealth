@@ -30,11 +30,13 @@ function SubSpecialtiesFilterSkeleton() {
 function SubSpecialtiesFilter() {
   const [{ specialty, subSpecialties }, setSearchParams] =
     useDoctorSearchParams()
-  const { data, isLoading } = api.specialties.listSubSpecialties.useQuery({
-    specialityId: specialty ?? '',
-  })
+  const { data, isLoading } = api.specialties.listSubSpecialties.useQuery(
+    { specialityId: specialty ?? '' },
+    { enabled: !!specialty },
+  )
 
   if (isLoading) return <SubSpecialtiesFilterSkeleton />
+  if (!data) return null
 
   return (
     <div className="flex flex-col gap-4 border-b py-6">
