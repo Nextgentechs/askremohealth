@@ -13,6 +13,7 @@ This project implements a modern healthcare platform using TypeScript and follow
 - [Tailwind CSS](https://tailwindcss.com): Utility-first CSS framework
 - [shadcn/ui](https://ui.shadcn.com): Accessible and customizable component library
 - [Lucia Auth](https://lucia-auth.com): Authentication library
+- [TanStack Router](https://tanstack.com/router): Type-safe routing for React applications
 
 ### Development Philosophy
 
@@ -48,6 +49,7 @@ We embrace the Backend for Frontend pattern with tight frontend-backend integrat
 ### Doctor Portal (`apps/web/doctor`)
 
 - Vite-based dashboard for healthcare professionals
+- TanStack Router for type-safe routing and data management
 - Manage appointments and patient interactions
 - Update availability and professional details
 - Handle virtual consultations
