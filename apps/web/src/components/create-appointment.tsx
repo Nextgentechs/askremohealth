@@ -1,21 +1,23 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
-import { useParams, useSearchParams } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { api } from '@web/trpc/react'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
 import DoctorDetails from './doctor-details'
 import { Label } from './ui/label'
 import { RadioGroup, RadioGroupItem } from './ui/radio-group'
 import { Input } from './ui/input'
-import { CalendarIcon, ClockIcon } from 'lucide-react'
+import { CalendarIcon, ClockIcon, Loader } from 'lucide-react'
 import { Textarea } from './ui/textarea'
 import { Button } from './ui/button'
 import { z } from 'zod'
 import { useForm, FormProvider, useFormContext } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { formatMoney, getTimeRange } from '@web/lib/utils'
+import { combineDateTime, formatMoney, getTimeRange } from '@web/lib/utils'
+import { useToast } from '@web/hooks/use-toast'
+import AppointmentConfirmation from './appointment-confirmation'
 
 function useDoctorDetails() {
   const { doctor } = useParams<{ doctor: string }>()
@@ -50,7 +52,7 @@ function AppointmentType() {
   return (
     <Card className="rounded-xl border shadow-sm">
       <RadioGroup
-        defaultValue="physical"
+        defaultValue="online"
         className="flex flex-col justify-between gap-4 sm:flex-row"
         onValueChange={(value) => {
           setValue('appointmentType', value as 'physical' | 'online')
@@ -87,7 +89,7 @@ function PatientInformation() {
           Patient Account Information
         </CardTitle>
       </CardHeader>
-      <CardContent className="grid w-full gap-6 pt-6 sm:grid-cols-2">
+      <CardContent className="grid w-full gap-6 pt-6 text-foreground sm:grid-cols-2">
         <div className="flex w-full flex-col items-start gap-2">
           <Label className="text-foreground" htmlFor="firstName">
             First Name
@@ -158,40 +160,6 @@ function PatientInformation() {
         </div>
 
         <div className="flex w-full flex-col items-start gap-2">
-          <Label className="text-foreground" htmlFor="password">
-            Account Password
-          </Label>
-          <Input
-            {...register('password')}
-            id="password"
-            type="password"
-            className="ps-4"
-          />
-          {errors.password && (
-            <span className="text-sm font-medium text-destructive">
-              {errors.password.message}
-            </span>
-          )}
-        </div>
-
-        <div className="flex w-full flex-col items-start gap-2">
-          <Label className="text-foreground" htmlFor="confirmPassword">
-            Confirm Password
-          </Label>
-          <Input
-            {...register('confirmPassword')}
-            id="confirmPassword"
-            type="password"
-            className="ps-4"
-          />
-          {errors.confirmPassword && (
-            <span className="text-sm font-medium text-destructive">
-              {errors.confirmPassword.message}
-            </span>
-          )}
-        </div>
-
-        <div className="flex w-full flex-col items-start gap-2">
           <Label className="text-foreground" htmlFor="dob">
             Date of Birth
           </Label>
@@ -216,7 +184,7 @@ function NotesForDoctor() {
           Notes for Doctor
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex w-full flex-col items-start gap-2 pt-6">
+      <CardContent className="flex w-full flex-col items-start gap-2 pt-6 text-foreground">
         <Label className="text-foreground" htmlFor="notes">
           Reasons for Appointment{' '}
           <span className="text-sm text-muted-foreground">(optional)</span>
@@ -256,7 +224,7 @@ function AppointmentDetails() {
           Appointment Details
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex w-full flex-col items-start gap-6 pt-6">
+      <CardContent className="flex w-full flex-col items-start gap-6 pt-6 text-foreground">
         <div className="flex w-full flex-col items-start gap-2">
           <Label className="text-foreground" htmlFor="consultationFee">
             Consultation Fee
@@ -297,74 +265,110 @@ function AppointmentDetails() {
   )
 }
 
-const appointmentSchema = z
-  .object({
-    appointmentType: z.enum(['physical', 'online']),
-    firstName: z.string().min(2, { message: 'First name is required' }),
-    lastName: z.string().min(2, { message: 'Last name is required' }),
-    phone: z
-      .string()
-      .refine((val) => /^\d{10}$/.test(val) || /^254\d{9}$/.test(val), {
+const appointmentSchema = z.object({
+  appointmentType: z.enum(['physical', 'online']),
+  firstName: z.string().min(2, { message: 'First name is required' }),
+  lastName: z.string().min(2, { message: 'Last name is required' }),
+  phone: z
+    .string()
+    .refine((val) => /^\d{10}$/.test(val) || /^254\d{9}$/.test(val), {
+      message: 'Invalid phone number',
+    })
+    .refine(
+      (val) =>
+        val.startsWith('07') ||
+        val.startsWith('01') ||
+        val.startsWith('2547') ||
+        val.startsWith('2541'),
+      {
         message: 'Invalid phone number',
-      })
-      .refine(
-        (val) =>
-          val.startsWith('07') ||
-          val.startsWith('01') ||
-          val.startsWith('2547') ||
-          val.startsWith('2541'),
-        {
-          message: 'Invalid phone number',
-        },
-      )
-      .transform((val) => {
-        if (val.startsWith('0')) {
-          return `254${val.slice(1)}`
-        }
-        return val
-      }),
-    email: z.string().email({ message: 'Invalid email address' }),
-    dob: z.string().min(10, { message: 'Date of birth is required' }),
-    notes: z.string().optional(),
-    password: z
-      .string()
-      .min(8, { message: 'Password must be at least 8 characters long' }),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
-  })
+      },
+    )
+    .transform((val) => {
+      if (val.startsWith('0')) {
+        return `254${val.slice(1)}`
+      }
+      return val
+    }),
+  email: z.string().email({ message: 'Invalid email address' }),
+  dob: z.string().min(10, { message: 'Date of birth is required' }),
+  notes: z.string().optional(),
+})
 
 function BookingForm() {
+  const [isOpen, setIsOpen] = useState(false)
+  const searchParams = useSearchParams()
+  const { toast } = useToast()
+  const [doctorDetails] = useDoctorDetails()
+
   const form = useForm<z.infer<typeof appointmentSchema>>({
     resolver: zodResolver(appointmentSchema),
+    defaultValues: {
+      appointmentType: 'online',
+    },
   })
 
-  return (
-    <form
-      onSubmit={form.handleSubmit((data) => console.log(data))}
-      className="flex flex-1 flex-col gap-6"
-    >
-      <div className="flex flex-col gap-6">
-        <FormProvider {...form}>
-          <AppointmentType />
-          <PatientInformation />
-          <NotesForDoctor />
-          <AppointmentDetails />
-        </FormProvider>
-      </div>
+  const { mutateAsync, isPending } =
+    api.appointments.patients.create.useMutation()
 
-      <div className="flex justify-end">
-        <Button type="submit" className="w-fit">
-          Book Appointment
-        </Button>
-      </div>
-    </form>
+  const router = useRouter()
+  const utils = api.useUtils()
+  const onSubmit = async (data: z.infer<typeof appointmentSchema>) => {
+    try {
+      const finalData = {
+        ...data,
+        doctorId: doctorDetails.user?.id ?? '',
+        date: combineDateTime(
+          searchParams.get('date') ?? '',
+          searchParams.get('time') ?? '',
+        ),
+      }
+
+      await mutateAsync(finalData)
+      form.reset()
+      setIsOpen(true)
+      await utils.doctors.invalidate()
+      setTimeout(() => {
+        router.push('/find-doctor')
+      }, 5000)
+    } catch (error) {
+      console.error(error)
+      toast({
+        title: 'Error',
+        description: 'An error occurred while booking your appointment',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  return (
+    <>
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="flex flex-1 flex-col gap-6"
+      >
+        <div className="flex flex-col gap-6">
+          <FormProvider {...form}>
+            <AppointmentType />
+            <PatientInformation />
+            <NotesForDoctor />
+            <AppointmentDetails />
+          </FormProvider>
+        </div>
+
+        <div className="flex justify-end">
+          <Button type="submit" className="w-fit" disabled={isPending}>
+            {isPending && <Loader className={`animate-spin`} />}
+            Book Appointment
+          </Button>
+        </div>
+      </form>
+      <AppointmentConfirmation isOpen={isOpen} setIsOpen={setIsOpen} />
+    </>
   )
 }
 
-export default function NewAppointment() {
+export default function CreateAppointment() {
   return (
     <div className="flex flex-col gap-8 md:flex-row">
       <DoctorCard />

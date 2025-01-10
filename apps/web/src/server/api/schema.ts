@@ -47,3 +47,18 @@ export const doctorSignupSchema = z.object({
   consultationFee: z.string().transform((val) => parseInt(val)),
   gender: z.enum(['male', 'female']).optional(),
 })
+
+export const newAppointmentSchema = z.object({
+  appointmentType: z.enum(['physical', 'online']),
+  firstName: z.string(),
+  lastName: z.string(),
+  phone: z.string(),
+  email: z.string(),
+  dob: z.string(),
+  notes: z.string().optional(),
+  date: z.date().refine((date) => date > new Date(), {
+    message: 'Date must be in the future',
+  }),
+  doctorId: z.string(),
+})
+export type NewAppointmentSchema = z.infer<typeof newAppointmentSchema>

@@ -63,7 +63,7 @@ function TimeSlotCard({
               .map((slot, index) => (
                 <Link
                   href={`/doctor/${doctorId}/book?date=${day.date.toISOString()}&time=${slot.time}`}
-                  className={`${slot.available ? 'hover:underline' : 'cursor-not-allowed line-through'} inline-flex h-fit items-center justify-center p-0 text-xs font-medium text-primary underline-offset-4 transition-colors`}
+                  className={`${slot.available ? 'text-primary hover:underline' : 'cursor-not-allowed text-muted-foreground line-through'} inline-flex h-fit items-center justify-center p-0 text-xs font-medium underline-offset-4 transition-colors`}
                   key={index}
                 >
                   {slot.time}
@@ -101,12 +101,14 @@ function TimeSlotCard({
 
 function TimeSlotCarousel({
   operatingHours,
+  bookedSlots,
   doctorId,
 }: {
   operatingHours: OperatingHours[]
+  bookedSlots: Date[]
   doctorId: string
 }) {
-  const schedule = getScheduleForWeek(operatingHours)
+  const schedule = getScheduleForWeek(operatingHours, bookedSlots)
 
   const pairedDays = schedule.reduce<ScheduleDay[][]>((acc, day, index) => {
     if (index % 2 === 0) {
@@ -228,6 +230,7 @@ export default function DoctorList() {
           </div>
           <TimeSlotCarousel
             operatingHours={doctor.operatingHours}
+            bookedSlots={doctor.bookedSlots ?? []}
             doctorId={doctor.id}
           />
         </Card>
