@@ -5,6 +5,7 @@ import { type Metadata } from 'next'
 import Provider from '@web/providers/provider'
 import Footer from '@web/components/footer'
 import NavigationBar from '@web/components/navigation-bar'
+import { Toaster } from '@web/components/ui/toaster'
 
 export const metadata: Metadata = {
   title: 'Ask Virtual Healthcare',
@@ -23,6 +24,7 @@ export default function RootLayout({
           </div>
           {children}
           <Footer />
+          <Toaster />
         </Provider>
       </body>
     </html>

@@ -109,3 +109,32 @@ export function getTimeRange(
     end: `${(endHour ?? 0) > 12 ? (endHour ?? 0) - 12 : (endHour ?? 0)}:${endMinute.toString().padStart(2, '0')} ${endPeriod}`,
   }
 }
+
+export function convertTo24Hour(time: string) {
+  const [time12, period] = time.split(' ')
+  if (!time12 || !period) throw new Error('Invalid time format')
+
+  const [hours, minutes] = time12.split(':')
+  if (!hours || !minutes) throw new Error('Invalid time format')
+
+  let hour24 = parseInt(hours)
+
+  if (period === 'PM' && hour24 !== 12) hour24 += 12
+  if (period === 'AM' && hour24 === 12) hour24 = 0
+
+  return `${hour24.toString().padStart(2, '0')}:${minutes}`
+}
+
+export function combineDateTime(date: string, time: string) {
+  const baseDate = new Date(date)
+
+  const [hours, minutes] = convertTo24Hour(time).split(':')
+  if (!hours || !minutes) throw new Error('Invalid time format')
+
+  baseDate.setHours(parseInt(hours))
+  baseDate.setMinutes(parseInt(minutes))
+  baseDate.setSeconds(0)
+  baseDate.setMilliseconds(0)
+
+  return baseDate
+}
