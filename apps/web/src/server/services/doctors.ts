@@ -1,6 +1,17 @@
 import { doctors as doctorsTable, facilities } from '@web/server/db/schema'
-import { count, inArray, gte, sql, eq, or, between, and } from 'drizzle-orm'
+import {
+  count,
+  inArray,
+  gte,
+  sql,
+  eq,
+  or,
+  between,
+  and,
+  exists,
+} from 'drizzle-orm'
 import { db } from '@web/server/db'
+import { KENYA_COUNTIES } from '../data/kenya-counties'
 
 type FilterInput = {
   specialty?: string
@@ -53,17 +64,18 @@ export class Doctors {
     if (input.specialty) {
       conditions.push(eq(doctorsTable.specialty, input.specialty))
     }
-
-    //FIXME: This is not working as expected
     if (input.subSpecialties?.length) {
       conditions.push(
         sql`EXISTS (
-      SELECT 1 FROM jsonb_array_elements(${doctorsTable.subSpecialties}) as sub
-      WHERE sub->>'id' = ANY(${sql`ARRAY[${sql.join(input.subSpecialties)}]`})
-    )`,
+          SELECT 1 FROM jsonb_array_elements(${doctorsTable.subSpecialties}) elem
+          WHERE elem->>'id' IN (${input.subSpecialties
+            .map((id) => sql`${id}`)
+            .reduce((acc, curr, idx) =>
+              idx === 0 ? curr : sql`${acc}, ${curr}`,
+            )})
+        )`,
       )
     }
-
     if (input.experiences?.length) {
       conditions.push(
         or(
@@ -75,27 +87,32 @@ export class Doctors {
         ),
       )
     }
-
     if (input.genders?.length) {
       conditions.push(inArray(doctorsTable.gender, input.genders))
     }
+    if (input.county || input.town) {
+      const query = db
+        .select()
+        .from(facilities)
+        .where(
+          and(
+            input.county
+              ? eq(
+                  facilities.county,
+                  KENYA_COUNTIES.find((c) => c.code === input.county)?.name ??
+                    '',
+                )
+              : undefined,
+            input.town ? eq(facilities.town, input.town) : undefined,
+          ),
+        )
 
-    if (input.entities?.length || input.town || input.county) {
-      const facilityConditions = []
-
-      if (input.entities?.length) {
-        facilityConditions.push(inArray(facilities.type, input.entities))
-      }
-      if (input.town) {
-        facilityConditions.push(eq(facilities.town, input.town))
-      }
-      if (input.county) {
-        facilityConditions.push(eq(facilities.county, input.county))
-      }
-
-      conditions.push(and(...facilityConditions))
+      conditions.push(exists(query))
     }
 
+    if (input.town) {
+      console.log('town', input.town)
+    }
     return conditions.length ? and(...conditions) : undefined
   }
 
@@ -103,12 +120,12 @@ export class Doctors {
     const { page, limit } = input
     const offset = (page - 1) * limit
 
-    const totalCount = await db
+    const countQuery = db
       .select({ count: count() })
       .from(doctorsTable)
       .where(this.buildWhereConditions(input))
 
-    const doctors = await db.query.doctors.findMany({
+    const doctorsQuery = db.query.doctors.findMany({
       where: this.buildWhereConditions(input),
       limit,
       offset,
@@ -136,6 +153,8 @@ export class Doctors {
         operatingHours: true,
       },
     })
+
+    const [totalCount, doctors] = await Promise.all([countQuery, doctorsQuery])
 
     const upcomingAppointments = await this.getUpcomingAppointments(
       doctors.map((d) => d.id),
