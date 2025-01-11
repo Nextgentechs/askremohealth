@@ -38,7 +38,9 @@ export default async function Page({
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage>Book</BreadcrumbPage>
+            <BreadcrumbPage>
+              {doctor.user?.firstName} {doctor.user?.lastName}
+            </BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
