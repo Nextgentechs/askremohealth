@@ -16,10 +16,13 @@ const createContext = cache(async () => {
   const heads = new Headers(await headers())
   heads.set('x-trpc-source', 'rsc')
 
-  /*FIX ME:*/
+  const req = new Request('http://localhost', {
+    headers: heads,
+  })
+
   return createTRPCContext({
     auth: null,
-    // req,
+    req,
   })
 })
 
