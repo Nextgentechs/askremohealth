@@ -20,8 +20,8 @@ import { useToast } from '@web/hooks/use-toast'
 import AppointmentConfirmation from './appointment-confirmation'
 
 function useDoctorDetails() {
-  const { doctor } = useParams<{ doctor: string }>()
-  return api.doctors.details.useSuspenseQuery(doctor)
+  const { id } = useParams<{ id: string }>()
+  return api.doctors.details.useSuspenseQuery(id)
 }
 
 function DoctorCard() {

@@ -62,7 +62,7 @@ function TimeSlotCard({
               .slice(0, showMore[dayIndex] ? undefined : 5)
               .map((slot, index) => (
                 <Link
-                  href={`/doctor/${doctorId}/book?date=${day.date.toISOString()}&time=${slot.time}`}
+                  href={`/doctors/${doctorId}/book?date=${day.date.toISOString()}&time=${slot.time}`}
                   className={`${slot.available ? 'text-primary hover:underline' : 'cursor-not-allowed text-muted-foreground line-through'} inline-flex h-fit items-center justify-center p-0 text-xs font-medium underline-offset-4 transition-colors`}
                   key={index}
                 >
