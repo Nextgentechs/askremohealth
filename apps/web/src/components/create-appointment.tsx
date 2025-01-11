@@ -329,7 +329,7 @@ function BookingForm() {
       setIsOpen(true)
       await utils.doctors.invalidate()
       setTimeout(() => {
-        router.push('/find-doctor')
+        router.push('/doctors')
       }, 5000)
     } catch (error) {
       console.error(error)
