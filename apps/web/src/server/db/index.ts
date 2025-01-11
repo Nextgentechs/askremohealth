@@ -18,4 +18,4 @@ if (env.NODE_ENV !== 'production') globalForDb.conn = conn
 
 const schema = { ...tables, ...relations }
 
-export const db = drizzle(conn, { schema })
+export const db = drizzle(conn, { schema, logger: true })
