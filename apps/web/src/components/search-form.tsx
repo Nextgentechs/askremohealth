@@ -69,7 +69,7 @@ export function SearchForm() {
     if (specialty) params.append('specialty', specialty)
     if (town) params.append('town', town)
 
-    router.push(`/find-doctor?${params.toString()}`)
+    router.push(`/doctors?${params.toString()}`)
   }
 
   return (
@@ -137,7 +137,7 @@ export function SearchForm() {
                 <SelectSkeleton />
               ) : (
                 towns?.map((town) => (
-                  <SelectItem key={town.id} value={town.id ?? ''}>
+                  <SelectItem key={town.id} value={town.name ?? ''}>
                     {town.name}
                   </SelectItem>
                 ))

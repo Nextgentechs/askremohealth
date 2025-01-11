@@ -11,7 +11,7 @@ import {
 } from '@web/components/ui/breadcrumb'
 import React from 'react'
 
-export default function FindDoctor() {
+export default function Pasge() {
   return (
     <main className="container mx-auto mt-12 flex min-h-screen w-full flex-col gap-12">
       <Breadcrumb className="lg:ps-3">
