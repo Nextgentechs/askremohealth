@@ -14,13 +14,15 @@ export default function DoctorDetails({
   return (
     <div className="flex w-full max-w-xs flex-col gap-6">
       <div className="flex flex-row gap-3">
-        <Avatar className="size-24 shrink-0 md:hidden md:size-28">
-          <AvatarImage src={doctor.user?.profilePicture?.url} />
-          <AvatarFallback>
-            {doctor.user?.firstName.charAt(0)}
-            {doctor.user?.lastName.charAt(0)}
-          </AvatarFallback>
-        </Avatar>
+        <Link href={`/doctors/${doctor.id}`}>
+          <Avatar className="size-24 shrink-0 cursor-pointer md:hidden md:size-28">
+            <AvatarImage src={doctor.user?.profilePicture?.url} />
+            <AvatarFallback>
+              {doctor.user?.firstName.charAt(0)}
+              {doctor.user?.lastName.charAt(0)}
+            </AvatarFallback>
+          </Avatar>
+        </Link>
         <div className="flex flex-col gap-3">
           <div className="flex flex-col items-start gap-0.5">
             <Link
