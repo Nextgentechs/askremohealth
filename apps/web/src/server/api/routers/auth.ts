@@ -177,4 +177,21 @@ export const authRouter = createTRPCRouter({
       cookieStore.set(cookie.name, cookie.value, cookie.attributes)
     }),
   },
+
+  patients: {
+    phoneValidation: publicProcedure
+      .input(z.string())
+      .mutation(async ({ ctx, input }) => {
+        const user = await ctx.db.query.users.findFirst({
+          where: (user, { eq, and }) =>
+            and(eq(user.phone, input), eq(user.hasAccount, true)),
+        })
+
+        if (!user) {
+          return { success: false }
+        }
+
+        return { success: true }
+      }),
+  },
 })
