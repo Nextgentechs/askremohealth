@@ -27,13 +27,13 @@ const navOptions = [
     icon: Home,
   },
   {
-    label: 'Find a Doctor',
-    href: '/find-doctor',
+    label: 'Doctors',
+    href: '/doctors',
     icon: Stethoscope,
   },
   {
-    label: 'Find a Hospital',
-    href: '/find-hospital',
+    label: 'Hospitals & Clinics',
+    href: '/hospitals',
     icon: Hospital,
   },
   {
