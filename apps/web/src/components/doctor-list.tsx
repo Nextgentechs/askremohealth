@@ -24,6 +24,7 @@ import { useDoctorSearchParams } from './search-form'
 import { getScheduleForWeek } from '@web/lib/utils'
 import { Skeleton } from './ui/skeleton'
 import DoctorDetails from './doctor-details'
+import { useRouter } from 'next/navigation'
 
 type ScheduleDay = {
   date: Date
@@ -176,22 +177,26 @@ function useDoctorList() {
     }
   })
 
-  return api.doctors.list.useQuery({
-    county: searchParams.county ?? undefined,
-    town: searchParams.town ?? undefined,
-    query: searchParams.query ?? undefined,
-    specialty: searchParams.specialty ?? undefined,
-    subSpecialties: searchParams.subSpecialties ?? undefined,
-    experiences: transformedExperiences,
-    genders:
-      searchParams.genders?.map((g) => g as 'male' | 'female') ?? undefined,
-    entities: searchParams.entities ?? undefined,
-    page,
-    limit: 10,
-  })
+  return api.doctors.list.useQuery(
+    {
+      county: searchParams.county ?? undefined,
+      town: searchParams.town ?? undefined,
+      query: searchParams.query ?? undefined,
+      specialty: searchParams.specialty ?? undefined,
+      subSpecialties: searchParams.subSpecialties ?? undefined,
+      experiences: transformedExperiences,
+      genders:
+        searchParams.genders?.map((g) => g as 'male' | 'female') ?? undefined,
+      entities: searchParams.entities ?? undefined,
+      page,
+      limit: 10,
+    },
+    { refetchOnMount: false },
+  )
 }
 
 export default function DoctorList() {
+  const router = useRouter()
   const [searchParams, setSearchParams] = useDoctorSearchParams()
   const { data, isLoading } = useDoctorList()
   const page = Number(searchParams.page)
@@ -218,8 +223,11 @@ export default function DoctorList() {
           key={doctor.id}
           className="flex h-fit w-full flex-col justify-between gap-8 rounded-xl border shadow-sm sm:flex-row lg:flex-row"
         >
-          <div className="flex flex-1 flex-row gap-5 md:gap-8 xl:gap-10">
-            <Avatar className="hidden md:block md:size-28">
+          <div
+            className="flex flex-1 flex-row gap-5 md:gap-8 xl:gap-10"
+            onClick={() => router.push(`/doctors/${doctor.id}`)}
+          >
+            <Avatar className="hidden cursor-pointer md:block md:size-28">
               <AvatarImage src={doctor.user.profilePicture?.url} />
               <AvatarFallback>
                 {doctor.user.firstName.charAt(0)}
