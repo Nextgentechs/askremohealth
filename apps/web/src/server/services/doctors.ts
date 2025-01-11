@@ -110,9 +110,6 @@ export class Doctors {
       conditions.push(exists(query))
     }
 
-    if (input.town) {
-      console.log('town', input.town)
-    }
     return conditions.length ? and(...conditions) : undefined
   }
 
