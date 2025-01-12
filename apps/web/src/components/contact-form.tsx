@@ -20,6 +20,7 @@ import { api } from '@web/trpc/react'
 import { useToast } from '@web/hooks/use-toast'
 import { Loader } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 const loginSchema = z.object({
   phone: z
@@ -72,19 +73,19 @@ export default function PhoneNumberForm() {
       if (isValid) {
         try {
           const res = await validatePhone(phoneValue)
-          if (res.success) {
-            toast({
-              title: 'Phone number validated',
-              description: 'Provide your password to continue',
-            })
-            setStep('password')
-          } else {
-            toast({
-              title: 'No account found',
-              description: 'Redirecting you to sign up...',
-              variant: 'destructive',
-            })
+          if (!res.success) {
+            router.push(`/signup`)
+            return
           }
+          if (res.success && !res.user?.hasAccount) {
+            router.push(`/signup?user=${res.user?.id}`)
+            return
+          }
+          toast({
+            title: 'Phone number validated',
+            description: 'Provide your password to continue',
+          })
+          setStep('password')
         } catch (error) {
           console.error(error)
           toast({
@@ -201,6 +202,16 @@ export default function PhoneNumberForm() {
               'Login'
             )}
           </Button>
+
+          <p className="text-center text-sm text-muted-foreground">
+            Don&apos;t have an account?{' '}
+            <Link
+              href="/signup"
+              className="font-medium text-primary hover:underline"
+            >
+              Sign up
+            </Link>
+          </p>
         </form>
       </CardContent>
     </Card>

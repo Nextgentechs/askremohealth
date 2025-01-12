@@ -1,5 +1,6 @@
 import { eq } from 'drizzle-orm'
 import { createTRPCRouter, doctorProcedure, publicProcedure } from '../trpc'
+import { z } from 'zod'
 
 export const usersRouter = createTRPCRouter({
   currentUser: publicProcedure.query(async ({ ctx }) => {
@@ -30,5 +31,19 @@ export const usersRouter = createTRPCRouter({
       })
       return doctor ?? null
     }),
+  },
+  patients: {
+    details: publicProcedure
+      .input(z.string().optional())
+      .query(async ({ ctx, input }) => {
+        if (!input) return null
+        const patient = await ctx.db.query.patients.findFirst({
+          where: (patient) => eq(patient.id, input),
+          with: {
+            user: true,
+          },
+        })
+        return patient
+      }),
   },
 })
