@@ -9,13 +9,13 @@
 import { initTRPC, TRPCError } from '@trpc/server'
 import superjson from 'superjson'
 import { ZodError } from 'zod'
-import { jwtVerify } from 'jose'
 
 import { db } from '@web/server/db'
 import { type User } from 'lucia'
 import { type Session } from 'lucia'
 import { session } from 'src/lib/lucia'
 import { env } from '@web/env'
+import { jwtVerify } from 'jose'
 
 type SessionData =
   | { user: User; session: Session }
@@ -27,12 +27,16 @@ async function createSession(request?: Request): Promise<SessionData> {
   const authSession = await session()
   if (authSession.user) return authSession
 
-  const token = request?.headers.get('Authorization')?.split(' ')[1]
-  if (!token) return { user: null, session: null }
+  const accessToken = request?.headers.get('Authorization')?.split(' ')[1]
+  if (!accessToken) return { user: null, session: null }
 
   try {
     const secret = new TextEncoder().encode(env.JWT_SECRET)
-    const payload = await jwtVerify(token, secret, { algorithms: ['HS256'] })
+    const payload = await jwtVerify(accessToken, secret, {
+      algorithms: ['HS256'],
+      audience: 'https://www.askvirtualhealthcare.com/',
+      issuer: 'https://www.askvirtualhealthcare.com/',
+    })
     if (!payload) return { user: null, session: null }
 
     return {
