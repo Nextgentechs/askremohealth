@@ -19,6 +19,7 @@ import { z } from 'zod'
 import { api } from '@web/trpc/react'
 import { useToast } from '@web/hooks/use-toast'
 import { Loader } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 const loginSchema = z.object({
   phone: z
@@ -49,7 +50,7 @@ type FormValues = z.infer<typeof loginSchema>
 
 export default function PhoneNumberForm() {
   const [step, setStep] = useState<'phone' | 'password'>('phone')
-
+  const router = useRouter()
   const form = useForm<FormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -61,6 +62,8 @@ export default function PhoneNumberForm() {
   const { toast } = useToast()
   const { mutateAsync: validatePhone, isPending: validatePhonePending } =
     api.auth.patients.phoneValidation.useMutation()
+  const { mutateAsync: login, isPending: loginPending } =
+    api.auth.patients.login.useMutation()
 
   const handlePhoneSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -86,7 +89,7 @@ export default function PhoneNumberForm() {
           console.error(error)
           toast({
             title: 'Error',
-            description: 'Validation failed,pleasetry again',
+            description: 'Validation failed,please try again',
             variant: 'destructive',
           })
         }
@@ -94,8 +97,25 @@ export default function PhoneNumberForm() {
     })
   }
 
-  const handleLoginSubmit = form.handleSubmit((data) => {
-    console.log('Step 2 - Login:', data)
+  const handleLoginSubmit = form.handleSubmit(async (data) => {
+    try {
+      const res = await login(data)
+      if (res.success) {
+        toast({
+          title: 'Login successful',
+          description: 'Redirecting to dashboard...',
+        })
+        router.push('/dashboard')
+      }
+    } catch (error) {
+      toast({
+        title: 'Login failed',
+        description:
+          error instanceof Error ? error.message : 'Something went wrong',
+        variant: 'destructive',
+      })
+      console.error(error)
+    }
   })
 
   return (
@@ -170,7 +190,7 @@ export default function PhoneNumberForm() {
             className="w-full"
             disabled={validatePhonePending || form.formState.isSubmitting}
           >
-            {validatePhonePending ? (
+            {validatePhonePending || loginPending ? (
               <>
                 <Loader className={`animate-spin`} />
                 Validating...

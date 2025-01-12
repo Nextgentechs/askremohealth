@@ -190,6 +190,39 @@ export const authRouter = createTRPCRouter({
         if (!user) {
           return { success: false }
         }
+        return { success: true }
+      }),
+
+    login: publicProcedure
+      .input(z.object({ phone: z.string(), password: z.string() }))
+      .mutation(async ({ ctx, input }) => {
+        const user = await ctx.db.query.users.findFirst({
+          where: (user) => eq(user.phone, input.phone),
+        })
+
+        if (!user) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'User not found',
+          })
+        }
+
+        const passwordMatch = await bcrypt.compare(
+          input.password,
+          user.password!,
+        )
+
+        if (!passwordMatch) {
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'Invalid password',
+          })
+        }
+
+        const session = await lucia.createSession(user.id, {})
+        const cookie = lucia.createSessionCookie(session.id)
+        const cookieStore = await cookies()
+        cookieStore.set(cookie.name, cookie.value, cookie.attributes)
 
         return { success: true }
       }),
