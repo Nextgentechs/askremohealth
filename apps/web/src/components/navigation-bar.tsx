@@ -135,7 +135,7 @@ function CurrentUser({
       <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width] min-w-44 rounded-lg">
         {/* <DropdownMenuLabel>My Account</DropdownMenuLabel> */}
         <DropdownMenuGroup>
-          <Link href="/profile">
+          <Link href="/appointments">
             <DropdownMenuItem>
               <Calendar />
               Appointments
