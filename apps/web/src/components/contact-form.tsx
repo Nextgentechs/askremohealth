@@ -106,7 +106,7 @@ export default function PhoneNumberForm() {
           title: 'Login successful',
           description: 'Redirecting to dashboard...',
         })
-        router.push('/dashboard')
+        router.push('/appointments')
       }
     } catch (error) {
       toast({
