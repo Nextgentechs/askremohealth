@@ -22,7 +22,6 @@ import {
 import { api, type RouterOutputs } from '@web/trpc/react'
 import { useDoctorSearchParams } from './search-form'
 import { getScheduleForWeek } from '@web/lib/utils'
-import { Skeleton } from './ui/skeleton'
 import DoctorDetails from './doctor-details'
 import { useRouter } from 'next/navigation'
 
@@ -142,14 +141,6 @@ function TimeSlotCarousel({
   )
 }
 
-function DoctorCardSkeleton() {
-  return (
-    <Card className="flex h-64 w-full flex-col justify-between gap-8 rounded-xl border border-none p-0 shadow-sm sm:flex-row lg:flex-row">
-      <Skeleton className="h-full w-full rounded-xl" />
-    </Card>
-  )
-}
-
 function EmptyDoctors() {
   return (
     <Card className="flex h-64 w-full flex-col items-center justify-center gap-2 text-center">
@@ -177,7 +168,7 @@ function useDoctorList() {
     }
   })
 
-  return api.doctors.list.useQuery(
+  return api.doctors.list.useSuspenseQuery(
     {
       county: searchParams.county ?? undefined,
       town: searchParams.town ?? undefined,
@@ -198,19 +189,9 @@ function useDoctorList() {
 export default function DoctorList() {
   const router = useRouter()
   const [searchParams, setSearchParams] = useDoctorSearchParams()
-  const { data, isLoading } = useDoctorList()
+  const [data] = useDoctorList()
   const page = Number(searchParams.page)
   const totalPages = Math.ceil((data?.count ?? 0) / 10)
-
-  if (isLoading) {
-    return (
-      <div className="flex w-full flex-col gap-6">
-        {[...Array(10)].map((_, i) => (
-          <DoctorCardSkeleton key={i} />
-        ))}
-      </div>
-    )
-  }
 
   if (!data?.doctors.length) {
     return <EmptyDoctors />
