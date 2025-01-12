@@ -3,6 +3,7 @@ import {
   certificates,
   doctors,
   operatingHours,
+  patients,
   profilePictures,
   users,
 } from '@web/server/db/schema'
@@ -16,6 +17,7 @@ import { z } from 'zod'
 import { lucia } from '@web/lib/lucia'
 import { cookies } from 'next/headers'
 import { Facility } from '@web/server/services/facilities'
+import { User } from '@web/server/services/users'
 
 export const authRouter = createTRPCRouter({
   doctor: {
@@ -176,5 +178,107 @@ export const authRouter = createTRPCRouter({
       const cookieStore = await cookies()
       cookieStore.set(cookie.name, cookie.value, cookie.attributes)
     }),
+  },
+
+  patients: {
+    phoneValidation: publicProcedure
+      .input(z.string())
+      .mutation(async ({ ctx, input }) => {
+        const user = await ctx.db.query.users.findFirst({
+          where: (user, { eq, and }) => and(eq(user.phone, input)),
+        })
+
+        if (!user) {
+          return { success: false }
+        }
+
+        return { success: true, user }
+      }),
+
+    login: publicProcedure
+      .input(z.object({ phone: z.string(), password: z.string() }))
+      .mutation(async ({ ctx, input }) => {
+        const user = await ctx.db.query.users.findFirst({
+          where: (user) => eq(user.phone, input.phone),
+        })
+
+        if (!user) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'User not found',
+          })
+        }
+
+        const passwordMatch = await bcrypt.compare(
+          input.password,
+          user.password!,
+        )
+
+        if (!passwordMatch) {
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'Invalid password',
+          })
+        }
+
+        const session = await lucia.createSession(user.id, {})
+        const cookie = lucia.createSessionCookie(session.id)
+        const cookieStore = await cookies()
+        cookieStore.set(cookie.name, cookie.value, cookie.attributes)
+
+        return { success: true }
+      }),
+
+    signup: publicProcedure
+      .input(
+        z.object({
+          firstName: z.string(),
+          lastName: z.string(),
+          email: z.string(),
+          phone: z.string(),
+          dob: z.string(),
+          password: z.string(),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        const hashedPassword = await bcrypt.hash(input.password, 10)
+        const user = await ctx.db.query.users.findFirst({
+          where: (user) => eq(user.phone, input.phone),
+        })
+
+        if (user && !user.hasAccount) {
+          await ctx.db
+            .update(users)
+            .set({
+              firstName: input.firstName,
+              lastName: input.lastName,
+              phone: input.phone,
+              email: input.email,
+              password: hashedPassword,
+              dob: new Date(input.dob),
+              hasAccount: true,
+            })
+            .where(eq(users.id, user.id))
+
+          return { success: true }
+        }
+
+        const newUser = await User.createUser({
+          firstName: input.firstName,
+          lastName: input.lastName,
+          email: input.email,
+          phone: input.phone,
+          password: hashedPassword,
+          dob: new Date(input.dob),
+          role: 'patient',
+          hasAccount: true,
+        })
+
+        await ctx.db.insert(patients).values({
+          id: newUser.id,
+        })
+
+        return { success: true }
+      }),
   },
 })
