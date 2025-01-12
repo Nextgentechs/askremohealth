@@ -1,6 +1,6 @@
 import { z } from 'zod'
-import { createTRPCRouter, publicProcedure } from '../trpc'
-import { eq } from 'drizzle-orm'
+import { createTRPCRouter, procedure, publicProcedure } from '../trpc'
+import { and, count, eq } from 'drizzle-orm'
 
 import { appointments } from '@web/server/db/schema'
 import { AppointmentStatus } from '@web/server/utils'
@@ -123,6 +123,100 @@ export const appointmentsRouter = createTRPCRouter({
         })
 
         return { success: true }
+      }),
+
+    list: procedure
+      .input(
+        z.object({
+          page: z.number().default(1),
+          limit: z.number().default(10),
+          type: z.enum(['physical', 'online']).optional(),
+          status: z
+            .enum([
+              'scheduled',
+              'pending',
+              'completed',
+              'cancelled',
+              'rescheduled',
+              'missed',
+              'in_progress',
+            ])
+            .optional(),
+        }),
+      )
+      .query(async ({ ctx, input }) => {
+        const offset = (input.page - 1) * input.limit
+
+        const whereConditions = () =>
+          and(
+            eq(appointments.patientId, ctx.user.id),
+            input.type ? eq(appointments.type, input.type) : undefined,
+            input.status ? eq(appointments.status, input.status) : undefined,
+          )
+
+        const [countResult, appointmentsList] = await Promise.all([
+          ctx.db
+            .select({ count: count() })
+            .from(appointments)
+            .where(whereConditions)
+            .then((res) => Number(res[0]?.count)),
+          ctx.db.query.appointments.findMany({
+            where: whereConditions,
+            columns: {
+              id: true,
+              appointmentDate: true,
+              status: true,
+              notes: true,
+              type: true,
+            },
+            with: {
+              doctor: {
+                columns: {
+                  id: true,
+                  title: true,
+                  consultationFee: true,
+                },
+                with: {
+                  user: {
+                    columns: {
+                      firstName: true,
+                      lastName: true,
+                    },
+                    with: {
+                      profilePicture: true,
+                    },
+                  },
+                  specialty: {
+                    columns: {
+                      name: true,
+                    },
+                  },
+                  facility: {
+                    columns: {
+                      address: true,
+                      type: true,
+                      name: true,
+                    },
+                  },
+                },
+              },
+            },
+            limit: input.limit,
+            offset,
+          }),
+        ])
+
+        const totalCount = countResult
+
+        return {
+          appointments: appointmentsList,
+          meta: {
+            total: totalCount,
+            page: input.page,
+            limit: input.limit,
+            pageCount: Math.ceil(totalCount / input.limit),
+          },
+        }
       }),
   },
 })
