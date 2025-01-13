@@ -54,7 +54,7 @@ export const newAppointmentSchema = z.object({
   lastName: z.string(),
   phone: z.string(),
   email: z.string(),
-  dob: z.date(),
+  dob: z.string().transform((str) => new Date(str)),
   notes: z.string().optional(),
   date: z.date().refine((date) => date > new Date(), {
     message: 'Date must be in the future',

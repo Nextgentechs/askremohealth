@@ -73,12 +73,12 @@ export default function AppointmentConfirmation({
             transition={{ delay: 0.5 }}
             className="flex flex-col gap-3 sm:flex-row sm:justify-center sm:gap-8"
           >
-            <Link href="/auth/login" className="w-full sm:w-auto">
+            <Link href="/login" className="w-full sm:w-auto">
               <Button variant="default" className="w-full sm:w-auto">
                 Log In
               </Button>
             </Link>
-            <Link href="/auth/sign-up" className="w-full sm:w-auto">
+            <Link href="/sign-up" className="w-full sm:w-auto">
               <Button variant="outline" className="w-full sm:w-auto">
                 Register
               </Button>

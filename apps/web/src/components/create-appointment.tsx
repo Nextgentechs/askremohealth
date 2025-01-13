@@ -291,7 +291,7 @@ const appointmentSchema = z.object({
       return val
     }),
   email: z.string().email({ message: 'Invalid email address' }),
-  dob: z.date(),
+  dob: z.string(),
   notes: z.string().optional(),
 })
 
@@ -310,7 +310,7 @@ function BookingForm() {
       lastName: currentUser?.lastName ?? '',
       phone: currentUser?.phone ?? '',
       email: currentUser?.email ?? '',
-      dob: currentUser?.dob ?? new Date(),
+      dob: currentUser?.dob?.toISOString().split('T')[0] ?? '',
     },
   })
 
@@ -346,9 +346,6 @@ function BookingForm() {
       }
       setIsOpen(true)
       await utils.doctors.invalidate()
-      setTimeout(() => {
-        router.push('/doctors')
-      }, 5000)
     } catch (error) {
       console.error(error)
       toast({
