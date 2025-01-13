@@ -9,7 +9,7 @@ import DoctorDetails from './doctor-details'
 import { Label } from './ui/label'
 import { RadioGroup, RadioGroupItem } from './ui/radio-group'
 import { Input } from './ui/input'
-import { CalendarIcon, ClockIcon, Loader } from 'lucide-react'
+import { CalendarIcon, Check, ClockIcon, Loader } from 'lucide-react'
 import { Textarea } from './ui/textarea'
 import { Button } from './ui/button'
 import { z } from 'zod'
@@ -291,7 +291,7 @@ const appointmentSchema = z.object({
       return val
     }),
   email: z.string().email({ message: 'Invalid email address' }),
-  dob: z.string().min(10, { message: 'Date of birth is required' }),
+  dob: z.date(),
   notes: z.string().optional(),
 })
 
@@ -300,11 +300,17 @@ function BookingForm() {
   const searchParams = useSearchParams()
   const { toast } = useToast()
   const [doctorDetails] = useDoctorDetails()
+  const { data: currentUser } = api.users.currentUser.useQuery()
 
   const form = useForm<z.infer<typeof appointmentSchema>>({
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
       appointmentType: 'online',
+      firstName: currentUser?.firstName ?? '',
+      lastName: currentUser?.lastName ?? '',
+      phone: currentUser?.phone ?? '',
+      email: currentUser?.email ?? '',
+      dob: currentUser?.dob ?? new Date(),
     },
   })
 
@@ -326,6 +332,18 @@ function BookingForm() {
 
       await mutateAsync(finalData)
       form.reset()
+      if (currentUser) {
+        toast({
+          description: (
+            <div className="flex items-center gap-2">
+              <Check className="h-4 w-4 text-green-500" />
+              <span>Appointment booked successfully</span>
+            </div>
+          ),
+        })
+        router.push('/appointments')
+        return
+      }
       setIsOpen(true)
       await utils.doctors.invalidate()
       setTimeout(() => {
