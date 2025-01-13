@@ -4,7 +4,6 @@ import { AppointmentStatus } from '@web/server/api/schema'
 import { and, inArray, lt } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
 
-export const runtime = 'edge'
 export const dynamic = 'force-dynamic'
 
 async function authenticate(req: Request) {
