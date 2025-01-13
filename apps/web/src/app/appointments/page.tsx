@@ -1,14 +1,7 @@
 import React from 'react'
-import {
-  Banknote,
-  CalendarClock,
-  Hospital,
-  MapPin,
-  MoreHorizontal,
-} from 'lucide-react'
+import { Banknote, CalendarClock, Hospital, MapPin } from 'lucide-react'
 import { api } from '@web/trpc/server'
 import { Card } from '@web/components/ui/card'
-import { Button } from '@web/components/ui/button'
 import { Badge } from '@web/components/ui/badge'
 import {
   BreadcrumbPage,
@@ -18,17 +11,13 @@ import {
   BreadcrumbItem,
   BreadcrumbLink,
 } from '@web/components/ui/breadcrumb'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@web/components/ui/dropdown-menu'
 import { type RouterOutputs } from '@web/server/api'
 import { format } from 'date-fns'
 import { formatMoney } from '@web/lib/utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@web/components/ui/avatar'
 import AppointmentsPagination from '@web/components/appointments-pagination'
+import { PendingAppointmentActions } from '@web/components/appointment-actions'
+import { AppointmentStatus } from '@web/server/utils'
 
 export default async function Page({
   searchParams,
@@ -36,8 +25,6 @@ export default async function Page({
   searchParams: Promise<{ page: string }>
 }) {
   const { page } = await searchParams
-  console.log('page', page)
-
   const appointments = await api.appointments.patients.list({
     page: page ? parseInt(page) : 1,
     limit: 6,
@@ -78,8 +65,8 @@ function AppointmentCard({
 }) {
   return (
     <Card className="rounded-xl border shadow-sm">
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-row items-center justify-between">
+      <div className="flex flex-col justify-between gap-4">
+        <div className="flex flex-row items-start justify-between">
           <div className="flex flex-row items-center gap-2">
             <Avatar className="size-16">
               <AvatarImage src={appointment.doctor.user.profilePicture.url} />
@@ -98,44 +85,37 @@ function AppointmentCard({
               </span>
             </div>
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost">
-                <MoreHorizontal />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem>Cancel Appointment</DropdownMenuItem>
-              <DropdownMenuItem>Reschedule Appointment</DropdownMenuItem>
-              <DropdownMenuItem>View Doctor Profile</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {appointment.status === AppointmentStatus.PENDING ||
+            (appointment.status === AppointmentStatus.SCHEDULED && (
+              <PendingAppointmentActions
+                appointmentId={appointment.id}
+                doctorId={appointment.doctor.id}
+              />
+            ))}
         </div>
 
-        <div className="grid gap-2 sm:grid-cols-2">
+        <div className="grid flex-1 gap-2 sm:grid-cols-2">
           <div className="flex flex-row items-start gap-1">
-            <Hospital className="mt-1 size-4" />
+            <Hospital className="mt-1 size-5" />
             <p className="text-sm">
               {appointment.doctor.facility?.name ?? 'N/A'}
             </p>
           </div>
 
           <div className="flex flex-row items-start gap-1">
-            <MapPin className="mt-1 size-4" />
-            <p className="text-sm">
-              {appointment.doctor.facility?.address ?? 'N/A'}
-            </p>
+            <MapPin className="size-5" />
+            <p className="text-sm">{appointment.doctor.facility?.address}</p>
           </div>
 
           <div className="flex flex-row items-center gap-1">
-            <Banknote className="size-4" />
+            <Banknote className="size-5" />
             <p className="text-sm">
               Fee: {formatMoney(appointment.doctor.consultationFee ?? 0)}
             </p>
           </div>
 
           <div className="flex flex-row items-center gap-1">
-            <CalendarClock className="size-4" />
+            <CalendarClock className="size-5" />
             <p className="text-sm">
               {format(appointment.appointmentDate, 'dd MMM yyyy, hh:mm a')}
             </p>
@@ -148,6 +128,7 @@ function AppointmentCard({
               ? 'Physical Appointment'
               : 'Online Appointment'}
           </Badge>
+
           <Badge variant={appointment.status}>{appointment.status}</Badge>
         </div>
       </div>
