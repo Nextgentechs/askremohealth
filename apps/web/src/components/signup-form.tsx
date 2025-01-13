@@ -16,7 +16,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { api, type RouterOutputs } from '@web/trpc/react'
 import { useToast } from '@web/hooks/use-toast'
-import { useRouter } from 'next/navigation'
+import { useRouter } from 'next-nprogress-bar'
 import { Loader } from 'lucide-react'
 
 const signupSchema = z
