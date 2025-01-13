@@ -14,6 +14,7 @@ export const env = createEnv({
       .default('development'),
     BLOB_READ_WRITE_TOKEN: z.string(),
     GOOGLE_MAPS_API_KEY: z.string(),
+    CRON_SECRET: z.string(),
   },
 
   /**
@@ -35,6 +36,7 @@ export const env = createEnv({
     JWT_SECRET: process.env.JWT_SECRET,
     BLOB_READ_WRITE_TOKEN: process.env.BLOB_READ_WRITE_TOKEN,
     GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY,
+    CRON_SECRET: process.env.CRON_SECRET,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**

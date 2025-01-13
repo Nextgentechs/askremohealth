@@ -4,11 +4,15 @@ import { Button } from './ui/button'
 import {
   Book,
   BriefcaseMedical,
+  Calendar,
+  ChevronsUpDown,
   Home,
   Hospital,
   LogIn,
+  LogOut,
   Menu,
   Stethoscope,
+  User,
 } from 'lucide-react'
 import {
   NavigationMenu,
@@ -19,6 +23,15 @@ import {
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from './ui/sheet'
 import Link from 'next/link'
 import Logo from './logo'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu'
+import { api, type RouterOutputs } from '@web/trpc/react'
 
 const navOptions = [
   {
@@ -68,6 +81,7 @@ function AuthButtons({
 }
 
 function MobileMenu() {
+  const { data: user } = api.users.currentUser.useQuery()
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -90,13 +104,67 @@ function MobileMenu() {
             </Link>
           ))}
         </div>
-        <AuthButtons className="flex flex-col items-start border-t px-4 pt-4" />
+        {user ? (
+          <div className="ms-4">
+            <CurrentUser user={user} />
+          </div>
+        ) : (
+          <AuthButtons className="flex flex-col items-start border-t px-4 pt-4" />
+        )}
       </SheetContent>
     </Sheet>
   )
 }
 
-export default function NavigationBar() {
+function CurrentUser({
+  user,
+}: {
+  user: RouterOutputs['users']['currentUser']
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline">
+          <User />
+          <span>
+            {user?.firstName} {user?.lastName}
+          </span>
+          <ChevronsUpDown className="ml-auto size-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width] min-w-44 rounded-lg">
+        {/* <DropdownMenuLabel>My Account</DropdownMenuLabel> */}
+        <DropdownMenuGroup>
+          <Link href="/appointments">
+            <DropdownMenuItem>
+              <Calendar />
+              Appointments
+            </DropdownMenuItem>
+          </Link>
+          <Link href="/profile">
+            <DropdownMenuItem>
+              <User />
+              My Profile
+            </DropdownMenuItem>
+          </Link>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator className="bg-border" />
+        <DropdownMenuGroup>
+          <DropdownMenuItem>
+            <LogOut />
+            Log out
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+export default function NavigationBar({
+  user,
+}: {
+  user: RouterOutputs['users']['currentUser']
+}) {
   return (
     <div className="flex w-full flex-row items-center justify-between lg:px-5">
       <Logo />
@@ -116,7 +184,13 @@ export default function NavigationBar() {
       </NavigationMenu>
 
       <div className="flex items-center gap-4">
-        <AuthButtons className="hidden lg:flex lg:gap-4" />
+        {user ? (
+          <div className="hidden sm:block">
+            <CurrentUser user={user} />
+          </div>
+        ) : (
+          <AuthButtons className="hidden flex-row items-center gap-4 lg:flex" />
+        )}
         <MobileMenu />
         {/* <ModeToggle /> */}
       </div>

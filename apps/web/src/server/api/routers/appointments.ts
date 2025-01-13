@@ -1,13 +1,14 @@
 import { z } from 'zod'
-import { createTRPCRouter, publicProcedure } from '../trpc'
-import { eq } from 'drizzle-orm'
+import { createTRPCRouter, procedure, publicProcedure } from '../trpc'
+import { and, count, eq } from 'drizzle-orm'
 
-import { appointments } from '@web/server/db/schema'
+import { appointmentLogs, appointments } from '@web/server/db/schema'
 import { AppointmentStatus } from '@web/server/utils'
 import { newAppointmentSchema } from '../schema'
 import { db } from '@web/server/db'
 import Appointments from '@web/server/services/appointments'
 import assert from 'assert'
+import { TRPCError } from '@trpc/server'
 
 const appointmentSchema = z.object({
   type: z.enum(['physical', 'online']),
@@ -123,6 +124,203 @@ export const appointmentsRouter = createTRPCRouter({
         })
 
         return { success: true }
+      }),
+
+    list: procedure
+      .input(
+        z.object({
+          page: z.number().default(1),
+          limit: z.number().default(10),
+          type: z.enum(['physical', 'online']).optional(),
+          status: z
+            .enum([
+              'scheduled',
+              'pending',
+              'completed',
+              'cancelled',
+              'rescheduled',
+              'missed',
+              'in_progress',
+            ])
+            .optional(),
+        }),
+      )
+      .query(async ({ ctx, input }) => {
+        const offset = (input.page - 1) * input.limit
+
+        const whereConditions = () =>
+          and(
+            eq(appointments.patientId, ctx.user.id),
+            input.type ? eq(appointments.type, input.type) : undefined,
+            input.status ? eq(appointments.status, input.status) : undefined,
+          )
+
+        const [countResult, appointmentsList] = await Promise.all([
+          ctx.db
+            .select({ count: count() })
+            .from(appointments)
+            .where(whereConditions)
+            .then((res) => Number(res[0]?.count)),
+          ctx.db.query.appointments.findMany({
+            where: whereConditions,
+            columns: {
+              id: true,
+              appointmentDate: true,
+              status: true,
+              notes: true,
+              type: true,
+              updatedAt: true,
+            },
+            with: {
+              doctor: {
+                columns: {
+                  id: true,
+                  title: true,
+                  consultationFee: true,
+                },
+                with: {
+                  user: {
+                    columns: {
+                      firstName: true,
+                      lastName: true,
+                    },
+                    with: {
+                      profilePicture: true,
+                    },
+                  },
+                  specialty: {
+                    columns: {
+                      name: true,
+                    },
+                  },
+                  facility: {
+                    columns: {
+                      address: true,
+                      type: true,
+                      name: true,
+                    },
+                  },
+                },
+              },
+            },
+            limit: input.limit,
+            offset,
+            orderBy: (appointments, { desc }) => [
+              desc(appointments.updatedAt),
+              desc(appointments.appointmentDate),
+            ],
+          }),
+        ])
+
+        const totalCount = countResult
+
+        return {
+          appointments: appointmentsList,
+          meta: {
+            total: totalCount,
+            page: input.page,
+            limit: input.limit,
+            pageCount: Math.ceil(totalCount / input.limit),
+          },
+        }
+      }),
+
+    cancel: publicProcedure
+      .input(z.string())
+      .mutation(async ({ ctx, input }) => {
+        const appointment = await db.query.appointments.findFirst({
+          where: (appointment, { eq, and, inArray, gte }) =>
+            and(
+              gte(appointment.appointmentDate, new Date()),
+              eq(appointment.id, input),
+              eq(appointment.patientId, ctx.user?.id ?? ''),
+              inArray(appointment.status, [
+                AppointmentStatus.SCHEDULED,
+                AppointmentStatus.PENDING,
+                AppointmentStatus.IN_PROGRESS,
+              ]),
+            ),
+        })
+        if (!appointment) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Appointment not found',
+          })
+        }
+
+        await Promise.all([
+          ctx.db
+            .update(appointments)
+            .set({
+              status: AppointmentStatus.CANCELLED,
+            })
+            .where(eq(appointments.id, input)),
+          ctx.db.insert(appointmentLogs).values({
+            appointmentId: input,
+            status: AppointmentStatus.CANCELLED,
+          }),
+        ])
+
+        return { success: true }
+      }),
+
+    reschedule: publicProcedure
+      .input(
+        z.object({
+          appointmentId: z.string(),
+          newDate: z.date(),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        const appointment = await db.query.appointments.findFirst({
+          where: (appointment, { eq, and, inArray, gte }) =>
+            and(
+              gte(appointment.appointmentDate, new Date()),
+              eq(appointment.id, input.appointmentId),
+              eq(appointment.patientId, ctx.user?.id ?? ''),
+              inArray(appointment.status, [
+                AppointmentStatus.SCHEDULED,
+                AppointmentStatus.PENDING,
+                AppointmentStatus.IN_PROGRESS,
+              ]),
+            ),
+        })
+
+        if (!appointment) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Appointment not found',
+          })
+        }
+
+        const newAppointment = await ctx.db
+          .insert(appointments)
+          .values({
+            doctorId: appointment.doctorId,
+            patientId: appointment.patientId,
+            appointmentDate: new Date(input.newDate),
+            type: appointment.type,
+            notes: appointment.notes,
+            status: AppointmentStatus.SCHEDULED,
+          })
+          .returning()
+
+        await Promise.all([
+          ctx.db
+            .update(appointments)
+            .set({
+              status: AppointmentStatus.RESCHEDULED,
+            })
+            .where(eq(appointments.id, input.appointmentId)),
+          ctx.db.insert(appointmentLogs).values([
+            {
+              appointmentId: input.appointmentId,
+              status: AppointmentStatus.RESCHEDULED,
+            },
+          ]),
+        ])
+
+        return { success: true, newAppointmentId: newAppointment[0]?.id }
       }),
   },
 })
