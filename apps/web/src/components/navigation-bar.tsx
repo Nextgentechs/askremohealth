@@ -189,7 +189,7 @@ export default function NavigationBar({
             <CurrentUser user={user} />
           </div>
         ) : (
-          <AuthButtons />
+          <AuthButtons className="hidden flex-row items-center gap-4 lg:flex" />
         )}
         <MobileMenu />
         {/* <ModeToggle /> */}
