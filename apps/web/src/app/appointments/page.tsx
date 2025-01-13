@@ -24,6 +24,7 @@ export default async function Page({
 }: {
   searchParams: Promise<{ page: string }>
 }) {
+  const user = await api.users.currentUser()
   const { page } = await searchParams
   const appointments = await api.appointments.patients.list({
     page: page ? parseInt(page) : 1,
@@ -39,7 +40,9 @@ export default async function Page({
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink href="/">Account</BreadcrumbLink>
+            <BreadcrumbLink href="/">
+              {user?.firstName} {user?.lastName}
+            </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
