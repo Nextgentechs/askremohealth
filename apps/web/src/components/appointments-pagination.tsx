@@ -13,8 +13,8 @@ import {
   ChevronsRight,
 } from 'lucide-react'
 import React, { useCallback } from 'react'
-import { useSearchParams } from 'next/navigation'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next-nprogress-bar'
 
 export default function AppointmentsPagination({
   meta,

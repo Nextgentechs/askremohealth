@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
-import { useParams, useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next-nprogress-bar'
 import { api } from '@web/trpc/react'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
 import DoctorDetails from './doctor-details'
@@ -18,6 +18,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { combineDateTime, formatMoney, getTimeRange } from '@web/lib/utils'
 import { useToast } from '@web/hooks/use-toast'
 import AppointmentConfirmation from './appointment-confirmation'
+import { useParams, useSearchParams } from 'next/navigation'
 
 function useDoctorDetails() {
   const { id } = useParams<{ id: string }>()

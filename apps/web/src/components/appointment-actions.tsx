@@ -12,7 +12,7 @@ import { Button } from './ui/button'
 import { api } from '@web/trpc/react'
 import { useToast } from '@web/hooks/use-toast'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter } from 'next-nprogress-bar'
 
 export function PendingAppointmentActions({
   appointmentId,

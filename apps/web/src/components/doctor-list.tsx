@@ -23,7 +23,7 @@ import { api, type RouterOutputs } from '@web/trpc/react'
 import { useDoctorSearchParams } from './search-form'
 import { getScheduleForWeek } from '@web/lib/utils'
 import DoctorDetails from './doctor-details'
-import { useRouter } from 'next/navigation'
+import { useRouter } from 'next-nprogress-bar'
 
 type ScheduleDay = {
   date: Date
