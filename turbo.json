@@ -20,7 +20,8 @@
     "POSTGRES_PRISMA_URL",
     "POSTGRES_URL",
     "NODE_ENV",
-    "GOOGLE_MAPS_API_KEY"
+    "GOOGLE_MAPS_API_KEY",
+    "CRON_SECRET"
   ],
   "tasks": {
     "build": {
