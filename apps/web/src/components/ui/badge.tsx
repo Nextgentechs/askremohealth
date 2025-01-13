@@ -14,6 +14,20 @@ const badgeVariants = cva(
         destructive:
           'border-transparent bg-destructive text-destructive-foreground shadow hover:bg-destructive/80',
         outline: 'text-foreground',
+        scheduled:
+          'bg-scheduled-background text-scheduled-foreground border-transparent hover:bg-scheduled-background/80',
+        pending:
+          'bg-pending-background text-pending-foreground border-transparent hover:bg-pending-background/80',
+        rescheduled:
+          'bg-rescheduled-background text-rescheduled-foreground border-transparent hover:bg-rescheduled-background/80',
+        completed:
+          'bg-completed-background text-completed-foreground border-transparent hover:bg-completed-background/80  ',
+        cancelled:
+          'bg-cancelled-background text-cancelled-foreground border-transparent hover:bg-cancelled-background/80',
+        missed:
+          'bg-no-show-background text-no-show-foreground border-transparent hover:bg-no-show-background/80',
+        in_progress:
+          'bg-progress-background text-progress-foreground border-transparent hover:bg-progress-background/80',
       },
     },
     defaultVariants: {

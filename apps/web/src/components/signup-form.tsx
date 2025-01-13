@@ -90,7 +90,7 @@ export default function SignupForm({
           title: 'Signup successful',
           description: 'Redirecting to dashboard',
         })
-        router.push('/dashboard')
+        router.push('/login')
       } else {
         toast({
           title: 'Signup failed',
