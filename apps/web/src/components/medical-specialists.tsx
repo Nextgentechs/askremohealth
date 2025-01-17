@@ -37,12 +37,14 @@ function SpecialistsCarousel() {
   const [current, setCurrent] = useState(0)
   const [count, setCount] = useState(0)
 
+  const sortedSpecialities = specialities.map((group) =>
+    [...group].sort((a, b) => a.specialty.localeCompare(b.specialty)),
+  )
   useEffect(() => {
-    if (!api) {
-      return
-    }
+    if (!api) return
 
-    setCount(api.scrollSnapList().length)
+    const snaps = api.scrollSnapList()
+    setCount(snaps.length)
     setCurrent(api.selectedScrollSnap() + 1)
 
     api.on('select', () => {
@@ -54,13 +56,13 @@ function SpecialistsCarousel() {
     <div className="flex w-full flex-col gap-8">
       <Carousel setApi={setApi}>
         <CarouselContent className="py-2">
-          {Array.from({ length: specialities.length }).map(
+          {Array.from({ length: sortedSpecialities.length }).map(
             (_, carouselIndex) => (
               <CarouselItem
                 key={carouselIndex}
                 className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 md:gap-4 lg:grid-cols-6 lg:gap-5"
               >
-                {specialities[carouselIndex]?.map((specialty, index) => (
+                {sortedSpecialities[carouselIndex]?.map((specialty, index) => (
                   <Specialty key={index} {...specialty} />
                 ))}
               </CarouselItem>
@@ -77,6 +79,7 @@ function SpecialistsCarousel() {
               current - 1 === index ? 'bg-primary' : 'bg-gray-300'
             }`}
             aria-label={`Go to slide ${index + 1}`}
+            onClick={() => api?.scrollTo(index)}
           />
         ))}
       </div>
