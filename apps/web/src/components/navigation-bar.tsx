@@ -13,6 +13,8 @@ import {
   Menu,
   Stethoscope,
   User,
+  FlaskConical,
+  Pill,
 } from 'lucide-react'
 import {
   NavigationMenu,
@@ -54,6 +56,16 @@ const navOptions = [
     label: 'Health Articles',
     href: '/health-articles',
     icon: Book,
+  },
+  {
+    label: 'Laboratories',
+    href: '/laboratories',
+    icon: FlaskConical,
+  },
+  {
+    label: 'Pharmacies',
+    href: '/pharmacies',
+    icon: Pill,
   },
   {
     label: 'For Doctors',
