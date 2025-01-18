@@ -21,7 +21,11 @@
     "POSTGRES_URL",
     "NODE_ENV",
     "GOOGLE_MAPS_API_KEY",
-    "CRON_SECRET"
+    "CRON_SECRET",
+    "TWILIO_API_KEY_SECRET",
+    "TWILIO_AUTH_TOKEN",
+    "TWILIO_ACCOUNT_SID",
+    "TWILIO_API_KEY_SID"
   ],
   "tasks": {
     "build": {
