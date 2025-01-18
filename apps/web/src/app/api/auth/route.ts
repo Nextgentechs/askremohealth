@@ -51,7 +51,7 @@ export async function OPTIONS(request: Request) {
   const response = NextResponse.json({})
   response.headers.set(
     'Access-Control-Allow-Origin',
-    request.headers.get('origin') || '*',
+    request.headers.get('origin') ?? '*',
   )
   response.headers.set('Access-Control-Allow-Methods', 'POST, OPTIONS')
   response.headers.set('Access-Control-Allow-Headers', 'Content-Type')
