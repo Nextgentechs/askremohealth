@@ -14,7 +14,7 @@ const footerNavOptions = {
         { title: 'Login', href: '/login' },
         { title: 'Doctors', href: '/doctors' },
         { title: 'Hospitals', href: '/hospitals' },
-        { title: 'Labortories', href: '/labortories' },
+        { title: 'Laboratories', href: '/laboratories' },
         { title: 'Pharmacies', href: '/pharmacies' },
         { title: 'FAQ', href: '/faq' },
       ],

@@ -5,6 +5,7 @@ import {
   Book,
   BriefcaseMedical,
   Calendar,
+  ChevronDown,
   ChevronsUpDown,
   Home,
   Hospital,
@@ -13,6 +14,9 @@ import {
   Menu,
   Stethoscope,
   User,
+  Building2,
+  Pill,
+  FlaskConical,
 } from 'lucide-react'
 import {
   NavigationMenu,
@@ -46,9 +50,25 @@ const navOptions = [
     icon: Stethoscope,
   },
   {
-    label: 'Hospitals & Clinics',
-    href: '/hospitals',
+    label: 'Healthcare Facilities',
     icon: Hospital,
+    dropdownItems: [
+      {
+        label: 'Hospitals and Clinics',
+        href: '/hospitals',
+        icon: Building2,
+      },
+      {
+        label: 'Pharmacies',
+        href: '/pharmacies',
+        icon: Pill,
+      },
+      {
+        label: 'Laboratories',
+        href: '/laboratories',
+        icon: FlaskConical,
+      },
+    ],
   },
   {
     label: 'Health Articles',
@@ -93,17 +113,38 @@ function MobileMenu() {
         <SheetTitle hidden>Menu</SheetTitle>
         <div className="flex flex-col py-4">
           {navOptions.map((option) => (
-            <Link
-              key={option.label}
-              href={option.href}
-              className="inline-flex h-9 items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
-              {...(option.external
-                ? { target: '_blank', rel: 'noopener noreferrer' }
-                : {})}
-            >
-              <option.icon className="size-4" />
-              <span>{option.label}</span>
-            </Link>
+            <div key={option.label}>
+              {option.dropdownItems ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="inline-flex h-9 w-full items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
+                    <option.icon className="size-4" />
+                    <span>{option.label}</span>
+                    <ChevronDown className="ml-auto h-4 w-4" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    {option.dropdownItems.map((item) => (
+                      <Link key={item.label} href={item.href}>
+                        <DropdownMenuItem className="gap-2">
+                          <item.icon className="size-4" />
+                          {item.label}
+                        </DropdownMenuItem>
+                      </Link>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Link
+                  href={option.href ?? ''}
+                  className="inline-flex h-9 items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+                  {...(option.external
+                    ? { target: '_blank', rel: 'noopener noreferrer' }
+                    : {})}
+                >
+                  <option.icon className="size-4" />
+                  <span>{option.label}</span>
+                </Link>
+              )}
+            </div>
           ))}
         </div>
         {user ? (
@@ -174,6 +215,7 @@ function CurrentUser({
 
 export default function NavigationBar() {
   const { data: user } = api.users.currentUser.useQuery()
+
   return (
     <div className="flex w-full flex-row items-center justify-between lg:px-5">
       <Logo />
@@ -181,13 +223,32 @@ export default function NavigationBar() {
       <NavigationMenu className="hidden list-none gap-1 xl:flex">
         {navOptions.map((option) => (
           <NavigationMenuItem key={option.label}>
-            <Link href={option.href} legacyBehavior passHref>
-              <NavigationMenuLink
-                className={`${navigationMenuTriggerStyle()} hover:underline`}
-              >
-                {option.label}
-              </NavigationMenuLink>
-            </Link>
+            {option.dropdownItems ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  className={`${navigationMenuTriggerStyle()} gap-1`}
+                >
+                  {option.label}
+                  <ChevronDown className="h-4 w-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="center">
+                  {option.dropdownItems.map((item) => (
+                    <Link key={item.label} href={item.href}>
+                      <DropdownMenuItem className="gap-2">
+                        <item.icon className="h-4 w-4" />
+                        {item.label}
+                      </DropdownMenuItem>
+                    </Link>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link href={option.href ?? '#'} legacyBehavior passHref>
+                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                  {option.label}
+                </NavigationMenuLink>
+              </Link>
+            )}
           </NavigationMenuItem>
         ))}
       </NavigationMenu>
