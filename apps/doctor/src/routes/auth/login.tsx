@@ -83,7 +83,7 @@ function LoginForm() {
     try {
       await mutateAsync(values)
       await utils.invalidate()
-      await utils.users.currentUser.refetch()
+      await utils.users.doctor.current.refetch()
       await router.invalidate()
       router.navigate({ to: search.redirect })
       toast({

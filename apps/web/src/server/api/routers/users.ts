@@ -1,10 +1,5 @@
 import { eq } from 'drizzle-orm'
-import {
-  createTRPCRouter,
-  doctorProcedure,
-  procedure,
-  publicProcedure,
-} from '../trpc'
+import { createTRPCRouter, procedure, publicProcedure } from '../trpc'
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { users } from '@web/server/db/schema'
@@ -22,11 +17,10 @@ export const usersRouter = createTRPCRouter({
     return user ?? null
   }),
   doctor: {
-    current: doctorProcedure.query(async ({ ctx }) => {
+    current: publicProcedure.query(async ({ ctx }) => {
       if (!ctx.user) return null
-
       const doctor = await ctx.db.query.doctors.findFirst({
-        where: (doctor) => eq(doctor.id, ctx.user.id),
+        where: (doctor) => eq(doctor.id, ctx.user!.id),
         with: {
           specialty: true,
           user: {
