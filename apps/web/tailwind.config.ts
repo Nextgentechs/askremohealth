@@ -96,6 +96,8 @@ export default {
         'no-show-foreground': '#C9610B',
         'progress-background': '#E6F9F3',
         'progress-foreground': '#0B9585',
+        'in-progress-background': '#E6F9F3',
+        'in-progress-foreground': '#0B9585',
       },
     },
   },

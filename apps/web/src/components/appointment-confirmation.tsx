@@ -1,7 +1,7 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { Check } from 'lucide-react'
+import { ArrowLeft, Check } from 'lucide-react'
 import { Dialog, DialogContent, DialogTitle } from '@web/components/ui/dialog'
 import { Button } from '@web/components/ui/button'
 import Link from 'next/link'
@@ -71,16 +71,24 @@ export default function AppointmentConfirmation({
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="flex flex-col gap-3 sm:flex-row sm:justify-center sm:gap-8"
+            className="flex flex-col gap-3 sm:justify-center sm:gap-8"
           >
-            <Link href="/login" className="w-full sm:w-auto">
-              <Button variant="default" className="w-full sm:w-auto">
-                Log In
-              </Button>
-            </Link>
-            <Link href="/sign-up" className="w-full sm:w-auto">
-              <Button variant="outline" className="w-full sm:w-auto">
-                Register
+            <div className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-8">
+              <Link href="/login" className="w-full sm:w-auto">
+                <Button variant="default" className="w-full sm:w-auto">
+                  Log In
+                </Button>
+              </Link>
+              <Link href="/sign-up" className="w-full sm:w-auto">
+                <Button variant="outline" className="w-full sm:w-auto">
+                  Register
+                </Button>
+              </Link>
+            </div>
+            <Link href="/" className="w-full sm:w-auto">
+              <Button variant="link" className="my-0 w-full sm:w-auto">
+                <ArrowLeft className="h-4 w-4" />
+                Back to homepage
               </Button>
             </Link>
           </motion.div>
