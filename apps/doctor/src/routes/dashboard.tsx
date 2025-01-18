@@ -3,7 +3,7 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/dashboard')({
   beforeLoad: async ({ context, location }) => {
-    const user = await context.trpcQueryUtils.users.currentUser.ensureData()
+    const user = await context.trpcQueryUtils.users.doctor.current.ensureData()
     if (!user) {
       throw redirect({
         to: '/auth/login',
