@@ -11,6 +11,7 @@ import {
   CarouselItem,
   type CarouselApi,
 } from './ui/carousel'
+import Autoplay from 'embla-carousel-autoplay'
 
 function Specialty({ specialty, icon }: (typeof specialities)[0][0]) {
   const [mouseOver, setMouseOver] = useState(false)
@@ -54,7 +55,15 @@ function SpecialistsCarousel() {
 
   return (
     <div className="flex w-full flex-col gap-8">
-      <Carousel setApi={setApi}>
+      <Carousel
+        setApi={setApi}
+        plugins={[
+          Autoplay({
+            delay: 2000,
+            stopOnMouseEnter: true,
+          }),
+        ]}
+      >
         <CarouselContent className="py-2">
           {Array.from({ length: sortedSpecialities.length }).map(
             (_, carouselIndex) => (
