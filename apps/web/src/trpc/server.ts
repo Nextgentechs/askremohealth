@@ -18,6 +18,7 @@ const createContext = cache(async () => {
 
   const req = new Request('http://localhost', {
     headers: heads,
+    credentials: 'include',
   })
 
   return createTRPCContext({
