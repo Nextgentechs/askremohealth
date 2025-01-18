@@ -120,7 +120,7 @@ export const appointmentsRouter = createTRPCRouter({
           appointmentDate: input.date,
           notes: input.notes,
           type: input.appointmentType,
-          status: AppointmentStatus.SCHEDULED,
+          status: AppointmentStatus.PENDING,
         })
 
         return { success: true }

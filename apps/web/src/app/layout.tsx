@@ -16,13 +16,12 @@ export const metadata: Metadata = {
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const user = await api.users.currentUser()
   return (
     <html lang="en" className={GeistSans.className} suppressHydrationWarning>
       <body className="bg-background text-foreground antialiased">
         <Provider>
           <div className="mx-auto max-w-[1440px] px-4 pt-2 transition-all duration-300 sm:px-6 sm:pt-4 lg:px-8 lg:pt-6 xl:px-16">
-            <NavigationBar user={user} />
+            <NavigationBar />
           </div>
           {children}
           <Footer />

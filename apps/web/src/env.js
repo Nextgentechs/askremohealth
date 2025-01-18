@@ -15,6 +15,10 @@ export const env = createEnv({
     BLOB_READ_WRITE_TOKEN: z.string(),
     GOOGLE_MAPS_API_KEY: z.string(),
     CRON_SECRET: z.string(),
+    TWILIO_API_KEY_SECRET: z.string(),
+    TWILIO_AUTH_TOKEN: z.string(),
+    TWILIO_ACCOUNT_SID: z.string(),
+    TWILIO_API_KEY_SID: z.string(),
   },
 
   /**
@@ -37,6 +41,11 @@ export const env = createEnv({
     BLOB_READ_WRITE_TOKEN: process.env.BLOB_READ_WRITE_TOKEN,
     GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY,
     CRON_SECRET: process.env.CRON_SECRET,
+    TWILIO_AUTH_TOKEN: process.env.TWILIO_AUTH_TOKEN,
+    TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID,
+    TWILIO_API_KEY_SECRET: process.env.TWILIO_API_KEY_SECRET,
+    TWILIO_API_KEY_SID: process.env.TWILIO_API_KEY_SID,
+
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**

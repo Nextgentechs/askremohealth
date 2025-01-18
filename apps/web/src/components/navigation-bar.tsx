@@ -32,6 +32,7 @@ import {
   DropdownMenuTrigger,
 } from './ui/dropdown-menu'
 import { api, type RouterOutputs } from '@web/trpc/react'
+import { useRouter } from 'next/navigation'
 
 const navOptions = [
   {
@@ -82,6 +83,7 @@ function AuthButtons({
 
 function MobileMenu() {
   const { data: user } = api.users.currentUser.useQuery()
+
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -121,6 +123,16 @@ function CurrentUser({
 }: {
   user: RouterOutputs['users']['currentUser']
 }) {
+  const { mutateAsync: signOut } = api.auth.patients.signOut.useMutation()
+  const utils = api.useUtils()
+  const router = useRouter()
+  const handleSignOut = async () => {
+    await signOut()
+    await utils.users.currentUser.refetch()
+    router.refresh()
+    router.push('/')
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -150,7 +162,7 @@ function CurrentUser({
         </DropdownMenuGroup>
         <DropdownMenuSeparator className="bg-border" />
         <DropdownMenuGroup>
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={handleSignOut}>
             <LogOut />
             Log out
           </DropdownMenuItem>
@@ -160,11 +172,8 @@ function CurrentUser({
   )
 }
 
-export default function NavigationBar({
-  user,
-}: {
-  user: RouterOutputs['users']['currentUser']
-}) {
+export default function NavigationBar() {
+  const { data: user } = api.users.currentUser.useQuery()
   return (
     <div className="flex w-full flex-row items-center justify-between lg:px-5">
       <Logo />

@@ -51,6 +51,7 @@ type FormValues = z.infer<typeof loginSchema>
 
 export default function PhoneNumberForm() {
   const [step, setStep] = useState<'phone' | 'password'>('phone')
+  const [finalFormSubmitting, setFinalFormSubmitting] = useState(false)
   const router = useRouter()
   const form = useForm<FormValues>({
     resolver: zodResolver(loginSchema),
@@ -61,10 +62,9 @@ export default function PhoneNumberForm() {
   })
 
   const { toast } = useToast()
+  const utils = api.useUtils()
   const { mutateAsync: validatePhone, isPending: validatePhonePending } =
     api.auth.patients.phoneValidation.useMutation()
-  const { mutateAsync: login, isPending: loginPending } =
-    api.auth.patients.login.useMutation()
 
   const handlePhoneSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -99,13 +99,32 @@ export default function PhoneNumberForm() {
   }
 
   const handleLoginSubmit = form.handleSubmit(async (data) => {
+    setFinalFormSubmitting(true)
     try {
-      const res = await login(data)
+      const response = await fetch('/api/auth', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          phone: data.phone,
+          password: data.password,
+        }),
+      })
+
+      const res = await response.json()
+
+      if (!response.ok) {
+        throw new Error(res.error || 'Login failed')
+      }
+
       if (res.success) {
         toast({
           title: 'Login successful',
           description: 'Redirecting to dashboard...',
         })
+        await utils.users.currentUser.refetch()
         router.push('/appointments')
       }
     } catch (error) {
@@ -116,6 +135,8 @@ export default function PhoneNumberForm() {
         variant: 'destructive',
       })
       console.error(error)
+    } finally {
+      setFinalFormSubmitting(false)
     }
   })
 
@@ -191,7 +212,7 @@ export default function PhoneNumberForm() {
             className="w-full"
             disabled={validatePhonePending || form.formState.isSubmitting}
           >
-            {validatePhonePending || loginPending ? (
+            {validatePhonePending || finalFormSubmitting ? (
               <>
                 <Loader className={`animate-spin`} />
                 Validating...
