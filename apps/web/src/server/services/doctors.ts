@@ -32,7 +32,7 @@ export class Doctors {
         and(
           inArray(appointment.doctorId, doctorIds),
           gte(appointment.appointmentDate, today),
-          inArray(appointment.status, ['scheduled', 'in_progress']),
+          inArray(appointment.status, ['scheduled', 'in_progress', 'pending']),
         ),
       columns: {
         doctorId: true,
