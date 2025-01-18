@@ -27,8 +27,6 @@ export function generateTimeSlots(
     (currentHour === closeHour && currentMinute < closeMinute)
   ) {
     if (currentHour !== 13) {
-      const timeString = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`
-
       const slotTime = new Date(date)
       slotTime.setHours(currentHour, currentMinute, 0, 0)
 
@@ -50,7 +48,7 @@ export function generateTimeSlots(
       })
 
       slots.push({
-        time: `${timeString} ${currentHour >= 12 ? 'PM' : 'AM'}`,
+        time: `${(currentHour > 12 ? currentHour - 12 : currentHour).toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')} ${currentHour >= 12 ? 'PM' : 'AM'}`,
         available: !isBooked && !isPastSlot,
       })
     }

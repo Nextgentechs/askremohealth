@@ -1,12 +1,12 @@
 import { appointments, patients, type users } from '../db/schema'
 import { db } from '../db'
-import { type InferSelectModel } from 'drizzle-orm'
 import { User } from './users'
 import { TRPCError } from '@trpc/server'
 import { type NewAppointmentSchema } from '../api/schema'
 import { AppointmentStatus } from '../utils'
 import { type AppointmentInput } from '../api/routers/appointments'
-
+import { type InferSelectModel } from 'drizzle-orm'
+import { and, eq, gte, count } from 'drizzle-orm'
 export default class Appointments {
   static async createNewUserAppointment(input: NewAppointmentSchema) {
     const user = await User.createUser({
@@ -15,7 +15,7 @@ export default class Appointments {
       email: input.email,
       phone: input.phone,
       role: 'patient',
-      dob: new Date(input.dob),
+      dob: input.dob,
     })
 
     if (!user) {
@@ -84,8 +84,27 @@ export default class Appointments {
     return { success: true }
   }
 
-  static async upcomming(doctorId: string, type: 'physical' | 'online') {
-    return await db.query.appointments.findMany({
+  static async upcomming(
+    doctorId: string,
+    type: 'physical' | 'online',
+    page: number,
+    pageSize: number,
+  ) {
+    const offset = (page - 1) * pageSize
+    const limit = pageSize
+
+    const countQuery = db
+      .select({ count: count() })
+      .from(appointments)
+      .where(
+        and(
+          eq(appointments.doctorId, doctorId),
+          eq(appointments.type, type),
+          gte(appointments.appointmentDate, new Date()),
+        ),
+      )
+
+    const query = db.query.appointments.findMany({
       where: (appontment, { and, eq, gte }) =>
         and(
           eq(appontment.doctorId, doctorId),
@@ -112,10 +131,25 @@ export default class Appointments {
           },
         },
       },
+      offset,
+      limit,
     })
+
+    const [totalCount, data] = await Promise.all([countQuery, query])
+
+    return {
+      pagination: {
+        total: totalCount[0]?.count ?? 0,
+        pages: Math.ceil((totalCount[0]?.count ?? 0) / pageSize),
+      },
+      appointments: data,
+    }
   }
 
   static async list(doctorId: string, input: AppointmentInput) {
+    const offset = (input.page! - 1) * input.pageSize!
+    const limit = input.pageSize!
+
     return await db.query.appointments.findMany({
       where: (appontment, { and, eq, gte }) =>
         and(
@@ -153,6 +187,8 @@ export default class Appointments {
           },
         },
       },
+      offset,
+      limit,
     })
   }
 }
