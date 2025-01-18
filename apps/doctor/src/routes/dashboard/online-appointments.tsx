@@ -32,6 +32,8 @@ const appointmentsSchema = z.object({
     .optional()
     .default(() => new Date()),
   status: z.nativeEnum(AppointmentStatus).optional().catch(undefined),
+  page: z.number().optional().catch(1),
+  pageSize: z.number().optional().catch(10),
 })
 
 export const Route = createFileRoute('/dashboard/online-appointments')({
