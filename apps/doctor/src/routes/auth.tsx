@@ -12,7 +12,7 @@ const searchSchema = z.object({
 export const Route = createFileRoute('/auth')({
   validateSearch: searchSchema,
   beforeLoad: async ({ context, search }) => {
-    if (await context.trpcQueryUtils.users.currentUser.ensureData()) {
+    if (await context.trpcQueryUtils.users.doctor.current.ensureData()) {
       throw redirect({ to: search.redirect })
     }
   },

@@ -16,7 +16,10 @@ import { format } from 'date-fns'
 import { formatMoney } from '@web/lib/utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@web/components/ui/avatar'
 import AppointmentsPagination from '@web/components/appointments-pagination'
-import { PendingAppointmentActions } from '@web/components/appointment-actions'
+import {
+  PendingAppointmentActions,
+  VideoAppointmentActions,
+} from '@web/components/appointment-actions'
 import { AppointmentStatus } from '@web/server/utils'
 
 export default async function Page({
@@ -50,7 +53,7 @@ export default async function Page({
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
         {appointments.appointments.map((appointment) => (
           <AppointmentCard key={appointment.id} appointment={appointment} />
         ))}
@@ -88,24 +91,32 @@ function AppointmentCard({
               </span>
             </div>
           </div>
-          {appointment.status === AppointmentStatus.PENDING ||
-            (appointment.status === AppointmentStatus.SCHEDULED && (
-              <PendingAppointmentActions
-                appointmentId={appointment.id}
-                doctorId={appointment.doctor.id}
-              />
-            ))}
+          {appointment.status === AppointmentStatus.PENDING && (
+            <PendingAppointmentActions
+              appointmentId={appointment.id}
+              doctorId={appointment.doctor.id}
+            />
+          )}
+
+          {appointment.type === 'online' &&
+            (appointment.status === AppointmentStatus.IN_PROGRESS ||
+              (appointment.status === AppointmentStatus.SCHEDULED && (
+                <VideoAppointmentActions
+                  appointmentId={appointment.id}
+                  doctorId={appointment.doctor.id}
+                />
+              )))}
         </div>
 
         <div className="grid flex-1 gap-2 sm:grid-cols-2">
-          <div className="flex flex-row items-start gap-1">
-            <Hospital className="mt-1 size-5" />
+          <div className="flex flex-row items-center gap-1">
+            <Hospital className="size-5" />
             <p className="text-sm">
               {appointment.doctor.facility?.name ?? 'N/A'}
             </p>
           </div>
 
-          <div className="flex flex-row items-start gap-1">
+          <div className="flex flex-row items-center gap-1">
             <MapPin className="size-5" />
             <p className="text-sm">{appointment.doctor.facility?.address}</p>
           </div>

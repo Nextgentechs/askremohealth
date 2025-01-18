@@ -36,7 +36,7 @@ export default class Appointments {
       appointmentDate: input.date,
       notes: input.notes,
       type: input.appointmentType,
-      status: AppointmentStatus.SCHEDULED,
+      status: AppointmentStatus.PENDING,
     })
 
     return { success: true }
@@ -65,7 +65,7 @@ export default class Appointments {
           appointmentDate: date,
           notes: notes,
           type: appointmentType,
-          status: AppointmentStatus.SCHEDULED,
+          status: AppointmentStatus.PENDING,
         }),
       ])
 
@@ -78,7 +78,7 @@ export default class Appointments {
       appointmentDate: date,
       notes: notes,
       type: appointmentType,
-      status: AppointmentStatus.SCHEDULED,
+      status: AppointmentStatus.PENDING,
     })
 
     return { success: true }
