@@ -1,22 +1,38 @@
 import { upcommingAppointmentsColumn } from '@/components/dashboard/columns'
 import { DataTable } from '@/components/data-table'
+import {
+  PaginationContent,
+  PaginationNext,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationItem,
+} from '@/components/ui/pagination'
+import { Pagination } from '@/components/ui/pagination'
 import { TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { RouterOutputs } from '@/lib/trpc'
 import { Tabs, TabsContent } from '@radix-ui/react-tabs'
 import {
   createFileRoute,
   useLoaderData,
   useNavigate,
+  useSearch,
 } from '@tanstack/react-router'
 import { z } from 'zod'
 
 export const Route = createFileRoute('/dashboard/upcomming-appointments')({
   validateSearch: z.object({
     type: z.enum(['physical', 'online']).catch('online'),
+    page: z.number().optional().catch(1),
+    pageSize: z.number().optional().catch(10),
   }),
   loaderDeps: ({ search }) => ({ search }),
   loader: async ({ deps: { search }, context: { trpcQueryUtils } }) => {
     const loaderData =
-      await trpcQueryUtils.appointments.doctor.upcomming.ensureData(search.type)
+      await trpcQueryUtils.appointments.doctor.upcomming.ensureData({
+        type: search.type,
+        page: search.page,
+        pageSize: search.pageSize,
+      })
     return loaderData
   },
   component: RouteComponent,
@@ -29,7 +45,7 @@ function RouteComponent() {
   })
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="mb-20 flex flex-col gap-6">
       <div>
         <h1 className="text-foreground text-xl font-semibold tracking-wide">
           Welcome back!{' '}
@@ -62,13 +78,80 @@ function RouteComponent() {
             Physical Appointments
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="onlineAppointments">
-          <DataTable columns={upcommingAppointmentsColumn} data={loaderData} />
+        <TabsContent value="onlineAppointments" className="flex flex-col gap-8">
+          <DataTable
+            columns={upcommingAppointmentsColumn}
+            data={loaderData.appointments}
+          />
+          <AppointmentsPagination pagination={loaderData.pagination} />
         </TabsContent>
         <TabsContent value="physicalAppointments">
-          <DataTable columns={upcommingAppointmentsColumn} data={loaderData} />
+          <DataTable
+            columns={upcommingAppointmentsColumn}
+            data={loaderData.appointments}
+          />
         </TabsContent>
       </Tabs>
     </div>
+  )
+}
+
+function AppointmentsPagination({
+  pagination,
+}: {
+  pagination: RouterOutputs['appointments']['doctor']['upcomming']['pagination']
+}) {
+  const search = useSearch({ from: '/dashboard/upcomming-appointments' })
+  const navigate = useNavigate({ from: '/dashboard/upcomming-appointments' })
+  const currentPage = search.page ?? 1
+
+  return (
+    <Pagination>
+      <PaginationContent>
+        <PaginationItem>
+          {currentPage > 1 && (
+            <PaginationPrevious
+              className="hover:cursor-pointer"
+              onClick={() =>
+                navigate({
+                  search: { ...search, page: currentPage - 1 },
+                })
+              }
+            />
+          )}
+        </PaginationItem>
+
+        {Array.from({ length: pagination.pages }, (_, i) => i + 1).map(
+          (page) => (
+            <PaginationItem key={page}>
+              <PaginationLink
+                className="hover:cursor-pointer"
+                onClick={() =>
+                  navigate({
+                    search: { ...search, page },
+                  })
+                }
+                isActive={currentPage === page}
+              >
+                {page}
+              </PaginationLink>
+            </PaginationItem>
+          ),
+        )}
+
+        {currentPage < pagination.pages && (
+          <PaginationItem>
+            <PaginationNext
+              className="hover:cursor-pointer"
+              onClick={() =>
+                navigate({
+                  search: { ...search, page: currentPage + 1 },
+                })
+              }
+            />
+          </PaginationItem>
+        )}
+      </PaginationContent>
+    </Pagination>
   )
 }

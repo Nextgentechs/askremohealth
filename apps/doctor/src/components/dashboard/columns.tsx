@@ -1,0 +1,287 @@
+import { ColumnDef } from '@tanstack/react-table'
+import { RouterOutputs } from '@web/server/api'
+import { format } from 'date-fns'
+import { Badge } from '../ui/badge'
+import { AppointmentStatus } from '../../../../web/src/server/utils'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../ui/dropdown-menu'
+import { Button } from '../ui/button'
+import {
+  CheckCircle,
+  MoreHorizontal,
+  XCircle,
+  Loader,
+  Check,
+  X,
+  Video,
+} from 'lucide-react'
+import { api } from '@/lib/trpc'
+import { useToast } from '@/hooks/use-toast'
+import { useRouter } from '@tanstack/react-router'
+
+type Appointment =
+  RouterOutputs['appointments']['doctor']['upcomming']['appointments'][number]
+
+export const upcommingAppointmentsColumn: ColumnDef<Appointment>[] = [
+  {
+    accessorKey: 'appointmentDate',
+    header: 'Appointment Date',
+    accessorFn: (row) => {
+      return format(row.appointmentDate, 'MMM dd, yyyy hh:mm a')
+    },
+  },
+  {
+    accessorKey: 'patient.user.firstName',
+    header: 'Patient Name',
+    accessorFn: (row) => {
+      return `${row.patient.user.firstName} ${row.patient.user.lastName}`
+    },
+  },
+  {
+    accessorKey: 'patient.user.phone',
+    header: 'Phone Number',
+  },
+  {
+    accessorKey: 'notes',
+    header: 'Reason for visit',
+    accessorFn: (row) => {
+      return row.notes || 'No notes'
+    },
+  },
+  {
+    accessorKey: 'status',
+    header: 'Status',
+    cell: ({ row }) => {
+      const status = row.getValue('status') as AppointmentStatus
+      return (
+        <Badge variant={status}>
+          {status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()}
+        </Badge>
+      )
+    },
+  },
+
+  {
+    id: 'actions',
+    enableHiding: false,
+    cell: ({ row }) => {
+      const status = row.getValue('status') as AppointmentStatus
+      if (status === AppointmentStatus.PENDING) {
+        return <PendingAppointmentActions appointmentId={row.original.id} />
+      }
+      if (status === AppointmentStatus.SCHEDULED) {
+        return <ScheduledAppointmentActions appointmentId={row.original.id} />
+      }
+      return null
+    },
+  },
+]
+
+function PendingAppointmentActions({
+  appointmentId,
+}: {
+  appointmentId: string
+}) {
+  const { toast } = useToast()
+  const utils = api.useUtils()
+  const router = useRouter()
+
+  const { mutateAsync: confirmAppointment, isPending: isConfirming } =
+    api.appointments.doctor.confirmAppointment.useMutation({
+      onMutate: () => {
+        toast({
+          description: (
+            <div className="flex items-center gap-2">
+              <Loader className="h-4 w-4 animate-spin" />
+              <span>Confirming appointment...</span>
+            </div>
+          ),
+        })
+      },
+      onSuccess: () => {
+        toast({
+          description: (
+            <div className="flex items-center gap-2">
+              <Check className="h-4 w-4 text-green-500" />
+              <span>Appointment successfully confirmed</span>
+            </div>
+          ),
+        })
+      },
+      onError: () => {
+        toast({
+          variant: 'destructive',
+          description: (
+            <div className="flex items-center gap-2">
+              <X className="h-4 w-4" />
+              <span>Failed to confirm appointment</span>
+            </div>
+          ),
+        })
+      },
+    })
+
+  const { mutateAsync: declineAppointment, isPending: isDeclining } =
+    api.appointments.doctor.declineAppointment.useMutation({
+      onMutate: () => {
+        toast({
+          description: (
+            <div className="flex items-center gap-2">
+              <Loader className="h-4 w-4 animate-spin" />
+              <span>Declining appointment...</span>
+            </div>
+          ),
+        })
+      },
+      onSuccess: () => {
+        toast({
+          description: (
+            <div className="flex items-center gap-2">
+              <Check className="h-4 w-4 text-green-500" />
+              <span>Appointment successfully declined</span>
+            </div>
+          ),
+        })
+      },
+      onError: () => {
+        toast({
+          variant: 'destructive',
+          description: (
+            <div className="flex items-center gap-2">
+              <X className="h-4 w-4" />
+              <span>Failed to decline appointment</span>
+            </div>
+          ),
+        })
+      },
+    })
+
+  const handleConfirmAppointment = async () => {
+    try {
+      await confirmAppointment({ appointmentId })
+      await utils.appointments.doctor.upcomming.refetch()
+      router.invalidate()
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const handleDeclineAppointment = async () => {
+    try {
+      await declineAppointment({ appointmentId })
+      await utils.appointments.doctor.upcomming.refetch()
+      router.invalidate()
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="h-8 w-8 p-0">
+          <span className="sr-only">Open menu</span>
+          <MoreHorizontal />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem
+          onClick={handleConfirmAppointment}
+          disabled={isConfirming}
+        >
+          <CheckCircle className="size-5" />
+          Confirm Consultation
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={handleDeclineAppointment}
+          disabled={isDeclining}
+        >
+          <XCircle className="size-5" />
+          Decline Request
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+function ScheduledAppointmentActions({
+  appointmentId,
+}: {
+  appointmentId: string
+}) {
+  const { toast } = useToast()
+  const utils = api.useUtils()
+  const router = useRouter()
+
+  const { mutateAsync: cancelAppointment, isPending: isCancelling } =
+    api.appointments.doctor.cancelAppointment.useMutation({
+      onMutate: () => {
+        toast({
+          description: (
+            <div className="flex items-center gap-2">
+              <Loader className="h-4 w-4 animate-spin" />
+              <span>Cancelling appointment...</span>
+            </div>
+          ),
+        })
+      },
+      onSuccess: () => {
+        toast({
+          description: (
+            <div className="flex items-center gap-2">
+              <Check className="h-4 w-4 text-green-500" />
+              <span>Appointment successfully cancelled</span>
+            </div>
+          ),
+        })
+      },
+      onError: () => {
+        toast({
+          variant: 'destructive',
+          description: (
+            <div className="flex items-center gap-2">
+              <X className="h-4 w-4" />
+              <span>Failed to cancel appointment</span>
+            </div>
+          ),
+        })
+      },
+    })
+
+  const handleCancelAppointment = async () => {
+    try {
+      await cancelAppointment({ appointmentId })
+      await utils.appointments.doctor.upcomming.refetch()
+      router.invalidate()
+    } catch (error) {
+      console.error(error)
+    }
+  }
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="h-8 w-8 p-0">
+          <span className="sr-only">Open menu</span>
+          <MoreHorizontal />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem>
+          <Video className="mr-2 h-4 w-4" />
+          Start Consultation
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={handleCancelAppointment}
+          disabled={isCancelling}
+        >
+          <XCircle className="mr-2 h-4 w-4" />
+          Cancel Consultation
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
