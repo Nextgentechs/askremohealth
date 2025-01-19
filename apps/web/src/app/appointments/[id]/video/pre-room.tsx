@@ -11,6 +11,14 @@ import { Alert, AlertTitle, AlertDescription } from '@web/components/ui/alert'
 import { Button } from '@web/components/ui/button'
 import { CheckCircle2, AlertCircle, Loader } from 'lucide-react'
 
+const groundRules = [
+  'Ensure you&apos;re in a quiet, private space',
+  'Your camera and microphone will be activated',
+  'The session is private and confidential',
+  'Have any relevant medical documents ready',
+  'Stay focused and avoid distractions',
+]
+
 export default function PreRoom({
   onJoinRoom,
   joiningRoom,
@@ -58,13 +66,7 @@ export default function PreRoom({
         <div className="flex flex-col items-start space-y-4 text-foreground">
           <h3 className="font-medium">Before You Join:</h3>
           <div className="grid w-full gap-2 text-sm">
-            {[
-              "Ensure you're in a quiet, private space",
-              'Your camera and microphone will be activated',
-              'The session is private and confidential',
-              'Have any relevant medical documents ready',
-              'Stay focused and avoid distractions',
-            ].map((text, index) => (
+            {groundRules.map((text, index) => (
               <div
                 key={index}
                 className="flex w-full items-start gap-3 text-start"
