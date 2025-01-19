@@ -12,7 +12,7 @@ import { Button } from '@web/components/ui/button'
 import { CheckCircle2, AlertCircle, Loader } from 'lucide-react'
 
 const groundRules = [
-  'Ensure you&apos;re in a quiet, private space',
+  `Ensure you're in a quiet, private space`,
   'Your camera and microphone will be activated',
   'The session is private and confidential',
   'Have any relevant medical documents ready',
@@ -39,7 +39,7 @@ export default function PreRoom({
 
   return (
     <Card className="mx-auto max-w-xl border shadow-sm">
-      <CardHeader className="gap-0.1 flex flex-col pb-6">
+      <CardHeader className="flex flex-col gap-0.5 pb-6">
         <CardTitle className="font-medium text-primary md:text-xl">
           Welcome to Your Virtual Appointment
         </CardTitle>

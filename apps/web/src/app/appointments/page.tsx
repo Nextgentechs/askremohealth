@@ -100,12 +100,12 @@ function AppointmentCard({
 
           {appointment.type === 'online' &&
             (appointment.status === AppointmentStatus.IN_PROGRESS ||
-              (appointment.status === AppointmentStatus.SCHEDULED && (
-                <VideoAppointmentActions
-                  appointmentId={appointment.id}
-                  doctorId={appointment.doctor.id}
-                />
-              )))}
+              appointment.status === AppointmentStatus.SCHEDULED) && (
+              <VideoAppointmentActions
+                appointmentId={appointment.id}
+                doctorId={appointment.doctor.id}
+              />
+            )}
         </div>
 
         <div className="grid flex-1 gap-2 sm:grid-cols-2">
