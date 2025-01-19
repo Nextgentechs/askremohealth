@@ -14,10 +14,10 @@ import {
   CheckCircle,
   MoreHorizontal,
   XCircle,
-  Loader2,
   Loader,
   Check,
   X,
+  Video,
 } from 'lucide-react'
 import { api } from '@/lib/trpc'
 import { useToast } from '@/hooks/use-toast'
@@ -68,11 +68,24 @@ export const upcommingAppointmentsColumn: ColumnDef<Appointment>[] = [
   {
     id: 'actions',
     enableHiding: false,
-    cell: ({ row }) => <ColumnActions appointmentId={row.original.id} />,
+    cell: ({ row }) => {
+      const status = row.getValue('status') as AppointmentStatus
+      if (status === AppointmentStatus.PENDING) {
+        return <PendingAppointmentActions appointmentId={row.original.id} />
+      }
+      if (status === AppointmentStatus.SCHEDULED) {
+        return <ScheduledAppointmentActions appointmentId={row.original.id} />
+      }
+      return null
+    },
   },
 ]
 
-const ColumnActions = ({ appointmentId }: { appointmentId: string }) => {
+function PendingAppointmentActions({
+  appointmentId,
+}: {
+  appointmentId: string
+}) {
   const { toast } = useToast()
   const utils = api.useUtils()
   const router = useRouter()
@@ -94,7 +107,7 @@ const ColumnActions = ({ appointmentId }: { appointmentId: string }) => {
           description: (
             <div className="flex items-center gap-2">
               <Check className="h-4 w-4 text-green-500" />
-              <span>Appointment confirmed successfully</span>
+              <span>Appointment successfully confirmed</span>
             </div>
           ),
         })
@@ -129,7 +142,7 @@ const ColumnActions = ({ appointmentId }: { appointmentId: string }) => {
           description: (
             <div className="flex items-center gap-2">
               <Check className="h-4 w-4 text-green-500" />
-              <span>Appointment declined successfully</span>
+              <span>Appointment successfully declined</span>
             </div>
           ),
         })
@@ -180,23 +193,93 @@ const ColumnActions = ({ appointmentId }: { appointmentId: string }) => {
           onClick={handleConfirmAppointment}
           disabled={isConfirming}
         >
-          {isConfirming ? (
-            <Loader2 className="size-5 animate-spin" />
-          ) : (
-            <CheckCircle className="size-5" />
-          )}
-          {isConfirming ? 'Confirming...' : 'Confirm Consultation'}
+          <CheckCircle className="size-5" />
+          Confirm Consultation
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={handleDeclineAppointment}
           disabled={isDeclining}
         >
-          {isDeclining ? (
-            <Loader2 className="size-5 animate-spin" />
-          ) : (
-            <XCircle className="size-5" />
-          )}
-          {isDeclining ? 'Declining...' : 'Decline Request'}
+          <XCircle className="size-5" />
+          Decline Request
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+function ScheduledAppointmentActions({
+  appointmentId,
+}: {
+  appointmentId: string
+}) {
+  const { toast } = useToast()
+  const utils = api.useUtils()
+  const router = useRouter()
+
+  const { mutateAsync: cancelAppointment, isPending: isCancelling } =
+    api.appointments.doctor.cancelAppointment.useMutation({
+      onMutate: () => {
+        toast({
+          description: (
+            <div className="flex items-center gap-2">
+              <Loader className="h-4 w-4 animate-spin" />
+              <span>Cancelling appointment...</span>
+            </div>
+          ),
+        })
+      },
+      onSuccess: () => {
+        toast({
+          description: (
+            <div className="flex items-center gap-2">
+              <Check className="h-4 w-4 text-green-500" />
+              <span>Appointment successfully cancelled</span>
+            </div>
+          ),
+        })
+      },
+      onError: () => {
+        toast({
+          variant: 'destructive',
+          description: (
+            <div className="flex items-center gap-2">
+              <X className="h-4 w-4" />
+              <span>Failed to cancel appointment</span>
+            </div>
+          ),
+        })
+      },
+    })
+
+  const handleCancelAppointment = async () => {
+    try {
+      await cancelAppointment({ appointmentId })
+      await utils.appointments.doctor.upcomming.refetch()
+      router.invalidate()
+    } catch (error) {
+      console.error(error)
+    }
+  }
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="h-8 w-8 p-0">
+          <span className="sr-only">Open menu</span>
+          <MoreHorizontal />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem>
+          <Video className="mr-2 h-4 w-4" />
+          Start Consultation
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={handleCancelAppointment}
+          disabled={isCancelling}
+        >
+          <XCircle className="mr-2 h-4 w-4" />
+          Cancel Consultation
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

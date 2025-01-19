@@ -122,6 +122,35 @@ export const appointmentsRouter = createTRPCRouter({
         return { success: true }
       }),
 
+    cancelAppointment: doctorProcedure
+      .input(z.object({ appointmentId: z.string() }))
+      .mutation(async ({ input }) => {
+        const updatedAppointment = await db
+          .update(appointments)
+          .set({ status: AppointmentStatus.CANCELLED })
+          .where(
+            and(
+              eq(appointments.id, input.appointmentId),
+              inArray(appointments.status, [AppointmentStatus.SCHEDULED]),
+            ),
+          )
+          .returning()
+
+        if (!updatedAppointment.length) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Appointment not found',
+          })
+        }
+
+        await db.insert(appointmentLogs).values({
+          appointmentId: updatedAppointment[0]?.id ?? '',
+          status: AppointmentStatus.CANCELLED,
+        })
+
+        return { success: true }
+      }),
+
     patients: publicProcedure
       .input(
         z.object({
