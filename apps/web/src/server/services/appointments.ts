@@ -131,6 +131,19 @@ export default class Appointments {
           },
         },
       },
+      orderBy: (appointments, { desc, sql }) => [
+        sql`CASE 
+          WHEN ${appointments.status} = 'pending' THEN 1
+          WHEN ${appointments.status} = 'in_progress' THEN 2
+          WHEN ${appointments.status} = 'scheduled' THEN 3
+          WHEN ${appointments.status} = 'completed' THEN 4
+          WHEN ${appointments.status} = 'missed' THEN 5
+          WHEN ${appointments.status} = 'rescheduled' THEN 6
+          WHEN ${appointments.status} = 'cancelled' THEN 7
+          ELSE 8
+        END`,
+        desc(appointments.appointmentDate),
+      ],
       offset,
       limit,
     })
