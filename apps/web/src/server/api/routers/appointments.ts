@@ -1,6 +1,11 @@
 import { z } from 'zod'
-import { createTRPCRouter, procedure, publicProcedure } from '../trpc'
-import { and, count, eq } from 'drizzle-orm'
+import {
+  createTRPCRouter,
+  doctorProcedure,
+  procedure,
+  publicProcedure,
+} from '../trpc'
+import { and, count, eq, inArray } from 'drizzle-orm'
 
 import { appointmentLogs, appointments } from '@web/server/db/schema'
 import { AppointmentStatus } from '@web/server/utils'
@@ -26,16 +31,29 @@ const appointmentSchema = z.object({
       'in_progress',
     ])
     .optional(),
+  page: z.number().optional().catch(1),
+  pageSize: z.number().optional().catch(10),
 })
 export type AppointmentInput = z.infer<typeof appointmentSchema>
 
 export const appointmentsRouter = createTRPCRouter({
   doctor: {
     upcomming: publicProcedure
-      .input(z.enum(['physical', 'online']))
+      .input(
+        z.object({
+          type: z.enum(['physical', 'online']),
+          page: z.number().optional().catch(1),
+          pageSize: z.number().optional().catch(10),
+        }),
+      )
       .query(async ({ ctx, input }) => {
         assert(ctx.user?.id, 'User not found')
-        return await Appointments.upcomming(ctx.user.id, input)
+        return await Appointments.upcomming(
+          ctx.user.id,
+          input.type,
+          input.page ?? 1,
+          input.pageSize ?? 10,
+        )
       }),
 
     listAll: publicProcedure
@@ -43,6 +61,94 @@ export const appointmentsRouter = createTRPCRouter({
       .query(async ({ ctx, input }) => {
         assert(ctx.user?.id, 'User not found')
         return await Appointments.list(ctx.user.id, input)
+      }),
+
+    confirmAppointment: doctorProcedure
+      .input(z.object({ appointmentId: z.string() }))
+      .mutation(async ({ input }) => {
+        const updatedAppointment = await db
+          .update(appointments)
+          .set({ status: AppointmentStatus.SCHEDULED })
+          .where(
+            and(
+              eq(appointments.id, input.appointmentId),
+              inArray(appointments.status, [AppointmentStatus.PENDING]),
+            ),
+          )
+          .returning()
+
+        if (!updatedAppointment.length) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Appointment not found',
+          })
+        }
+
+        await db.insert(appointmentLogs).values({
+          appointmentId: updatedAppointment[0]?.id ?? '',
+          status: AppointmentStatus.SCHEDULED,
+        })
+
+        return { success: true }
+      }),
+
+    declineAppointment: doctorProcedure
+      .input(z.object({ appointmentId: z.string() }))
+      .mutation(async ({ ctx, input }) => {
+        const updatedAppointment = await db
+          .update(appointments)
+          .set({ status: AppointmentStatus.CANCELLED })
+          .where(
+            and(
+              eq(appointments.id, input.appointmentId),
+              eq(appointments.doctorId, ctx.user?.id ?? ''),
+              inArray(appointments.status, [AppointmentStatus.PENDING]),
+            ),
+          )
+          .returning()
+
+        if (!updatedAppointment.length) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Appointment not found',
+          })
+        }
+
+        await db.insert(appointmentLogs).values({
+          appointmentId: updatedAppointment[0]?.id ?? '',
+          status: AppointmentStatus.CANCELLED,
+        })
+
+        return { success: true }
+      }),
+
+    cancelAppointment: doctorProcedure
+      .input(z.object({ appointmentId: z.string() }))
+      .mutation(async ({ input }) => {
+        const updatedAppointment = await db
+          .update(appointments)
+          .set({ status: AppointmentStatus.CANCELLED })
+          .where(
+            and(
+              eq(appointments.id, input.appointmentId),
+              inArray(appointments.status, [AppointmentStatus.SCHEDULED]),
+            ),
+          )
+          .returning()
+
+        if (!updatedAppointment.length) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Appointment not found',
+          })
+        }
+
+        await db.insert(appointmentLogs).values({
+          appointmentId: updatedAppointment[0]?.id ?? '',
+          status: AppointmentStatus.CANCELLED,
+        })
+
+        return { success: true }
       }),
 
     patients: publicProcedure

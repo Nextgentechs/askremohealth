@@ -7,7 +7,7 @@ export default async function AppointmentPage({
 }) {
   const { id } = await params
   return (
-    <div className="container mb-40 mt-12 flex min-h-screen w-full flex-col items-center gap-12 xl:mb-2">
+    <div className="container mb-40 mt-12 flex min-h-screen w-full flex-col gap-12 xl:mb-2">
       <VideoRoom appointmentId={id} />
     </div>
   )

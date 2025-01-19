@@ -214,6 +214,7 @@ function AppointmentDetails() {
     },
   )
   const time = searchParams.get('time')
+
   const appointmentDuration =
     doctorDetails?.operatingHours?.[0]?.consultationDuration
   const timeRange = getTimeRange(time, appointmentDuration)
@@ -333,6 +334,7 @@ function BookingForm() {
 
       await mutateAsync(finalData)
       form.reset()
+
       if (currentUser) {
         toast({
           description: (
@@ -346,7 +348,7 @@ function BookingForm() {
         return
       }
       setIsOpen(true)
-      await utils.doctors.invalidate()
+      await utils.doctors.list.refetch()
     } catch (error) {
       console.error(error)
       toast({
