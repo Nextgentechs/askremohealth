@@ -120,23 +120,33 @@ export const videoRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ input }) => {
+      const appointment = await db.query.appointments.findFirst({
+        where: eq(appointments.id, input.appointmentId),
+      })
+
+      if (!appointment) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Appointment not found',
+        })
+      }
+      if (appointment.status === AppointmentStatus.Completed) {
+        return { success: true }
+      }
+
       try {
         await twilioClient.video.v1.rooms(input.roomName).update({
           status: 'completed',
         })
-
-        await db
-          .update(appointments)
-          .set({ status: AppointmentStatus.Completed })
-          .where(eq(appointments.id, input.appointmentId))
-
-        return { success: true }
       } catch (error) {
-        console.error('Error ending session:', error)
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to end video session',
-        })
+        console.error('Error completing room:', error)
       }
+
+      await db
+        .update(appointments)
+        .set({ status: AppointmentStatus.Completed })
+        .where(eq(appointments.id, input.appointmentId))
+
+      return { success: true }
     }),
 })

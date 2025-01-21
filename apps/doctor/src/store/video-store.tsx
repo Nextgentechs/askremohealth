@@ -1,6 +1,7 @@
 import {
   type Room,
   type LocalVideoTrack,
+  type LocalAudioTrack,
   type LocalParticipant,
   type RemoteParticipant,
 } from 'twilio-video'
@@ -11,6 +12,7 @@ type VideoState = {
   localParticipant: LocalParticipant | null
   remoteParticipant: RemoteParticipant | null
   localTrack: LocalVideoTrack | null
+  localAudioTrack: LocalAudioTrack | null
   isMuted: boolean
   isVideoOff: boolean
   volume: number
@@ -25,6 +27,7 @@ type VideoActions = {
   setLocalParticipant: (participant: LocalParticipant | null) => void
   setRemoteParticipant: (participant: RemoteParticipant | null) => void
   setLocalTrack: (track: LocalVideoTrack | null) => void
+  setLocalAudioTrack: (track: LocalAudioTrack | null) => void
   setIsMuted: (muted: boolean) => void
   setIsVideoOff: (off: boolean) => void
   setVolume: (volume: number) => void
@@ -43,6 +46,7 @@ export const useVideoStore = create<VideoStore>((set, get) => ({
   localParticipant: null,
   remoteParticipant: null,
   localTrack: null,
+  localAudioTrack: null,
   isMuted: false,
   isVideoOff: false,
   volume: 100,
@@ -56,6 +60,7 @@ export const useVideoStore = create<VideoStore>((set, get) => ({
   setRemoteParticipant: (participant) =>
     set({ remoteParticipant: participant }),
   setLocalTrack: (track) => set({ localTrack: track }),
+  setLocalAudioTrack: (track) => set({ localAudioTrack: track }),
   setIsMuted: (muted) => set({ isMuted: muted }),
   setIsVideoOff: (off) => set({ isVideoOff: off }),
   setVolume: (volume) => set({ volume }),
@@ -64,32 +69,24 @@ export const useVideoStore = create<VideoStore>((set, get) => ({
   setJoiningRoom: (joining) => set({ joiningRoom: joining }),
   setShowPostCall: (show) => set({ showPostCall: show }),
   toggleMute: () => {
-    const { localParticipant, isMuted } = get()
-    if (localParticipant) {
-      localParticipant.audioTracks.forEach((publication) => {
-        if (publication.track) {
-          if (isMuted) {
-            publication.track.enable()
-          } else {
-            publication.track.disable()
-          }
-        }
-      })
+    const { localAudioTrack, isMuted } = get()
+    if (localAudioTrack) {
+      if (isMuted) {
+        localAudioTrack.enable()
+      } else {
+        localAudioTrack.disable()
+      }
       set({ isMuted: !isMuted })
     }
   },
   toggleVideo: () => {
-    const { localParticipant, isVideoOff } = get()
-    if (localParticipant) {
-      localParticipant.videoTracks.forEach((publication) => {
-        if (publication.track) {
-          if (isVideoOff) {
-            publication.track.enable()
-          } else {
-            publication.track.disable()
-          }
-        }
-      })
+    const { localTrack, isVideoOff } = get()
+    if (localTrack) {
+      if (isVideoOff) {
+        localTrack.enable()
+      } else {
+        localTrack.disable()
+      }
       set({ isVideoOff: !isVideoOff })
     }
   },
