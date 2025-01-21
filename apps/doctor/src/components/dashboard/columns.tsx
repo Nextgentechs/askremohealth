@@ -22,6 +22,7 @@ import {
 import { api } from '@/lib/trpc'
 import { useToast } from '@/hooks/use-toast'
 import { useRouter } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 
 type Appointment =
   RouterOutputs['appointments']['doctor']['upcomming']['appointments'][number]
@@ -73,7 +74,10 @@ export const upcommingAppointmentsColumn: ColumnDef<Appointment>[] = [
       if (status === AppointmentStatus.PENDING) {
         return <PendingAppointmentActions appointmentId={row.original.id} />
       }
-      if (status === AppointmentStatus.SCHEDULED) {
+      if (
+        status === AppointmentStatus.SCHEDULED ||
+        status === AppointmentStatus.IN_PROGRESS
+      ) {
         return <ScheduledAppointmentActions appointmentId={row.original.id} />
       }
       return null
@@ -270,10 +274,12 @@ function ScheduledAppointmentActions({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem>
-          <Video className="mr-2 h-4 w-4" />
-          Start Consultation
-        </DropdownMenuItem>
+        <Link to={'/appointment-room/$id'} params={{ id: appointmentId }}>
+          <DropdownMenuItem>
+            <Video className="mr-2 h-4 w-4" />
+            Start Consultation
+          </DropdownMenuItem>
+        </Link>
         <DropdownMenuItem
           onClick={handleCancelAppointment}
           disabled={isCancelling}
