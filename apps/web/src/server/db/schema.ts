@@ -195,8 +195,19 @@ export const appointments = pgTable('appointment', {
   updatedAt: timestamp('updated_at')
     .notNull()
     .$onUpdate(() => new Date()),
-  notes: varchar('notes'),
+  patientNotes: varchar('patient_notes'),
+  doctorNotes: varchar('doctor_notes'),
   status: appointmentsStatusEnum('status').notNull(),
+})
+
+export const appointmentAttachments = pgTable('appointment_attachments', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  appointmentId: uuid('appointment_id')
+    .notNull()
+    .references(() => appointments.id, { onDelete: 'cascade' }),
+  url: varchar('url').notNull(),
+  path: varchar('path').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
 })
 
 export const appointmentLogs = pgTable('appointment_log', {
