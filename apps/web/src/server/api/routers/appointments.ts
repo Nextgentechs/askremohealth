@@ -7,13 +7,18 @@ import {
 } from '../trpc'
 import { and, count, eq, inArray } from 'drizzle-orm'
 
-import { appointmentLogs, appointments } from '@web/server/db/schema'
+import {
+  appointmentAttachments,
+  appointmentLogs,
+  appointments,
+} from '@web/server/db/schema'
 import { AppointmentStatus } from '@web/server/utils'
 import { newAppointmentSchema } from '../schema'
 import { db } from '@web/server/db'
 import Appointments from '@web/server/services/appointments'
 import assert from 'assert'
 import { TRPCError } from '@trpc/server'
+import { put } from '@vercel/blob'
 
 const appointmentSchema = z.object({
   type: z.enum(['physical', 'online']),
@@ -61,6 +66,54 @@ export const appointmentsRouter = createTRPCRouter({
       .query(async ({ ctx, input }) => {
         assert(ctx.user?.id, 'User not found')
         return await Appointments.list(ctx.user.id, input)
+      }),
+
+    details: doctorProcedure
+      .input(z.object({ appointmentId: z.string() }))
+      .query(async ({ ctx, input }) => {
+        return await ctx.db.query.appointments.findFirst({
+          where: (appointment, { and, eq }) =>
+            eq(appointment.id, input.appointmentId),
+          columns: {
+            id: true,
+            appointmentDate: true,
+            status: true,
+            patientNotes: true,
+            doctorNotes: true,
+            type: true,
+            updatedAt: true,
+          },
+          with: {
+            logs: true,
+            attachments: true,
+            doctor: {
+              columns: {
+                id: true,
+              },
+              with: {
+                user: {
+                  columns: {
+                    firstName: true,
+                    lastName: true,
+                  },
+                },
+              },
+            },
+            patient: {
+              columns: {
+                id: true,
+              },
+              with: {
+                user: {
+                  columns: {
+                    firstName: true,
+                    lastName: true,
+                  },
+                },
+              },
+            },
+          },
+        })
       }),
 
     confirmAppointment: doctorProcedure
@@ -151,6 +204,69 @@ export const appointmentsRouter = createTRPCRouter({
         return { success: true }
       }),
 
+    postAppointment: doctorProcedure
+      .input(
+        z.object({
+          appointmentId: z.string(),
+          doctorNotes: z.string(),
+          attachment: z.string().optional(),
+        }),
+      )
+      .mutation(async ({ input, ctx }) => {
+        const appointment = await db.query.appointments.findFirst({
+          where: (appointment, { eq }) =>
+            eq(appointment.id, input.appointmentId),
+        })
+
+        if (!appointment) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Appointment not found',
+          })
+        }
+
+        if (input.attachment) {
+          const buffer = Buffer.from(
+            input.attachment.replace(/^data:application\/pdf;base64,/, ''),
+            'base64',
+          )
+
+          const { url, pathname } = await put(
+            `documents/${ctx.user?.id}/${'appointment-attachment'}`,
+            buffer,
+            {
+              access: 'public',
+              contentType: `application/pdf`,
+            },
+          )
+
+          await Promise.all([
+            db.insert(appointmentAttachments).values({
+              appointmentId: appointment.id,
+              url,
+              path: pathname,
+            }),
+            db
+              .update(appointments)
+              .set({
+                doctorNotes: input.doctorNotes,
+              })
+              .where(eq(appointments.id, appointment.id)),
+          ])
+
+          return { success: true }
+        }
+
+        await db
+          .update(appointments)
+          .set({
+            doctorNotes: input.doctorNotes,
+          })
+          .where(eq(appointments.id, appointment.id))
+
+        return { success: true }
+      }),
+
     patients: publicProcedure
       .input(
         z.object({
@@ -224,7 +340,7 @@ export const appointmentsRouter = createTRPCRouter({
           doctorId: input.doctorId,
           patientId: user.id,
           appointmentDate: input.date,
-          notes: input.notes,
+          patientNotes: input.notes,
           type: input.appointmentType,
           status: AppointmentStatus.PENDING,
         })
@@ -273,7 +389,8 @@ export const appointmentsRouter = createTRPCRouter({
               id: true,
               appointmentDate: true,
               status: true,
-              notes: true,
+              patientNotes: true,
+              doctorNotes: true,
               type: true,
               updatedAt: true,
             },
@@ -406,7 +523,8 @@ export const appointmentsRouter = createTRPCRouter({
             patientId: appointment.patientId,
             appointmentDate: new Date(input.newDate),
             type: appointment.type,
-            notes: appointment.notes,
+            patientNotes: appointment.patientNotes,
+            doctorNotes: appointment.doctorNotes,
             status: AppointmentStatus.SCHEDULED,
           })
           .returning()
