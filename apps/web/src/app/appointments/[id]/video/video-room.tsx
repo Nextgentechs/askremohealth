@@ -7,6 +7,7 @@ import {
   type LocalVideoTrack,
   type LocalParticipant,
   type RemoteParticipant,
+  type LocalAudioTrack,
 } from 'twilio-video'
 import { Button } from '@web/components/ui/button'
 import {
@@ -22,7 +23,6 @@ import {
 import { Slider } from '@web/components/ui/slider'
 import { Alert, AlertDescription, AlertTitle } from '@web/components/ui/alert'
 import PreRoom from './pre-room'
-import LocalVideoRoom from './local-video-room'
 import useVideoSetup from './use-video-setup'
 import { PostCall } from './post-call'
 
@@ -31,6 +31,7 @@ type VideoState = {
   localParticipant: LocalParticipant | null
   remoteParticipant: RemoteParticipant | null
   localTrack: LocalVideoTrack | null
+  localAudioTrack: LocalAudioTrack | null
   isMuted: boolean
   isVideoOff: boolean
   volume: number
@@ -45,6 +46,7 @@ type VideoActions = {
   setLocalParticipant: (participant: LocalParticipant | null) => void
   setRemoteParticipant: (participant: RemoteParticipant | null) => void
   setLocalTrack: (track: LocalVideoTrack | null) => void
+  setLocalAudioTrack: (track: LocalAudioTrack | null) => void
   setIsMuted: (muted: boolean) => void
   setIsVideoOff: (off: boolean) => void
   setVolume: (volume: number) => void
@@ -63,6 +65,7 @@ export const useVideoStore = create<VideoStore>((set, get) => ({
   localParticipant: null,
   remoteParticipant: null,
   localTrack: null,
+  localAudioTrack: null,
   isMuted: false,
   isVideoOff: false,
   volume: 100,
@@ -76,6 +79,7 @@ export const useVideoStore = create<VideoStore>((set, get) => ({
   setRemoteParticipant: (participant) =>
     set({ remoteParticipant: participant }),
   setLocalTrack: (track) => set({ localTrack: track }),
+  setLocalAudioTrack: (track) => set({ localAudioTrack: track }),
   setIsMuted: (muted) => set({ isMuted: muted }),
   setIsVideoOff: (off) => set({ isVideoOff: off }),
   setVolume: (volume) => set({ volume }),
@@ -84,32 +88,24 @@ export const useVideoStore = create<VideoStore>((set, get) => ({
   setJoiningRoom: (joining) => set({ joiningRoom: joining }),
   setShowPostCall: (show) => set({ showPostCall: show }),
   toggleMute: () => {
-    const { localParticipant, isMuted } = get()
-    if (localParticipant) {
-      localParticipant.audioTracks.forEach((publication) => {
-        if (publication.track) {
-          if (isMuted) {
-            publication.track.enable()
-          } else {
-            publication.track.disable()
-          }
-        }
-      })
+    const { localAudioTrack, isMuted } = get()
+    if (localAudioTrack) {
+      if (isMuted) {
+        localAudioTrack.enable()
+      } else {
+        localAudioTrack.disable()
+      }
       set({ isMuted: !isMuted })
     }
   },
   toggleVideo: () => {
-    const { localParticipant, isVideoOff } = get()
-    if (localParticipant) {
-      localParticipant.videoTracks.forEach((publication) => {
-        if (publication.track) {
-          if (isVideoOff) {
-            publication.track.enable()
-          } else {
-            publication.track.disable()
-          }
-        }
-      })
+    const { localTrack, isVideoOff } = get()
+    if (localTrack) {
+      if (isVideoOff) {
+        localTrack.enable()
+      } else {
+        localTrack.disable()
+      }
       set({ isVideoOff: !isVideoOff })
     }
   },
@@ -138,35 +134,50 @@ function VideoControls({ isEndingSessions }: { isEndingSessions: boolean }) {
   }
 
   return (
-    <div className="flex items-center justify-center gap-4 rounded-lg bg-card p-4">
-      <Button
-        variant={isMuted ? 'destructive' : 'secondary'}
-        size="icon"
-        onClick={toggleMute}
-      >
-        {isMuted ? <MicOff /> : <Mic />}
-      </Button>
-      <Button
-        variant={isVideoOff ? 'destructive' : 'secondary'}
-        size="icon"
-        onClick={toggleVideo}
-      >
-        {isVideoOff ? <VideoOff /> : <Video />}
-      </Button>
-      <Button variant="destructive" size="icon" onClick={handleEndCall}>
-        {isEndingSessions ? (
-          <Loader className="size-4 animate-spin" />
-        ) : (
-          <Phone className="rotate-225" />
-        )}
-      </Button>
-      <div className="flex w-48 items-center gap-2">
-        <Volume2 className="h-4 w-4" />
+    <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 rounded-full bg-background p-2 shadow-lg backdrop-blur-sm">
+        <Button
+          variant={isMuted ? 'destructive' : 'ghost'}
+          size="icon"
+          className=""
+          onClick={toggleMute}
+        >
+          {isMuted ? <MicOff className="size-5" /> : <Mic className="size-5" />}
+        </Button>
+        <Button
+          variant={isVideoOff ? 'destructive' : 'ghost'}
+          size="icon"
+          className=""
+          onClick={toggleVideo}
+        >
+          {isVideoOff ? (
+            <VideoOff className="size-5" />
+          ) : (
+            <Video className="size-5" />
+          )}
+        </Button>
+        <Button
+          variant="destructive"
+          size="icon"
+          className="size-11 rounded-full bg-red-500 hover:bg-red-600"
+          onClick={handleEndCall}
+        >
+          {isEndingSessions ? (
+            <Loader className="size-5 animate-spin" />
+          ) : (
+            <Phone className="rotate-225 size-5" />
+          )}
+        </Button>
+      </div>
+
+      <div className="hidden items-center gap-2 rounded-full bg-zinc-800/90 px-4 py-2 shadow-lg backdrop-blur-sm sm:flex">
+        <Volume2 className="size-4 text-zinc-400" />
         <Slider
           value={[volume]}
           onValueChange={handleVolumeChange}
           max={100}
           step={1}
+          className="w-24 cursor-pointer xl:w-32 2xl:w-40"
         />
       </div>
     </div>
@@ -182,23 +193,42 @@ function MainVideoRoom({
   remoteVideoRef: React.RefObject<HTMLDivElement>
   isEndingSessions: boolean
 }) {
+  const { remoteParticipant } = useVideoStore()
+
   return (
-    <div className="grid h-full grid-cols-12 gap-4 lg:container lg:mx-auto">
-      <div className="col-span-12 flex flex-col gap-4">
-        <div className="relative h-[70vh] min-h-[300px] rounded-lg bg-background">
-          <div
-            id="remote-video"
-            className="h-full w-full overflow-hidden rounded-lg bg-muted"
-            ref={remoteVideoRef}
-          />
-          <div
-            id="local-video"
-            className="absolute bottom-4 right-4 aspect-video w-48 overflow-hidden rounded-lg bg-muted shadow-lg transition-all hover:scale-105 sm:w-64 md:w-80 lg:w-96"
-            ref={localVideoRef}
-          />
+    <div className="fixed inset-0 bg-black">
+      <div className="h-full w-full p-4 sm:p-6 md:p-8">
+        <div
+          ref={remoteVideoRef}
+          id="remote-video"
+          className="h-full w-full overflow-hidden rounded-2xl bg-zinc-900"
+        >
+          {!remoteParticipant && (
+            <div className="flex h-full w-full flex-col items-center justify-center gap-4">
+              <Loader className="h-8 w-8 animate-spin text-zinc-400" />
+              <Alert variant="default" className="w-auto border-none">
+                <AlertCircle className="h-4 w-4" />
+
+                <AlertTitle className="text-card-foreground">
+                  Waiting for other participant
+                </AlertTitle>
+                <AlertDescription className="text-muted-foreground">
+                  The other participant hasn&apos;t joined the room yet.
+                </AlertDescription>
+              </Alert>
+            </div>
+          )}
         </div>
 
-        <VideoControls isEndingSessions={isEndingSessions} />
+        <div
+          ref={localVideoRef}
+          id="local-video"
+          className="absolute bottom-24 right-8 aspect-video w-[200px] overflow-hidden rounded-xl bg-zinc-800 shadow-lg transition-transform hover:scale-105 sm:bottom-28 sm:right-10 sm:w-[280px] md:right-12 md:w-[320px]"
+        />
+
+        <div className="absolute bottom-8 left-0 right-0 flex items-center justify-center md:bottom-12 lg:bottom-14">
+          <VideoControls isEndingSessions={isEndingSessions} />
+        </div>
       </div>
     </div>
   )
@@ -210,18 +240,12 @@ export function VideoRoom({ appointmentId }: { appointmentId: string }) {
   const {
     room,
     localParticipant,
-    remoteParticipant,
+    localTrack,
+    showPostCall,
     showPreRoom,
     joiningRoom,
-    localTrack,
-    toggleMute,
-    toggleVideo,
-    isMuted,
-    isVideoOff,
-    showPostCall,
   } = useVideoStore()
-  const { joinRoom, handleEndCall, isEndingSessions } =
-    useVideoSetup(appointmentId)
+  const { joinRoom, isEndingSessions } = useVideoSetup(appointmentId)
 
   useEffect(() => {
     return () => {
@@ -247,39 +271,25 @@ export function VideoRoom({ appointmentId }: { appointmentId: string }) {
     )
   }
 
-  if (room && localParticipant && !remoteParticipant) {
+  if (!room || !localParticipant) {
     return (
-      <LocalVideoRoom
-        isMuted={isMuted}
-        isVideoOff={isVideoOff}
-        toggleMute={toggleMute}
-        toggleVideo={toggleVideo}
-        handleEndCall={handleEndCall}
-        isEndingSessions={isEndingSessions}
-        localVideoRef={localVideoRef}
-      />
+      <div className="flex h-full items-center justify-center">
+        <Alert variant="default">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Connecting...</AlertTitle>
+          <AlertDescription>
+            Please wait while we connect you to the video room.
+          </AlertDescription>
+        </Alert>
+      </div>
     )
   }
 
   return (
-    <div className="">
-      {room && localParticipant && remoteParticipant ? (
-        <MainVideoRoom
-          localVideoRef={localVideoRef}
-          remoteVideoRef={remoteVideoRef}
-          isEndingSessions={isEndingSessions}
-        />
-      ) : (
-        <div className="flex h-full items-center justify-center">
-          <Alert variant="default">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Connecting...</AlertTitle>
-            <AlertDescription>
-              Please wait while we connect you to the video room.
-            </AlertDescription>
-          </Alert>
-        </div>
-      )}
-    </div>
+    <MainVideoRoom
+      localVideoRef={localVideoRef}
+      remoteVideoRef={remoteVideoRef}
+      isEndingSessions={isEndingSessions}
+    />
   )
 }

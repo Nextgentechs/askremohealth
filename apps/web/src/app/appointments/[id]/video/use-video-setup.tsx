@@ -3,6 +3,7 @@ import { api } from '@web/trpc/react'
 import { useVideoStore } from './video-room'
 import {
   connect,
+  createLocalAudioTrack,
   createLocalVideoTrack,
   type LocalVideoTrack,
   type RemoteParticipant,
@@ -14,11 +15,13 @@ export default function useVideoSetup(appointmentId: string) {
     setRoom,
     setLocalParticipant,
     setLocalTrack,
+    setLocalAudioTrack,
     setRemoteParticipant,
     setShowPreRoom,
     setJoiningRoom,
     room,
     localTrack,
+    localAudioTrack,
     setShowPostCall,
   } = useVideoStore()
 
@@ -148,6 +151,9 @@ export default function useVideoSetup(appointmentId: string) {
       if (localTrack) {
         localTrack.stop()
       }
+      if (localAudioTrack) {
+        localAudioTrack.stop()
+      }
 
       setShowPostCall(true)
     } catch (error) {
@@ -166,21 +172,25 @@ export default function useVideoSetup(appointmentId: string) {
   ) => {
     setJoiningRoom(true)
     try {
-      const track = await createLocalVideoTrack({
-        width: 640,
-        height: 480,
-      })
+      const [videoTrack, audioTrack] = await Promise.all([
+        createLocalVideoTrack({
+          width: 640,
+          height: 480,
+        }),
+        createLocalAudioTrack(),
+      ])
 
       const { roomName } = await createRoom({ appointmentId })
       const { token } = await generateToken({ appointmentId, roomName })
       const videoRoom = await connect(token, {
         name: roomName,
-        tracks: [track],
+        tracks: [videoTrack, audioTrack],
       })
 
       setRoom(videoRoom)
       setLocalParticipant(videoRoom.localParticipant)
-      setLocalTrack(track)
+      setLocalTrack(videoTrack)
+      setLocalAudioTrack(audioTrack)
 
       videoRoom.participants.forEach((participant) =>
         attachRemoteParticipant(participant, remoteVideoRef),
@@ -189,7 +199,7 @@ export default function useVideoSetup(appointmentId: string) {
         attachRemoteParticipant(participant, remoteVideoRef),
       )
 
-      attachLocalTrack(track, localVideoRef)
+      attachLocalTrack(videoTrack, localVideoRef)
 
       setShowPreRoom(false)
     } catch (error) {
