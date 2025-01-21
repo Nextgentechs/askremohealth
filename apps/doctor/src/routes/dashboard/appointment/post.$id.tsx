@@ -1,0 +1,148 @@
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
+import { createFileRoute } from '@tanstack/react-router'
+import { z } from 'zod'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
+import { fileToBase64 } from '@/lib/utils'
+import { api } from '@/lib/trpc'
+import { useToast } from '@/hooks/use-toast'
+import { Loader } from 'lucide-react'
+
+export const Route = createFileRoute('/dashboard/appointment/post/$id')({
+  loader: async ({ context: { trpcQueryUtils }, params: { id } }) => {
+    trpcQueryUtils.appointments.doctor.details.prefetch({
+      appointmentId: id,
+    })
+  },
+  component: RouteComponent,
+})
+
+const postAppointmentSchema = z.object({
+  patientName: z.string().optional(),
+  appointmentDate: z.string().optional(),
+  notes: z.string().min(10, { message: 'Please add a note' }),
+  attachment: z.string().optional(),
+})
+
+function RouteComponent() {
+  const { id } = Route.useParams()
+  const { toast } = useToast()
+  const navigate = Route.useNavigate()
+
+  const [appointment] = api.appointments.doctor.details.useSuspenseQuery({
+    appointmentId: id,
+  })
+
+  const { register, handleSubmit, setValue, reset } = useForm<
+    z.infer<typeof postAppointmentSchema>
+  >({
+    resolver: zodResolver(postAppointmentSchema),
+    defaultValues: {
+      patientName: `${appointment?.patient?.user.firstName} ${appointment?.patient?.user.lastName}`,
+      appointmentDate: appointment?.appointmentDate
+        ? new Date(appointment.appointmentDate)
+            .toLocaleString('en-US', {
+              timeZone: 'Africa/Nairobi',
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true,
+            })
+            .replace(',', '')
+        : '',
+      notes: appointment?.patientNotes ?? '',
+      attachment: '',
+    },
+  })
+
+  const { mutateAsync, isPending } =
+    api.appointments.doctor.postAppointment.useMutation()
+
+  const onSubmit = async (data: z.infer<typeof postAppointmentSchema>) => {
+    await mutateAsync({
+      appointmentId: id,
+      doctorNotes: data.notes,
+      attachment: data.attachment,
+    })
+    toast({
+      title: 'Success',
+      description: 'Follow-up notes succesfully sent',
+    })
+    reset()
+    navigate({
+      to: '/dashboard/upcomming-appointments',
+    })
+  }
+
+  return (
+    <div className="mb-20 flex flex-col gap-6">
+      <div>
+        <h1 className="text-foreground text-xl font-semibold tracking-wide">
+          Post Appointment
+        </h1>
+        <p className="text-muted-foreground text-sm">
+          Thank you for completing the appointment. Please take a moment to
+          review and document any important notes or follow-up actions.
+        </p>
+      </div>
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="flex max-w-xl flex-col gap-6"
+      >
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="patientName">Patient Name</Label>
+          <Input type="text" id="patientName" {...register('patientName')} />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="appointmentDate">Appointment Date</Label>
+          <Input
+            type="text"
+            id="appointmentDate"
+            {...register('appointmentDate')}
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="notes">Notes</Label>
+          <Textarea
+            className="h-40"
+            id="notes"
+            {...register('notes')}
+            placeholder="Add any important notes here"
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="attachment">Attachment</Label>
+          <Input
+            type="file"
+            id="attachment"
+            onChange={async (e) => {
+              const file = e.target.files?.[0]
+              if (file) {
+                try {
+                  const base64String = await fileToBase64(file)
+                  setValue('attachment', base64String)
+                } catch (error) {
+                  console.error('Error converting file to base64:', error)
+                }
+              }
+            }}
+          />
+        </div>
+        <div className="flex justify-end">
+          <Button type="submit" size="lg">
+            {isPending ? (
+              <Loader className="animate-spin" />
+            ) : (
+              <span>Submit</span>
+            )}
+          </Button>
+        </div>
+      </form>
+    </div>
+  )
+}
