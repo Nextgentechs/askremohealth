@@ -34,7 +34,7 @@ export default class Appointments {
       doctorId: input.doctorId,
       patientId: user.id,
       appointmentDate: input.date,
-      notes: input.notes,
+      patientNotes: input.notes,
       type: input.appointmentType,
       status: AppointmentStatus.PENDING,
     })
@@ -63,7 +63,7 @@ export default class Appointments {
           doctorId: doctorId,
           patientId: user.id,
           appointmentDate: date,
-          notes: notes,
+          patientNotes: notes,
           type: appointmentType,
           status: AppointmentStatus.PENDING,
         }),
@@ -76,7 +76,7 @@ export default class Appointments {
       doctorId: doctorId,
       patientId: user.id,
       appointmentDate: date,
-      notes: notes,
+      patientNotes: notes,
       type: appointmentType,
       status: AppointmentStatus.PENDING,
     })
@@ -115,7 +115,7 @@ export default class Appointments {
         id: true,
         appointmentDate: true,
         status: true,
-        notes: true,
+        patientNotes: true,
       },
       with: {
         patient: {
@@ -179,7 +179,7 @@ export default class Appointments {
         id: true,
         appointmentDate: true,
         status: true,
-        notes: true,
+        patientNotes: true,
       },
       with: {
         doctor: {

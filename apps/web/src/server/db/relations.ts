@@ -12,6 +12,7 @@ import {
   subSpecialties,
   users,
   reviews,
+  appointmentAttachments,
 } from './schema'
 
 export const userRelations = relations(users, ({ one }) => ({
@@ -79,6 +80,7 @@ export const appointmentRelations = relations(
       fields: [appointments.id],
       references: [reviews.appointmentId],
     }),
+    attachments: many(appointmentAttachments),
   }),
 )
 
@@ -121,3 +123,13 @@ export const reviewRelations = relations(reviews, ({ one }) => ({
     references: [doctors.id],
   }),
 }))
+
+export const appointmentAttachmentRelations = relations(
+  appointmentAttachments,
+  ({ one }) => ({
+    appointment: one(appointments, {
+      fields: [appointmentAttachments.appointmentId],
+      references: [appointments.id],
+    }),
+  }),
+)

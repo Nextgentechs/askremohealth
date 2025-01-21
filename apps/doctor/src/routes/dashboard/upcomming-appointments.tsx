@@ -105,6 +105,8 @@ function AppointmentsPagination({
   const navigate = useNavigate({ from: '/dashboard/upcomming-appointments' })
   const currentPage = search.page ?? 1
 
+  if (pagination.pages <= 1) return null
+
   return (
     <Pagination>
       <PaginationContent>
