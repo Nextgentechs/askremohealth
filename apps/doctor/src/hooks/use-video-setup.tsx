@@ -4,6 +4,7 @@ import { useVideoStore } from '@/store/video-store'
 import {
   connect,
   createLocalVideoTrack,
+  createLocalAudioTrack,
   LocalVideoTrack,
   RemoteParticipant,
 } from 'twilio-video'
@@ -17,16 +18,19 @@ export default function useVideoSetup(appointmentId: string) {
     setRoom,
     setLocalParticipant,
     setLocalTrack,
+    setLocalAudioTrack,
     setRemoteParticipant,
     setShowPreRoom,
     setJoiningRoom,
     room,
     localTrack,
+    localAudioTrack,
   } = useVideoStore()
 
   const { mutateAsync: createRoom } = api.video.createRoom.useMutation()
   const { mutateAsync: generateToken } = api.video.generateToken.useMutation()
   const { mutateAsync: endSession } = api.video.endSession.useMutation()
+  const router = useRouter()
 
   const attachLocalTrack = (
     track: LocalVideoTrack,
@@ -132,18 +136,11 @@ export default function useVideoSetup(appointmentId: string) {
       })
     })
   }
-  const router = useRouter()
 
   const handleEndCall = async () => {
     setIsEndingSessions(true)
     try {
       const roomAppointmentId = room?.name?.replace('appointment-', '')
-      if (roomAppointmentId && room?.name) {
-        await endSession({
-          appointmentId: roomAppointmentId,
-          roomName: room.name,
-        })
-      }
 
       if (room) {
         room.disconnect()
@@ -151,16 +148,30 @@ export default function useVideoSetup(appointmentId: string) {
       if (localTrack) {
         localTrack.stop()
       }
+      if (localAudioTrack) {
+        localAudioTrack.stop()
+      }
+
+      if (roomAppointmentId && room?.name) {
+        try {
+          await endSession({
+            appointmentId: roomAppointmentId,
+            roomName: room.name,
+          })
+        } catch (error) {
+          console.error('Error ending session on server:', error)
+        }
+      }
 
       router.navigate({
         to: '/dashboard/appointment/post/$id',
         params: { id: roomAppointmentId ?? '' },
       })
     } catch (error) {
-      console.error('Error ending call:', error)
+      console.error('Error in handleEndCall:', error)
       toast({
         title: 'Error',
-        description: 'Failed to end the call. Please try again.',
+        description: 'Failed to end the call. Please refresh the page.',
         variant: 'destructive',
       })
     } finally {
@@ -174,21 +185,25 @@ export default function useVideoSetup(appointmentId: string) {
   ) => {
     setJoiningRoom(true)
     try {
-      const track = await createLocalVideoTrack({
-        width: 640,
-        height: 480,
-      })
+      const [videoTrack, audioTrack] = await Promise.all([
+        createLocalVideoTrack({
+          width: 640,
+          height: 480,
+        }),
+        createLocalAudioTrack(),
+      ])
 
       const { roomName } = await createRoom({ appointmentId })
       const { token } = await generateToken({ appointmentId, roomName })
       const videoRoom = await connect(token, {
         name: roomName,
-        tracks: [track],
+        tracks: [videoTrack, audioTrack],
       })
 
       setRoom(videoRoom)
       setLocalParticipant(videoRoom.localParticipant)
-      setLocalTrack(track)
+      setLocalTrack(videoTrack)
+      setLocalAudioTrack(audioTrack)
 
       videoRoom.participants.forEach((participant) =>
         attachRemoteParticipant(participant, remoteVideoRef),
@@ -197,7 +212,7 @@ export default function useVideoSetup(appointmentId: string) {
         attachRemoteParticipant(participant, remoteVideoRef),
       )
 
-      attachLocalTrack(track, localVideoRef)
+      attachLocalTrack(videoTrack, localVideoRef)
 
       setShowPreRoom(false)
     } catch (error) {
