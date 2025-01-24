@@ -5,6 +5,7 @@ import LatestArticles from '@web/components/latest-articles'
 import TopSpecialists from '@web/components/top-specialists'
 import WhatPatientsSay from '@web/components/what-patients-say'
 import { SearchForm } from '@web/components/search-form'
+
 export default async function Home() {
   return (
     <main className="h-full w-full">
