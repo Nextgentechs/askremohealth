@@ -4,6 +4,7 @@
   "workspaces": [
     "apps/web",
     "apps/doctor",
+    "apps/cms",
     "packages/eslint-config"
   ],
   "scripts": {

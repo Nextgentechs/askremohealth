@@ -143,7 +143,10 @@ function AppointmentCard({
               : 'Online Appointment'}
           </Badge>
 
-          <Badge variant={appointment.status}>{appointment.status}</Badge>
+          <Badge variant={appointment.status}>
+            {appointment.status.charAt(0).toUpperCase() +
+              appointment.status.slice(1)}
+          </Badge>
         </div>
       </div>
     </Card>

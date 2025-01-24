@@ -1,102 +1,76 @@
-'use client'
-
 import Image from 'next/image'
-import articles from '@web/data/articles'
-import { Card, CardContent, CardFooter } from './ui/card'
-import { Avatar, AvatarImage } from './ui/avatar'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from './ui/dropdown-menu'
+import { Card, CardContent } from './ui/card'
 import { Button } from './ui/button'
-import {
-  ArrowRight,
-  EllipsisVertical,
-  ExternalLink,
-  Flag,
-  Share,
-} from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import Link from 'next/link'
-import { useState } from 'react'
+import { client, urlFor } from '@web/sanity/client'
+import { type SanityImageSource } from '@sanity/image-url/lib/types/types'
 
-export function DropdownOptions() {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size={'icon'} className="rounded-full">
-          <EllipsisVertical />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56">
-        <DropdownMenuItem className="inline-flex w-full items-center gap-2 px-6">
-          <ExternalLink />
-          <span>View Doctor&apos;s Profile</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem className="inline-flex w-full items-center gap-2 px-6">
-          <Share />
-          <span>Share Article</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem className="inline-flex w-full items-center gap-2 px-6">
-          <Flag />
-          <span>Report Article</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
+export type Post = {
+  title: string
+  slug: {
+    current: string
+  }
+  snippet: string
+  image: SanityImageSource
+  publishedAt: string
 }
 
-function ArticleCard({ article }: { article: (typeof articles)[number] }) {
-  const [mouseOver, setMouseOver] = useState(false)
+async function getPosts(limit: number) {
+  const query = `*[_type == "post"] | order(publishedAt desc)[0...$limit] {
+    title,
+    slug,
+    publishedAt,
+    image,
+    snippet
+  }`
 
+  return client.fetch<Post[]>(query, { limit })
+}
+
+function ArticleCard({ post }: { post: Post }) {
   return (
-    <Card className="overflow-hidden rounded-none bg-transparent p-0">
-      <Link href={`/articles/${article.title}`}>
-        <CardContent
-          onMouseEnter={() => setMouseOver(true)}
-          onMouseLeave={() => setMouseOver(false)}
-          className="border-b p-0 pb-6"
-        >
-          <Image
-            src={article.photoUrl}
-            alt={article.title}
-            width={450}
-            height={350}
-            className="size-auto rounded-md object-cover"
-          />
-          <div className="flex flex-col items-start gap-2 py-4">
-            <h3
-              className={`text-base font-medium text-primary ${mouseOver ? 'underline' : ''}`}
-            >
-              {article.title}
+    <Card className="h-96 overflow-hidden rounded-none bg-transparent p-0 transition-all hover:bg-muted/10">
+      <Link
+        href={`/articles/${post.slug.current}`}
+        className="group block h-full"
+        aria-label={`Read article: ${post.title}`}
+      >
+        <CardContent className="h-full p-0">
+          <div className="relative h-48 w-full overflow-hidden">
+            <Image
+              src={urlFor(post.image).url()}
+              alt={post.title}
+              width={450}
+              height={350}
+              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+          </div>
+          <div className="flex h-[calc(100%-14rem)] flex-col items-start justify-between pt-4">
+            <h3 className="line-clamp-2 text-start font-medium text-primary underline-offset-4 group-hover:underline">
+              {post.title}
             </h3>
+
             <p className="line-clamp-3 text-start text-sm text-muted-foreground opacity-75">
-              {article.snippet}
+              {post.snippet}
+            </p>
+
+            <p className="text-xs text-muted-foreground">
+              {new Date(post.publishedAt).toLocaleDateString('en-US', {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric',
+              })}
             </p>
           </div>
         </CardContent>
       </Link>
-
-      <CardFooter className="inline-flex w-full justify-between px-0">
-        <div className="inline-flex items-start gap-4 py-6">
-          <Avatar>
-            <AvatarImage src={article.doctorImage} />
-          </Avatar>
-          <div className="flex flex-col gap-0.5 text-start">
-            <p className="text-sm font-medium text-primary">
-              {article.doctorName}
-            </p>
-            <p className="text-sm text-muted-foreground">{article.specialty}</p>
-          </div>
-        </div>
-        <DropdownOptions />
-      </CardFooter>
     </Card>
   )
 }
 
-export default function LatestArticles() {
+export default async function LatestArticles() {
+  const posts = await getPosts(4)
   return (
     <section id="latest-articles" className="w-full bg-secondary py-16">
       <div className="container mx-auto flex flex-col items-center justify-center gap-10">
@@ -108,13 +82,13 @@ export default function LatestArticles() {
           </p>
         </div>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {articles.map((article) => (
-            <ArticleCard key={article.title} article={article} />
+          {posts.map((post) => (
+            <ArticleCard key={post.title} post={post} />
           ))}
         </div>
 
         <Button variant={'link'}>
-          <span>Read More Articles</span>
+          <span>Explore More Articles</span>
           <ArrowRight />
         </Button>
       </div>
