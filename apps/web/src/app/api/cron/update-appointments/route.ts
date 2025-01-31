@@ -1,6 +1,6 @@
 import { db } from '@web/server/db'
 import { appointments, appointmentLogs } from '@web/server/db/schema'
-import { AppointmentStatus } from '@web/server/api/schema'
+import { AppointmentStatus } from '@web/server/api/validation'
 import { and, inArray, lt } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
 

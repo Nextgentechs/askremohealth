@@ -25,7 +25,7 @@ import { useRouter } from '@tanstack/react-router'
 import { Link } from '@tanstack/react-router'
 
 type Appointment =
-  RouterOutputs['appointments']['doctor']['upcomming']['appointments'][number]
+  RouterOutputs['doctors']['upcommingAppointments']['appointments'][number]
 
 export const upcommingAppointmentsColumn: ColumnDef<Appointment>[] = [
   {
@@ -50,7 +50,7 @@ export const upcommingAppointmentsColumn: ColumnDef<Appointment>[] = [
     accessorKey: 'notes',
     header: 'Reason for visit',
     accessorFn: (row) => {
-      return row.notes || 'No notes'
+      return row.patientNotes || 'No notes'
     },
   },
   {
@@ -95,7 +95,7 @@ function PendingAppointmentActions({
   const router = useRouter()
 
   const { mutateAsync: confirmAppointment, isPending: isConfirming } =
-    api.appointments.doctor.confirmAppointment.useMutation({
+    api.doctors.confirmAppointment.useMutation({
       onMutate: () => {
         toast({
           description: (
@@ -130,7 +130,7 @@ function PendingAppointmentActions({
     })
 
   const { mutateAsync: declineAppointment, isPending: isDeclining } =
-    api.appointments.doctor.declineAppointment.useMutation({
+    api.doctors.declineAppointment.useMutation({
       onMutate: () => {
         toast({
           description: (
@@ -167,7 +167,7 @@ function PendingAppointmentActions({
   const handleConfirmAppointment = async () => {
     try {
       await confirmAppointment({ appointmentId })
-      await utils.appointments.doctor.upcomming.refetch()
+      await utils.doctors.upcommingAppointments.refetch()
       router.invalidate()
     } catch (error) {
       console.error(error)
@@ -177,7 +177,7 @@ function PendingAppointmentActions({
   const handleDeclineAppointment = async () => {
     try {
       await declineAppointment({ appointmentId })
-      await utils.appointments.doctor.upcomming.refetch()
+      await utils.doctors.upcommingAppointments.refetch()
       router.invalidate()
     } catch (error) {
       console.error(error)
@@ -222,7 +222,7 @@ function ScheduledAppointmentActions({
   const router = useRouter()
 
   const { mutateAsync: cancelAppointment, isPending: isCancelling } =
-    api.appointments.doctor.cancelAppointment.useMutation({
+    api.doctors.cancelAppointment.useMutation({
       onMutate: () => {
         toast({
           description: (
@@ -259,7 +259,7 @@ function ScheduledAppointmentActions({
   const handleCancelAppointment = async () => {
     try {
       await cancelAppointment({ appointmentId })
-      await utils.appointments.doctor.upcomming.refetch()
+      await utils.doctors.upcommingAppointments.refetch()
       router.invalidate()
     } catch (error) {
       console.error(error)

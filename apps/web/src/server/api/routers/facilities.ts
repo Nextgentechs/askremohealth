@@ -5,8 +5,8 @@ import { Facility } from '@web/server/services/facilities'
 export const facilitiesRouter = createTRPCRouter({
   registerFacility: publicProcedure
     .input(z.object({ placeId: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      return Facility.register(ctx, input.placeId)
+    .mutation(async ({ input }) => {
+      return Facility.register(input.placeId)
     }),
 
   findByLocation: publicProcedure

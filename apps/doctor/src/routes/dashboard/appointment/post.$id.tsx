@@ -13,7 +13,7 @@ import { Loader } from 'lucide-react'
 
 export const Route = createFileRoute('/dashboard/appointment/post/$id')({
   loader: async ({ context: { trpcQueryUtils }, params: { id } }) => {
-    trpcQueryUtils.appointments.doctor.details.prefetch({
+    trpcQueryUtils.doctors.appointmentDetails.prefetch({
       appointmentId: id,
     })
   },
@@ -32,7 +32,7 @@ function RouteComponent() {
   const { toast } = useToast()
   const navigate = Route.useNavigate()
 
-  const [appointment] = api.appointments.doctor.details.useSuspenseQuery({
+  const [appointment] = api.doctors.appointmentDetails.useSuspenseQuery({
     appointmentId: id,
   })
 
@@ -60,8 +60,7 @@ function RouteComponent() {
     },
   })
 
-  const { mutateAsync, isPending } =
-    api.appointments.doctor.postAppointment.useMutation()
+  const { mutateAsync, isPending } = api.doctors.postAppointment.useMutation()
 
   const onSubmit = async (data: z.infer<typeof postAppointmentSchema>) => {
     await mutateAsync({

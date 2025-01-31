@@ -1,87 +1,142 @@
-import { createTRPCRouter, publicProcedure } from '../trpc'
+import { doctorProcedure, publicProcedure } from '../trpc'
 import { z } from 'zod'
-import { doctors as doctorsTable } from '@web/server/db/schema'
 import { Doctors } from '@web/server/services/doctors'
+import { doctorListSchema, doctorSignupSchema } from '../validation'
+import { lucia } from '@web/lib/lucia'
+import { cookies } from 'next/headers'
+import Appointments from '@web/server/services/appointments'
+import assert from 'assert'
+import { appointmentSchema } from './appointments'
+import { eq } from 'drizzle-orm'
 
-export const doctorsRouter = createTRPCRouter({
-  list: publicProcedure
-    .input(
-      z.object({
-        specialty: z.string().optional(),
-        subSpecialties: z.array(z.string()).optional(),
-        experiences: z
-          .array(
-            z.object({
-              min: z.number(),
-              max: z.number().optional(),
-            }),
-          )
-          .optional(),
-        genders: z.array(z.enum(['male', 'female'])).optional(),
-        entities: z.array(z.string()).optional(),
-        query: z.string().optional(),
-        county: z.string().optional(),
-        town: z.string().optional(),
-        page: z.number().default(1),
-        limit: z.number().default(10),
-      }),
-    )
-    .query(async ({ input }) => {
-      return Doctors.list(input)
+export const signup = publicProcedure
+  .input(doctorSignupSchema)
+  .mutation(async ({ input }) => {
+    return Doctors.signup(input)
+  })
+
+export const login = publicProcedure
+  .input(
+    z.object({
+      phone: z.string(),
+      password: z.string(),
     }),
+  )
+  .mutation(async ({ input }) => {
+    return Doctors.login(input)
+  })
 
-  details: publicProcedure.input(z.string()).query(async ({ ctx, input }) => {
-    const doctor = await ctx.db.query.doctors.findFirst({
-      where: (doctor, { eq }) => eq(doctorsTable.id, input),
-      with: {
-        user: {
-          columns: {
-            id: true,
-            firstName: true,
-            lastName: true,
-          },
-          with: {
-            profilePicture: true,
-          },
+export const currentDoctor = publicProcedure.query(async ({ ctx }) => {
+  if (!ctx.user) return null
+  const doctor = await ctx.db.query.doctors.findFirst({
+    where: (doctor) => eq(doctor.id, ctx.user!.id),
+    with: {
+      specialty: true,
+      user: {
+        with: {
+          profilePicture: true,
         },
-        facility: {
-          columns: {
-            placeId: true,
-            name: true,
-            address: true,
-            town: true,
-            county: true,
-          },
-        },
-        specialty: true,
-        operatingHours: true,
-        reviews: true,
       },
-    })
-
-    const subSpecialties = await ctx.db.query.subSpecialties.findMany({
-      where: (subSpecialty, { inArray }) =>
-        inArray(
-          subSpecialty.id,
-          (doctor?.subSpecialties as Array<{ id: string }>).map((s) => s.id),
-        ),
-    })
-
-    const reviews = doctor?.reviews
-      .map((r) => r.rating)
-      .filter((r) => r !== null)
-
-    const averageRating = reviews?.length
-      ? reviews.reduce((acc, rating) => acc + rating, 0) / reviews.length
-      : 0
-
-    return {
-      ...doctor,
-      subSpecialties,
-      reviewStats: {
-        averageRating,
-        totalReviews: reviews?.length ?? 0,
-      },
-    }
-  }),
+      facility: true,
+      operatingHours: true,
+      certificates: true,
+    },
+  })
+  return doctor ?? null
 })
+
+export const signOut = doctorProcedure.mutation(async ({ ctx }) => {
+  if (ctx.session) await lucia.invalidateSession(ctx.session.id)
+  const cookie = lucia.createBlankSessionCookie()
+  const cookieStore = await cookies()
+  cookieStore.set(cookie.name, cookie.value, cookie.attributes)
+})
+
+export const list = publicProcedure
+  .input(doctorListSchema)
+  .query(async ({ input }) => {
+    return Doctors.list(input)
+  })
+
+export const details = publicProcedure
+  .input(z.string())
+  .query(async ({ input }) => {
+    return Doctors.details(input)
+  })
+
+export const upcommingAppointments = doctorProcedure
+  .input(
+    z.object({
+      type: z.enum(['physical', 'online']),
+      page: z.number().optional().catch(1),
+      pageSize: z.number().optional().catch(10),
+    }),
+  )
+  .query(async ({ ctx, input }) => {
+    assert(ctx.user?.id, 'User not found')
+    return Appointments.upcomming(
+      ctx.user.id,
+      input.type,
+      input.page ?? 1,
+      input.pageSize ?? 10,
+    )
+  })
+
+export const allAppointments = doctorProcedure
+  .input(appointmentSchema)
+  .query(async ({ ctx, input }) => {
+    assert(ctx.user?.id, 'User not found')
+    return Appointments.list(ctx.user.id, input)
+  })
+
+export const appointmentDetails = doctorProcedure
+  .input(z.object({ appointmentId: z.string() }))
+  .query(async ({ input }) => {
+    return Doctors.appointmentDetails(input.appointmentId)
+  })
+
+export const confirmAppointment = doctorProcedure
+  .input(z.object({ appointmentId: z.string() }))
+  .mutation(async ({ input }) => {
+    return Doctors.confirmAppointment(input.appointmentId)
+  })
+
+export const declineAppointment = doctorProcedure
+  .input(z.object({ appointmentId: z.string() }))
+  .mutation(async ({ ctx, input }) => {
+    return Doctors.declineAppointment(input.appointmentId, ctx.user.id)
+  })
+
+export const cancelAppointment = doctorProcedure
+  .input(z.object({ appointmentId: z.string() }))
+  .mutation(async ({ input }) => {
+    return Doctors.cancelAppointment(input.appointmentId)
+  })
+
+export const postAppointment = doctorProcedure
+  .input(
+    z.object({
+      appointmentId: z.string(),
+      doctorNotes: z.string(),
+      attachment: z.string().optional(),
+    }),
+  )
+  .mutation(async ({ input, ctx }) => {
+    return Doctors.postAppointment(
+      ctx.user.id,
+      input.appointmentId,
+      input.doctorNotes,
+      input.attachment,
+    )
+  })
+
+export const patients = doctorProcedure
+  .input(
+    z.object({
+      page: z.number().default(1),
+      limit: z.number().default(10),
+    }),
+  )
+  .query(async ({ ctx, input }) => {
+    return Doctors.patients(ctx.user.id, input.page, input.limit)
+  })
