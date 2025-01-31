@@ -39,9 +39,9 @@ import { api } from '@/lib/trpc'
 function NavUser() {
   const router = useRouter()
   const { isMobile } = useSidebar()
-  const [doctor] = api.users.doctor.current.useSuspenseQuery()
+  const [doctor] = api.doctors.currentDoctor.useSuspenseQuery()
 
-  const { mutateAsync } = api.auth.doctor.signOut.useMutation()
+  const { mutateAsync } = api.doctors.signOut.useMutation()
   const utils = api.useUtils()
 
   const handleSignout = async () => {

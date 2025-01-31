@@ -6,7 +6,7 @@ import { facilitiesRouter } from './routers/facilities'
 import { appointmentsRouter } from './routers/appointments'
 import { usersRouter } from './routers/users'
 import { locationsRouter } from './routers/location'
-import { doctorsRouter } from './routers/doctors'
+import * as doctors from './routers/doctors'
 import { videoRouter } from './routers/video'
 
 /**
@@ -21,7 +21,7 @@ export const appRouter = createTRPCRouter({
   appointments: appointmentsRouter,
   users: usersRouter,
   locations: locationsRouter,
-  doctors: doctorsRouter,
+  doctors: createTRPCRouter(doctors),
   video: videoRouter,
 })
 

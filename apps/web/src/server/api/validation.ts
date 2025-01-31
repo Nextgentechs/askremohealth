@@ -47,6 +47,7 @@ export const doctorSignupSchema = z.object({
   consultationFee: z.string().transform((val) => parseInt(val)),
   gender: z.enum(['male', 'female']).optional(),
 })
+export type DoctorSignupSchema = z.infer<typeof doctorSignupSchema>
 
 export const newAppointmentSchema = z.object({
   appointmentType: z.enum(['physical', 'online']),
@@ -62,3 +63,23 @@ export const newAppointmentSchema = z.object({
   doctorId: z.string(),
 })
 export type NewAppointmentSchema = z.infer<typeof newAppointmentSchema>
+
+export const doctorListSchema = z.object({
+  specialty: z.string().optional(),
+  subSpecialties: z.array(z.string()).optional(),
+  experiences: z
+    .array(
+      z.object({
+        min: z.number(),
+        max: z.number().optional(),
+      }),
+    )
+    .optional(),
+  genders: z.array(z.enum(['male', 'female'])).optional(),
+  entities: z.array(z.string()).optional(),
+  query: z.string().optional(),
+  county: z.string().optional(),
+  town: z.string().optional(),
+  page: z.number().default(1),
+  limit: z.number().default(10),
+})

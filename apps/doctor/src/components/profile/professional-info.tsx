@@ -61,7 +61,7 @@ function SubSpecialtySelect({ specialty }: { specialty: string }) {
 }
 
 function ProfessionalInfoForm() {
-  const [doctor] = api.users.doctor.current.useSuspenseQuery()
+  const [doctor] = api.doctors.currentDoctor.useSuspenseQuery()
   const [selectedSpecialty, setSelectedSpecialty] = useState(
     doctor?.specialty?.id,
   )

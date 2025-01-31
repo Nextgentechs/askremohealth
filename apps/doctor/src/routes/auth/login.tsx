@@ -77,13 +77,13 @@ function LoginForm() {
   })
 
   const { toast } = useToast()
-  const { mutateAsync, isPending } = api.auth.doctor.login.useMutation()
+  const { mutateAsync, isPending } = api.doctors.login.useMutation()
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {
       await mutateAsync(values)
       await utils.invalidate()
-      await utils.users.doctor.current.refetch()
+      await utils.doctors.currentDoctor.refetch()
       await router.invalidate()
       router.navigate({ to: search.redirect })
       toast({

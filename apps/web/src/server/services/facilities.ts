@@ -1,13 +1,13 @@
 import { Client, AddressType } from '@googlemaps/google-maps-services-js'
 import { env } from '@web/env'
 import { facilities } from '@web/server/db/schema'
-import { type Context } from '../api/trpc'
+import { db } from '@web/server/db'
 
 const googleMapsClient = new Client({})
 
 export class Facility {
-  static async register(ctx: Context, placeId: string) {
-    const existingFacility = await ctx.db.query.facilities.findFirst({
+  static async register(placeId: string) {
+    const existingFacility = await db.query.facilities.findFirst({
       where: (f, { eq }) => eq(f.placeId, placeId),
     })
 
@@ -51,7 +51,7 @@ export class Facility {
           component.types.includes(AddressType.sublocality),
       )?.long_name ?? ''
 
-    const [facility] = await ctx.db
+    const [facility] = await db
       .insert(facilities)
       .values({
         name: place.name ?? '',

@@ -16,26 +16,7 @@ export const usersRouter = createTRPCRouter({
     })
     return user ?? null
   }),
-  doctor: {
-    current: publicProcedure.query(async ({ ctx }) => {
-      if (!ctx.user) return null
-      const doctor = await ctx.db.query.doctors.findFirst({
-        where: (doctor) => eq(doctor.id, ctx.user!.id),
-        with: {
-          specialty: true,
-          user: {
-            with: {
-              profilePicture: true,
-            },
-          },
-          facility: true,
-          operatingHours: true,
-          certificates: true,
-        },
-      })
-      return doctor ?? null
-    }),
-  },
+
   patients: {
     details: publicProcedure
       .input(z.string().optional())

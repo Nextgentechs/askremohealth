@@ -60,7 +60,7 @@ export default function AvailabilityDetails() {
   })
   const { toast } = useToast()
 
-  const { mutateAsync, isPending } = api.auth.doctor.signup.useMutation({
+  const { mutateAsync, isPending } = api.doctors.signup.useMutation({
     onSuccess: () => {
       toast({
         description: 'Signup successful,log in to continue!',

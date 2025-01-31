@@ -15,7 +15,7 @@ import { api, RouterOutputs } from '@/lib/trpc'
 function ProfilePhoto({
   doctor,
 }: {
-  doctor: RouterOutputs['users']['doctor']['current']
+  doctor: RouterOutputs['doctors']['currentDoctor']
 }) {
   return (
     <Card className="col-span-1 w-full shadow-sm">
@@ -46,7 +46,7 @@ function ProfilePhoto({
 function PersonalInfoForm({
   doctor,
 }: {
-  doctor: RouterOutputs['users']['doctor']['current']
+  doctor: RouterOutputs['doctors']['currentDoctor']
 }) {
   const {
     register,
@@ -161,7 +161,7 @@ function PersonalInfoForm({
 }
 
 export default function PersonalInfo() {
-  const [doctor] = api.users.doctor.current.useSuspenseQuery()
+  const [doctor] = api.doctors.currentDoctor.useSuspenseQuery()
 
   return (
     <div className="grid grid-cols-3 gap-4">
