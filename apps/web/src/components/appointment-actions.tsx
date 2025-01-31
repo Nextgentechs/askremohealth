@@ -25,7 +25,7 @@ export function PendingAppointmentActions({
   const { toast } = useToast()
   const router = useRouter()
   const { mutateAsync: cancelAppointment, isPending: cancelPending } =
-    api.appointments.patients.cancel.useMutation({
+    api.users.cancelAppointment.useMutation({
       onMutate: () => {
         toast({
           description: (
@@ -61,7 +61,7 @@ export function PendingAppointmentActions({
 
   const handleCancelAppointment = async () => {
     await cancelAppointment(appointmentId)
-    utils.appointments.patients.list.invalidate()
+    utils.users.listAppointments.invalidate()
     router.refresh()
   }
 
@@ -104,7 +104,7 @@ export function VideoAppointmentActions({
   }
 
   const { mutateAsync: cancelAppointment, isPending: cancelPending } =
-    api.appointments.patients.cancel.useMutation({
+    api.users.cancelAppointment.useMutation({
       onMutate: () => {
         toast({
           description: (
@@ -140,7 +140,7 @@ export function VideoAppointmentActions({
 
   const handleCancelAppointment = async () => {
     await cancelAppointment(appointmentId)
-    utils.appointments.patients.list.invalidate()
+    utils.users.listAppointments.invalidate()
     router.refresh()
   }
 

@@ -164,7 +164,7 @@ function CurrentUser({
 }: {
   user: RouterOutputs['users']['currentUser']
 }) {
-  const { mutateAsync: signOut } = api.auth.patients.signOut.useMutation()
+  const { mutateAsync: signOut } = api.users.signOut.useMutation()
   const utils = api.useUtils()
   const router = useRouter()
   const handleSignOut = async () => {

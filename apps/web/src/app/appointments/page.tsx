@@ -29,7 +29,7 @@ export default async function Page({
 }) {
   const user = await api.users.currentUser()
   const { page } = await searchParams
-  const appointments = await api.appointments.patients.list({
+  const appointments = await api.users.listAppointments({
     page: page ? parseInt(page) : 1,
     limit: 6,
   })
@@ -67,7 +67,7 @@ export default async function Page({
 function AppointmentCard({
   appointment,
 }: {
-  appointment: RouterOutputs['appointments']['patients']['list']['appointments'][number]
+  appointment: RouterOutputs['users']['listAppointments']['appointments'][number]
 }) {
   return (
     <Card className="rounded-xl border shadow-sm">

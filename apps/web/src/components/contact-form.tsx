@@ -64,7 +64,7 @@ export default function PhoneNumberForm() {
   const { toast } = useToast()
   const utils = api.useUtils()
   const { mutateAsync: validatePhone, isPending: validatePhonePending } =
-    api.auth.patients.phoneValidation.useMutation()
+    api.users.validatePhone.useMutation()
 
   const handlePhoneSubmit = (e: React.FormEvent) => {
     e.preventDefault()

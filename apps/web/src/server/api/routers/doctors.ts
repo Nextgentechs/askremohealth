@@ -1,12 +1,15 @@
-import { doctorProcedure, publicProcedure } from '../trpc'
+import { doctorProcedure, procedure, publicProcedure } from '../trpc'
 import { z } from 'zod'
 import { Doctors } from '@web/server/services/doctors'
-import { doctorListSchema, doctorSignupSchema } from '../validation'
+import {
+  appointmentListSchema,
+  doctorListSchema,
+  doctorSignupSchema,
+} from '../validation'
 import { lucia } from '@web/lib/lucia'
 import { cookies } from 'next/headers'
 import Appointments from '@web/server/services/appointments'
 import assert from 'assert'
-import { appointmentSchema } from './appointments'
 import { eq } from 'drizzle-orm'
 
 export const signup = publicProcedure
@@ -83,7 +86,7 @@ export const upcommingAppointments = doctorProcedure
   })
 
 export const allAppointments = doctorProcedure
-  .input(appointmentSchema)
+  .input(appointmentListSchema)
   .query(async ({ ctx, input }) => {
     assert(ctx.user?.id, 'User not found')
     return Appointments.list(ctx.user.id, input)

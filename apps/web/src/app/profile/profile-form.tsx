@@ -56,8 +56,7 @@ export function ProfileForm() {
   const { toast } = useToast()
   const router = useRouter()
   const utils = api.useUtils()
-  const { mutateAsync, isPending } =
-    api.users.patients.updateProfile.useMutation()
+  const { mutateAsync, isPending } = api.users.updateProfile.useMutation()
 
   const onSubmit = async (data: z.infer<typeof profileSchema>) => {
     try {
@@ -187,14 +186,13 @@ export function UpdatePassword() {
     resolver: zodResolver(passwordSchema),
   })
 
-  const { mutateAsync, isPending } =
-    api.users.patients.updatePassword.useMutation()
+  const { mutateAsync, isPending } = api.users.updatePassword.useMutation()
 
   const onSubmit = async (data: z.infer<typeof passwordSchema>) => {
     try {
       await mutateAsync({
         oldPassword: data.oldPassword,
-        newPassowrd: data.newPassword,
+        newPassword: data.newPassword,
       })
       toast({
         title: 'Password updated successfully',

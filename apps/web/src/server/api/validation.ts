@@ -83,3 +83,21 @@ export const doctorListSchema = z.object({
   page: z.number().default(1),
   limit: z.number().default(10),
 })
+
+export const appointmentListSchema = z.object({
+  page: z.number().default(1),
+  limit: z.number().default(10),
+  type: z.enum(['physical', 'online']).optional(),
+  status: z
+    .enum([
+      AppointmentStatus.Scheduled,
+      AppointmentStatus.Pending,
+      AppointmentStatus.Completed,
+      AppointmentStatus.Cancelled,
+      AppointmentStatus.Rescheduled,
+      AppointmentStatus.Missed,
+      AppointmentStatus.InProgress,
+    ])
+    .optional(),
+})
+export type AppointmentListSchema = z.infer<typeof appointmentListSchema>
