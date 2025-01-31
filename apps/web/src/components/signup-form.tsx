@@ -59,7 +59,7 @@ const signupSchema = z
 export default function SignupForm({
   patient,
 }: {
-  patient: RouterOutputs['users']['patients']['details'] | null
+  patient: RouterOutputs['users']['details'] | null
 }) {
   const form = useForm<z.infer<typeof signupSchema>>({
     resolver: zodResolver(signupSchema),
@@ -78,8 +78,7 @@ export default function SignupForm({
 
   const { toast } = useToast()
   const router = useRouter()
-  const { mutateAsync: signup, isPending } =
-    api.auth.patients.signup.useMutation()
+  const { mutateAsync: signup, isPending } = api.users.signup.useMutation()
 
   const onSubmit = async (data: z.infer<typeof signupSchema>) => {
     try {

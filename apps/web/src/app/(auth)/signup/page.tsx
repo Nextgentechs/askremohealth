@@ -8,9 +8,7 @@ export default async function Page({
     user?: string
   }>
 }): Promise<React.ReactNode> {
-  const patient = await api.users.patients.details(
-    (await searchParams).user ?? '',
-  )
+  const patient = await api.users.details((await searchParams).user ?? '')
 
   return (
     <main className="container mx-auto flex min-h-[95vh] w-full flex-col items-center pb-28">

@@ -316,8 +316,7 @@ function BookingForm() {
     },
   })
 
-  const { mutateAsync, isPending } =
-    api.appointments.patients.create.useMutation()
+  const { mutateAsync, isPending } = api.users.createAppointment.useMutation()
 
   const router = useRouter()
   const utils = api.useUtils()
