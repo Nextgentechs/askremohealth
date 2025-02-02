@@ -1,4 +1,5 @@
 import DashboardLayout from '@/components/dashboard-layout'
+import LinearProgressBar from '@/components/linear-progress'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_protected')({
@@ -11,6 +12,7 @@ export const Route = createFileRoute('/_protected')({
       })
     }
   },
+  pendingComponent: () => <LinearProgressBar />,
 
   component: DashboardLayout,
 })

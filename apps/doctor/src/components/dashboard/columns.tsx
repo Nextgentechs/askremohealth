@@ -167,8 +167,8 @@ function PendingAppointmentActions({
   const handleConfirmAppointment = async () => {
     try {
       await confirmAppointment({ appointmentId })
-      await utils.doctors.upcommingAppointments.refetch()
       router.invalidate()
+      await utils.doctors.upcommingAppointments.refetch()
     } catch (error) {
       console.error(error)
     }
@@ -177,8 +177,8 @@ function PendingAppointmentActions({
   const handleDeclineAppointment = async () => {
     try {
       await declineAppointment({ appointmentId })
-      await utils.doctors.upcommingAppointments.refetch()
       router.invalidate()
+      await utils.doctors.upcommingAppointments.refetch()
     } catch (error) {
       console.error(error)
     }
