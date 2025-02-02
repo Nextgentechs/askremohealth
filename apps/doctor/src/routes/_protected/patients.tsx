@@ -1,7 +1,7 @@
 import { DataTable } from '@/components/data-table'
 import { Input } from '@/components/ui/input'
 import { Label } from '@radix-ui/react-dropdown-menu'
-import { createFileRoute, useLoaderData } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { ColumnDef } from '@tanstack/react-table'
 import { RouterOutputs } from '@web/server/api'
 import { z } from 'zod'
@@ -11,18 +11,17 @@ const patientsFilters = z.object({
   pageSize: z.number().int().catch(10),
 })
 
-export const Route = createFileRoute('/dashboard/patients')({
+export const Route = createFileRoute('/_protected/patients')({
   validateSearch: patientsFilters,
   loaderDeps: ({ search }) => ({ search }),
   loader: async ({ deps: { search }, context: { trpcQueryUtils } }) => {
-    const loaderData =
-      await trpcQueryUtils.appointments.doctor.patients.ensureData(search)
+    const loaderData = await trpcQueryUtils.doctors.patients.ensureData(search)
     return loaderData
   },
   component: RouteComponent,
 })
 
-type Patient = RouterOutputs['appointments']['doctor']['patients'][number]
+type Patient = RouterOutputs['doctors']['patients'][number]
 
 const patientsTableColumns: ColumnDef<Patient>[] = [
   {
@@ -48,7 +47,7 @@ const patientsTableColumns: ColumnDef<Patient>[] = [
 ]
 
 function RouteComponent() {
-  const loaderData = useLoaderData({ from: '/dashboard/patients' })
+  const loaderData = Route.useLoaderData()
   return (
     <div className="flex flex-col gap-6">
       <div>

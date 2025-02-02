@@ -11,15 +11,10 @@ import { Pagination } from '@/components/ui/pagination'
 import { TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { RouterOutputs } from '@/lib/trpc'
 import { Tabs, TabsContent } from '@radix-ui/react-tabs'
-import {
-  createFileRoute,
-  useLoaderData,
-  useNavigate,
-  useSearch,
-} from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
 
-export const Route = createFileRoute('/dashboard/upcomming-appointments')({
+export const Route = createFileRoute('/_protected/upcomming-appointments')({
   validateSearch: z.object({
     type: z.enum(['physical', 'online']).catch('online'),
     page: z.number().optional().catch(1),
@@ -28,7 +23,7 @@ export const Route = createFileRoute('/dashboard/upcomming-appointments')({
   loaderDeps: ({ search }) => ({ search }),
   loader: async ({ deps: { search }, context: { trpcQueryUtils } }) => {
     const loaderData =
-      await trpcQueryUtils.appointments.doctor.upcomming.ensureData({
+      await trpcQueryUtils.doctors.upcommingAppointments.ensureData({
         type: search.type,
         page: search.page,
         pageSize: search.pageSize,
@@ -39,10 +34,8 @@ export const Route = createFileRoute('/dashboard/upcomming-appointments')({
 })
 
 function RouteComponent() {
-  const navigate = useNavigate({ from: '/dashboard/upcomming-appointments' })
-  const loaderData = useLoaderData({
-    from: '/dashboard/upcomming-appointments',
-  })
+  const navigate = Route.useNavigate()
+  const loaderData = Route.useLoaderData()
 
   return (
     <div className="mb-20 flex flex-col gap-6">
@@ -99,10 +92,10 @@ function RouteComponent() {
 function AppointmentsPagination({
   pagination,
 }: {
-  pagination: RouterOutputs['appointments']['doctor']['upcomming']['pagination']
+  pagination: RouterOutputs['doctors']['upcommingAppointments']['pagination']
 }) {
-  const search = useSearch({ from: '/dashboard/upcomming-appointments' })
-  const navigate = useNavigate({ from: '/dashboard/upcomming-appointments' })
+  const search = Route.useSearch()
+  const navigate = Route.useNavigate()
   const currentPage = search.page ?? 1
 
   if (pagination.pages <= 1) return null

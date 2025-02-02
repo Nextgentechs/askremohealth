@@ -25,7 +25,7 @@ import { api } from '@/lib/trpc'
 import { useToast } from '@/hooks/use-toast'
 import { Loader } from 'lucide-react'
 
-export const Route = createFileRoute('/auth/login')({
+export const Route = createFileRoute('/_public/login')({
   component: RouteComponent,
 })
 
@@ -65,7 +65,7 @@ const loginSchema = z.object({
 
 function LoginForm() {
   const router = useRouter()
-  const search = useSearch({ from: '/auth' })
+  const search = useSearch({ from: '/_public' })
   const utils = api.useUtils()
 
   const form = useForm<z.infer<typeof loginSchema>>({
@@ -130,7 +130,7 @@ function LoginForm() {
               <div className="flex items-center">
                 <FormLabel>Password</FormLabel>
                 <Link
-                  to="/auth/signup"
+                  to="/signup"
                   className="ml-auto inline-block text-sm underline"
                 >
                   Forgot your password ?
@@ -167,7 +167,7 @@ function LoginCard() {
         <LoginForm />
         <div className="mt-4 text-center text-sm">
           Don&apos;t have an account?{' '}
-          <Link to="/auth/signup" className="underline">
+          <Link to="/signup" className="underline">
             Sign up
           </Link>
         </div>

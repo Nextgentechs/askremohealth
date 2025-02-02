@@ -1,9 +1,4 @@
-import {
-  createFileRoute,
-  useLoaderData,
-  useNavigate,
-  useSearch,
-} from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
 import {
   allAppointmentsColumns,
@@ -36,21 +31,20 @@ const appointmentsSchema = z.object({
   pageSize: z.number().optional().catch(10),
 })
 
-export const Route = createFileRoute('/dashboard/online-appointments')({
+export const Route = createFileRoute('/_protected/online-appointments')({
   validateSearch: appointmentsSchema,
   loaderDeps: ({ search }) => ({ search }),
   loader: async ({ deps: { search }, context: { trpcQueryUtils } }) => {
     const loaderData =
-      await trpcQueryUtils.appointments.doctor.listAll.ensureData(search)
+      await trpcQueryUtils.doctors.allAppointments.ensureData(search)
     return loaderData
   },
   component: RouteComponent,
 })
 
 function RouteComponent() {
-  const loaderData = useLoaderData({
-    from: '/dashboard/online-appointments',
-  })
+  const loaderData = Route.useLoaderData()
+
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -71,8 +65,8 @@ function RouteComponent() {
 }
 
 function Filters() {
-  const searchParams = useSearch({ from: '/dashboard/online-appointments' })
-  const navigate = useNavigate({ from: '/dashboard/online-appointments' })
+  const searchParams = Route.useSearch()
+  const navigate = Route.useNavigate()
 
   const handleFilterChange = (values: string[]) => {
     console.log(values)

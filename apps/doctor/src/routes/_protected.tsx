@@ -1,12 +1,12 @@
 import DashboardLayout from '@/components/dashboard-layout'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 
-export const Route = createFileRoute('/dashboard')({
+export const Route = createFileRoute('/_protected')({
   beforeLoad: async ({ context, location }) => {
-    const user = await context.trpcQueryUtils.users.doctor.current.ensureData()
+    const user = await context.trpcQueryUtils.doctors.currentDoctor.ensureData()
     if (!user) {
       throw redirect({
-        to: '/auth/login',
+        to: '/login',
         search: { redirect: location.href },
       })
     }

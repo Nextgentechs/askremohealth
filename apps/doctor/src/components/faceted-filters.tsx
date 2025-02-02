@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/popover'
 import { Separator } from '@/components/ui/separator'
 import { CheckIcon, CirclePlus } from 'lucide-react'
-import { AppointmentStatus } from '@/routes/dashboard/physical-appointments'
+import { AppointmentStatus } from '@/routes/_protected/physical-appointments'
 import { useEffect, useState } from 'react'
 
 type FacetedFilterProps = {

@@ -4,7 +4,7 @@ import ProfessionalInfo from '@/components/profile/professional-info'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { createFileRoute } from '@tanstack/react-router'
 
-export const Route = createFileRoute('/dashboard/profile')({
+export const Route = createFileRoute('/_protected/profile')({
   component: RouteComponent,
 })
 

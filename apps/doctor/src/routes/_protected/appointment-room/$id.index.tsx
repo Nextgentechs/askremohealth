@@ -9,7 +9,7 @@ import PreRoom from '@/components/video-room/pre-room'
 import MainVideoRoom from '@/components/video-room/main-video-room'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
-export const Route = createFileRoute('/appointment-room/$id/')({
+export const Route = createFileRoute('/_protected/appointment-room/$id/')({
   component: RouteComponent,
 })
 
