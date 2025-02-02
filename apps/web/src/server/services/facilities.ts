@@ -131,4 +131,12 @@ export class Facility {
       photos: place.photos?.map((photo) => photo.photo_reference),
     }))
   }
+
+  static async list() {
+    return db.query.facilities.findMany({
+      with: {
+        doctors: true,
+      },
+    })
+  }
 }

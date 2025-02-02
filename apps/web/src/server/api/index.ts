@@ -1,7 +1,7 @@
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server'
 import { createCallerFactory, createTRPCRouter } from './trpc'
 import { specialtiesRouter } from './routers/specialties'
-import { facilitiesRouter } from './routers/facilities'
+import * as facilities from './routers/facilities'
 import * as users from './routers/users'
 import { locationsRouter } from './routers/location'
 import * as doctors from './routers/doctors'
@@ -14,7 +14,7 @@ import { videoRouter } from './routers/video'
  */
 export const appRouter = createTRPCRouter({
   specialties: specialtiesRouter,
-  facilities: facilitiesRouter,
+  facilities: createTRPCRouter(facilities),
   users: createTRPCRouter(users),
   locations: locationsRouter,
   doctors: createTRPCRouter(doctors),

@@ -1,4 +1,4 @@
-import { doctorProcedure, procedure, publicProcedure } from '../trpc'
+import { doctorProcedure, publicProcedure } from '../trpc'
 import { z } from 'zod'
 import { Doctors } from '@web/server/services/doctors'
 import {

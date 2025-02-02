@@ -47,7 +47,7 @@ type FilterInput = {
 export class Doctors {
   static async signup(input: DoctorSignupSchema) {
     const user = await db.query.users.findFirst({
-      where: (user) => eq(user.phone, input.phone),
+      where: (user, { eq }) => eq(user.phone, input.phone),
     })
     if (user) {
       throw new TRPCError({
