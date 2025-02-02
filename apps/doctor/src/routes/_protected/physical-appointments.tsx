@@ -3,12 +3,7 @@ import { DateRangePicker } from '@/components/date-range-picker'
 import { FacetedFilter } from '@/components/faceted-filters'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  createFileRoute,
-  useLoaderData,
-  useNavigate,
-  useSearch,
-} from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { ColumnDef } from '@tanstack/react-table'
 import { RouterOutputs } from '@web/server/api'
 import { z } from 'zod'
@@ -41,12 +36,12 @@ const appointmentsSchema = z.object({
   status: z.nativeEnum(AppointmentStatus).optional().catch(undefined),
 })
 
-export const Route = createFileRoute('/dashboard/physical-appointments')({
+export const Route = createFileRoute('/_protected/physical-appointments')({
   validateSearch: appointmentsSchema,
   loaderDeps: ({ search }) => ({ search }),
   loader: async ({ deps: { search }, context: { trpcQueryUtils } }) => {
     const loaderData =
-      await trpcQueryUtils.appointments.doctor.listAll.ensureData(search)
+      await trpcQueryUtils.doctors.allAppointments.ensureData(search)
     return loaderData
   },
   component: RouteComponent,
@@ -60,8 +55,8 @@ export const appointmentStatusOptions = Object.values(AppointmentStatus).map(
 )
 
 function Filters() {
-  const searchParams = useSearch({ from: '/dashboard/physical-appointments' })
-  const navigate = useNavigate({ from: '/dashboard/physical-appointments' })
+  const searchParams = Route.useSearch()
+  const navigate = Route.useNavigate()
 
   const handleFilterChange = (values: string[]) => {
     console.log(values)
@@ -96,9 +91,7 @@ function Filters() {
 }
 
 function RouteComponent() {
-  const loaderData = useLoaderData({
-    from: '/dashboard/physical-appointments',
-  })
+  const loaderData = Route.useLoaderData()
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -118,8 +111,7 @@ function RouteComponent() {
   )
 }
 
-type PhysicalAppointment =
-  RouterOutputs['appointments']['doctor']['listAll'][number]
+type PhysicalAppointment = RouterOutputs['doctors']['allAppointments'][number]
 
 export const allAppointmentsColumns: ColumnDef<PhysicalAppointment>[] = [
   {

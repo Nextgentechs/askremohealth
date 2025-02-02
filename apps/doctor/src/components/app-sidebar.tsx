@@ -49,7 +49,7 @@ function NavUser() {
     await utils.users.currentUser.refetch()
     await utils.invalidate()
     await router.invalidate()
-    router.navigate({ to: '/auth/login' })
+    router.navigate({ to: '/login' })
   }
 
   return (
@@ -102,7 +102,7 @@ function NavUser() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <Link to="/dashboard/profile">
+              <Link to="/profile">
                 <DropdownMenuItem>
                   <User />
                   My Profile
@@ -130,27 +130,27 @@ const data = {
   navMain: [
     {
       title: 'Upcomming Appointments',
-      url: '/dashboard/upcomming-appointments',
+      url: '/upcomming-appointments',
       icon: House,
     },
     {
       title: 'Physical Appointments',
-      url: '/dashboard/physical-appointments',
+      url: '/physical-appointments',
       icon: ClipboardList,
     },
     {
       title: 'Online Appointments',
-      url: '/dashboard/online-appointments',
+      url: '/online-appointments',
       icon: ClipboardPlus,
     },
     {
       title: 'Patients',
-      url: '/dashboard/patients',
+      url: '/patients',
       icon: ShieldPlus,
     },
     {
       title: 'Profile',
-      url: '/dashboard/profile',
+      url: '/profile',
       icon: CircleUserRound,
     },
   ],
@@ -181,7 +181,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </Link>
             ))}
           </SidebarMenu>
-          <Link to="/dashboard" />
+          <Link to="/upcomming-appointments" />
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>

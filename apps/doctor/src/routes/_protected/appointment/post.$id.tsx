@@ -11,7 +11,7 @@ import { api } from '@/lib/trpc'
 import { useToast } from '@/hooks/use-toast'
 import { Loader } from 'lucide-react'
 
-export const Route = createFileRoute('/dashboard/appointment/post/$id')({
+export const Route = createFileRoute('/_protected/appointment/post/$id')({
   loader: async ({ context: { trpcQueryUtils }, params: { id } }) => {
     trpcQueryUtils.doctors.appointmentDetails.prefetch({
       appointmentId: id,

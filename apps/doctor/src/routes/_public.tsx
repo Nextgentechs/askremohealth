@@ -6,13 +6,13 @@ import { z } from 'zod'
 import LinearProgressBar from '@/components/linear-progress'
 
 const searchSchema = z.object({
-  redirect: z.string().default('/dashboard/upcomming-appointments'),
+  redirect: z.string().default('/upcomming-appointments'),
 })
 
-export const Route = createFileRoute('/auth')({
+export const Route = createFileRoute('/_public')({
   validateSearch: searchSchema,
   beforeLoad: async ({ context, search }) => {
-    if (await context.trpcQueryUtils.users.doctor.current.ensureData()) {
+    if (await context.trpcQueryUtils.doctors.currentDoctor.ensureData()) {
       throw redirect({ to: search.redirect })
     }
   },

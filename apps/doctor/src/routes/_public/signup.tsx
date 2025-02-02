@@ -5,7 +5,7 @@ import PersonalDetails from '@/components/auth/personal-details'
 import ProffesionalDetails from '@/components/auth/professional-details'
 import AvailabilityDetails from '@/components/auth/availability-details'
 
-export const Route = createFileRoute('/auth/signup')({
+export const Route = createFileRoute('/_public/signup')({
   component: RouteComponent,
 })
 

@@ -11,16 +11,28 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as AuthImport } from './routes/auth'
+import { Route as PublicImport } from './routes/_public'
+import { Route as ProtectedImport } from './routes/_protected'
 import { Route as IndexImport } from './routes/index'
-import { Route as AuthSignupImport } from './routes/auth/signup'
-import { Route as AuthLoginImport } from './routes/auth/login'
+import { Route as PublicSignupImport } from './routes/_public/signup'
+import { Route as PublicLoginImport } from './routes/_public/login'
+import { Route as ProtectedUpcommingAppointmentsImport } from './routes/_protected/upcomming-appointments'
+import { Route as ProtectedProfileImport } from './routes/_protected/profile'
+import { Route as ProtectedPhysicalAppointmentsImport } from './routes/_protected/physical-appointments'
+import { Route as ProtectedPatientsImport } from './routes/_protected/patients'
+import { Route as ProtectedOnlineAppointmentsImport } from './routes/_protected/online-appointments'
+import { Route as ProtectedAppointmentRoomIdIndexImport } from './routes/_protected/appointment-room/$id.index'
+import { Route as ProtectedAppointmentPostIdImport } from './routes/_protected/appointment/post.$id'
 
 // Create/Update Routes
 
-const AuthRoute = AuthImport.update({
-  id: '/auth',
-  path: '/auth',
+const PublicRoute = PublicImport.update({
+  id: '/_public',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const ProtectedRoute = ProtectedImport.update({
+  id: '/_protected',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -30,17 +42,65 @@ const IndexRoute = IndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const AuthSignupRoute = AuthSignupImport.update({
+const PublicSignupRoute = PublicSignupImport.update({
   id: '/signup',
   path: '/signup',
-  getParentRoute: () => AuthRoute,
+  getParentRoute: () => PublicRoute,
 } as any)
 
-const AuthLoginRoute = AuthLoginImport.update({
+const PublicLoginRoute = PublicLoginImport.update({
   id: '/login',
   path: '/login',
-  getParentRoute: () => AuthRoute,
+  getParentRoute: () => PublicRoute,
 } as any)
+
+const ProtectedUpcommingAppointmentsRoute =
+  ProtectedUpcommingAppointmentsImport.update({
+    id: '/upcomming-appointments',
+    path: '/upcomming-appointments',
+    getParentRoute: () => ProtectedRoute,
+  } as any)
+
+const ProtectedProfileRoute = ProtectedProfileImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => ProtectedRoute,
+} as any)
+
+const ProtectedPhysicalAppointmentsRoute =
+  ProtectedPhysicalAppointmentsImport.update({
+    id: '/physical-appointments',
+    path: '/physical-appointments',
+    getParentRoute: () => ProtectedRoute,
+  } as any)
+
+const ProtectedPatientsRoute = ProtectedPatientsImport.update({
+  id: '/patients',
+  path: '/patients',
+  getParentRoute: () => ProtectedRoute,
+} as any)
+
+const ProtectedOnlineAppointmentsRoute =
+  ProtectedOnlineAppointmentsImport.update({
+    id: '/online-appointments',
+    path: '/online-appointments',
+    getParentRoute: () => ProtectedRoute,
+  } as any)
+
+const ProtectedAppointmentRoomIdIndexRoute =
+  ProtectedAppointmentRoomIdIndexImport.update({
+    id: '/appointment-room/$id/',
+    path: '/appointment-room/$id/',
+    getParentRoute: () => ProtectedRoute,
+  } as any)
+
+const ProtectedAppointmentPostIdRoute = ProtectedAppointmentPostIdImport.update(
+  {
+    id: '/appointment/post/$id',
+    path: '/appointment/post/$id',
+    getParentRoute: () => ProtectedRoute,
+  } as any,
+)
 
 // Populate the FileRoutesByPath interface
 
@@ -53,83 +113,223 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthImport
+    '/_protected': {
+      id: '/_protected'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof ProtectedImport
       parentRoute: typeof rootRoute
     }
-    '/auth/login': {
-      id: '/auth/login'
-      path: '/login'
-      fullPath: '/auth/login'
-      preLoaderRoute: typeof AuthLoginImport
-      parentRoute: typeof AuthImport
+    '/_public': {
+      id: '/_public'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof PublicImport
+      parentRoute: typeof rootRoute
     }
-    '/auth/signup': {
-      id: '/auth/signup'
+    '/_protected/online-appointments': {
+      id: '/_protected/online-appointments'
+      path: '/online-appointments'
+      fullPath: '/online-appointments'
+      preLoaderRoute: typeof ProtectedOnlineAppointmentsImport
+      parentRoute: typeof ProtectedImport
+    }
+    '/_protected/patients': {
+      id: '/_protected/patients'
+      path: '/patients'
+      fullPath: '/patients'
+      preLoaderRoute: typeof ProtectedPatientsImport
+      parentRoute: typeof ProtectedImport
+    }
+    '/_protected/physical-appointments': {
+      id: '/_protected/physical-appointments'
+      path: '/physical-appointments'
+      fullPath: '/physical-appointments'
+      preLoaderRoute: typeof ProtectedPhysicalAppointmentsImport
+      parentRoute: typeof ProtectedImport
+    }
+    '/_protected/profile': {
+      id: '/_protected/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProtectedProfileImport
+      parentRoute: typeof ProtectedImport
+    }
+    '/_protected/upcomming-appointments': {
+      id: '/_protected/upcomming-appointments'
+      path: '/upcomming-appointments'
+      fullPath: '/upcomming-appointments'
+      preLoaderRoute: typeof ProtectedUpcommingAppointmentsImport
+      parentRoute: typeof ProtectedImport
+    }
+    '/_public/login': {
+      id: '/_public/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof PublicLoginImport
+      parentRoute: typeof PublicImport
+    }
+    '/_public/signup': {
+      id: '/_public/signup'
       path: '/signup'
-      fullPath: '/auth/signup'
-      preLoaderRoute: typeof AuthSignupImport
-      parentRoute: typeof AuthImport
+      fullPath: '/signup'
+      preLoaderRoute: typeof PublicSignupImport
+      parentRoute: typeof PublicImport
+    }
+    '/_protected/appointment/post/$id': {
+      id: '/_protected/appointment/post/$id'
+      path: '/appointment/post/$id'
+      fullPath: '/appointment/post/$id'
+      preLoaderRoute: typeof ProtectedAppointmentPostIdImport
+      parentRoute: typeof ProtectedImport
+    }
+    '/_protected/appointment-room/$id/': {
+      id: '/_protected/appointment-room/$id/'
+      path: '/appointment-room/$id'
+      fullPath: '/appointment-room/$id'
+      preLoaderRoute: typeof ProtectedAppointmentRoomIdIndexImport
+      parentRoute: typeof ProtectedImport
     }
   }
 }
 
 // Create and export the route tree
 
-interface AuthRouteChildren {
-  AuthLoginRoute: typeof AuthLoginRoute
-  AuthSignupRoute: typeof AuthSignupRoute
+interface ProtectedRouteChildren {
+  ProtectedOnlineAppointmentsRoute: typeof ProtectedOnlineAppointmentsRoute
+  ProtectedPatientsRoute: typeof ProtectedPatientsRoute
+  ProtectedPhysicalAppointmentsRoute: typeof ProtectedPhysicalAppointmentsRoute
+  ProtectedProfileRoute: typeof ProtectedProfileRoute
+  ProtectedUpcommingAppointmentsRoute: typeof ProtectedUpcommingAppointmentsRoute
+  ProtectedAppointmentPostIdRoute: typeof ProtectedAppointmentPostIdRoute
+  ProtectedAppointmentRoomIdIndexRoute: typeof ProtectedAppointmentRoomIdIndexRoute
 }
 
-const AuthRouteChildren: AuthRouteChildren = {
-  AuthLoginRoute: AuthLoginRoute,
-  AuthSignupRoute: AuthSignupRoute,
+const ProtectedRouteChildren: ProtectedRouteChildren = {
+  ProtectedOnlineAppointmentsRoute: ProtectedOnlineAppointmentsRoute,
+  ProtectedPatientsRoute: ProtectedPatientsRoute,
+  ProtectedPhysicalAppointmentsRoute: ProtectedPhysicalAppointmentsRoute,
+  ProtectedProfileRoute: ProtectedProfileRoute,
+  ProtectedUpcommingAppointmentsRoute: ProtectedUpcommingAppointmentsRoute,
+  ProtectedAppointmentPostIdRoute: ProtectedAppointmentPostIdRoute,
+  ProtectedAppointmentRoomIdIndexRoute: ProtectedAppointmentRoomIdIndexRoute,
 }
 
-const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+const ProtectedRouteWithChildren = ProtectedRoute._addFileChildren(
+  ProtectedRouteChildren,
+)
+
+interface PublicRouteChildren {
+  PublicLoginRoute: typeof PublicLoginRoute
+  PublicSignupRoute: typeof PublicSignupRoute
+}
+
+const PublicRouteChildren: PublicRouteChildren = {
+  PublicLoginRoute: PublicLoginRoute,
+  PublicSignupRoute: PublicSignupRoute,
+}
+
+const PublicRouteWithChildren =
+  PublicRoute._addFileChildren(PublicRouteChildren)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRouteWithChildren
-  '/auth/login': typeof AuthLoginRoute
-  '/auth/signup': typeof AuthSignupRoute
+  '': typeof PublicRouteWithChildren
+  '/online-appointments': typeof ProtectedOnlineAppointmentsRoute
+  '/patients': typeof ProtectedPatientsRoute
+  '/physical-appointments': typeof ProtectedPhysicalAppointmentsRoute
+  '/profile': typeof ProtectedProfileRoute
+  '/upcomming-appointments': typeof ProtectedUpcommingAppointmentsRoute
+  '/login': typeof PublicLoginRoute
+  '/signup': typeof PublicSignupRoute
+  '/appointment/post/$id': typeof ProtectedAppointmentPostIdRoute
+  '/appointment-room/$id': typeof ProtectedAppointmentRoomIdIndexRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRouteWithChildren
-  '/auth/login': typeof AuthLoginRoute
-  '/auth/signup': typeof AuthSignupRoute
+  '': typeof PublicRouteWithChildren
+  '/online-appointments': typeof ProtectedOnlineAppointmentsRoute
+  '/patients': typeof ProtectedPatientsRoute
+  '/physical-appointments': typeof ProtectedPhysicalAppointmentsRoute
+  '/profile': typeof ProtectedProfileRoute
+  '/upcomming-appointments': typeof ProtectedUpcommingAppointmentsRoute
+  '/login': typeof PublicLoginRoute
+  '/signup': typeof PublicSignupRoute
+  '/appointment/post/$id': typeof ProtectedAppointmentPostIdRoute
+  '/appointment-room/$id': typeof ProtectedAppointmentRoomIdIndexRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
-  '/auth': typeof AuthRouteWithChildren
-  '/auth/login': typeof AuthLoginRoute
-  '/auth/signup': typeof AuthSignupRoute
+  '/_protected': typeof ProtectedRouteWithChildren
+  '/_public': typeof PublicRouteWithChildren
+  '/_protected/online-appointments': typeof ProtectedOnlineAppointmentsRoute
+  '/_protected/patients': typeof ProtectedPatientsRoute
+  '/_protected/physical-appointments': typeof ProtectedPhysicalAppointmentsRoute
+  '/_protected/profile': typeof ProtectedProfileRoute
+  '/_protected/upcomming-appointments': typeof ProtectedUpcommingAppointmentsRoute
+  '/_public/login': typeof PublicLoginRoute
+  '/_public/signup': typeof PublicSignupRoute
+  '/_protected/appointment/post/$id': typeof ProtectedAppointmentPostIdRoute
+  '/_protected/appointment-room/$id/': typeof ProtectedAppointmentRoomIdIndexRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/auth/login' | '/auth/signup'
+  fullPaths:
+    | '/'
+    | ''
+    | '/online-appointments'
+    | '/patients'
+    | '/physical-appointments'
+    | '/profile'
+    | '/upcomming-appointments'
+    | '/login'
+    | '/signup'
+    | '/appointment/post/$id'
+    | '/appointment-room/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/auth/login' | '/auth/signup'
-  id: '__root__' | '/' | '/auth' | '/auth/login' | '/auth/signup'
+  to:
+    | '/'
+    | ''
+    | '/online-appointments'
+    | '/patients'
+    | '/physical-appointments'
+    | '/profile'
+    | '/upcomming-appointments'
+    | '/login'
+    | '/signup'
+    | '/appointment/post/$id'
+    | '/appointment-room/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/_protected'
+    | '/_public'
+    | '/_protected/online-appointments'
+    | '/_protected/patients'
+    | '/_protected/physical-appointments'
+    | '/_protected/profile'
+    | '/_protected/upcomming-appointments'
+    | '/_public/login'
+    | '/_public/signup'
+    | '/_protected/appointment/post/$id'
+    | '/_protected/appointment-room/$id/'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AuthRoute: typeof AuthRouteWithChildren
+  ProtectedRoute: typeof ProtectedRouteWithChildren
+  PublicRoute: typeof PublicRouteWithChildren
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AuthRoute: AuthRouteWithChildren,
+  ProtectedRoute: ProtectedRouteWithChildren,
+  PublicRoute: PublicRouteWithChildren,
 }
 
 export const routeTree = rootRoute
@@ -143,26 +343,67 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/auth"
+        "/_protected",
+        "/_public"
       ]
     },
     "/": {
       "filePath": "index.tsx"
     },
-    "/auth": {
-      "filePath": "auth.tsx",
+    "/_protected": {
+      "filePath": "_protected.tsx",
       "children": [
-        "/auth/login",
-        "/auth/signup"
+        "/_protected/online-appointments",
+        "/_protected/patients",
+        "/_protected/physical-appointments",
+        "/_protected/profile",
+        "/_protected/upcomming-appointments",
+        "/_protected/appointment/post/$id",
+        "/_protected/appointment-room/$id/"
       ]
     },
-    "/auth/login": {
-      "filePath": "auth/login.tsx",
-      "parent": "/auth"
+    "/_public": {
+      "filePath": "_public.tsx",
+      "children": [
+        "/_public/login",
+        "/_public/signup"
+      ]
     },
-    "/auth/signup": {
-      "filePath": "auth/signup.tsx",
-      "parent": "/auth"
+    "/_protected/online-appointments": {
+      "filePath": "_protected/online-appointments.tsx",
+      "parent": "/_protected"
+    },
+    "/_protected/patients": {
+      "filePath": "_protected/patients.tsx",
+      "parent": "/_protected"
+    },
+    "/_protected/physical-appointments": {
+      "filePath": "_protected/physical-appointments.tsx",
+      "parent": "/_protected"
+    },
+    "/_protected/profile": {
+      "filePath": "_protected/profile.tsx",
+      "parent": "/_protected"
+    },
+    "/_protected/upcomming-appointments": {
+      "filePath": "_protected/upcomming-appointments.tsx",
+      "parent": "/_protected"
+    },
+    "/_public/login": {
+      "filePath": "_public/login.tsx",
+      "parent": "/_public"
+    },
+    "/_public/signup": {
+      "filePath": "_public/signup.tsx",
+      "parent": "/_public"
+    },
+    "/_protected/appointment/post/$id": {
+      "filePath": "_protected/appointment/post.$id.tsx",
+      "parent": "/_protected"
+    },
+    "/_protected/appointment-room/$id/": {
+      "filePath": "_protected/appointment-room/$id.index.tsx",
+      "parent": "/_protected"
     }
   }
 }
