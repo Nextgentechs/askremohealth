@@ -66,7 +66,7 @@ function ProfessionalInfoForm() {
     doctor?.specialty?.id,
   )
   const { data: specialties } = api.specialties.listSpecialties.useQuery()
-  const { data: facilities } = api.facilities.list.useQuery()
+  const { data: facilities } = api.facilities.listFacilities.useQuery()
 
   const methods = useForm<ProfessionalDetails>({
     resolver: zodResolver(professionalDetailsSchema),
@@ -74,7 +74,7 @@ function ProfessionalInfoForm() {
       experience: doctor?.experience?.toString() ?? '0',
       registrationNumber: doctor?.licenseNumber ?? '',
       specialty: doctor?.specialty?.id,
-      facility: doctor?.facility?.id,
+      facility: doctor?.facility?.placeId,
     },
   })
 
@@ -158,7 +158,7 @@ function ProfessionalInfoForm() {
                 </SelectTrigger>
                 <SelectContent>
                   {facilities?.map((facility) => (
-                    <SelectItem key={facility.id} value={facility.id}>
+                    <SelectItem key={facility.placeId} value={facility.placeId}>
                       {facility.name}
                     </SelectItem>
                   ))}
