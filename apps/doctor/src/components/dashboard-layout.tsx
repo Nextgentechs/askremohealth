@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { Suspense } from 'react'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from './ui/sidebar'
 import { AppSidebar } from './app-sidebar'
 import { Outlet } from '@tanstack/react-router'
@@ -18,18 +18,16 @@ import { ModeToggle } from './mode-toggle'
 function DashboardHeader() {
   const routerState = useRouterState()
 
-  const pathSegments = useMemo(() => {
-    return routerState.resolvedLocation.pathname.split('/').filter(Boolean)
-  }, [routerState.resolvedLocation.pathname])
+  const pathSegments = routerState.resolvedLocation.pathname
+    .split('/')
+    .filter(Boolean)
 
-  const formattedPaths = useMemo(() => {
-    return pathSegments.map((segment) =>
-      segment
-        .split('-')
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' '),
-    )
-  }, [pathSegments])
+  const formattedPaths = pathSegments.map((segment) =>
+    segment
+      .split('-')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' '),
+  )
 
   return (
     <header className="flex h-16 shrink-0 flex-row items-center justify-between gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
@@ -67,6 +65,16 @@ function DashboardHeader() {
   )
 }
 
+function ProgressBar() {
+  return (
+    <div className="mx-auto flex h-[90vh] w-screen max-w-md flex-row items-center justify-center">
+      <div className="relative h-1 w-full overflow-hidden bg-gray-300">
+        <div className="bg-primary animate-streaming-progress absolute left-0 top-0 h-full w-1/2"></div>
+      </div>
+    </div>
+  )
+}
+
 export default function DashboardLayout() {
   return (
     <SidebarProvider>
@@ -74,7 +82,9 @@ export default function DashboardLayout() {
       <SidebarInset className="flex flex-col gap-4">
         <DashboardHeader />
         <div className="container mx-auto max-w-6xl flex-1">
-          <Outlet />
+          <Suspense fallback={<ProgressBar />}>
+            <Outlet />
+          </Suspense>
         </div>
       </SidebarInset>
     </SidebarProvider>

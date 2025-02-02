@@ -20,14 +20,16 @@ export const Route = createFileRoute('/_protected/upcomming-appointments')({
     page: z.number().optional().catch(1),
     pageSize: z.number().optional().catch(10),
   }),
+
   loaderDeps: ({ search }) => ({ search }),
   loader: async ({ deps: { search }, context: { trpcQueryUtils } }) => {
-    const loaderData =
-      await trpcQueryUtils.doctors.upcommingAppointments.ensureData({
+    const loaderData = await trpcQueryUtils.doctors.upcommingAppointments.fetch(
+      {
         type: search.type,
         page: search.page,
         pageSize: search.pageSize,
-      })
+      },
+    )
     return loaderData
   },
   component: RouteComponent,
@@ -36,6 +38,7 @@ export const Route = createFileRoute('/_protected/upcomming-appointments')({
 function RouteComponent() {
   const navigate = Route.useNavigate()
   const loaderData = Route.useLoaderData()
+  const search = Route.useSearch()
 
   return (
     <div className="mb-20 flex flex-col gap-6">
@@ -48,7 +51,11 @@ function RouteComponent() {
         </p>
       </div>
 
-      <Tabs defaultValue="onlineAppointments" className="flex flex-col gap-4">
+      <Tabs
+        defaultValue="online"
+        value={search.type}
+        className="flex flex-col gap-4"
+      >
         <TabsList className="grid w-fit grid-cols-2">
           <TabsTrigger
             onClick={() =>
@@ -56,12 +63,12 @@ function RouteComponent() {
                 search: { type: 'online' },
               })
             }
-            value="onlineAppointments"
+            value="online"
           >
             Online Appointments
           </TabsTrigger>
           <TabsTrigger
-            value="physicalAppointments"
+            value="physical"
             onClick={() =>
               navigate({
                 search: { type: 'physical' },
@@ -71,14 +78,14 @@ function RouteComponent() {
             Physical Appointments
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="onlineAppointments" className="flex flex-col gap-8">
+        <TabsContent value="online" className="flex flex-col gap-8">
           <DataTable
             columns={upcommingAppointmentsColumn}
             data={loaderData.appointments}
           />
           <AppointmentsPagination pagination={loaderData.pagination} />
         </TabsContent>
-        <TabsContent value="physicalAppointments">
+        <TabsContent value="physical">
           <DataTable
             columns={upcommingAppointmentsColumn}
             data={loaderData.appointments}
