@@ -1,11 +1,11 @@
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server'
 import { createCallerFactory, createTRPCRouter } from './trpc'
-import { specialtiesRouter } from './routers/specialties'
+import * as specialties from './routers/specialties'
 import * as facilities from './routers/facilities'
 import * as users from './routers/users'
-import { locationsRouter } from './routers/location'
+import * as locations from './routers/location'
 import * as doctors from './routers/doctors'
-import { videoRouter } from './routers/video'
+import * as video from './routers/video'
 
 /**
  * This is the primary router for your server.
@@ -13,12 +13,12 @@ import { videoRouter } from './routers/video'
  * All routers added in /api/routers should be manually added here.
  */
 export const appRouter = createTRPCRouter({
-  specialties: specialtiesRouter,
+  specialties: createTRPCRouter(specialties),
   facilities: createTRPCRouter(facilities),
   users: createTRPCRouter(users),
-  locations: locationsRouter,
+  locations: createTRPCRouter(locations),
   doctors: createTRPCRouter(doctors),
-  video: videoRouter,
+  video: createTRPCRouter(video),
 })
 
 // export type definition of API
