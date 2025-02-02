@@ -2,7 +2,7 @@ import { doctorProcedure, publicProcedure } from '../trpc'
 import { z } from 'zod'
 import { Doctors } from '@web/server/services/doctors'
 import {
-  appointmentListSchema,
+  doctorAppointmentListSchema,
   doctorListSchema,
   doctorSignupSchema,
 } from '../validation'
@@ -86,7 +86,7 @@ export const upcommingAppointments = doctorProcedure
   })
 
 export const allAppointments = doctorProcedure
-  .input(appointmentListSchema)
+  .input(doctorAppointmentListSchema)
   .query(async ({ ctx, input }) => {
     assert(ctx.user?.id, 'User not found')
     return Appointments.list(ctx.user.id, input)

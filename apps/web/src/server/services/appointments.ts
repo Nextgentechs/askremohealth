@@ -2,9 +2,12 @@ import { appointments, patients, type users } from '../db/schema'
 import { db } from '../db'
 import { User } from './users'
 import { TRPCError } from '@trpc/server'
-import { type NewAppointmentSchema } from '../api/validation'
+import {
+  type DoctorAppointmentListSchema,
+  type NewAppointmentSchema,
+} from '../api/validation'
 import { AppointmentStatus } from '../utils'
-import { type AppointmentInput } from '../api/routers/appointments'
+
 import { type InferSelectModel } from 'drizzle-orm'
 import { and, eq, gte, count } from 'drizzle-orm'
 export default class Appointments {
@@ -159,7 +162,7 @@ export default class Appointments {
     }
   }
 
-  static async list(doctorId: string, input: AppointmentInput) {
+  static async list(doctorId: string, input: DoctorAppointmentListSchema) {
     const offset = (input.page! - 1) * input.pageSize!
     const limit = input.pageSize!
 
