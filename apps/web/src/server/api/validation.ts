@@ -84,6 +84,29 @@ export const doctorListSchema = z.object({
   limit: z.number().default(10),
 })
 
+export const doctorAppointmentListSchema = z.object({
+  type: z.enum(['physical', 'online']),
+  patientId: z.string().optional(),
+  startDate: z.date(),
+  endDate: z.date(),
+  status: z
+    .enum([
+      'scheduled',
+      'pending',
+      'completed',
+      'cancelled',
+      'rescheduled',
+      'missed',
+      'in_progress',
+    ])
+    .optional(),
+  page: z.number().optional().catch(1),
+  pageSize: z.number().optional().catch(10),
+})
+export type DoctorAppointmentListSchema = z.infer<
+  typeof doctorAppointmentListSchema
+>
+
 export const appointmentListSchema = z.object({
   page: z.number().default(1),
   limit: z.number().default(10),

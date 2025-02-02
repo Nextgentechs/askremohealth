@@ -19,7 +19,7 @@ import { useRouter } from 'next-nprogress-bar'
 export default function AppointmentsPagination({
   meta,
 }: {
-  meta: RouterOutputs['appointments']['patients']['list']['meta']
+  meta: RouterOutputs['users']['listAppointments']['meta']
 }) {
   const router = useRouter()
   const pathname = usePathname()
