@@ -6,7 +6,6 @@ import Provider from '@web/providers/provider'
 import Footer from '@web/components/footer'
 import NavigationBar from '@web/components/navigation-bar'
 import { Toaster } from '@web/components/ui/toaster'
-import { api } from '@web/trpc/server'
 
 export const metadata: Metadata = {
   title: 'Ask Virtual Healthcare',
