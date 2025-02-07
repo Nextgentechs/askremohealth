@@ -100,8 +100,8 @@ export const doctorAppointmentListSchema = z.object({
       'in_progress',
     ])
     .optional(),
-  page: z.number().optional().catch(1),
-  pageSize: z.number().optional().catch(10),
+  page: z.number().optional().default(1),
+  pageSize: z.number().optional().default(10),
 })
 export type DoctorAppointmentListSchema = z.infer<
   typeof doctorAppointmentListSchema
