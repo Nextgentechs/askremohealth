@@ -1,15 +1,25 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
 import {
-  allAppointmentsColumns,
   AppointmentStatus,
   appointmentStatusOptions,
 } from './physical-appointments'
-import { Label } from '@/components/ui/label'
 import { FacetedFilter } from '@/components/faceted-filters'
-import { Input } from '@/components/ui/input'
 import { DataTable } from '@/components/data-table'
 import { DateRangePicker } from '@/components/date-range-picker'
+import { RouterOutputs } from '@web/server/api'
+import {
+  Pagination,
+  PaginationPrevious,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+} from '@/components/ui/pagination'
+import { upcommingAppointmentsColumn } from '@/components/dashboard/columns'
+import SearchableDropdown from '@/components/searchable-dropdown'
+import { api } from '@/lib/trpc'
+import React from 'react'
 
 const appointmentsSchema = z.object({
   type: z.enum(['physical', 'online']).catch('online'),
@@ -58,29 +68,50 @@ function RouteComponent() {
 
       <div className="flex flex-col gap-4">
         <Filters />
-        <DataTable columns={allAppointmentsColumns} data={loaderData} />
+        <DataTable
+          columns={upcommingAppointmentsColumn}
+          data={loaderData.appointments}
+        />
+        <AppointmentsPagination pagination={loaderData.pagination} />
       </div>
     </div>
   )
 }
 
 function Filters() {
+  const [searchTerm, setSearchTerm] = React.useState('')
+
   const searchParams = Route.useSearch()
   const navigate = Route.useNavigate()
+  const { data: patients, isLoading: isLoadingPatients } =
+    api.doctors.searchPatient.useQuery({
+      query: searchTerm,
+    })
 
   const handleFilterChange = (values: string[]) => {
     console.log(values)
   }
+
   return (
     <div>
       <div className="flex w-full flex-row justify-between">
         <div className="flex flex-row items-center gap-4">
-          <div className="w-full max-w-72">
-            <Label hidden className="sr-only">
-              Patient
-            </Label>
-            <Input placeholder="Search patient..." />
-          </div>
+          <SearchableDropdown
+            loading={isLoadingPatients}
+            options={
+              patients?.map((patient) => ({
+                value: patient.id,
+                label: `${patient.firstName} ${patient.lastName}`,
+              })) ?? []
+            }
+            placeholder="Select Patient"
+            onChange={(value) => {
+              setSearchTerm(value)
+            }}
+            onSelect={(value) => {
+              navigate({ search: { patientId: value.value } })
+            }}
+          />
           <FacetedFilter
             onFilterChange={handleFilterChange}
             title="Status"
@@ -97,5 +128,67 @@ function Filters() {
         />
       </div>
     </div>
+  )
+}
+
+function AppointmentsPagination({
+  pagination,
+}: {
+  pagination: RouterOutputs['doctors']['allAppointments']['pagination']
+}) {
+  const search = Route.useSearch()
+  const navigate = Route.useNavigate()
+  const currentPage = search.page ?? 1
+
+  if (pagination.pages <= 1) return null
+
+  return (
+    <Pagination>
+      <PaginationContent>
+        <PaginationItem>
+          {currentPage > 1 && (
+            <PaginationPrevious
+              className="hover:cursor-pointer"
+              onClick={() =>
+                navigate({
+                  search: { ...search, page: currentPage - 1 },
+                })
+              }
+            />
+          )}
+        </PaginationItem>
+
+        {Array.from({ length: pagination.pages }, (_, i) => i + 1).map(
+          (page) => (
+            <PaginationItem key={page}>
+              <PaginationLink
+                className="hover:cursor-pointer"
+                onClick={() =>
+                  navigate({
+                    search: { ...search, page },
+                  })
+                }
+                isActive={currentPage === page}
+              >
+                {page}
+              </PaginationLink>
+            </PaginationItem>
+          ),
+        )}
+
+        {currentPage < pagination.pages && (
+          <PaginationItem>
+            <PaginationNext
+              className="hover:cursor-pointer"
+              onClick={() =>
+                navigate({
+                  search: { ...search, page: currentPage + 1 },
+                })
+              }
+            />
+          </PaginationItem>
+        )}
+      </PaginationContent>
+    </Pagination>
   )
 }
