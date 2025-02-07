@@ -74,7 +74,7 @@ function RouteComponent() {
     })
     reset()
     navigate({
-      to: '/dashboard/upcomming-appointments',
+      to: '/upcomming-appointments',
     })
   }
 

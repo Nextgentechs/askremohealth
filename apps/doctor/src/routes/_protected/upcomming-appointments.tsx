@@ -90,6 +90,7 @@ function RouteComponent() {
             columns={upcommingAppointmentsColumn}
             data={loaderData.appointments}
           />
+          <AppointmentsPagination pagination={loaderData.pagination} />
         </TabsContent>
       </Tabs>
     </div>

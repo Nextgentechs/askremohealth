@@ -133,15 +133,16 @@ const data = {
       url: '/upcomming-appointments',
       icon: House,
     },
-    {
-      title: 'Physical Appointments',
-      url: '/physical-appointments',
-      icon: ClipboardList,
-    },
+
     {
       title: 'Online Appointments',
       url: '/online-appointments',
       icon: ClipboardPlus,
+    },
+    {
+      title: 'Physical Appointments',
+      url: '/physical-appointments',
+      icon: ClipboardList,
     },
     {
       title: 'Patients',

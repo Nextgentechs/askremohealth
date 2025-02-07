@@ -105,13 +105,17 @@ function RouteComponent() {
 
       <div className="flex flex-col gap-4">
         <Filters />
-        <DataTable columns={allAppointmentsColumns} data={loaderData} />
+        <DataTable
+          columns={allAppointmentsColumns}
+          data={loaderData.appointments}
+        />
       </div>
     </div>
   )
 }
 
-type PhysicalAppointment = RouterOutputs['doctors']['allAppointments'][number]
+type PhysicalAppointment =
+  RouterOutputs['doctors']['allAppointments']['appointments'][number]
 
 export const allAppointmentsColumns: ColumnDef<PhysicalAppointment>[] = [
   {

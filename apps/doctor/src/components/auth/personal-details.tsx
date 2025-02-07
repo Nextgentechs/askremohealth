@@ -70,20 +70,17 @@ export const personalDetailsSchema = z
       .min(10, { message: 'Bio must be at least 10 characters long' })
       .max(256, { message: 'Bio must be at most 256 characters long' }),
 
-    profilePicture: z
-      .string()
-      .optional()
-      .refine(
-        (base64) => {
-          if (!base64) return true
-          const base64Data = base64.split(',')[1] || base64
-          const sizeInBytes = (base64Data.length * 3) / 4
-          return sizeInBytes <= 5 * 1024 * 1024
-        },
-        {
-          message: 'Photo must be less than 5MB',
-        },
-      ),
+    profilePicture: z.string().refine(
+      (base64) => {
+        if (!base64) return true
+        const base64Data = base64.split(',')[1] || base64
+        const sizeInBytes = (base64Data.length * 3) / 4
+        return sizeInBytes <= 5 * 1024 * 1024
+      },
+      {
+        message: 'Photo must be less than 5MB',
+      },
+    ),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Passwords do not match',
