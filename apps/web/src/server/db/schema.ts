@@ -116,6 +116,8 @@ export const doctors = pgTable('doctor', {
   gender: genderEnum('gender'),
   title: varchar('title'),
   consultationFee: integer('consultation_fee'),
+  isVerified: boolean('is_verified').default(false),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
 })
 
 export const profilePictures = pgTable('profile_picture', {
