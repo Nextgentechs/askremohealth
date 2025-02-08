@@ -115,13 +115,15 @@ export const DoctorsColumns: ColumnDef<Doctor>[] = [
     header: 'Phone',
   },
   {
-    accessorKey: 'isVerified',
-    header: 'Verified',
+    accessorKey: 'status',
+    header: 'Status',
     cell: ({ row }) => {
-      return row.original.isVerified ? (
+      return row.original.status === 'verified' ? (
         <Badge variant="completed">Verified</Badge>
+      ) : row.original.status === 'pending' ? (
+        <Badge variant="pending">Pending</Badge>
       ) : (
-        <Badge variant="pending">Unverified</Badge>
+        <Badge variant="missed">Rejected</Badge>
       )
     },
   },

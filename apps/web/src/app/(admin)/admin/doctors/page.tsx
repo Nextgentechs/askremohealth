@@ -8,7 +8,9 @@ export default async function page({
 }: {
   searchParams: Promise<{ page: string }>
 }) {
-  const page = Number((await searchParams).page) ?? 1
+  const pageParam = Number((await searchParams).page)
+  const page = !isNaN(pageParam) && pageParam > 0 ? pageParam : 1
+
   const data = await api.admin.getDoctors({
     page,
     limit: 15,
