@@ -1,7 +1,6 @@
 'use client'
 import React from 'react'
-import { api, type RouterOutputs } from '@web/trpc/react'
-import { DataTable } from '@web/components/data-table'
+import { type RouterOutputs } from '@web/trpc/react'
 import { type ColumnDef } from '@tanstack/react-table'
 import { format } from 'date-fns'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -15,30 +14,8 @@ import {
 } from '@web/components/ui/pagination'
 import { Badge } from '@web/components/ui/badge'
 import Link from 'next/link'
-export default function Doctors() {
-  const searchParams = useSearchParams()
-  const currentPage = Number(searchParams.get('page')) ?? 1
 
-  const [{ data, pagination }] = api.admin.getDoctors.useSuspenseQuery({
-    page: currentPage,
-    limit: 15,
-  })
-
-  return (
-    <div className="flex flex-col gap-8">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-xl font-semibold tracking-wide text-foreground">
-          Doctors
-        </h1>
-        <p className="text-sm text-muted-foreground">Manage all doctors here</p>
-      </div>
-      <DataTable columns={columns} data={data} />
-      <AppointmentsPagination pagination={pagination} />
-    </div>
-  )
-}
-
-function AppointmentsPagination({
+export function DoctorsPagination({
   pagination,
 }: {
   pagination: RouterOutputs['admin']['getDoctors']['pagination']
@@ -114,7 +91,7 @@ function AppointmentsPagination({
 
 type Doctor = RouterOutputs['admin']['getDoctors']['data'][number]
 
-const columns: ColumnDef<Doctor>[] = [
+export const DoctorsColumns: ColumnDef<Doctor>[] = [
   {
     accessorKey: 'user.firstName',
     header: 'Name',
