@@ -39,7 +39,6 @@ export const doctorRelations = relations(doctors, ({ one, many }) => ({
     fields: [doctors.specialty],
     references: [specialties.id],
   }),
-  subspecialties: many(subSpecialties),
   facility: one(facilities, {
     fields: [doctors.facility],
     references: [facilities.placeId],
