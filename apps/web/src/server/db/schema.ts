@@ -39,6 +39,12 @@ export const appointmentTypesEnum = pgEnum('appointment_type', [
   'physical',
 ])
 
+export const doctorStatusEnum = pgEnum('doctor_status', [
+  'pending',
+  'verified',
+  'rejected',
+])
+
 export const specialties = pgTable('specialty', {
   id: uuid('id').primaryKey().notNull().defaultRandom(),
   name: varchar('name').notNull(),
@@ -116,7 +122,7 @@ export const doctors = pgTable('doctor', {
   gender: genderEnum('gender'),
   title: varchar('title'),
   consultationFee: integer('consultation_fee'),
-  isVerified: boolean('is_verified').default(false),
+  status: doctorStatusEnum('status').default('pending'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 })
 
