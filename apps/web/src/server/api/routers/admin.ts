@@ -4,8 +4,8 @@ import { TRPCError } from '@trpc/server'
 import bcrypt from 'bcrypt'
 import { lucia } from '@web/lib/lucia'
 import { cookies } from 'next/headers'
-import { count } from 'drizzle-orm'
-import { doctors } from '@web/server/db/schema'
+import { count, eq, sql } from 'drizzle-orm'
+import { doctors, type subSpecialties } from '@web/server/db/schema'
 
 export const login = publicProcedure
   .input(
@@ -58,10 +58,20 @@ export const getDoctors = adminProcedure
       ctx.db.query.doctors.findMany({
         with: {
           user: true,
-          certificates: true,
         },
         offset: Math.max(1, (input.page - 1) * input.limit),
         limit: input.limit,
+        orderBy: (doctors, { desc }) => [
+          desc(
+            sql<number>`CASE 
+              WHEN ${doctors.status} = 'pending' THEN 3
+              WHEN ${doctors.status} = 'verified' THEN 2
+              WHEN ${doctors.status} = 'rejected' THEN 1
+              ELSE 0 
+            END`,
+          ),
+          desc(doctors.createdAt),
+        ],
       }),
     ])
 
@@ -77,10 +87,56 @@ export const getDoctors = adminProcedure
 export const getDoctor = adminProcedure
   .input(z.object({ id: z.string() }))
   .query(async ({ ctx, input }) => {
-    return ctx.db.query.doctors.findFirst({
+    const doctor = await ctx.db.query.doctors.findFirst({
       where: (doctor, { eq }) => eq(doctor.id, input.id),
       with: {
-        user: true,
+        user: {
+          with: {
+            profilePicture: true,
+          },
+        },
+        certificates: true,
+        specialty: true,
+        facility: true,
+        operatingHours: true,
       },
     })
+
+    if (!doctor) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Doctor not found',
+      })
+    }
+
+    const subspecialtyIds = (
+      doctor.subSpecialties as Array<{ id: string }>
+    ).map((sub) => sub.id)
+    let subspecialties: (typeof subSpecialties.$inferSelect)[] = []
+
+    if (subspecialtyIds.length > 0) {
+      subspecialties = await ctx.db.query.subSpecialties.findMany({
+        where: (subspecialty, { inArray }) =>
+          inArray(subspecialty.id, subspecialtyIds),
+      })
+    }
+
+    return {
+      ...doctor,
+      subSpecialties: subspecialties,
+    }
+  })
+
+export const updateDoctorStatus = adminProcedure
+  .input(
+    z.object({
+      id: z.string(),
+      status: z.enum(['pending', 'verified', 'rejected']),
+    }),
+  )
+  .mutation(async ({ ctx, input }) => {
+    const { id, status } = input
+    await ctx.db.update(doctors).set({ status }).where(eq(doctors.id, id))
+
+    return { success: true }
   })
