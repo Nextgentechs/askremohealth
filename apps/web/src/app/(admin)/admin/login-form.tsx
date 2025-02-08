@@ -47,7 +47,7 @@ export default function LoginForm() {
           title: 'Login successful',
         })
       }
-      router.push('/admin/dashboard')
+      router.push('/admin/doctors')
     } catch (err) {
       console.error(err)
       toast({
