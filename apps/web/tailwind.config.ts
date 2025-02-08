@@ -19,7 +19,6 @@ export default {
       animation: {
         'streaming-progress': 'streaming-progress 1.5s linear infinite',
       },
-
       fontFamily: {
         sans: ['var(--font-geist-sans)', ...fontFamily.sans],
       },

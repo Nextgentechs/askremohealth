@@ -10,7 +10,8 @@ import { lucia } from '@web/lib/lucia'
 import { cookies } from 'next/headers'
 import Appointments from '@web/server/services/appointments'
 import assert from 'assert'
-import { eq } from 'drizzle-orm'
+import { eq, ilike, or } from 'drizzle-orm'
+import { users, patients as patientsTable } from '@web/server/db/schema'
 
 export const signup = publicProcedure
   .input(doctorSignupSchema)
@@ -142,4 +143,24 @@ export const patients = doctorProcedure
   )
   .query(async ({ ctx, input }) => {
     return Doctors.patients(ctx.user.id, input.page, input.limit)
+  })
+
+export const searchPatient = doctorProcedure
+  .input(z.object({ query: z.string() }))
+  .query(async ({ ctx, input }) => {
+    return ctx.db
+      .select({
+        id: patientsTable.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+      })
+      .from(patientsTable)
+      .innerJoin(users, eq(patientsTable.id, users.id))
+      .where(
+        or(
+          ilike(users.firstName, `%${input.query}%`),
+          ilike(users.lastName, `%${input.query}%`),
+        ),
+      )
+      .limit(6)
   })

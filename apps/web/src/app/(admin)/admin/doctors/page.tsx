@@ -10,7 +10,7 @@ import { Separator } from '@web/components/ui/separator'
 import { SidebarInset, SidebarTrigger } from '@web/components/ui/sidebar'
 import { SidebarProvider } from '@web/components/ui/sidebar'
 import React from 'react'
-
+import Doctors from './doctors'
 export default function page() {
   return (
     <SidebarProvider>
@@ -19,7 +19,7 @@ export default function page() {
         <DashboardHeader />
         <div className="container mx-auto mb-10 max-w-6xl flex-1">
           <React.Suspense fallback={<ProgressBar />}>
-            <div>Hello</div>
+            <Doctors />
           </React.Suspense>
         </div>
       </SidebarInset>
