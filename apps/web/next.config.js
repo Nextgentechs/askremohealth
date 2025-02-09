@@ -12,6 +12,10 @@ const config = {
         protocol: 'https',
         hostname: 'cdn.sanity.io',
       },
+      {
+        protocol: 'https',
+        hostname: 'do5q0y4otbt6jaho.public.blob.vercel-storage.com',
+      },
     ],
   },
 }
