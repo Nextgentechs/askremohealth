@@ -8,7 +8,7 @@ import {
 } from '../api/validation'
 import { AppointmentStatus } from '../utils'
 
-import { type InferSelectModel } from 'drizzle-orm'
+import { lte, type InferSelectModel } from 'drizzle-orm'
 import { and, eq, gte, count } from 'drizzle-orm'
 export default class Appointments {
   static async createNewUserAppointment(input: NewAppointmentSchema) {
@@ -119,6 +119,7 @@ export default class Appointments {
         appointmentDate: true,
         status: true,
         patientNotes: true,
+        type: true,
       },
       with: {
         patient: {
@@ -163,11 +164,27 @@ export default class Appointments {
   }
 
   static async list(doctorId: string, input: DoctorAppointmentListSchema) {
-    const offset = (input.page! - 1) * input.pageSize!
-    const limit = input.pageSize!
+    const offset = (input.page - 1) * input.pageSize
+    const limit = input.pageSize
 
-    return await db.query.appointments.findMany({
-      where: (appontment, { and, eq, gte }) =>
+    const countQuery = db
+      .select({ count: count() })
+      .from(appointments)
+      .where(
+        and(
+          eq(appointments.doctorId, doctorId),
+          eq(appointments.type, input.type),
+          input.status ? eq(appointments.status, input.status) : undefined,
+          input.patientId
+            ? eq(appointments.patientId, input.patientId)
+            : undefined,
+          gte(appointments.appointmentDate, input.startDate),
+          lte(appointments.appointmentDate, input.endDate),
+        ),
+      )
+
+    const query = db.query.appointments.findMany({
+      where: (appontment, { and, eq, gte, lte }) =>
         and(
           eq(appontment.doctorId, doctorId),
           eq(appontment.type, input.type),
@@ -176,13 +193,14 @@ export default class Appointments {
             ? eq(appontment.patientId, input.patientId)
             : undefined,
           gte(appontment.appointmentDate, input.startDate),
-          gte(appontment.appointmentDate, input.endDate),
+          lte(appontment.appointmentDate, input.endDate),
         ),
       columns: {
         id: true,
         appointmentDate: true,
         status: true,
         patientNotes: true,
+        type: true,
       },
       with: {
         doctor: {
@@ -203,8 +221,19 @@ export default class Appointments {
           },
         },
       },
+
       offset,
       limit,
     })
+
+    const [totalCount, data] = await Promise.all([countQuery, query])
+
+    return {
+      pagination: {
+        total: totalCount[0]?.count ?? 0,
+        pages: Math.ceil((totalCount[0]?.count ?? 0) / input.pageSize),
+      },
+      appointments: data,
+    }
   }
 }

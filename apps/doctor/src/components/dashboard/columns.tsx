@@ -78,7 +78,7 @@ export const upcommingAppointmentsColumn: ColumnDef<Appointment>[] = [
         status === AppointmentStatus.SCHEDULED ||
         status === AppointmentStatus.IN_PROGRESS
       ) {
-        return <ScheduledAppointmentActions appointmentId={row.original.id} />
+        return <ScheduledAppointmentActions row={row.original} />
       }
       return null
     },
@@ -213,9 +213,9 @@ function PendingAppointmentActions({
 }
 
 function ScheduledAppointmentActions({
-  appointmentId,
+  row,
 }: {
-  appointmentId: string
+  row: RouterOutputs['doctors']['upcommingAppointments']['appointments'][number]
 }) {
   const { toast } = useToast()
   const utils = api.useUtils()
@@ -258,7 +258,7 @@ function ScheduledAppointmentActions({
 
   const handleCancelAppointment = async () => {
     try {
-      await cancelAppointment({ appointmentId })
+      await cancelAppointment({ appointmentId: row.id })
       await utils.doctors.upcommingAppointments.refetch()
       router.invalidate()
     } catch (error) {
@@ -274,12 +274,14 @@ function ScheduledAppointmentActions({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <Link to={'/appointment-room/$id'} params={{ id: appointmentId }}>
-          <DropdownMenuItem>
-            <Video className="mr-2 h-4 w-4" />
-            Start Consultation
-          </DropdownMenuItem>
-        </Link>
+        {row.type === 'online' && (
+          <Link to={'/appointment-room/$id'} params={{ id: row.id }}>
+            <DropdownMenuItem>
+              <Video className="mr-2 h-4 w-4" />
+              Start Consultation
+            </DropdownMenuItem>
+          </Link>
+        )}
         <DropdownMenuItem
           onClick={handleCancelAppointment}
           disabled={isCancelling}
