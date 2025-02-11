@@ -5,14 +5,17 @@ import {
   CardHeader,
   CardTitle,
 } from '@web/components/ui/card'
+
 export default function Page() {
   return (
     <div className="flex h-screen items-center justify-center">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>Admin Login</CardTitle>
+      <Card className="w-full max-w-sm border shadow-sm">
+        <CardHeader className="flex flex-col items-start">
+          <CardTitle className="text-start text-xl font-semibold">
+            Admin Login
+          </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="content-start px-0 pb-0 pt-6 text-foreground">
           <LoginForm />
         </CardContent>
       </Card>

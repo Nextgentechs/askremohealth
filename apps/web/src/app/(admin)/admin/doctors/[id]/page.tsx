@@ -13,6 +13,14 @@ import { Textarea } from '@web/components/ui/textarea'
 import { Button } from '@web/components/ui/button'
 import { ExternalLink } from 'lucide-react'
 import { AspectRatio } from '@web/components/ui/aspect-ratio'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@web/components/ui/breadcrumb'
 
 export default async function page({
   params,
@@ -22,24 +30,39 @@ export default async function page({
   const doctorId = (await params).id
   const doctor = await api.admin.getDoctor({ id: doctorId })
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-row items-center justify-between">
-        <h1 className="text-xl font-semibold tracking-wide text-foreground">
-          {doctor?.title}. {doctor?.user.firstName} {doctor?.user.lastName}
-        </h1>
+    <div className="flex flex-col gap-8">
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="">Admin</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
 
-        <DoctorActions doctor={doctor} />
-      </div>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="">Doctors</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+
+          <BreadcrumbItem>
+            <BreadcrumbPage>{`${doctor?.title}. ${doctor?.user.firstName} ${doctor?.user.lastName}`}</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
 
       <Tabs defaultValue="personalInfo" className="flex flex-col gap-6">
-        <TabsList className="gird w-fit grid-cols-3">
-          <TabsTrigger value="personalInfo">Personal Info</TabsTrigger>
-          <TabsTrigger value="professionalInfo">Professional Info</TabsTrigger>
-          <TabsTrigger value="consultationSettings">
-            Consultation Settings
-          </TabsTrigger>
-        </TabsList>
+        <div className="flex flex-row items-center justify-between">
+          <TabsList className="gird w-fit grid-cols-3">
+            <TabsTrigger value="personalInfo">Personal Info</TabsTrigger>
+            <TabsTrigger value="professionalInfo">
+              Professional Info
+            </TabsTrigger>
+            <TabsTrigger value="consultationSettings">
+              Consultation Settings
+            </TabsTrigger>
+          </TabsList>
 
+          <DoctorActions doctor={doctor} />
+        </div>
         <TabsContent value="personalInfo">
           <div className="grid grid-cols-3 gap-4">
             <ProfilePhoto doctor={doctor} />
