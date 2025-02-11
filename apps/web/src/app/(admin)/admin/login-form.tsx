@@ -14,7 +14,6 @@ import {
 } from '@web/components/ui/form'
 import { Input } from '@web/components/ui/input'
 import { Button } from '@web/components/ui/button'
-import { api } from '@web/trpc/react'
 import { useToast } from '@web/hooks/use-toast'
 import { useRouter } from 'next/navigation'
 
@@ -37,16 +36,27 @@ export default function LoginForm() {
 
   const { toast } = useToast()
   const router = useRouter()
-  const { mutateAsync: login, isPending } = api.admin.login.useMutation()
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {
-      const res = await login(values)
-      if (res.success) {
+      const res = await fetch('/api/auth', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(values),
+      })
+      const data = await res.json()
+
+      if (data.user.role !== 'admin') {
         toast({
-          title: 'Login successful',
+          title: 'Login failed',
+          description: 'Invalid phone number or password',
         })
+        return
       }
+
       router.push('/admin/doctors')
     } catch (err) {
       console.error(err)
@@ -64,7 +74,7 @@ export default function LoginForm() {
           control={form.control}
           name="phone"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="flex flex-col items-start">
               <FormLabel>Phone Number</FormLabel>
               <FormControl>
                 <Input
@@ -97,8 +107,12 @@ export default function LoginForm() {
           )}
         />
 
-        <Button type="submit" className="w-full" disabled={isPending}>
-          {isPending ? 'Logging in...' : 'Login'}
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={form.formState.isSubmitting}
+        >
+          {form.formState.isSubmitting ? 'Logging in...' : 'Login'}
         </Button>
       </form>
     </Form>

@@ -2,6 +2,14 @@ import React from 'react'
 import { api } from '@web/trpc/server'
 import { DataTable } from '@web/components/data-table'
 import { DoctorsColumns, DoctorsPagination } from './doctors-table'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@web/components/ui/breadcrumb'
 
 export default async function page({
   searchParams,
@@ -17,6 +25,19 @@ export default async function page({
   })
   return (
     <div className="flex flex-col gap-8">
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="">Admin</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+
+          <BreadcrumbItem>
+            <BreadcrumbPage>Doctors</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
       <div className="flex flex-col gap-2">
         <h1 className="text-xl font-semibold tracking-wide text-foreground">
           Doctors

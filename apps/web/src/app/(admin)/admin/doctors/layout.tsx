@@ -1,29 +1,32 @@
 import React from 'react'
-import {
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-} from '@web/components/ui/breadcrumb'
+
 import { AppSidebar } from '@web/components/admin/app-sidebar'
-import { Breadcrumb } from '@web/components/ui/breadcrumb'
 import { Separator } from '@web/components/ui/separator'
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from '@web/components/ui/sidebar'
-
-export default function layout({ children }: { children: React.ReactNode }) {
+import { AdminAuthProvider } from '@web/providers/admin-auth'
+export default async function layout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset className="flex flex-col gap-4">
-        <DashboardHeader />
-        <div className="container mx-auto mb-10 max-w-6xl flex-1">
-          <React.Suspense fallback={<ProgressBar />}>{children}</React.Suspense>
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+    <AdminAuthProvider>
+      <SidebarProvider>
+        <AppSidebar />
+        <SidebarInset className="flex flex-col gap-4">
+          <DashboardHeader />
+          <div className="container mx-auto mb-10 max-w-6xl flex-1">
+            <React.Suspense fallback={<ProgressBar />}>
+              {children}
+            </React.Suspense>
+          </div>
+        </SidebarInset>
+      </SidebarProvider>
+    </AdminAuthProvider>
   )
 }
 
@@ -43,13 +46,6 @@ function DashboardHeader() {
       <div className="flex items-center gap-2 px-4">
         <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="mr-2 h-4" />
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem className="hidden md:block">
-              <BreadcrumbLink href="#">Dashboard</BreadcrumbLink>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
       </div>
     </header>
   )
