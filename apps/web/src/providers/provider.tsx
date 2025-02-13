@@ -3,6 +3,7 @@ import { NuqsAdapter } from 'nuqs/adapters/next/app'
 import { TRPCReactProvider } from '@web/trpc/react'
 import { ThemeProvider } from './theme-provider'
 import { AppProgressBar as ProgressBar } from 'next-nprogress-bar'
+import { ClerkProvider } from '@clerk/nextjs'
 
 export default function Provider({ children }: { children: React.ReactNode }) {
   return (
@@ -19,7 +20,9 @@ export default function Provider({ children }: { children: React.ReactNode }) {
           options={{ showSpinner: false }}
           shallowRouting
         />
-        <NuqsAdapter>{children}</NuqsAdapter>
+        <NuqsAdapter>
+          <ClerkProvider>{children}</ClerkProvider>
+        </NuqsAdapter>
       </TRPCReactProvider>
     </ThemeProvider>
   )
