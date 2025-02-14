@@ -71,8 +71,8 @@ const navOptions = [
     ],
   },
   {
-    label: 'Health Articles',
-    href: '/health-articles',
+    label: 'Articles',
+    href: '/articles',
     icon: Book,
   },
   {
@@ -107,7 +107,7 @@ function MobileMenu() {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Menu className="size-6 hover:cursor-pointer xl:hidden" />
+        <Menu className="size-6 hover:cursor-pointer lg:hidden" />
       </SheetTrigger>
       <SheetContent className="flex flex-col items-start">
         <SheetTitle hidden>Menu</SheetTitle>
@@ -164,7 +164,7 @@ function CurrentUser({
 }: {
   user: RouterOutputs['users']['currentUser']
 }) {
-  const { mutateAsync: signOut } = api.users.signOut.useMutation()
+  const { mutateAsync: signOut } = api.auth.patients.signOut.useMutation()
   const utils = api.useUtils()
   const router = useRouter()
   const handleSignOut = async () => {
@@ -220,7 +220,7 @@ export default function NavigationBar() {
     <div className="flex w-full flex-row items-center justify-between lg:px-5">
       <Logo />
 
-      <NavigationMenu className="hidden list-none gap-1 xl:flex">
+      <NavigationMenu className="hidden list-none gap-1 lg:flex">
         {navOptions.map((option) => (
           <NavigationMenuItem key={option.label}>
             {option.dropdownItems ? (
