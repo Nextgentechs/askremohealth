@@ -1,5 +1,5 @@
 'use client'
-
+import React from 'react'
 import { Button } from '@web/components/ui/button'
 import {
   Card,
@@ -26,23 +26,54 @@ import {
   FormLabel,
   FormMessage,
 } from './ui/form'
-import { useSignUp } from '@clerk/nextjs'
+import { useSignIn, useSignUp } from '@clerk/nextjs'
 import { Loader } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { type OAuthStrategy } from '@clerk/types'
+import { useRouter } from 'next/navigation'
 
 export function LoginForm() {
   const [currentStep, setCurrentStep] = useState<'login' | 'signup' | 'otp'>(
     'login',
   )
 
-  if (currentStep === 'otp') {
-    return <InputOTPForm />
-  }
-
-  if (currentStep === 'signup') {
-    return <SignUp setCurrentStep={setCurrentStep} />
-  }
-
-  return <Login setCurrentStep={setCurrentStep} />
+  return (
+    <AnimatePresence mode="wait">
+      {currentStep === 'otp' && (
+        <motion.div
+          key="otp"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.2 }}
+        >
+          <InputOTPForm />
+        </motion.div>
+      )}
+      {currentStep === 'signup' && (
+        <motion.div
+          key="signup"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.2 }}
+        >
+          <SignUp setCurrentStep={setCurrentStep} />
+        </motion.div>
+      )}
+      {currentStep === 'login' && (
+        <motion.div
+          key="login"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.2 }}
+        >
+          <Login setCurrentStep={setCurrentStep} />
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
 }
 
 function Login({
@@ -50,14 +81,53 @@ function Login({
 }: {
   setCurrentStep: (step: 'login' | 'signup' | 'otp') => void
 }) {
+  const [isLoading, setIsLoading] = useState(false)
   const [loginForm, setLoginForm] = useState({
     email: '',
     password: '',
   })
+  const router = useRouter()
+  const { signIn } = useSignIn()
+  if (!signIn) {
+    return null
+  }
 
-  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+  function signInWith(strategy: OAuthStrategy) {
+    return signIn
+      ?.authenticateWithRedirect({
+        strategy,
+        redirectUrl: '/auth/sso-callback',
+        redirectUrlComplete: '/',
+      })
+      .then((res) => {
+        console.log(res)
+      })
+      .catch((err) => {
+        console.log(err.errors)
+        console.error(err, null, 2)
+      })
+  }
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    console.log(loginForm)
+    setIsLoading(true)
+    try {
+      await signIn?.create({
+        identifier: loginForm.email,
+        password: loginForm.password,
+      })
+      router.push('/dashboard')
+    } catch (error) {
+      console.error(error)
+      toast({
+        title: 'Error',
+        description:
+          error instanceof Error ? error.message : 'An error occurred',
+        color: 'destructive',
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -73,7 +143,12 @@ function Login({
           <form onSubmit={onSubmit}>
             <div className="grid gap-6">
               <div className="flex flex-col gap-4">
-                <Button type="button" variant="outline" className="w-full">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => signInWith('oauth_google')}
+                >
                   <Google className="mr-2 h-4 w-4" />
                   Login with Google
                 </Button>
@@ -119,9 +194,11 @@ function Login({
                 <Button
                   type="submit"
                   className="w-full"
-                  disabled={!loginForm.email || !loginForm.password}
+                  disabled={
+                    !loginForm.email || !loginForm.password || isLoading
+                  }
                 >
-                  Login
+                  {isLoading ? <Loader className="animate-spin" /> : 'Login'}
                 </Button>
               </div>
               <div className="text-center text-sm">
@@ -159,6 +236,26 @@ function SignUp({
     password: '',
   })
   const { isLoaded, signUp } = useSignUp()
+  const { signIn } = useSignIn()
+  if (!signIn) {
+    return null
+  }
+
+  function signInWith(strategy: OAuthStrategy) {
+    return signIn
+      ?.authenticateWithRedirect({
+        strategy,
+        redirectUrl: '/auth/sso-callback',
+        redirectUrlComplete: '/',
+      })
+      .then((res) => {
+        console.log(res)
+      })
+      .catch((err) => {
+        console.log(err.errors)
+        console.error(err, null, 2)
+      })
+  }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -187,6 +284,7 @@ function SignUp({
         toast({
           title: 'Error',
           description: 'An error occurred',
+          color: 'destructive',
         })
       }
     } finally {
@@ -207,7 +305,12 @@ function SignUp({
           <form onSubmit={onSubmit}>
             <div className="grid gap-6">
               <div className="flex flex-col gap-4">
-                <Button type="button" variant="outline" className="w-full">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => signInWith('oauth_google')}
+                >
                   <Google className="mr-2 h-4 w-4" />
                   Sign up with Google
                 </Button>
@@ -285,6 +388,7 @@ function SignUp({
                   {isLoading ? <Loader className="animate-spin" /> : 'Sign Up'}
                 </Button>
               </div>
+              <div id="clerk-captcha"></div>
               <div className="text-center text-sm">
                 Already have an account?{' '}
                 <button
@@ -313,7 +417,7 @@ const FormSchema = z.object({
   }),
 })
 
-export function InputOTPForm() {
+function InputOTPForm() {
   const [isLoading, setIsLoading] = useState(false)
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
