@@ -32,7 +32,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { type OAuthStrategy } from '@clerk/types'
 import { useRouter } from 'next/navigation'
 
-export function LoginForm() {
+export default function AuthForm() {
   const [currentStep, setCurrentStep] = useState<'login' | 'signup' | 'otp'>(
     'login',
   )
