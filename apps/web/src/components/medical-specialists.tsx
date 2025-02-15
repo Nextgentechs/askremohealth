@@ -12,13 +12,26 @@ import {
   type CarouselApi,
 } from './ui/carousel'
 import Autoplay from 'embla-carousel-autoplay'
+import { useRouter } from 'next-nprogress-bar'
+import { api } from '@web/trpc/react'
 
 function Specialty({ specialty, icon }: (typeof specialities)[0][0]) {
+  const { data: specialties } =
+      api.specialties.listSpecialties.useQuery()
+  
+  const specialtyId = specialties?.find((loadedSpecialty) => loadedSpecialty.name === specialty)?.id
+
   const [mouseOver, setMouseOver] = useState(false)
+
+  const router = useRouter()
+
   return (
     <Card
       onMouseEnter={() => setMouseOver(true)}
       onMouseLeave={() => setMouseOver(false)}
+      onClick={() => {
+		  router.push(`/doctors?specialty=${specialtyId}`)
+	  }}
       className="shadow-sm transition-transform duration-200 hover:scale-105 hover:cursor-pointer hover:text-primary"
     >
       <CardContent className="flex flex-col items-center justify-center gap-2 px-6 py-4 pb-0">
