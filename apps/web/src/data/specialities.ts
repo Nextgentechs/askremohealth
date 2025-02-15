@@ -1,7 +1,7 @@
 const specialities = [
   [
     {
-      specialty: 'General Practitioner',
+      specialty: 'General Physician',
       icon: '/assets/specialities/general.svg',
     },
 
@@ -18,7 +18,7 @@ const specialities = [
       icon: '/assets/specialities/dentist.svg',
     },
     {
-      specialty: 'Gynecologist',
+      specialty: 'Obstetrician and Gynecologist',
       icon: '/assets/specialities/gynacologist.svg',
     },
     {
@@ -26,7 +26,7 @@ const specialities = [
       icon: '/assets/specialities/dermatologist.svg',
     },
     {
-      specialty: 'ENT Specialist',
+      specialty: 'E.N.T. Specialist',
       icon: '/assets/specialities/ent-specialist.svg',
     },
     {
@@ -47,7 +47,7 @@ const specialities = [
       icon: '/assets/specialities/allergist.svg',
     },
     {
-      specialty: 'Nutritionist',
+      specialty: 'Nutrition Dietician',
       icon: '/assets/specialities/nutritionist.svg',
     },
   ],
@@ -65,7 +65,7 @@ const specialities = [
       icon: '/assets/specialities/neurologist.svg',
     },
     {
-      specialty: 'Family Medicine',
+      specialty: 'Family Physician',
       icon: '/assets/specialities/family.svg',
     },
 
@@ -98,7 +98,7 @@ const specialities = [
       icon: '/assets/specialities/rheumatologist.svg',
     },
     {
-      specialty: 'Chiropodist',
+      specialty: 'Chiropodist/Podiatrist',
       icon: '/assets/specialities/chiropodist.svg',
     },
   ],
@@ -112,7 +112,7 @@ const specialities = [
       icon: '/assets/specialities/neurosurgeon.svg',
     },
     {
-      specialty: 'Oral Surgeon',
+      specialty: 'Oral & Maxillofacial Surgeon',
       icon: '/assets/specialities/oral-surgeon.svg',
     },
     {
@@ -132,7 +132,7 @@ const specialities = [
       icon: '/assets/specialities/physiatrist.svg',
     },
     {
-      specialty: 'Pharmacotherapist',
+      specialty: 'Pharmacotherapist and Analyst',
       icon: '/assets/specialities/pharmacotherapist.svg',
     },
     {
@@ -140,11 +140,11 @@ const specialities = [
       icon: '/assets/specialities/occupational-therapist.svg',
     },
     {
-      specialty: 'Infectious Disease',
+      specialty: 'Infectious Disease Specialist',
       icon: '/assets/specialities/infectious.svg',
     },
     {
-      specialty: 'Hospice Care',
+      specialty: 'Hospice and Palliative Medicine Specialist',
       icon: '/assets/specialities/hospice.svg',
     },
   ],
