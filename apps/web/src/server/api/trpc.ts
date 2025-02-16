@@ -105,7 +105,7 @@ const authMiddleware = t.middleware(({ ctx, next }) => {
 
 const doctorMiddleware = t.middleware(({ ctx, next }) => {
   if (!ctx.user) throw new TRPCError({ code: 'UNAUTHORIZED' })
-  if (ctx.user.role !== 'doctor') throw new TRPCError({ code: 'FORBIDDEN' })
+  if (ctx.user.role !== 'specialist') throw new TRPCError({ code: 'FORBIDDEN' })
   return next({ ctx: { session: ctx.session, user: ctx.user } })
 })
 
