@@ -18,12 +18,12 @@ export async function OPTIONS() {
   return response
 }
 
-async function handler(req: Request): Promise<Response> {
+async function handler(req: Request) {
   const response = await fetchRequestHandler({
     endpoint: '/api/trpc',
     router: appRouter,
     req,
-    createContext: () => createTRPCContext({ auth: null, req }),
+    createContext: () => createTRPCContext({ req }),
     onError({ error, path }) {
       console.error(
         `❌ tRPC failed on ${path ?? '<no-path>'}: ${error.message}`,
