@@ -12,9 +12,6 @@ export const getDoctors = adminProcedure
     const [total, data] = await Promise.all([
       ctx.db.select({ count: count() }).from(doctors),
       ctx.db.query.doctors.findMany({
-        with: {
-          user: true,
-        },
         offset: Math.max(1, (input.page - 1) * input.limit),
         limit: input.limit,
         orderBy: (doctors, { desc }) => [
@@ -46,11 +43,6 @@ export const getDoctor = adminProcedure
     const doctor = await ctx.db.query.doctors.findFirst({
       where: (doctor, { eq }) => eq(doctor.id, input.id),
       with: {
-        user: {
-          with: {
-            profilePicture: true,
-          },
-        },
         certificates: true,
         specialty: true,
         facility: true,

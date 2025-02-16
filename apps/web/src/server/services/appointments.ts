@@ -5,7 +5,7 @@ import { TRPCError } from '@trpc/server'
 import {
   type DoctorAppointmentListSchema,
   type NewAppointmentSchema,
-} from '../api/validation'
+} from '../api/validators'
 import { AppointmentStatus } from '../utils'
 
 import { lte, type InferSelectModel } from 'drizzle-orm'
