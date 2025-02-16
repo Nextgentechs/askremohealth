@@ -21,7 +21,9 @@ import { NextRequest } from 'next/server'
  */
 
 export const createTRPCContext = async (opts: { req: Request }) => {
-  const nextReq = new NextRequest(opts.req)
+  // Clone the request before creating NextRequest to avoid body stream issues
+  const reqClone = opts.req.clone()
+  const nextReq = new NextRequest(reqClone)
   const auth = getAuth(nextReq)
   const source = opts.req.headers.get('user-agent')
 

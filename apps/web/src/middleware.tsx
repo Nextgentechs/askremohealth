@@ -27,7 +27,9 @@ export default clerkMiddleware(async (auth, req) => {
       sessionClaims?.metadata.role !== 'specialist' ||
       !sessionClaims?.metadata.onboardingComplete
     ) {
-      return NextResponse.redirect(new URL('/specialist/onboarding', req.url))
+      return NextResponse.redirect(
+        new URL('/specialist/onboarding/personal-details', req.url),
+      )
     }
   }
 
