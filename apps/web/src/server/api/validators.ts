@@ -149,3 +149,12 @@ export const professionalDetailsSchema = z.object({
 export type ProfessionalDetailsSchema = z.infer<
   typeof professionalDetailsSchema
 >
+
+export const availabilityDetailsSchema = z.object({
+  consultationFee: z.string().transform((val) => Number(val)),
+  appointmentDuration: z.string().transform((val) => Number(val)),
+  operatingHours: z.array(operatingHoursSchema),
+})
+export type AvailabilityDetailsSchema = z.infer<
+  typeof availabilityDetailsSchema
+>

@@ -2,6 +2,7 @@ import { doctorProcedure, procedure, publicProcedure } from '../trpc'
 import { z } from 'zod'
 import { Doctors } from '@web/server/services/doctors'
 import {
+  availabilityDetailsSchema,
   doctorAppointmentListSchema,
   doctorListSchema,
   doctorSignupSchema,
@@ -23,6 +24,12 @@ export const updateProfessionalDetails = procedure
   .input(professionalDetailsSchema)
   .mutation(async ({ input, ctx }) => {
     return Doctors.updateProfessionalDetails(input, ctx.user.id ?? '')
+  })
+
+export const updateAvailabilityDetails = procedure
+  .input(availabilityDetailsSchema)
+  .mutation(async ({ input, ctx }) => {
+    return Doctors.updateAvailabilityDetails(input, ctx.user.id ?? '')
   })
 
 export const signup = publicProcedure

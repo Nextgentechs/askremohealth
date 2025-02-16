@@ -7,11 +7,12 @@ const isProtectedRoute = createRouteMatcher([
   '/profile',
   '/admin',
   '/doctors/:id/book',
+  '/specialist/(.*)',
 ])
 const isAdminRoute = createRouteMatcher(['/admin'])
 const isSpecialistRoute = createRouteMatcher([
   '/specialist/patients',
-  '/specialist/upcomming',
+  '/specialist/upcoming',
   '/specialist/online',
   '/specialist/physical',
   '/specialist/profile',
@@ -23,10 +24,7 @@ export default clerkMiddleware(async (auth, req) => {
   if (isProtectedRoute(req)) await auth.protect()
 
   if (isSpecialistRoute(req)) {
-    if (
-      sessionClaims?.metadata.role !== 'specialist' ||
-      !sessionClaims?.metadata.onboardingComplete
-    ) {
+    if (!sessionClaims?.metadata.onboardingComplete) {
       return NextResponse.redirect(
         new URL('/specialist/onboarding/personal-details', req.url),
       )
