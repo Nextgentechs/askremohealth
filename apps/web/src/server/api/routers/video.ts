@@ -6,7 +6,7 @@ import { env } from '@web/env'
 import { db } from '@web/server/db'
 import { eq, inArray } from 'drizzle-orm'
 import { appointments } from '@web/server/db/schema'
-import { AppointmentStatus } from '../validation'
+import { AppointmentStatus } from '../validators'
 
 const twilioClient = twilio(env.TWILIO_ACCOUNT_SID, env.TWILIO_AUTH_TOKEN)
 const AccessToken = twilio.jwt.AccessToken

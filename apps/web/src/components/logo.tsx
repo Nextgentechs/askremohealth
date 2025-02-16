@@ -5,9 +5,12 @@ import Link from 'next/link'
 
 type LogoProps = Omit<ImageProps, 'src' | 'alt'>
 
-export default function Logo({ ...props }: LogoProps) {
+export default function Logo({
+  href = '/',
+  ...props
+}: LogoProps & { href?: string }) {
   return (
-    <Link href="/">
+    <Link href={href}>
       <Image
         src="/assets/logo.svg"
         alt="askvirtualhealthcare logo"

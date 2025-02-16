@@ -5,7 +5,7 @@ import { appointments } from '@web/server/db/schema'
 import { AppointmentStatus } from '@web/server/utils'
 import Appointments from '@web/server/services/appointments'
 import { db } from '@web/server/db'
-import { appointmentListSchema, newAppointmentSchema } from '../validation'
+import { appointmentListSchema, newAppointmentSchema } from '../validators'
 import { currentUser as clerkCurrentUser } from '@clerk/nextjs/server'
 
 export const signOut = procedure.mutation(async ({ ctx }) => {
@@ -28,14 +28,14 @@ export const details = procedure
 export const createAppointment = publicProcedure
   .input(newAppointmentSchema)
   .mutation(async ({ ctx, input }) => {
-    const user = await ctx.db.query.users.findFirst({
+    const user = await ctx.db.query.patients.findFirst({
       where: (user, { eq }) => eq(user.phone, input.phone),
     })
     if (!user) {
       await Appointments.createNewUserAppointment(input)
       return
     }
-    if (user.role === 'doctor') {
+    if (ctx.user?.role === 'specialist') {
       await Appointments.createDoctorAppointment(
         user,
         input.date,

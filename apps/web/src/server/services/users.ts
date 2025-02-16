@@ -1,15 +1,14 @@
 import { count, and, eq, type InferInsertModel } from 'drizzle-orm'
-import { appointmentLogs, appointments, users } from '../db/schema'
+import { appointmentLogs, appointments } from '../db/schema'
 import { db } from '../db'
 import { TRPCError } from '@trpc/server'
-import { lucia } from '@web/lib/lucia'
 import bcrypt from 'bcrypt'
 import { type Context } from '../api/trpc'
 import { cookies } from 'next/headers'
 import {
   AppointmentStatus,
   type AppointmentListSchema,
-} from '../api/validation'
+} from '../api/validators'
 
 export class User {
   static async createUser(params: InferInsertModel<typeof users>) {
