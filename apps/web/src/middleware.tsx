@@ -1,6 +1,7 @@
 import { clerkMiddleware } from '@clerk/nextjs/server'
 import { createRouteMatcher } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
+
 const isProtectedRoute = createRouteMatcher([
   '/appointments',
   '/profile',
@@ -8,12 +9,29 @@ const isProtectedRoute = createRouteMatcher([
   '/doctors/:id/book',
 ])
 const isAdminRoute = createRouteMatcher(['/admin'])
+const isSpecialistRoute = createRouteMatcher([
+  '/specialist/patients',
+  '/specialist/upcomming',
+  '/specialist/online',
+  '/specialist/physical',
+  '/specialist/profile',
+])
 
 export default clerkMiddleware(async (auth, req) => {
+  const { sessionClaims } = await auth()
+
   if (isProtectedRoute(req)) await auth.protect()
 
+  if (isSpecialistRoute(req)) {
+    if (
+      sessionClaims?.metadata.role !== 'specialist' ||
+      !sessionClaims?.metadata.onboardingComplete
+    ) {
+      return NextResponse.redirect(new URL('/specialist/onboarding', req.url))
+    }
+  }
+
   if (isAdminRoute(req)) {
-    const { sessionClaims } = await auth()
     const isAdmin = sessionClaims?.metadata.role === 'admin'
     if (!isAdmin) {
       return NextResponse.redirect(new URL('/', req.url))
