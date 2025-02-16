@@ -25,6 +25,7 @@ import { KENYA_COUNTIES } from '../data/kenya-counties'
 import {
   type PersonalDetailsSchema,
   type DoctorSignupSchema,
+  type ProfessionalDetailsSchema,
 } from '../api/validators'
 import { TRPCError } from '@trpc/server'
 import bcrypt from 'bcrypt'
@@ -46,17 +47,10 @@ type FilterInput = {
 }
 
 export class Doctors {
-  static async personalDetails(input: PersonalDetailsSchema, userId: string) {
-    const doctor = await db.query.doctors.findFirst({
-      where: (doctor, { eq }) => eq(doctor.id, userId),
-    })
-    if (doctor) {
-      throw new TRPCError({
-        code: 'CONFLICT',
-        message: 'Doctor already exists',
-      })
-    }
-
+  static async updatePersonalDetails(
+    input: PersonalDetailsSchema,
+    userId: string,
+  ) {
     await db.transaction(async (trx) => {
       const [doctor] = await trx
         .insert(doctorsTable)
@@ -71,6 +65,19 @@ export class Doctors {
           title: input.title,
           dob: new Date(input.dob),
           status: 'pending',
+        })
+        .onConflictDoUpdate({
+          target: doctorsTable.id,
+          set: {
+            firstName: input.firstName,
+            lastName: input.lastName,
+            email: input.email,
+            phone: input.phone,
+            bio: input.bio,
+            gender: input.gender,
+            title: input.title,
+            dob: new Date(input.dob),
+          },
         })
         .returning()
 
@@ -102,6 +109,61 @@ export class Doctors {
         url,
         path: pathname,
       })
+    })
+
+    return { success: true }
+  }
+
+  static async updateProfessionalDetails(
+    input: ProfessionalDetailsSchema,
+    userId: string,
+  ) {
+    await db.transaction(async (trx) => {
+      const doctor = await db.query.doctors.findFirst({
+        where: (doctor) => eq(doctor.id, userId),
+      })
+
+      if (!doctor) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Doctor not found',
+        })
+      }
+
+      const facility = await Facility.register(input.facility)
+
+      await trx
+        .update(doctorsTable)
+        .set({
+          specialty: input.specialty,
+          subSpecialties: input.subSpecialty.map((id) => ({ id })),
+          experience: input.experience,
+          facility: facility?.placeId,
+          licenseNumber: input.registrationNumber,
+        })
+        .where(eq(doctorsTable.id, userId))
+
+      if (input.medicalLicense) {
+        const buffer = Buffer.from(
+          input.medicalLicense.replace(/^data:application\/pdf;base64,/, ''),
+          'base64',
+        )
+
+        const { url, pathname } = await put(
+          `documents/${userId}/${'medical-license'}`,
+          buffer,
+          {
+            access: 'public',
+            contentType: `application/pdf`,
+          },
+        )
+
+        await trx.insert(certificates).values({
+          doctorId: userId,
+          name: pathname,
+          url,
+        })
+      }
     })
 
     return { success: true }

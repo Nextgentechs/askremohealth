@@ -1,6 +1,5 @@
 'use client'
-import { useUser } from '@clerk/nextjs'
-import { User } from '@clerk/nextjs/server'
+
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@web/components/ui/button'
 import { Input } from '@web/components/ui/input'
@@ -88,7 +87,7 @@ export default function PersonalDetails() {
 
   const router = useRouter()
   const { toast } = useToast()
-  const { mutateAsync } = api.doctors.personalDetails.useMutation()
+  const { mutateAsync } = api.doctors.updatePersonalDetails.useMutation()
 
   async function onSubmit(data: PersonalDetails) {
     try {

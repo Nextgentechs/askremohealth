@@ -137,3 +137,15 @@ export const personalDetailsSchema = z.object({
   profilePicture: z.string(),
 })
 export type PersonalDetailsSchema = z.infer<typeof personalDetailsSchema>
+
+export const professionalDetailsSchema = z.object({
+  specialty: z.string(),
+  subSpecialty: z.array(z.string()),
+  facility: z.string(),
+  experience: z.number(),
+  registrationNumber: z.string(),
+  medicalLicense: z.string().optional(),
+})
+export type ProfessionalDetailsSchema = z.infer<
+  typeof professionalDetailsSchema
+>
