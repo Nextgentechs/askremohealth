@@ -1,6 +1,16 @@
 import { clerkMiddleware } from '@clerk/nextjs/server'
+import { createRouteMatcher } from '@clerk/nextjs/server'
 
-export default clerkMiddleware()
+const isProtectedRoute = createRouteMatcher([
+  '/appointments',
+  '/profile',
+  '/admin',
+  '/doctors/:id/book',
+])
+
+export default clerkMiddleware(async (auth, req) => {
+  if (isProtectedRoute(req)) await auth.protect()
+})
 
 export const config = {
   matcher: [
@@ -10,38 +20,3 @@ export const config = {
     '/(api|trpc)(.*)',
   ],
 }
-
-// import { NextResponse } from 'next/server'
-// import type { NextRequest } from 'next/server'
-
-// const protectedPaths = ['/appointments', '/profile']
-// const publicPaths = [
-//   '/login',
-//   '/signup',
-//   '/about-us',
-//   '/contact-us',
-//   '/doctors/:path*',
-//   '/find-hospital',
-//   '/api',
-// ]
-
-// export async function middleware(request: NextRequest) {
-//   const { pathname } = request.nextUrl
-//   if (publicPaths.some((path) => pathname.startsWith(path))) {
-//     return NextResponse.next()
-//   }
-
-//   if (protectedPaths.some((path) => pathname.startsWith(path))) {
-//     const sessionId = request.cookies.get('auth_session')?.value
-//     if (!sessionId) {
-//       return NextResponse.redirect(new URL('/login', request.url))
-//     }
-//     return NextResponse.next()
-//   }
-
-//   return NextResponse.next()
-// }
-
-// export const config = {
-//   matcher: ['/((?!_next/static|_next/image|favicon.ico|public).*)'],
-// }

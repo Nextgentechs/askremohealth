@@ -30,7 +30,7 @@ import { useSignIn, useSignUp } from '@clerk/nextjs'
 import { Loader } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { type OAuthStrategy } from '@clerk/types'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 export default function AuthForm() {
   const [currentStep, setCurrentStep] = useState<'login' | 'signup' | 'otp'>(
@@ -86,21 +86,16 @@ function Login({
     email: '',
     password: '',
   })
-  const router = useRouter()
-  const { signIn } = useSignIn()
-  if (!signIn) {
-    return null
-  }
+  const { signIn, setActive, isLoaded } = useSignIn()
+  const params = useSearchParams()
+  const redirectUrl = params.get('redirect_url') ?? '/appointments'
 
   function signInWith(strategy: OAuthStrategy) {
     return signIn
       ?.authenticateWithRedirect({
         strategy,
         redirectUrl: '/auth/sso-callback',
-        redirectUrlComplete: '/',
-      })
-      .then((res) => {
-        console.log(res)
+        redirectUrlComplete: redirectUrl,
       })
       .catch((err) => {
         console.log(err.errors)
@@ -111,12 +106,21 @@ function Login({
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setIsLoading(true)
+    if (!isLoaded) {
+      return
+    }
+
     try {
-      await signIn?.create({
+      const signInAttempt = await signIn?.create({
         identifier: loginForm.email,
         password: loginForm.password,
       })
-      router.push('/dashboard')
+      if (signInAttempt?.status === 'complete') {
+        await setActive({
+          session: signInAttempt.createdSessionId,
+          redirectUrl: redirectUrl,
+        })
+      }
     } catch (error) {
       console.error(error)
       toast({
@@ -135,9 +139,7 @@ function Login({
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Welcome back</CardTitle>
-          <CardDescription>
-            Login with your Apple or Google account
-          </CardDescription>
+          <CardDescription>Login to complete your booking</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit}>
@@ -237,6 +239,8 @@ function SignUp({
   })
   const { isLoaded, signUp } = useSignUp()
   const { signIn } = useSignIn()
+  const params = useSearchParams()
+  const redirectUrl = params.get('redirect_url') ?? '/appointments'
   if (!signIn) {
     return null
   }
@@ -246,10 +250,7 @@ function SignUp({
       ?.authenticateWithRedirect({
         strategy,
         redirectUrl: '/auth/sso-callback',
-        redirectUrlComplete: '/',
-      })
-      .then((res) => {
-        console.log(res)
+        redirectUrlComplete: redirectUrl,
       })
       .catch((err) => {
         console.log(err.errors)
@@ -270,6 +271,7 @@ function SignUp({
         lastName: signUpForm.lastName,
         emailAddress: signUpForm.email,
         password: signUpForm.password,
+        redirectUrl: redirectUrl,
       })
 
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
@@ -427,6 +429,8 @@ function InputOTPForm() {
   })
   const { toast } = useToast()
   const { isLoaded, signUp, setActive } = useSignUp()
+  const params = useSearchParams()
+  const redirectUrl = params.get('redirect_url') ?? '/appointments'
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     if (!isLoaded) return
@@ -437,10 +441,10 @@ function InputOTPForm() {
       })
 
       if (signUpAttempt.status === 'complete') {
-        setActive({ session: signUpAttempt.createdSessionId })
+        setActive({ session: signUpAttempt.createdSessionId, redirectUrl })
         toast({
           title: 'Account created',
-          description: 'You can now login',
+          description: 'Redirecting...',
         })
       }
     } catch (error) {
