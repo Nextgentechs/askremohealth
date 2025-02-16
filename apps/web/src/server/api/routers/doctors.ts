@@ -6,16 +6,23 @@ import {
   doctorListSchema,
   doctorSignupSchema,
   personalDetailsSchema,
+  professionalDetailsSchema,
 } from '../validators'
 import Appointments from '@web/server/services/appointments'
 import assert from 'assert'
 import { eq, ilike, or } from 'drizzle-orm'
 import { patients as patientsTable } from '@web/server/db/schema'
 
-export const personalDetails = procedure
+export const updatePersonalDetails = procedure
   .input(personalDetailsSchema)
   .mutation(async ({ input, ctx }) => {
-    return Doctors.personalDetails(input, ctx.user.id ?? '')
+    return Doctors.updatePersonalDetails(input, ctx.user.id ?? '')
+  })
+
+export const updateProfessionalDetails = procedure
+  .input(professionalDetailsSchema)
+  .mutation(async ({ input, ctx }) => {
+    return Doctors.updateProfessionalDetails(input, ctx.user.id ?? '')
   })
 
 export const signup = publicProcedure
