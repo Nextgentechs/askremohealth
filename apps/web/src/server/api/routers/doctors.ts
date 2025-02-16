@@ -33,7 +33,7 @@ export const login = publicProcedure
 export const currentDoctor = publicProcedure.query(async ({ ctx }) => {
   if (!ctx.user) return null
   const doctor = await ctx.db.query.doctors.findFirst({
-    where: (doctor) => eq(doctor.id, ctx.user!.id),
+    where: (doctor) => eq(doctor.id, ctx.user.id ?? ''),
     with: {
       specialty: true,
       user: {
@@ -50,7 +50,7 @@ export const currentDoctor = publicProcedure.query(async ({ ctx }) => {
 })
 
 export const signOut = doctorProcedure.mutation(async ({ ctx }) => {
-  if (ctx.session) await lucia.invalidateSession(ctx.session.id)
+  if (ctx.session) await lucia.invalidateSession(ctx.session)
   const cookie = lucia.createBlankSessionCookie()
   const cookieStore = await cookies()
   cookieStore.set(cookie.name, cookie.value, cookie.attributes)
@@ -108,7 +108,7 @@ export const confirmAppointment = doctorProcedure
 export const declineAppointment = doctorProcedure
   .input(z.object({ appointmentId: z.string() }))
   .mutation(async ({ ctx, input }) => {
-    return Doctors.declineAppointment(input.appointmentId, ctx.user.id)
+    return Doctors.declineAppointment(input.appointmentId, ctx.user.id ?? '')
   })
 
 export const cancelAppointment = doctorProcedure
@@ -127,7 +127,7 @@ export const postAppointment = doctorProcedure
   )
   .mutation(async ({ input, ctx }) => {
     return Doctors.postAppointment(
-      ctx.user.id,
+      ctx.user.id ?? '',
       input.appointmentId,
       input.doctorNotes,
       input.attachment,
@@ -142,7 +142,7 @@ export const patients = doctorProcedure
     }),
   )
   .query(async ({ ctx, input }) => {
-    return Doctors.patients(ctx.user.id, input.page, input.limit)
+    return Doctors.patients(ctx.user.id ?? '', input.page, input.limit)
   })
 
 export const searchPatient = doctorProcedure

@@ -58,7 +58,7 @@ export const generateToken = procedure
       env.TWILIO_ACCOUNT_SID,
       env.TWILIO_API_KEY_SID,
       env.TWILIO_API_KEY_SECRET,
-      { identity: ctx.user.id },
+      { identity: ctx.user.id ?? '' },
     )
 
     const videoGrant = new VideoGrant({
@@ -68,7 +68,7 @@ export const generateToken = procedure
 
     return {
       token: token.toJwt(),
-      identity: ctx.user.id,
+      identity: ctx.user.id ?? '',
       roomName: input.roomName,
     }
   })
