@@ -92,7 +92,7 @@ export class User {
       .set({ password: hashedPassword })
       .where(eq(users.id, user.id))
 
-    if (ctx.session) await lucia.invalidateSession(ctx.session.id)
+    if (ctx.session) await lucia.invalidateSession(ctx.session ?? '')
     const cookie = lucia.createBlankSessionCookie()
     const cookieStore = await cookies()
     cookieStore.set(cookie.name, cookie.value, cookie.attributes)
@@ -279,7 +279,7 @@ export class User {
   }
 
   static async signOut(ctx: Context) {
-    if (ctx.session) await lucia.invalidateSession(ctx.session.id)
+    if (ctx.session) await lucia.invalidateSession(ctx.session ?? '')
     const cookie = lucia.createBlankSessionCookie()
     const cookieStore = await cookies()
     cookieStore.set(cookie.name, cookie.value, cookie.attributes)
