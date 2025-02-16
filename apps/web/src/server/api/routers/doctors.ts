@@ -1,17 +1,22 @@
-import { doctorProcedure, publicProcedure } from '../trpc'
+import { doctorProcedure, procedure, publicProcedure } from '../trpc'
 import { z } from 'zod'
 import { Doctors } from '@web/server/services/doctors'
 import {
   doctorAppointmentListSchema,
   doctorListSchema,
   doctorSignupSchema,
-} from '../validation'
-import { lucia } from '@web/lib/lucia'
-import { cookies } from 'next/headers'
+  personalDetailsSchema,
+} from '../validators'
 import Appointments from '@web/server/services/appointments'
 import assert from 'assert'
 import { eq, ilike, or } from 'drizzle-orm'
-import { users, patients as patientsTable } from '@web/server/db/schema'
+import { patients as patientsTable } from '@web/server/db/schema'
+
+export const personalDetails = procedure
+  .input(personalDetailsSchema)
+  .mutation(async ({ input, ctx }) => {
+    return Doctors.personalDetails(input, ctx.user.id ?? '')
+  })
 
 export const signup = publicProcedure
   .input(doctorSignupSchema)
@@ -36,24 +41,12 @@ export const currentDoctor = publicProcedure.query(async ({ ctx }) => {
     where: (doctor) => eq(doctor.id, ctx.user.id ?? ''),
     with: {
       specialty: true,
-      user: {
-        with: {
-          profilePicture: true,
-        },
-      },
       facility: true,
       operatingHours: true,
       certificates: true,
     },
   })
   return doctor ?? null
-})
-
-export const signOut = doctorProcedure.mutation(async ({ ctx }) => {
-  if (ctx.session) await lucia.invalidateSession(ctx.session)
-  const cookie = lucia.createBlankSessionCookie()
-  const cookieStore = await cookies()
-  cookieStore.set(cookie.name, cookie.value, cookie.attributes)
 })
 
 export const list = publicProcedure
@@ -151,15 +144,14 @@ export const searchPatient = doctorProcedure
     return ctx.db
       .select({
         id: patientsTable.id,
-        firstName: users.firstName,
-        lastName: users.lastName,
+        firstName: patientsTable.firstName,
+        lastName: patientsTable.lastName,
       })
       .from(patientsTable)
-      .innerJoin(users, eq(patientsTable.id, users.id))
       .where(
         or(
-          ilike(users.firstName, `%${input.query}%`),
-          ilike(users.lastName, `%${input.query}%`),
+          ilike(patientsTable.firstName, `%${input.query}%`),
+          ilike(patientsTable.lastName, `%${input.query}%`),
         ),
       )
       .limit(6)

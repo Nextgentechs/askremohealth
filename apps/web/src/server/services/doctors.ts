@@ -8,7 +8,6 @@ import {
   facilities,
   operatingHours,
   profilePictures,
-  users,
 } from '@web/server/db/schema'
 import {
   count,
@@ -23,13 +22,15 @@ import {
 } from 'drizzle-orm'
 import { db } from '@web/server/db'
 import { KENYA_COUNTIES } from '../data/kenya-counties'
-import { type DoctorSignupSchema } from '../api/validation'
+import {
+  type PersonalDetailsSchema,
+  type DoctorSignupSchema,
+} from '../api/validators'
 import { TRPCError } from '@trpc/server'
 import bcrypt from 'bcrypt'
 import { Facility } from './facilities'
 import { put } from '@vercel/blob'
 import sharp from 'sharp'
-import { lucia } from '@web/lib/lucia'
 import { cookies } from 'next/headers'
 import { AppointmentStatus } from '../utils'
 
@@ -45,6 +46,67 @@ type FilterInput = {
 }
 
 export class Doctors {
+  static async personalDetails(input: PersonalDetailsSchema, userId: string) {
+    const doctor = await db.query.doctors.findFirst({
+      where: (doctor, { eq }) => eq(doctor.id, userId),
+    })
+    if (doctor) {
+      throw new TRPCError({
+        code: 'CONFLICT',
+        message: 'Doctor already exists',
+      })
+    }
+
+    await db.transaction(async (trx) => {
+      const [doctor] = await trx
+        .insert(doctorsTable)
+        .values({
+          id: userId,
+          firstName: input.firstName,
+          lastName: input.lastName,
+          email: input.email,
+          phone: input.phone,
+          bio: input.bio,
+          gender: input.gender,
+          title: input.title,
+          dob: new Date(input.dob),
+          status: 'pending',
+        })
+        .returning()
+
+      if (!doctor) {
+        throw new TRPCError({
+          code: 'NOT_IMPLEMENTED',
+          message: 'Failed to create doctor',
+        })
+      }
+
+      const base64Data = input.profilePicture.replace(
+        /^data:image\/\w+;base64,/,
+        '',
+      )
+      const buffer = await sharp(Buffer.from(base64Data, 'base64'))
+        .resize(400, 400, { fit: 'cover', position: 'center' })
+        .webp({ quality: 80 })
+        .toBuffer()
+
+      const fileName = `profile-picture-${userId}.webp`
+
+      const { url, pathname } = await put(fileName, buffer, {
+        access: 'public',
+        contentType: `image/webp`,
+      })
+
+      await trx.insert(profilePictures).values({
+        doctorId: doctor.id,
+        url,
+        path: pathname,
+      })
+    })
+
+    return { success: true }
+  }
+
   static async signup(input: DoctorSignupSchema) {
     const user = await db.query.users.findFirst({
       where: (user, { eq }) => eq(user.phone, input.phone),
