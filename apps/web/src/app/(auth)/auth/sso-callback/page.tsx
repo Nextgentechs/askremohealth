@@ -7,7 +7,6 @@ export default function SSOCallback() {
   return (
     <>
       <AuthenticateWithRedirectCallback />
-      <div id="clerk-captcha"></div>
     </>
   )
 }

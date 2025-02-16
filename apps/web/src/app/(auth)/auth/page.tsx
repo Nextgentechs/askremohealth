@@ -1,5 +1,4 @@
 import AuthForm from '@web/components/auth-form'
-import Logo from '@web/components/logo'
 
 export default function LoginPage() {
   return (
