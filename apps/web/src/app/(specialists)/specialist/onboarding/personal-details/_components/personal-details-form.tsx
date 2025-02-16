@@ -89,7 +89,7 @@ export default function PersonalDetails() {
   const { toast } = useToast()
   const { mutateAsync } = api.doctors.updatePersonalDetails.useMutation()
 
-  async function onSubmit(data: PersonalDetails) {
+  const onSubmit = form.handleSubmit(async (data) => {
     try {
       const res = await mutateAsync(data)
       if (res.success) {
@@ -103,7 +103,7 @@ export default function PersonalDetails() {
         variant: 'destructive',
       })
     }
-  }
+  })
 
   return (
     <form className="space-y-8">
@@ -216,14 +216,15 @@ export default function PersonalDetails() {
         </div>
       </div>
 
-      <div
-        onClick={(e) => {
-          e.preventDefault()
-          form.handleSubmit(onSubmit)()
-        }}
-        className="fixed bottom-0 left-0 right-0 flex justify-end border-t border-t-border bg-background px-6 py-4 sm:px-12"
-      >
-        <Button size="lg" disabled={form.formState.isSubmitting}>
+      <div className="fixed bottom-0 left-0 right-0 flex justify-end border-t border-t-border bg-background px-6 py-4 sm:px-12">
+        <Button
+          size="lg"
+          disabled={form.formState.isSubmitting}
+          onClick={(e) => {
+            e.preventDefault()
+            onSubmit()
+          }}
+        >
           {form.formState.isSubmitting ? (
             <Loader className="h-4 w-4 animate-spin" />
           ) : (

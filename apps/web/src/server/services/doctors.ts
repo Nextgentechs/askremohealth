@@ -3,7 +3,6 @@ import {
   appointmentLogs,
   appointments,
   certificates,
-  doctors,
   doctors as doctorsTable,
   facilities,
   operatingHours,
@@ -24,16 +23,15 @@ import { db } from '@web/server/db'
 import { KENYA_COUNTIES } from '../data/kenya-counties'
 import {
   type PersonalDetailsSchema,
-  type DoctorSignupSchema,
   type ProfessionalDetailsSchema,
+  type AvailabilityDetailsSchema,
 } from '../api/validators'
 import { TRPCError } from '@trpc/server'
-import bcrypt from 'bcrypt'
 import { Facility } from './facilities'
 import { put } from '@vercel/blob'
 import sharp from 'sharp'
-import { cookies } from 'next/headers'
 import { AppointmentStatus } from '../utils'
+import { clerkClient } from '@clerk/nextjs/server'
 
 type FilterInput = {
   specialty?: string
@@ -169,139 +167,33 @@ export class Doctors {
     return { success: true }
   }
 
-  static async signup(input: DoctorSignupSchema) {
-    const user = await db.query.users.findFirst({
-      where: (user, { eq }) => eq(user.phone, input.phone),
-    })
-    if (user) {
-      throw new TRPCError({
-        code: 'CONFLICT',
-        message: 'User already exists',
-      })
-    }
-
+  static async updateAvailabilityDetails(
+    input: AvailabilityDetailsSchema,
+    userId: string,
+  ) {
+    const client = await clerkClient()
     await db.transaction(async (trx) => {
-      const hashedPassword = await bcrypt.hash(input.password, 10)
-
-      const [user] = await trx
-        .insert(users)
-        .values({
-          firstName: input.firstName,
-          lastName: input.lastName,
-          email: input.email,
-          phone: input.phone,
-          password: hashedPassword,
-          role: 'doctor',
-          dob: new Date(input.dob),
+      await trx
+        .update(doctorsTable)
+        .set({
+          consultationFee: input.consultationFee,
         })
-        .returning()
+        .where(eq(doctorsTable.id, userId))
 
-      if (!user) {
-        throw new TRPCError({
-          code: 'NOT_IMPLEMENTED',
-          message: 'Failed to create user',
+      await trx
+        .update(operatingHours)
+        .set({
+          schedule: input.operatingHours,
+          consultationDuration: input.appointmentDuration,
         })
-      }
-
-      const facility = await Facility.register(input.facility)
-
-      await trx.insert(doctors).values({
-        id: user.id,
-        bio: input.bio,
-        specialty: input.specialty,
-        subSpecialties: input.subSpecialty.map((id) => ({ id })),
-        experience: input.experience,
-        facility: facility?.placeId,
-        licenseNumber: input.registrationNumber,
-        gender: input.gender,
-        title: input.title,
-        consultationFee: input.consultationFee,
+        .where(eq(operatingHours.doctorId, userId))
+      await client.users.updateUser(userId, {
+        publicMetadata: {
+          onboardingComplete: true,
+          role: 'specialist',
+        },
       })
-
-      await trx.insert(operatingHours).values({
-        doctorId: user.id,
-        schedule: input.operatingHours,
-        consultationDuration: input.appointmentDuration,
-      })
-
-      if (input.medicalLicense) {
-        const buffer = Buffer.from(
-          input.medicalLicense.replace(/^data:application\/pdf;base64,/, ''),
-          'base64',
-        )
-
-        const { url, pathname } = await put(
-          `documents/${user.id}/${'medical-license'}`,
-          buffer,
-          {
-            access: 'public',
-            contentType: `application/pdf`,
-          },
-        )
-
-        await trx.insert(certificates).values({
-          doctorId: user.id,
-          name: pathname,
-          url,
-        })
-      }
-
-      if (input.profilePicture) {
-        const base64Data = input.profilePicture.replace(
-          /^data:image\/\w+;base64,/,
-          '',
-        )
-        const buffer = await sharp(Buffer.from(base64Data, 'base64'))
-          .resize(400, 400, {
-            fit: 'cover',
-            position: 'center',
-          })
-          .webp({ quality: 80 })
-          .toBuffer()
-
-        const fileName = `profile-picture-${user.id}.webp`
-
-        const { url, pathname } = await put(fileName, buffer, {
-          access: 'public',
-          contentType: `image/webp`,
-        })
-
-        await trx.insert(profilePictures).values({
-          id: user.id,
-          url,
-          path: pathname,
-        })
-      }
     })
-
-    return { success: true }
-  }
-
-  static async login(input: { phone: string; password: string }) {
-    const user = await db.query.users.findFirst({
-      where: (user) => eq(user.phone, input.phone),
-    })
-
-    if (!user) {
-      throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: 'User not found',
-      })
-    }
-
-    const passwordMatch = await bcrypt.compare(input.password, user.password!)
-
-    if (!passwordMatch) {
-      throw new TRPCError({
-        code: 'UNAUTHORIZED',
-        message: 'Invalid password',
-      })
-    }
-
-    const session = await lucia.createSession(user.id, {})
-    const cookie = lucia.createSessionCookie(session.id)
-    const cookieStore = await cookies()
-    cookieStore.set(cookie.name, cookie.value, cookie.attributes)
 
     return { success: true }
   }
@@ -408,16 +300,7 @@ export class Doctors {
       limit,
       offset,
       with: {
-        user: {
-          columns: {
-            id: true,
-            firstName: true,
-            lastName: true,
-          },
-          with: {
-            profilePicture: true,
-          },
-        },
+        profilePicture: true,
         facility: {
           columns: {
             placeId: true,
@@ -494,16 +377,7 @@ export class Doctors {
     const doctor = await db.query.doctors.findFirst({
       where: (doctor, { eq }) => eq(doctor.id, id),
       with: {
-        user: {
-          columns: {
-            id: true,
-            firstName: true,
-            lastName: true,
-          },
-          with: {
-            profilePicture: true,
-          },
-        },
+        profilePicture: true,
         facility: {
           columns: {
             placeId: true,
@@ -565,25 +439,12 @@ export class Doctors {
             id: true,
           },
           with: {
-            user: {
-              columns: {
-                firstName: true,
-                lastName: true,
-              },
-            },
+            profilePicture: true,
           },
         },
         patient: {
           columns: {
             id: true,
-          },
-          with: {
-            user: {
-              columns: {
-                firstName: true,
-                lastName: true,
-              },
-            },
           },
         },
       },
@@ -743,29 +604,18 @@ export class Doctors {
           columns: {
             lastAppointment: true,
           },
-          with: {
-            user: {
-              columns: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                phone: true,
-                email: true,
-                dob: true,
-              },
-            },
-          },
         },
       },
       limit,
       offset,
     })
+    return
     return patients.map((patient) => ({
-      name: `${patient.patient.user.firstName} ${patient.patient.user.lastName}`,
+      name: `${patient.firstName} ${patient.patient.lastName}`,
       lastAppointment: patient.patient.lastAppointment,
-      phone: patient.patient.user.phone,
-      email: patient.patient.user.email,
-      dob: patient.patient.user.dob,
+      phone: patient.patient.phone,
+      email: patient.patient.email,
+      dob: patient.patient.dob,
     }))
   }
 }

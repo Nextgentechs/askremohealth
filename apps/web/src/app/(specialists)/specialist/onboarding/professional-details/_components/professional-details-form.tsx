@@ -197,11 +197,11 @@ export default function ProffesionalDetailsForm() {
   const { mutateAsync: updateProfessionalDetails } =
     api.doctors.updateProfessionalDetails.useMutation()
 
-  async function onSubmit(values: ProfessionalDetails) {
+  const onSubmit = form.handleSubmit(async (data) => {
     try {
-      const res = await updateProfessionalDetails(values)
+      const res = await updateProfessionalDetails(data)
       if (res.success) {
-        router.push('/specialist/onboarding/consultation-fee')
+        router.push('/specialist/onboarding/availability-details')
       }
     } catch (error) {
       console.error(error)
@@ -211,9 +211,9 @@ export default function ProffesionalDetailsForm() {
         variant: 'destructive',
       })
     }
-  }
+  })
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+    <form onSubmit={onSubmit} className="space-y-8">
       <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2 sm:gap-4">
         <div className="flex flex-col gap-2">
           <Label htmlFor="specialty">Specialty</Label>
@@ -385,14 +385,11 @@ export default function ProffesionalDetailsForm() {
           </p>
         </div>
       </div>
-      <div
-        onClick={(e) => {
-          e.preventDefault()
-          form.handleSubmit(onSubmit)()
-        }}
-        className="fixed bottom-0 left-0 right-0 flex justify-end border-t border-t-border bg-background px-6 py-4 sm:px-12"
-      >
-        <Button size="lg" disabled={form.formState.isSubmitting}>
+      <div className="fixed bottom-0 left-0 right-0 flex justify-end border-t border-t-border bg-background px-6 py-4 sm:px-12">
+        <Button
+          size="lg"
+          disabled={form.formState.isSubmitting || !form.formState.isValid}
+        >
           {form.formState.isSubmitting ? (
             <Loader className="h-4 w-4 animate-spin" />
           ) : (
