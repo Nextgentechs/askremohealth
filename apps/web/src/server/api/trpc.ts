@@ -9,87 +9,32 @@
 import { initTRPC, TRPCError } from '@trpc/server'
 import superjson from 'superjson'
 import { ZodError } from 'zod'
-
+import { getAuth } from '@clerk/nextjs/server'
 import { db } from '@web/server/db'
-import { type User } from 'lucia'
-import { type Session } from 'lucia'
-import { session } from 'src/lib/lucia'
-import { env } from '@web/env'
-import { jwtVerify } from 'jose'
-
-type SessionData =
-  | { user: User; session: Session }
-  | { user: User | null; session: null }
-
-type CreateContextOptions = SessionData
-
-async function createSession(request?: Request): Promise<SessionData> {
-  const authSession = await session()
-  if (authSession.user) return authSession
-
-  const accessToken = request?.headers.get('Authorization')?.split(' ')[1]
-  if (!accessToken) return { user: null, session: null }
-
-  try {
-    const secret = new TextEncoder().encode(env.JWT_SECRET)
-    const payload = await jwtVerify(accessToken, secret, {
-      algorithms: ['HS256'],
-      audience: 'https://www.askvirtualhealthcare.com/',
-      issuer: 'https://www.askvirtualhealthcare.com/',
-    })
-    if (!payload) return { user: null, session: null }
-
-    return {
-      user: {
-        id: payload.payload.id as string,
-        isAdmin: payload.payload.isAdmin as boolean,
-        role: payload.payload.role as 'patient' | 'doctor' | 'admin',
-      },
-      session: null,
-    }
-  } catch (error) {
-    console.error(error)
-    return { user: null, session: null }
-  }
-}
-
-const createInnerTRPCContext = (opts: CreateContextOptions) => {
-  return {
-    user: opts.user,
-    session: opts.session,
-    db,
-  }
-}
+import { NextRequest } from 'next/server'
 
 /**
  * 1. CONTEXT
- *
  * This section defines the "contexts" that are available in the backend API.
- *
  * These allow you to access things when processing a request, like the database, the session, etc.
- *
- * This helper generates the "internals" for a tRPC context. The API handler and RSC clients each
- * wrap this and provides the required context.
- *
  * @see https://trpc.io/docs/server/context
  */
 
-export const createTRPCContext = async (opts: {
-  req?: Request
-  auth: Session | null
-}) => {
-  const session = await createSession(opts.req)
+export const createTRPCContext = async (opts: { req: Request }) => {
+  const nextReq = new NextRequest(opts.req)
+  const auth = getAuth(nextReq)
+  const source = opts.req.headers.get('user-agent')
 
-  const source = opts.req?.headers.get('user-agent')
+  console.log('>>> tRPC Request from', source, 'by', auth.userId ?? 'unknown')
 
-  console.log(
-    '>>> tRPC Request from',
-    source,
-    'by',
-    session.user?.id ?? 'unknown',
-  )
-
-  return createInnerTRPCContext({ ...session })
+  return {
+    user: {
+      id: auth.userId,
+      role: auth.sessionClaims?.metadata.role,
+    },
+    session: auth.sessionId,
+    db,
+  }
 }
 
 export type Context = Awaited<ReturnType<typeof createTRPCContext>>
@@ -164,9 +109,13 @@ const doctorMiddleware = t.middleware(({ ctx, next }) => {
   return next({ ctx: { session: ctx.session, user: ctx.user } })
 })
 
+/**
+ * this filters out queries and mutations that are only accessible to admins
+ */
+
 const adminMiddleware = t.middleware(({ ctx, next }) => {
   if (!ctx.user) throw new TRPCError({ code: 'UNAUTHORIZED' })
-  if (!ctx.user.isAdmin) throw new TRPCError({ code: 'FORBIDDEN' })
+  if (ctx.user.role !== 'admin') throw new TRPCError({ code: 'FORBIDDEN' })
   return next({ ctx: { session: ctx.session, user: ctx.user } })
 })
 /**
