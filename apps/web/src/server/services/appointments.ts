@@ -123,15 +123,11 @@ export default class Appointments {
       },
       with: {
         patient: {
-          with: {
-            user: {
-              columns: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                phone: true,
-              },
-            },
+          columns: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            phone: true,
           },
         },
       },
