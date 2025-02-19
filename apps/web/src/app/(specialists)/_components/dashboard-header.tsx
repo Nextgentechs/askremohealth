@@ -1,6 +1,5 @@
 'use client'
 
-import { BellDot } from 'lucide-react'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -8,17 +7,13 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from '@web/components/ui/breadcrumb'
-import { Button } from '@web/components/ui/button'
 import { Separator } from '@web/components/ui/separator'
 import { SidebarTrigger } from '@web/components/ui/sidebar'
 import { usePathname } from 'next/navigation'
-import { ModeToggle } from '@web/components/mode-toggle'
 
 export default function DashboardHeader() {
   const pathname = usePathname()
-
   const pathSegments = pathname.split('/').filter(Boolean)
-
   const formattedPaths = pathSegments.map((segment) =>
     segment
       .split('-')
@@ -31,7 +26,7 @@ export default function DashboardHeader() {
       <div className="flex items-center gap-2 px-4">
         <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="mr-2 h-4" />
-        <Breadcrumb>
+        <Breadcrumb className="hidden md:block">
           <BreadcrumbList>
             {formattedPaths.map((path, index) => (
               <div key={index} className="inline-flex items-center gap-1.5">
@@ -43,20 +38,6 @@ export default function DashboardHeader() {
             ))}
           </BreadcrumbList>
         </Breadcrumb>
-      </div>
-
-      <div className="flex items-center gap-2 px-4">
-        <Button variant={'ghost'} size={'icon'} className="rounded-full">
-          <BellDot />
-        </Button>
-        <Button
-          variant={'ghost'}
-          size={'icon'}
-          className="rounded-full"
-          asChild
-        >
-          <ModeToggle />
-        </Button>
       </div>
     </header>
   )

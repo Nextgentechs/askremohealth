@@ -36,24 +36,14 @@ import {
 } from '@web/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@web/components/ui/avatar'
 import { api } from '@web/trpc/react'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import Link from 'next/link'
+import { useClerk } from '@clerk/nextjs'
 
 function NavUser() {
-  const router = useRouter()
+  const { signOut } = useClerk()
   const { isMobile } = useSidebar()
   const [doctor] = api.doctors.currentDoctor.useSuspenseQuery()
-
-  const { mutateAsync } = api.doctors.signOut.useMutation()
-  const utils = api.useUtils()
-
-  const handleSignout = async () => {
-    await mutateAsync()
-    await utils.users.currentUser.refetch()
-    await utils.invalidate()
-    router.refresh()
-    router.push('/auth')
-  }
 
   return (
     <SidebarMenu>
@@ -66,13 +56,13 @@ function NavUser() {
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage
-                  src={doctor?.user?.profilePicture?.url}
-                  alt={doctor?.user.firstName}
+                  src={doctor?.profilePicture?.url}
+                  alt={doctor?.firstName}
                 />
                 <AvatarFallback className="rounded-lg">CN</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">{`${doctor?.user.firstName} ${doctor?.user.lastName}`}</span>
+                <span className="truncate font-semibold">{`${doctor?.firstName} ${doctor?.lastName}`}</span>
                 <span className="truncate text-xs">
                   {doctor?.specialty?.name}
                 </span>
@@ -90,13 +80,13 @@ function NavUser() {
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage
-                    src={doctor?.user?.profilePicture?.url}
-                    alt={doctor?.user.firstName}
+                    src={doctor?.profilePicture.url}
+                    alt={doctor?.firstName}
                   />
                   <AvatarFallback className="rounded-lg">CN</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">{`${doctor?.user.firstName} ${doctor?.user?.lastName}`}</span>
+                  <span className="truncate font-semibold">{`${doctor?.firstName} ${doctor?.lastName}`}</span>
                   <span className="truncate text-xs">
                     {doctor?.specialty?.name}
                   </span>
@@ -111,7 +101,7 @@ function NavUser() {
                   My Profile
                 </DropdownMenuItem>
               </Link>
-              <DropdownMenuItem onClick={handleSignout}>
+              <DropdownMenuItem onClick={() => signOut({ redirectUrl: '/' })}>
                 <LogOut />
                 Log out
               </DropdownMenuItem>
@@ -133,7 +123,7 @@ const data = {
   navMain: [
     {
       title: 'Upcomming Appointments',
-      url: '/specialist/upcomming',
+      url: '/specialist/upcoming-appointments',
       icon: House,
     },
 
@@ -176,7 +166,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     tooltip={item.title}
-                    isActive={pathname === item.url}
+                    isActive={pathname
+                      .split('/')
+                      .slice(1, 3)
+                      .includes(item.url.split('/').pop() ?? '')}
                   >
                     {item.icon && <item.icon />}
                     <span>{item.title}</span>

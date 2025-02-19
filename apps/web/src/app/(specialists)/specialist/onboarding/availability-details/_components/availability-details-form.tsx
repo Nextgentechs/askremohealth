@@ -169,7 +169,7 @@ export default function AvailabilityDetailsForm() {
     try {
       const res = await updateAvailabilityDetails(values)
       if (res.success) {
-        router.push('/specialist/upcoming')
+        router.push('/specialist/upcoming-appointments')
       }
     } catch (error) {
       console.error(error)
