@@ -1,28 +1,26 @@
 'use client'
 
-import React from 'react'
+import { DataTable } from '@web/components/data-table'
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@web/components/ui/pagination'
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from '@web/components/ui/tabs'
-import { DataTable } from '@web/components/data-table'
-import { PaginationNext } from '@web/components/ui/pagination'
-import {
-  PaginationLink,
-  PaginationPrevious,
-} from '@web/components/ui/pagination'
-import { PaginationItem } from '@web/components/ui/pagination'
-import { PaginationContent } from '@web/components/ui/pagination'
-import { usePathname } from 'next/navigation'
-import { useRouter } from 'next/navigation'
 import { type RouterOutputs } from '@web/trpc/react'
-import { useSearchParams } from 'next/navigation'
-import { Pagination } from '@web/components/ui/pagination'
-import { upcommingAppointmentsColumn } from './upcomming-appointments-columns'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import React from 'react'
+import { appointmentsColumns } from './upcomming-appointments-columns'
 
-function useCreateQueryString() {
+export function useQueryString() {
   const searchParams = useSearchParams()
 
   return React.useCallback(
@@ -44,7 +42,7 @@ function AppointmentsPagination({
   const router = useRouter()
   const pathname = usePathname()
   const currentPage = Number(searchParams.get('page')) ?? 1
-  const createQueryString = useCreateQueryString()
+  const createQueryString = useQueryString()
 
   if (pagination.pages <= 1) return null
 
@@ -111,7 +109,7 @@ export default function AppointmentTabs({
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
-  const createQueryString = useCreateQueryString()
+  const createQueryString = useQueryString()
 
   return (
     <Tabs
@@ -140,18 +138,12 @@ export default function AppointmentTabs({
       </TabsList>
 
       <TabsContent value="online" className="">
-        <DataTable
-          columns={upcommingAppointmentsColumn}
-          data={data.appointments}
-        />
+        <DataTable columns={appointmentsColumns} data={data.appointments} />
         <AppointmentsPagination pagination={data.pagination} />
       </TabsContent>
 
       <TabsContent value="physical">
-        <DataTable
-          columns={upcommingAppointmentsColumn}
-          data={data.appointments}
-        />
+        <DataTable columns={appointmentsColumns} data={data.appointments} />
         <AppointmentsPagination pagination={data.pagination} />
       </TabsContent>
     </Tabs>

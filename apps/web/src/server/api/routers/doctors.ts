@@ -5,7 +5,6 @@ import {
   availabilityDetailsSchema,
   doctorAppointmentListSchema,
   doctorListSchema,
-  doctorSignupSchema,
   personalDetailsSchema,
   professionalDetailsSchema,
 } from '../validators'
@@ -32,28 +31,12 @@ export const updateAvailabilityDetails = procedure
     return Doctors.updateAvailabilityDetails(input, ctx.user.id ?? '')
   })
 
-export const signup = publicProcedure
-  .input(doctorSignupSchema)
-  .mutation(async ({ input }) => {
-    return Doctors.signup(input)
-  })
-
-export const login = publicProcedure
-  .input(
-    z.object({
-      phone: z.string(),
-      password: z.string(),
-    }),
-  )
-  .mutation(async ({ input }) => {
-    return Doctors.login(input)
-  })
-
 export const currentDoctor = publicProcedure.query(async ({ ctx }) => {
   if (!ctx.user) return null
   const doctor = await ctx.db.query.doctors.findFirst({
     where: (doctor) => eq(doctor.id, ctx.user.id ?? ''),
     with: {
+      profilePicture: true,
       specialty: true,
       facility: true,
       operatingHours: true,

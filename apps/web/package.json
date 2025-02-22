@@ -94,6 +94,7 @@
     "zustand": "^5.0.3"
   },
   "devDependencies": {
+    "prettier-plugin-organize-imports": "^4.1.0",
     "@types/bcrypt": "^5.0.2",
     "@types/eslint": "^8.56.10",
     "@types/node": "^20.14.10",

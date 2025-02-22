@@ -87,8 +87,8 @@ export const doctorListSchema = z.object({
 export const doctorAppointmentListSchema = z.object({
   type: z.enum(['physical', 'online']),
   patientId: z.string().optional(),
-  startDate: z.date(),
-  endDate: z.date(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
   status: z
     .enum([
       'scheduled',
