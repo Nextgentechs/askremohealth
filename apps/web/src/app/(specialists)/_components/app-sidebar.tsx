@@ -1,6 +1,5 @@
 'use client'
 
-import * as React from 'react'
 import {
   ChevronsUpDown,
   CircleUserRound,
@@ -11,7 +10,20 @@ import {
   ShieldPlus,
   User,
 } from 'lucide-react'
+import * as React from 'react'
 
+import { useClerk } from '@clerk/nextjs'
+import Logo from '@web/components/logo'
+import { Avatar, AvatarFallback, AvatarImage } from '@web/components/ui/avatar'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@web/components/ui/dropdown-menu'
 import {
   Sidebar,
   SidebarContent,
@@ -24,21 +36,9 @@ import {
   SidebarRail,
   useSidebar,
 } from '@web/components/ui/sidebar'
-import Logo from '@web/components/logo'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@web/components/ui/dropdown-menu'
-import { Avatar, AvatarFallback, AvatarImage } from '@web/components/ui/avatar'
 import { api } from '@web/trpc/react'
-import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { useClerk } from '@clerk/nextjs'
+import { usePathname } from 'next/navigation'
 
 function NavUser() {
   const { signOut } = useClerk()
@@ -134,7 +134,7 @@ const data = {
     },
     {
       title: 'Physical Appointments',
-      url: '/specialist/physical',
+      url: '/specialist/physical-appointments',
       icon: ClipboardList,
     },
     {
