@@ -29,7 +29,7 @@ import { useRouter } from 'next/navigation'
 type Appointment =
   RouterOutputs['doctors']['upcommingAppointments']['appointments'][number]
 
-export const upcommingAppointmentsColumn: ColumnDef<Appointment>[] = [
+export const appointmentsColumns: ColumnDef<Appointment>[] = [
   {
     accessorKey: 'appointmentDate',
     header: 'Appointment Date',

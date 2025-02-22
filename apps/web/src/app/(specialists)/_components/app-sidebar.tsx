@@ -129,7 +129,7 @@ const data = {
 
     {
       title: 'Online Appointments',
-      url: '/specialist/online',
+      url: '/specialist/online-appointments',
       icon: ClipboardPlus,
     },
     {

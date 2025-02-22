@@ -1,15 +1,14 @@
-import { appointments, patients, type users } from '../db/schema'
-import { db } from '../db'
-import { User } from './users'
 import { TRPCError } from '@trpc/server'
 import {
   type DoctorAppointmentListSchema,
   type NewAppointmentSchema,
 } from '../api/validators'
+import { db } from '../db'
+import { appointments, patients, type users } from '../db/schema'
 import { AppointmentStatus } from '../utils'
+import { User } from './users'
 
-import { lte, type InferSelectModel } from 'drizzle-orm'
-import { and, eq, gte, count } from 'drizzle-orm'
+import { and, count, eq, gte, lte, type InferSelectModel } from 'drizzle-orm'
 export default class Appointments {
   static async createNewUserAppointment(input: NewAppointmentSchema) {
     const user = await User.createUser({
@@ -174,8 +173,12 @@ export default class Appointments {
           input.patientId
             ? eq(appointments.patientId, input.patientId)
             : undefined,
-          gte(appointments.appointmentDate, input.startDate),
-          lte(appointments.appointmentDate, input.endDate),
+          input.startDate
+            ? gte(appointments.appointmentDate, new Date(input.startDate))
+            : undefined,
+          input.endDate
+            ? lte(appointments.appointmentDate, new Date(input.endDate))
+            : undefined,
         ),
       )
 
@@ -188,8 +191,12 @@ export default class Appointments {
           input.patientId
             ? eq(appontment.patientId, input.patientId)
             : undefined,
-          gte(appontment.appointmentDate, input.startDate),
-          lte(appontment.appointmentDate, input.endDate),
+          input.startDate
+            ? gte(appontment.appointmentDate, new Date(input.startDate))
+            : undefined,
+          input.endDate
+            ? lte(appontment.appointmentDate, new Date(input.endDate))
+            : undefined,
         ),
       columns: {
         id: true,
@@ -205,15 +212,11 @@ export default class Appointments {
           },
         },
         patient: {
-          with: {
-            user: {
-              columns: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                phone: true,
-              },
-            },
+          columns: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            phone: true,
           },
         },
       },
