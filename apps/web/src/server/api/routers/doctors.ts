@@ -1,6 +1,10 @@
-import { doctorProcedure, procedure, publicProcedure } from '../trpc'
-import { z } from 'zod'
+import { patients as patientsTable } from '@web/server/db/schema'
+import Appointments from '@web/server/services/appointments'
 import { Doctors } from '@web/server/services/doctors'
+import assert from 'assert'
+import { eq, ilike, or } from 'drizzle-orm'
+import { z } from 'zod'
+import { doctorProcedure, procedure, publicProcedure } from '../trpc'
 import {
   availabilityDetailsSchema,
   doctorAppointmentListSchema,
@@ -8,15 +12,21 @@ import {
   personalDetailsSchema,
   professionalDetailsSchema,
 } from '../validators'
-import Appointments from '@web/server/services/appointments'
-import assert from 'assert'
-import { eq, ilike, or } from 'drizzle-orm'
-import { patients as patientsTable } from '@web/server/db/schema'
 
 export const updatePersonalDetails = procedure
   .input(personalDetailsSchema)
   .mutation(async ({ input, ctx }) => {
     return Doctors.updatePersonalDetails(input, ctx.user.id ?? '')
+  })
+
+export const updateProfilePicture = doctorProcedure
+  .input(z.object({ profilePicture: z.string() }))
+  .mutation(async ({ input, ctx }) => {
+    assert(ctx.user?.id, 'User not found')
+    return Doctors.updateProfilePicture({
+      userId: ctx.user.id,
+      profilePicture: input.profilePicture,
+    })
   })
 
 export const updateProfessionalDetails = procedure
@@ -127,12 +137,18 @@ export const postAppointment = doctorProcedure
 export const patients = doctorProcedure
   .input(
     z.object({
+      query: z.string().optional(),
       page: z.number().default(1),
       limit: z.number().default(10),
     }),
   )
   .query(async ({ ctx, input }) => {
-    return Doctors.patients(ctx.user.id ?? '', input.page, input.limit)
+    return Doctors.patients({
+      query: input.query,
+      doctorId: ctx.user.id ?? '',
+      page: input.page,
+      limit: input.limit,
+    })
   })
 
 export const searchPatient = doctorProcedure

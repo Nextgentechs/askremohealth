@@ -1,21 +1,14 @@
 'use client'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@web/components/ui/button'
+import { Checkbox } from '@web/components/ui/checkbox'
+import { Input } from '@web/components/ui/input'
+import { Label } from '@web/components/ui/label'
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@web/components/ui/popover'
-import { Skeleton } from '@web/components/ui/skeleton'
-import { api } from '@web/trpc/react'
-import { ChevronDown, Loader } from 'lucide-react'
-import React from 'react'
-import { FormProvider, useForm, useFormContext } from 'react-hook-form'
-import { z } from 'zod'
-import { Checkbox } from '@web/components/ui/checkbox'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { fileToBase64 } from '@web/lib/utils'
-import { Label } from '@web/components/ui/label'
-import { Input } from '@web/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -23,10 +16,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@web/components/ui/select'
+import { Skeleton } from '@web/components/ui/skeleton'
 import { toast } from '@web/hooks/use-toast'
+import { fileToBase64 } from '@web/lib/utils'
+import { api } from '@web/trpc/react'
+import { ChevronDown, Loader } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import React from 'react'
+import { FormProvider, useForm, useFormContext } from 'react-hook-form'
+import { z } from 'zod'
 
-const professionalDetailsSchema = z.object({
+export const professionalDetailsSchema = z.object({
   county: z.string().min(1, { message: 'County is required' }),
   town: z
     .object({
@@ -65,7 +65,7 @@ const professionalDetailsSchema = z.object({
     ),
   facility: z.string().min(1, { message: 'Facility is required' }),
 })
-type ProfessionalDetails = z.infer<typeof professionalDetailsSchema>
+export type ProfessionalDetails = z.infer<typeof professionalDetailsSchema>
 
 function SelectSkeleton() {
   return (
@@ -94,7 +94,7 @@ function SubSpecialtySelect({ specialty }: { specialty: string }) {
       },
     )
 
-  const selectedNames = React.useMemo(() => {
+  const selected = React.useMemo(() => {
     if (!subspecialties) return ''
     const names = subspecialties
       .filter((sub) => selectedSubSpecialties.includes(sub.id))
@@ -115,7 +115,7 @@ function SubSpecialtySelect({ specialty }: { specialty: string }) {
           className="flex w-full items-center justify-between disabled:cursor-not-allowed"
           disabled={!specialty}
         >
-          <span className="truncate">{selectedNames || 'Select'}</span>
+          <span className="truncate">{selected || 'Select'}</span>
           <ChevronDown className="ml-2 h-4 w-4 shrink-0" />
         </Button>
       </PopoverTrigger>

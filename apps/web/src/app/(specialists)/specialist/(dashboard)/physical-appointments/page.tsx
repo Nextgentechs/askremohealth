@@ -26,10 +26,10 @@ export default async function page({
     <div className="mb-20 flex flex-col gap-8 md:mt-4">
       <div className="flex flex-col gap-1">
         <h1 className="text-xl font-semibold tracking-wide text-foreground">
-          Physical Appointments
+          Online Appointments
         </h1>
         <p className="text-sm text-muted-foreground">
-          Manage all your previous and upcomming physical appointments here
+          Manage all your previous and upcomming online appointments here
         </p>
       </div>
 

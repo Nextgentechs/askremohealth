@@ -33,7 +33,7 @@ export function useQueryString() {
   )
 }
 
-function AppointmentsPagination({
+export function SpecialistsPagination({
   pagination,
 }: {
   pagination: RouterOutputs['doctors']['upcommingAppointments']['pagination']
@@ -139,12 +139,12 @@ export default function AppointmentTabs({
 
       <TabsContent value="online" className="">
         <DataTable columns={appointmentsColumns} data={data.appointments} />
-        <AppointmentsPagination pagination={data.pagination} />
+        <SpecialistsPagination pagination={data.pagination} />
       </TabsContent>
 
       <TabsContent value="physical">
         <DataTable columns={appointmentsColumns} data={data.appointments} />
-        <AppointmentsPagination pagination={data.pagination} />
+        <SpecialistsPagination pagination={data.pagination} />
       </TabsContent>
     </Tabs>
   )

@@ -43,7 +43,7 @@ import { usePathname } from 'next/navigation'
 function NavUser() {
   const { signOut } = useClerk()
   const { isMobile } = useSidebar()
-  const [doctor] = api.doctors.currentDoctor.useSuspenseQuery()
+  const { data: doctor } = api.doctors.currentDoctor.useQuery()
 
   return (
     <SidebarMenu>
@@ -56,15 +56,17 @@ function NavUser() {
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage
-                  src={doctor?.profilePicture?.url}
-                  alt={doctor?.firstName}
+                  src={doctor?.profilePicture?.url ?? ''}
+                  alt={doctor?.firstName ?? ''}
                 />
                 <AvatarFallback className="rounded-lg">CN</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">{`${doctor?.firstName} ${doctor?.lastName}`}</span>
+                <span className="truncate font-semibold">
+                  {`${(doctor?.firstName ?? '').charAt(0).toUpperCase() + (doctor?.firstName ?? '').slice(1)} ${(doctor?.lastName ?? '').charAt(0).toUpperCase() + (doctor?.lastName ?? '').slice(1)}`}
+                </span>
                 <span className="truncate text-xs">
-                  {doctor?.specialty?.name}
+                  {doctor?.specialty?.name ?? ''}
                 </span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />

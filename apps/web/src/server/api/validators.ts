@@ -132,9 +132,9 @@ export const personalDetailsSchema = z.object({
   email: z.string().email().optional(),
   phone: z.string(),
   dob: z.string(),
-  gender: z.enum(['male', 'female']),
-  bio: z.string(),
-  profilePicture: z.string(),
+  gender: z.enum(['male', 'female']).optional(),
+  bio: z.string().optional(),
+  profilePicture: z.string().optional(),
 })
 export type PersonalDetailsSchema = z.infer<typeof personalDetailsSchema>
 

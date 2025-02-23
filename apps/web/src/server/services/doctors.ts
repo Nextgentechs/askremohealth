@@ -1,3 +1,7 @@
+import { clerkClient } from '@clerk/nextjs/server'
+import { TRPCError } from '@trpc/server'
+import { del, put } from '@vercel/blob'
+import { db } from '@web/server/db'
 import {
   appointmentAttachments,
   appointmentLogs,
@@ -6,32 +10,30 @@ import {
   doctors as doctorsTable,
   facilities,
   operatingHours,
+  patients as patientsTable,
   profilePictures,
 } from '@web/server/db/schema'
 import {
-  count,
-  inArray,
-  gte,
-  sql,
-  eq,
-  or,
-  between,
   and,
+  between,
+  count,
+  eq,
   exists,
+  gte,
+  ilike,
+  inArray,
+  or,
+  sql,
 } from 'drizzle-orm'
-import { db } from '@web/server/db'
-import { KENYA_COUNTIES } from '../data/kenya-counties'
+import sharp from 'sharp'
 import {
+  type AvailabilityDetailsSchema,
   type PersonalDetailsSchema,
   type ProfessionalDetailsSchema,
-  type AvailabilityDetailsSchema,
 } from '../api/validators'
-import { TRPCError } from '@trpc/server'
-import { Facility } from './facilities'
-import { put } from '@vercel/blob'
-import sharp from 'sharp'
+import { KENYA_COUNTIES } from '../data/kenya-counties'
 import { AppointmentStatus } from '../utils'
-import { clerkClient } from '@clerk/nextjs/server'
+import { Facility } from './facilities'
 
 type FilterInput = {
   specialty?: string
@@ -86,6 +88,8 @@ export class Doctors {
         })
       }
 
+      if (!input.profilePicture) return { success: true }
+
       const base64Data = input.profilePicture.replace(
         /^data:image\/\w+;base64,/,
         '',
@@ -108,6 +112,57 @@ export class Doctors {
         path: pathname,
       })
     })
+
+    return { success: true }
+  }
+
+  static async updateProfilePicture(input: {
+    userId: string
+    profilePicture: string
+  }) {
+    const doctor = await db.query.doctors.findFirst({
+      where: (doctor) => eq(doctor.id, input.userId),
+      with: {
+        profilePicture: true,
+      },
+    })
+
+    if (!doctor) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Doctor not found',
+      })
+    }
+
+    if (doctor.profilePicture) {
+      await del(doctor.profilePicture.url)
+    }
+
+    const base64Data = input.profilePicture.replace(
+      /^data:image\/\w+;base64,/,
+      '',
+    )
+    const buffer = await sharp(Buffer.from(base64Data, 'base64'))
+      .resize(400, 400, { fit: 'cover', position: 'center' })
+      .webp({ quality: 80 })
+      .toBuffer()
+
+    const { url, pathname } = await put(
+      `profile-picture-${input.userId}.webp`,
+      buffer,
+      {
+        access: 'public',
+        contentType: `image/webp`,
+      },
+    )
+
+    await db
+      .update(profilePictures)
+      .set({
+        url,
+        path: pathname,
+      })
+      .where(eq(profilePictures.doctorId, input.userId))
 
     return { success: true }
   }
@@ -592,30 +647,72 @@ export class Doctors {
     return { success: true }
   }
 
-  static async patients(doctorId: string, page: number, limit: number) {
-    const offset = (page - 1) * limit
-    const patients = await db.query.appointments.findMany({
-      where: (appointment) => eq(appointment.doctorId, doctorId),
-      columns: {
-        patientId: true,
+  static async patients(filter: {
+    query?: string
+    doctorId: string
+    page: number
+    limit: number
+  }) {
+    const offset = (filter.page - 1) * filter.limit
+
+    const countQuery = db
+      .select({ count: count() })
+      .from(appointments)
+      .where(
+        and(
+          eq(appointments.doctorId, filter.doctorId),
+          filter.query
+            ? or(
+                ilike(patientsTable.firstName, `%${filter.query}%`),
+                ilike(patientsTable.lastName, `%${filter.query}%`),
+              )
+            : undefined,
+        ),
+      )
+
+    const patientsQuery = db
+      .select({
+        patientId: appointments.patientId,
+        firstName: patientsTable.firstName,
+        lastName: patientsTable.lastName,
+        lastAppointment: patientsTable.lastAppointment,
+        phone: patientsTable.phone,
+        email: patientsTable.email,
+        dob: patientsTable.dob,
+      })
+      .from(appointments)
+      .innerJoin(patientsTable, eq(appointments.patientId, patientsTable.id))
+      .where(
+        and(
+          eq(appointments.doctorId, filter.doctorId),
+          filter.query
+            ? or(
+                ilike(patientsTable.firstName, `%${filter.query}%`),
+                ilike(patientsTable.lastName, `%${filter.query}%`),
+              )
+            : undefined,
+        ),
+      )
+      .limit(filter.limit)
+      .offset(offset)
+
+    const [totalCount, patients] = await Promise.all([
+      countQuery,
+      patientsQuery,
+    ])
+
+    return {
+      patients: patients.map((patient) => ({
+        name: `${patient.firstName} ${patient.lastName}`,
+        lastAppointment: patient.lastAppointment,
+        phone: patient.phone,
+        email: patient.email,
+        dob: patient.dob,
+      })),
+      pagination: {
+        total: totalCount[0]?.count ?? 0,
+        pages: Math.ceil((totalCount[0]?.count ?? 0) / filter.limit),
       },
-      with: {
-        patient: {
-          columns: {
-            lastAppointment: true,
-          },
-        },
-      },
-      limit,
-      offset,
-    })
-    return
-    return patients.map((patient) => ({
-      name: `${patient.firstName} ${patient.patient.lastName}`,
-      lastAppointment: patient.patient.lastAppointment,
-      phone: patient.patient.phone,
-      email: patient.patient.email,
-      dob: patient.patient.dob,
-    }))
+    }
   }
 }
