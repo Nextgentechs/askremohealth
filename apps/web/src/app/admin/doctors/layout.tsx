@@ -7,26 +7,22 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from '@web/components/ui/sidebar'
-import { AdminAuthProvider } from '@web/providers/admin-auth'
+
 export default async function layout({
   children,
 }: {
   children: React.ReactNode
 }) {
   return (
-    <AdminAuthProvider>
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset className="flex flex-col gap-4">
-          <DashboardHeader />
-          <div className="container mx-auto mb-10 max-w-6xl flex-1">
-            <React.Suspense fallback={<ProgressBar />}>
-              {children}
-            </React.Suspense>
-          </div>
-        </SidebarInset>
-      </SidebarProvider>
-    </AdminAuthProvider>
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset className="flex flex-col gap-4">
+        <DashboardHeader />
+        <div className="container mx-auto mb-10 max-w-6xl flex-1">
+          <React.Suspense fallback={<ProgressBar />}>{children}</React.Suspense>
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }
 

@@ -1,8 +1,8 @@
+import { TRPCError } from '@trpc/server'
+import { doctors, type subSpecialties } from '@web/server/db/schema'
+import { count, eq, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { adminProcedure } from '../trpc'
-import { TRPCError } from '@trpc/server'
-import { count, eq, sql } from 'drizzle-orm'
-import { doctors, type subSpecialties } from '@web/server/db/schema'
 
 export const getDoctors = adminProcedure
   .input(
@@ -47,6 +47,7 @@ export const getDoctor = adminProcedure
         specialty: true,
         facility: true,
         operatingHours: true,
+        profilePicture: true,
       },
     })
 

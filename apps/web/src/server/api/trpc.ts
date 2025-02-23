@@ -6,12 +6,12 @@
  * TL;DR - This is where all the tRPC server stuff is created and plugged in. The pieces you will
  * need to use are documented accordingly near the end.
  */
-import { initTRPC, TRPCError } from '@trpc/server'
-import superjson from 'superjson'
-import { ZodError } from 'zod'
 import { getAuth } from '@clerk/nextjs/server'
+import { initTRPC, TRPCError } from '@trpc/server'
 import { db } from '@web/server/db'
 import { NextRequest } from 'next/server'
+import superjson from 'superjson'
+import { ZodError } from 'zod'
 
 /**
  * 1. CONTEXT
@@ -107,7 +107,8 @@ const authMiddleware = t.middleware(({ ctx, next }) => {
 
 const doctorMiddleware = t.middleware(({ ctx, next }) => {
   if (!ctx.user) throw new TRPCError({ code: 'UNAUTHORIZED' })
-  if (ctx.user.role !== 'specialist') throw new TRPCError({ code: 'FORBIDDEN' })
+  if (ctx.user.role !== 'specialist' && ctx.user.role !== 'admin')
+    throw new TRPCError({ code: 'FORBIDDEN' })
   return next({ ctx: { session: ctx.session, user: ctx.user } })
 })
 
