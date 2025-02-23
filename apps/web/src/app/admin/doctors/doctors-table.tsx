@@ -1,9 +1,6 @@
 'use client'
-import React from 'react'
-import { type RouterOutputs } from '@web/trpc/react'
 import { type ColumnDef } from '@tanstack/react-table'
-import { format } from 'date-fns'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { Badge } from '@web/components/ui/badge'
 import {
   Pagination,
   PaginationContent,
@@ -12,8 +9,11 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@web/components/ui/pagination'
-import { Badge } from '@web/components/ui/badge'
+import { type RouterOutputs } from '@web/trpc/react'
+import { format } from 'date-fns'
 import Link from 'next/link'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import React from 'react'
 
 export function DoctorsPagination({
   pagination,
@@ -96,7 +96,7 @@ export const DoctorsColumns: ColumnDef<Doctor>[] = [
     accessorKey: 'user.firstName',
     header: 'Name',
     accessorFn: (row) => {
-      return `${row.user.firstName} ${row.user.lastName}`
+      return `${row.firstName} ${row.lastName}`
     },
     cell: ({ row }) => {
       const doctor = row.original
@@ -105,7 +105,7 @@ export const DoctorsColumns: ColumnDef<Doctor>[] = [
           className="underline-offset-4 hover:text-primary hover:underline"
           href={`/admin/doctors/${doctor.id}`}
         >
-          {doctor.user.firstName} {doctor.user.lastName}
+          {doctor.firstName} {doctor.lastName}
         </Link>
       )
     },

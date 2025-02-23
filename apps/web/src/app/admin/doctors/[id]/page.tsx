@@ -1,17 +1,3 @@
-import { api } from '@web/trpc/server'
-import React from 'react'
-import { TabsContent } from '@web/components/ui/tabs'
-import { TabsList } from '@web/components/ui/tabs'
-import { DoctorActions } from './doctor-actions'
-import { Tabs, TabsTrigger } from '@web/components/ui/tabs'
-import Image from 'next/image'
-import { type RouterOutputs } from '@web/server/api'
-import { Card, CardHeader, CardTitle } from '@web/components/ui/card'
-import { Label } from '@web/components/ui/label'
-import { Input } from '@web/components/ui/input'
-import { Textarea } from '@web/components/ui/textarea'
-import { Button } from '@web/components/ui/button'
-import { ExternalLink } from 'lucide-react'
 import { AspectRatio } from '@web/components/ui/aspect-ratio'
 import {
   Breadcrumb,
@@ -21,6 +7,22 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@web/components/ui/breadcrumb'
+import { Button } from '@web/components/ui/button'
+import { Card, CardHeader, CardTitle } from '@web/components/ui/card'
+import { Input } from '@web/components/ui/input'
+import { Label } from '@web/components/ui/label'
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@web/components/ui/tabs'
+import { Textarea } from '@web/components/ui/textarea'
+import { type RouterOutputs } from '@web/server/api'
+import { api } from '@web/trpc/server'
+import { ExternalLink } from 'lucide-react'
+import Image from 'next/image'
+import { DoctorActions } from './doctor-actions'
 
 export default async function page({
   params,
@@ -44,7 +46,7 @@ export default async function page({
           <BreadcrumbSeparator />
 
           <BreadcrumbItem>
-            <BreadcrumbPage>{`${doctor?.title}. ${doctor?.user.firstName} ${doctor?.user.lastName}`}</BreadcrumbPage>
+            <BreadcrumbPage>{`${doctor?.title}. ${doctor?.firstName} ${doctor?.lastName}`}</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
@@ -92,8 +94,8 @@ function ProfilePhoto({
     <div className="col-span-1">
       <AspectRatio className="bg-muted" ratio={3 / 4}>
         <Image
-          src={doctor?.user?.profilePicture?.url ?? ''}
-          alt={doctor?.user.firstName ?? ''}
+          src={doctor?.profilePicture?.url ?? ''}
+          alt={doctor?.firstName ?? ''}
           fill
           className="rounded-lg object-cover"
           priority
@@ -117,7 +119,7 @@ function PersonalInfo({
           </Label>
           <Input
             readOnly
-            value={doctor?.user.firstName}
+            value={doctor?.firstName}
             id="firstName"
             type="text"
           />
@@ -127,32 +129,17 @@ function PersonalInfo({
           <Label htmlFor="lastName" className="">
             Last Name
           </Label>
-          <Input
-            readOnly
-            value={doctor?.user.lastName}
-            id="lastName"
-            type="text"
-          />
+          <Input readOnly value={doctor?.lastName} id="lastName" type="text" />
         </div>
 
         <div className="flex flex-col items-start gap-2 text-foreground">
           <Label htmlFor="email">Email</Label>
-          <Input
-            readOnly
-            value={doctor?.user.email ?? ''}
-            id="email"
-            type="email"
-          />
+          <Input readOnly value={doctor?.email ?? ''} id="email" type="email" />
         </div>
 
         <div className="flex flex-col items-start gap-2 text-foreground">
           <Label htmlFor="phone">Phone Number</Label>
-          <Input
-            readOnly
-            value={doctor?.user.phone ?? ''}
-            id="phone"
-            type="tel"
-          />
+          <Input readOnly value={doctor?.phone ?? ''} id="phone" type="tel" />
         </div>
 
         <div className="flex flex-col items-start gap-2 text-foreground">
@@ -160,8 +147,8 @@ function PersonalInfo({
           <Input
             readOnly
             value={
-              doctor?.user.dob
-                ? new Date(doctor.user.dob).toISOString().split('T')[0]
+              doctor?.dob
+                ? new Date(doctor.dob).toISOString().split('T')[0]
                 : ''
             }
             id="dob"

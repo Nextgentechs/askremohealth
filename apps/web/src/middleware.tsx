@@ -1,5 +1,4 @@
-import { clerkMiddleware } from '@clerk/nextjs/server'
-import { createRouteMatcher } from '@clerk/nextjs/server'
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 
 const isProtectedRoute = createRouteMatcher([
@@ -9,7 +8,7 @@ const isProtectedRoute = createRouteMatcher([
   '/doctors/:id/book',
   '/specialist/(.*)',
 ])
-const isAdminRoute = createRouteMatcher(['/admin'])
+const isAdminRoute = createRouteMatcher(['/admin', '/admin/doctors'])
 const isSpecialistRoute = createRouteMatcher([
   '/specialist/patients',
   '/specialist/upcoming',
