@@ -1,6 +1,5 @@
-import React from 'react'
 import { SidebarInset, SidebarProvider } from '@web/components/ui/sidebar'
-import { Suspense } from 'react'
+import React, { Suspense } from 'react'
 import { AppSidebar } from '../../_components/app-sidebar'
 import DashboardHeader from '../../_components/dashboard-header'
 
