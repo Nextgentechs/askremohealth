@@ -275,7 +275,7 @@ function ScheduledAppointmentActions({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {row.type === 'online' && (
-          <Link href={`/appointment-room/${row.id}`}>
+          <Link href={`specialist/appointment-room/${row.id}`}>
             <DropdownMenuItem>
               <Video className="mr-2 h-4 w-4" />
               Start Consultation

@@ -500,6 +500,8 @@ export class Doctors {
         patient: {
           columns: {
             id: true,
+            firstName: true,
+            lastName: true,
           },
         },
       },
