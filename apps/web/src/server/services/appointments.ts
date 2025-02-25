@@ -86,7 +86,7 @@ export default class Appointments {
     return { success: true }
   }
 
-  static async upcomming(
+  static async upcoming(
     doctorId: string,
     type: 'physical' | 'online',
     page: number,

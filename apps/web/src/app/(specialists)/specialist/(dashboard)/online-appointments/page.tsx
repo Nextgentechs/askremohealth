@@ -29,7 +29,7 @@ export default async function page({
           Online Appointments
         </h1>
         <p className="text-sm text-muted-foreground">
-          Manage all your previous and upcomming online appointments here
+          Manage all your previous and upcoming online appointments here
         </p>
       </div>
 

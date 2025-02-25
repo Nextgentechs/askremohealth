@@ -124,7 +124,7 @@ const data = {
 
   navMain: [
     {
-      title: 'Upcomming Appointments',
+      title: 'Upcoming Appointments',
       url: '/specialist/upcoming-appointments',
       icon: House,
     },

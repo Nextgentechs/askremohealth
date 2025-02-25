@@ -1,9 +1,9 @@
 'use client'
 
-import React from 'react'
-import Logo from './logo'
 import Link from 'next/link'
+import React from 'react'
 import { Facebook, Instagram, Twitter, YouTube } from './icons'
+import Logo from './logo'
 
 const footerNavOptions = {
   patients: [
@@ -23,11 +23,11 @@ const footerNavOptions = {
 
   doctors: [
     {
-      header: 'For Doctors',
+      header: 'For Specialists',
       links: [
-        { title: 'Login', href: '/login' },
-        { title: 'How to register', href: '/how-to-register' },
-        { title: 'Promote your practice', href: '/promote-your-practice' },
+        { title: 'Login', href: '/specialists/onboarding/' },
+        { title: 'How to register', href: '/specialists/onboarding/' },
+        { title: 'Promote your practice', href: '/specialists/onboarding/' },
         { title: 'FAQ', href: '/faq' },
       ],
     },
@@ -37,7 +37,7 @@ const footerNavOptions = {
     {
       header: 'For Healthcare Facilities',
       links: [
-        { title: 'Login', href: '/login' },
+        { title: 'Login', href: '/facilities/login' },
         { title: 'How to register', href: '/how-to-register' },
         { title: 'Promote your facility', href: '/promote-your-facility' },
         { title: 'FAQ', href: '/faq' },
