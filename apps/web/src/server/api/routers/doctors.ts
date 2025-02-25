@@ -78,7 +78,7 @@ export const upcommingAppointments = doctorProcedure
   )
   .query(async ({ ctx, input }) => {
     assert(ctx.user?.id, 'User not found')
-    return Appointments.upcomming(
+    return Appointments.upcoming(
       ctx.user.id,
       input.type,
       input.page ?? 1,
