@@ -64,7 +64,7 @@ export default async function Articles({
   return (
     <div className="py-6">
       <h2 className="text-center font-bold text-4xl sm:text-3xl md:text-6xl py-6 sm:py-11 text-primary font-sans">
-        Blog &amp; Resources
+        Blogs &amp; Resources
       </h2>
       <div className="flex flex-col gap-8 sm:gap-12 lg:gap-14 px-4 sm:px-10 md:px-20 lg:px-36">
         {posts.map((post) => (
