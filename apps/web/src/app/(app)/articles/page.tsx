@@ -18,14 +18,14 @@ async function getPosts(page: number, limit: number) {
   const totalQuery = `count(*[_type == "post"])`
   const totalPosts = await client.fetch<number>(totalQuery)
 
-  const query = `*[_type == "post"] | order(publishedAt desc)[$start...$end] {
+  const query = `*[_type == "post"] | order(publishedAt desc)[${start}...${end}] {
     title,
     slug,
     publishedAt,
     image,
     snippet
   }`
-  const posts = await client.fetch<Post[]>(query, { start, end })
+  const posts = await client.fetch<Post[]>(query)
 
   return {
     posts,
@@ -36,10 +36,12 @@ async function getPosts(page: number, limit: number) {
 export default async function Articles({
   searchParams,
 }: {
-  searchParams?: { page?: string }
+  searchParams: Promise<{ page?: string | number }>
 }) {
-  const limit = 2
-  const page = Number(searchParams?.page) || 1
+  const limit = 5
+  const params = await searchParams
+
+  const page = Number(params.page) || 1
 
   const { posts, totalPages } = await getPosts(page, limit)
 
