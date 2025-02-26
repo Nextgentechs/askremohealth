@@ -9,7 +9,7 @@ import {
   PaginationPrevious,
 } from '@web/components/ui/pagination'
 import { client } from '@web/sanity/client'
-import { notFound } from 'next/navigation'
+import { FileSearch } from 'lucide-react'
 
 async function getPosts(page: number, limit: number) {
   const start = (page - 1) * limit
@@ -43,22 +43,36 @@ export default async function Articles({
 
   const { posts, totalPages } = await getPosts(page, limit)
 
-  if (posts.length === 0) return notFound()
+  if (posts.length === 0) {
+    return (
+      <div className="flex h-full px-6 py-20 sm:px-10 md:px-20 lg:px-40 flex-col items-center justify-center text-center">
+        <div className="bg-background">
+          <FileSearch size={48} color="#0F172A" />
+        </div>
+        <p className="text-3xl sm:text-4xl lg:text-5xl text-primary">
+          Nothing to see here!
+        </p>
+        <p className="text-lg sm:text-xl text-muted-foreground opacity-75">
+          Check back later!
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div className="py-6">
-      <h2 className="text-center font-bold text-6xl py-11 text-primary font-sans">
+      <h2 className="text-center font-bold text-4xl sm:text-3xl md:text-6xl py-6 sm:py-11 text-primary font-sans">
         Blog &amp; Resources
       </h2>
-      <div className="flex px-36 flex-col gap-14">
+      <div className="flex flex-col gap-8 sm:gap-12 lg:gap-14 px-4 sm:px-10 md:px-20 lg:px-36">
         {posts.map((post) => (
           <Article key={post.slug.current} post={post} />
         ))}
       </div>
 
       {totalPages > 1 && (
-        <Pagination className="mt-10">
-          <PaginationContent>
+        <Pagination className="mt-10 flex justify-center">
+          <PaginationContent className="flex flex-wrap gap-2 justify-center">
             {page > 1 && (
               <PaginationItem>
                 <PaginationPrevious
@@ -73,7 +87,7 @@ export default async function Articles({
                 <PaginationLink
                   href={`?page=${p}`}
                   isActive={p === page}
-                  className="hover:cursor-pointer text-primary"
+                  className="hover:cursor-pointer px-3 py-2 sm:px-4 sm:py-3 text-primary text-sm sm:text-base"
                 >
                   {p}
                 </PaginationLink>
