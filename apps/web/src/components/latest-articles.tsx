@@ -1,10 +1,10 @@
-import Image from 'next/image'
-import { Card, CardContent } from './ui/card'
-import { Button } from './ui/button'
-import { ArrowRight } from 'lucide-react'
-import Link from 'next/link'
-import { client, urlFor } from '@web/sanity/client'
 import { type SanityImageSource } from '@sanity/image-url/lib/types/types'
+import { client, urlFor } from '@web/sanity/client'
+import { ArrowRight } from 'lucide-react'
+import Image from 'next/image'
+import Link from 'next/link'
+import { Button } from './ui/button'
+import { Card, CardContent } from './ui/card'
 
 export type Post = {
   title: string
@@ -88,8 +88,10 @@ export default async function LatestArticles() {
         </div>
 
         <Button variant={'link'}>
-          <span>Explore More Articles</span>
-          <ArrowRight />
+          <Link href="/articles" className="flex items-center gap-1">
+            <span>Explore More Articles</span>
+            <ArrowRight />
+          </Link>
         </Button>
       </div>
     </section>
