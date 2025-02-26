@@ -13,7 +13,7 @@ export default function Article({ post }: { post: Post }) {
         aria-label={`Read article: ${post.title}`}
       >
         <CardContent className="h-full flex flex-col sm:flex-row gap-6 sm:gap-10 py-4 sm:py-6">
-          <div className="relative h-52 sm:h-full w-full sm:w-[350px] md:w-[450px] flex-shrink-0 overflow-hidden">
+          <div className="relative h-[200px] sm:h-[250px] md:h-[300px] lg:h-[350px] w-full sm:w-[350px] md:w-[450px] flex-shrink-0 overflow-hidden">
             <Image
               src={urlFor(post.image).url()}
               alt={post.title}
@@ -23,8 +23,7 @@ export default function Article({ post }: { post: Post }) {
             />
           </div>
 
-          {/* Text Section */}
-          <div className="flex flex-col justify-between gap-4 sm:gap-10">
+          <div className="flex flex-col md:gap-24 sm:gap-10">
             <p className="text-sm sm:text-base text-muted-foreground">
               {new Date(post.publishedAt).toLocaleDateString('en-US', {
                 month: 'long',
