@@ -11,21 +11,25 @@ import {
 import { client } from '@web/sanity/client'
 import { FileSearch } from 'lucide-react'
 
+const LIMIT = 5
+
 async function getPosts(page: number, limit: number) {
   const start = (page - 1) * limit
   const end = start + limit
 
   const totalQuery = `count(*[_type == "post"])`
-  const totalPosts = await client.fetch<number>(totalQuery)
-
-  const query = `*[_type == "post"] | order(publishedAt desc)[${start}...${end}] {
+  const postsQuery = `*[_type == "post"] | order(publishedAt desc)[${start}...${end}] {
     title,
     slug,
     publishedAt,
     image,
     snippet
   }`
-  const posts = await client.fetch<Post[]>(query)
+
+  const [totalPosts, posts] = await Promise.all([
+    client.fetch<number>(totalQuery),
+    client.fetch<Post[]>(postsQuery),
+  ])
 
   return {
     posts,
@@ -38,12 +42,11 @@ export default async function Articles({
 }: {
   searchParams: Promise<{ page?: string | number }>
 }) {
-  const limit = 5
   const params = await searchParams
 
   const page = Number(params.page) || 1
 
-  const { posts, totalPages } = await getPosts(page, limit)
+  const { posts, totalPages } = await getPosts(page, LIMIT)
 
   if (posts.length === 0) {
     return (
