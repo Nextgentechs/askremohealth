@@ -1,9 +1,16 @@
 'use client'
 
-import React, { useState } from 'react'
-import { Card } from './ui/card'
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
+import { getScheduleForWeek } from '@web/lib/utils'
+import { api, type RouterOutputs } from '@web/trpc/react'
 import { Stethoscope } from 'lucide-react'
+import { useRouter } from 'next-nprogress-bar'
+import Link from 'next/link'
+import { useState } from 'react'
+import DoctorDetails from './doctor-details'
+import { useDoctorSearchParams } from './search-form-old'
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
+import { Button } from './ui/button'
+import { Card } from './ui/card'
 import {
   Carousel,
   CarouselContent,
@@ -11,19 +18,12 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from './ui/carousel'
-import { Button } from './ui/button'
-import Link from 'next/link'
 import {
   Pagination,
   PaginationContent,
   PaginationItem,
   PaginationLink,
 } from './ui/pagination'
-import { api, type RouterOutputs } from '@web/trpc/react'
-import { useDoctorSearchParams } from './search-form'
-import { getScheduleForWeek } from '@web/lib/utils'
-import DoctorDetails from './doctor-details'
-import { useRouter } from 'next-nprogress-bar'
 
 type ScheduleDay = {
   date: Date
