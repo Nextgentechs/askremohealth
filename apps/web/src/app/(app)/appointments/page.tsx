@@ -1,26 +1,25 @@
-import React from 'react'
-import { Banknote, CalendarClock, Hospital, MapPin } from 'lucide-react'
-import { api } from '@web/trpc/server'
-import { Card } from '@web/components/ui/card'
-import { Badge } from '@web/components/ui/badge'
-import {
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-  BreadcrumbList,
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-} from '@web/components/ui/breadcrumb'
-import { type RouterOutputs } from '@web/server/api'
-import { format } from 'date-fns'
-import { formatMoney } from '@web/lib/utils'
-import { Avatar, AvatarFallback, AvatarImage } from '@web/components/ui/avatar'
-import AppointmentsPagination from '@web/components/appointments-pagination'
 import {
   PendingAppointmentActions,
   VideoAppointmentActions,
 } from '@web/components/appointment-actions'
+import AppointmentsPagination from '@web/components/appointments-pagination'
+import { Avatar, AvatarFallback, AvatarImage } from '@web/components/ui/avatar'
+import { Badge } from '@web/components/ui/badge'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@web/components/ui/breadcrumb'
+import { Card } from '@web/components/ui/card'
+import { formatMoney } from '@web/lib/utils'
+import { type RouterOutputs } from '@web/server/api'
 import { AppointmentStatus } from '@web/server/utils'
+import { api } from '@web/trpc/server'
+import { format } from 'date-fns'
+import { Banknote, CalendarClock, Hospital, MapPin } from 'lucide-react'
 
 export default async function Page({
   searchParams,
@@ -70,42 +69,38 @@ function AppointmentCard({
   appointment: RouterOutputs['users']['listAppointments']['appointments'][number]
 }) {
   return (
-    <Card className="rounded-xl border shadow-sm">
+    <Card className="rounded-xl border shadow-sm p-6">
       <div className="flex flex-col justify-between gap-4">
         <div className="flex flex-row items-start justify-between">
           <div className="flex flex-row items-center gap-2">
             <Avatar className="size-16">
-              <AvatarImage src={appointment.doctor.user.profilePicture.url} />
+              <AvatarImage src={appointment.doctor.profilePicture.url} />
               <AvatarFallback>
-                {appointment.doctor.user.firstName.charAt(0)}
-                {appointment.doctor.user.lastName.charAt(0)}
+                {appointment.doctor.firstName.charAt(0)}
+                {appointment.doctor.lastName.charAt(0)}
               </AvatarFallback>
             </Avatar>
             <div className="flex flex-col gap-0.5">
               <h3 className="font-medium text-primary">
-                {appointment.doctor.title}. {appointment.doctor.user.firstName}{' '}
-                {appointment.doctor.user.lastName}
+                {appointment.doctor.title}. {appointment.doctor.firstName}{' '}
+                {appointment.doctor.lastName}
               </h3>
               <span className="text-sm text-muted-foreground">
                 {appointment.doctor.specialty?.name}
               </span>
             </div>
           </div>
-          {appointment.status === AppointmentStatus.PENDING && (
-            <PendingAppointmentActions
-              appointmentId={appointment.id}
-              doctorId={appointment.doctor.id}
-            />
-          )}
 
-          {appointment.type === 'online' &&
-            (appointment.status === AppointmentStatus.IN_PROGRESS ||
-              appointment.status === AppointmentStatus.SCHEDULED) && (
-              <VideoAppointmentActions
-                appointmentId={appointment.id}
-                doctorId={appointment.doctor.id}
-              />
-            )}
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Badge variant={appointment.status}>
+              {appointment.status.charAt(0).toUpperCase() +
+                appointment.status.slice(1)}
+            </Badge>
+            <Badge variant="outline">
+              {appointment.type.charAt(0).toUpperCase() +
+                appointment.type.slice(1)}
+            </Badge>
+          </div>
         </div>
 
         <div className="grid flex-1 gap-2 sm:grid-cols-2">
@@ -136,17 +131,18 @@ function AppointmentCard({
           </div>
         </div>
 
-        <div className="flex flex-row justify-between">
-          <Badge variant="outline">
-            {appointment.type === 'physical'
-              ? 'Physical Appointment'
-              : 'Online Appointment'}
-          </Badge>
-
-          <Badge variant={appointment.status}>
-            {appointment.status.charAt(0).toUpperCase() +
-              appointment.status.slice(1)}
-          </Badge>
+        <div className="border-t pt-4">
+          {appointment.status === AppointmentStatus.PENDING && (
+            <PendingAppointmentActions
+              appointmentId={appointment.id}
+              doctorId={appointment.doctor.id}
+            />
+          )}
+          {appointment.type === 'online' &&
+            (appointment.status === AppointmentStatus.IN_PROGRESS ||
+              appointment.status === AppointmentStatus.SCHEDULED) && (
+              <VideoAppointmentActions appointmentId={appointment.id} />
+            )}
         </div>
       </div>
     </Card>
