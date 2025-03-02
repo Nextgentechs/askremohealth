@@ -3,21 +3,20 @@ import { StarRating } from '@web/components/star-rating'
 import { Avatar, AvatarFallback, AvatarImage } from '@web/components/ui/avatar'
 import {
   Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-  BreadcrumbLink,
-  BreadcrumbItem,
-  BreadcrumbList,
 } from '@web/components/ui/breadcrumb'
 import {
   Card,
-  CardTitle,
-  CardHeader,
   CardContent,
+  CardHeader,
+  CardTitle,
 } from '@web/components/ui/card'
 import { type RouterOutputs } from '@web/trpc/react'
 import { api } from '@web/trpc/server'
-import React from 'react'
 
 export default async function Page({
   params,
@@ -39,7 +38,7 @@ export default async function Page({
           <BreadcrumbSeparator />
           <BreadcrumbItem>
             <BreadcrumbPage>
-              {doctor.user?.firstName} {doctor.user?.lastName}
+              {doctor.firstName} {doctor.lastName}
             </BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
@@ -67,10 +66,10 @@ function DoctorCard({
     >
       <div className="flex flex-1 flex-row gap-5 md:gap-8 xl:gap-10">
         <Avatar className="hidden md:block md:size-28">
-          <AvatarImage src={doctor.user?.profilePicture?.url} />
+          <AvatarImage src={doctor.profilePicture?.url} />
           <AvatarFallback>
-            {doctor.user?.firstName.charAt(0)}
-            {doctor.user?.lastName.charAt(0)}
+            {doctor.firstName?.charAt(0)}
+            {doctor.lastName?.charAt(0)}
           </AvatarFallback>
         </Avatar>
         <DoctorDetails doctor={doctor} />

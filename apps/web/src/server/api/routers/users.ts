@@ -1,12 +1,11 @@
-import { procedure, publicProcedure } from '../trpc'
-import { z } from 'zod'
-import { User } from '@web/server/services/users'
-import { appointments } from '@web/server/db/schema'
-import { AppointmentStatus } from '@web/server/utils'
-import Appointments from '@web/server/services/appointments'
-import { db } from '@web/server/db'
-import { appointmentListSchema, newAppointmentSchema } from '../validators'
 import { currentUser as clerkCurrentUser } from '@clerk/nextjs/server'
+import { db } from '@web/server/db'
+import { appointmentLogs, appointments, patients } from '@web/server/db/schema'
+import { User } from '@web/server/services/users'
+import { AppointmentStatus } from '@web/server/utils'
+import { z } from 'zod'
+import { procedure, publicProcedure } from '../trpc'
+import { appointmentListSchema, newAppointmentSchema } from '../validators'
 
 export const signOut = procedure.mutation(async ({ ctx }) => {
   return await User.signOut(ctx)
@@ -25,32 +24,38 @@ export const details = procedure
     return await User.getUser(input)
   })
 
-export const createAppointment = publicProcedure
+export const createAppointment = procedure
   .input(newAppointmentSchema)
   .mutation(async ({ ctx, input }) => {
-    const user = await ctx.db.query.patients.findFirst({
-      where: (user, { eq }) => eq(user.phone, input.phone),
+    const patient = await ctx.db.query.patients.findFirst({
+      where: (patient, { eq }) => eq(patient.id, ctx.user?.id ?? ''),
     })
-    if (!user) {
-      await Appointments.createNewUserAppointment(input)
-      return
+    if (!patient) {
+      const currentUser = await clerkCurrentUser()
+      await ctx.db.insert(patients).values({
+        id: ctx.user?.id ?? '',
+        firstName: currentUser?.firstName ?? '',
+        lastName: currentUser?.lastName ?? '',
+        email: currentUser?.emailAddresses[0]?.emailAddress ?? '',
+        phone: currentUser?.phoneNumbers[0]?.phoneNumber ?? '',
+        dob: input.dob,
+        lastAppointment: input.date,
+      })
     }
-    if (ctx.user?.role === 'specialist') {
-      await Appointments.createDoctorAppointment(
-        user,
-        input.date,
-        input.appointmentType,
-        input.doctorId,
-        input.notes,
-      )
-      return
-    }
-    await db.insert(appointments).values({
-      doctorId: input.doctorId,
-      patientId: user.id,
-      appointmentDate: input.date,
-      patientNotes: input.notes,
-      type: input.appointmentType,
+
+    const [appointment] = await db
+      .insert(appointments)
+      .values({
+        doctorId: input.doctorId,
+        patientId: ctx.user?.id ?? '',
+        appointmentDate: input.date,
+        patientNotes: input.notes,
+        type: input.appointmentType,
+        status: AppointmentStatus.PENDING,
+      })
+      .returning()
+    await db.insert(appointmentLogs).values({
+      appointmentId: appointment?.id ?? '',
       status: AppointmentStatus.PENDING,
     })
 

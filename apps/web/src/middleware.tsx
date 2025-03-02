@@ -5,7 +5,7 @@ const isProtectedRoute = createRouteMatcher([
   '/appointments',
   '/profile',
   '/admin',
-  '/specialists/:id/book',
+  '/find-specialists/:id/book',
   '/specialists/(.*)',
   '/specialist/(.*)',
 ])
