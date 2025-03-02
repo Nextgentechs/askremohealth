@@ -1,14 +1,13 @@
-import { count, and, eq, type InferInsertModel } from 'drizzle-orm'
-import { appointmentLogs, appointments } from '../db/schema'
-import { db } from '../db'
 import { TRPCError } from '@trpc/server'
-import bcrypt from 'bcrypt'
-import { type Context } from '../api/trpc'
+import { and, count, eq, type InferInsertModel } from 'drizzle-orm'
 import { cookies } from 'next/headers'
+import { type Context } from '../api/trpc'
 import {
   AppointmentStatus,
   type AppointmentListSchema,
 } from '../api/validators'
+import { db } from '../db'
+import { appointmentLogs, appointments } from '../db/schema'
 
 export class User {
   static async createUser(params: InferInsertModel<typeof users>) {
@@ -62,43 +61,6 @@ export class User {
     return { success: true }
   }
 
-  static async updatePassword(
-    oldPassword: string,
-    newPassword: string,
-    ctx: Context,
-  ) {
-    const user = await db.query.users.findFirst({
-      where: (user, { eq, and }) =>
-        and(eq(user.id, ctx.user?.id ?? ''), eq(user.hasAccount, true)),
-    })
-    if (!user) {
-      throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: 'User not found',
-      })
-    }
-
-    const passwordMatch = await bcrypt.compare(oldPassword, user.password!)
-    if (!passwordMatch) {
-      throw new TRPCError({
-        code: 'UNAUTHORIZED',
-        message: 'Old Password is incorrect',
-      })
-    }
-    const hashedPassword = await bcrypt.hash(newPassword, 10)
-    await db
-      .update(users)
-      .set({ password: hashedPassword })
-      .where(eq(users.id, user.id))
-
-    if (ctx.session) await lucia.invalidateSession(ctx.session ?? '')
-    const cookie = lucia.createBlankSessionCookie()
-    const cookieStore = await cookies()
-    cookieStore.set(cookie.name, cookie.value, cookie.attributes)
-
-    return { success: true }
-  }
-
   static async getUserAppointments(
     userId: string,
     input: AppointmentListSchema,
@@ -135,17 +97,11 @@ export class User {
               id: true,
               title: true,
               consultationFee: true,
+              firstName: true,
+              lastName: true,
             },
             with: {
-              user: {
-                columns: {
-                  firstName: true,
-                  lastName: true,
-                },
-                with: {
-                  profilePicture: true,
-                },
-              },
+              profilePicture: true,
               specialty: {
                 columns: {
                   name: true,

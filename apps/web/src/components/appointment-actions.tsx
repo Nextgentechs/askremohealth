@@ -1,22 +1,14 @@
 'use client'
 
-import { Check, Loader, MoreHorizontal, Video, X } from 'lucide-react'
+import { CalendarClock, Check, Loader, Video, X } from 'lucide-react'
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@web/components/ui/dropdown-menu'
-import { Button } from './ui/button'
-import { api } from '@web/trpc/react'
 import { useToast } from '@web/hooks/use-toast'
-import Link from 'next/link'
+import { api } from '@web/trpc/react'
 import { useRouter } from 'next-nprogress-bar'
+import { Button } from './ui/button'
 
 export function PendingAppointmentActions({
   appointmentId,
-  doctorId,
 }: {
   appointmentId: string
   doctorId: string
@@ -24,7 +16,7 @@ export function PendingAppointmentActions({
   const utils = api.useUtils()
   const { toast } = useToast()
   const router = useRouter()
-  const { mutateAsync: cancelAppointment, isPending: cancelPending } =
+  const { mutateAsync: cancelAppointment } =
     api.users.cancelAppointment.useMutation({
       onMutate: () => {
         toast({
@@ -66,44 +58,39 @@ export function PendingAppointmentActions({
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost">
-          <MoreHorizontal />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent>
-        <DropdownMenuItem
-          onClick={handleCancelAppointment}
-          disabled={cancelPending}
-        >
-          Cancel Appointment
-        </DropdownMenuItem>
-        <DropdownMenuItem>Reschedule Appointment</DropdownMenuItem>
-        <DropdownMenuItem>
-          <Link href={`/doctors/${doctorId}`}>View Doctor Profile</Link>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className="flex gap-2 justify-end">
+      <Button
+        variant="outline"
+        size={'sm'}
+        className=" text-destructive border-destructive hover:bg-destructive/10 hover:text-destructive"
+        onClick={handleCancelAppointment}
+      >
+        <X className="  size-4" />
+        Cancel
+      </Button>
+      <Button
+        size={'sm'}
+        disabled
+        variant="outline"
+        className="border-primary "
+      >
+        <CalendarClock className="size-4" />
+        Reschedule
+      </Button>
+    </div>
   )
 }
 
 export function VideoAppointmentActions({
   appointmentId,
-  doctorId,
 }: {
   appointmentId: string
-  doctorId: string
 }) {
   const utils = api.useUtils()
   const { toast } = useToast()
   const router = useRouter()
 
-  const handleJoinMeeting = () => {
-    router.push(`/appointments/${appointmentId}/video`)
-  }
-
-  const { mutateAsync: cancelAppointment, isPending: cancelPending } =
+  const { mutateAsync: cancelAppointment } =
     api.users.cancelAppointment.useMutation({
       onMutate: () => {
         toast({
@@ -138,35 +125,29 @@ export function VideoAppointmentActions({
       },
     })
 
-  const handleCancelAppointment = async () => {
-    await cancelAppointment(appointmentId)
-    utils.users.listAppointments.invalidate()
-    router.refresh()
-  }
-
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost">
-          <MoreHorizontal />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent>
-        <DropdownMenuItem onClick={handleJoinMeeting}>
-          <Video className="mr-2 h-4 w-4" />
-          Join Meeting
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={handleCancelAppointment}
-          disabled={cancelPending}
-        >
-          Cancel Appointment
-        </DropdownMenuItem>
-        <DropdownMenuItem>Reschedule Appointment</DropdownMenuItem>
-        <DropdownMenuItem>
-          <Link href={`/doctors/${doctorId}`}>View Doctor Profile</Link>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className="flex gap-2 justify-end">
+      <Button
+        variant="outline"
+        size={'sm'}
+        onClick={() => router.push(`/appointments/${appointmentId}/video`)}
+      >
+        <Video className="size-4" />
+        Join Meeting
+      </Button>
+      <Button
+        variant="outline"
+        size={'sm'}
+        className=" text-destructive border-destructive hover:bg-destructive/10 hover:text-destructive"
+        onClick={async () => {
+          await cancelAppointment(appointmentId)
+          utils.users.listAppointments.invalidate()
+          router.refresh()
+        }}
+      >
+        <X className="size-4" />
+        Cancel
+      </Button>
+    </div>
   )
 }

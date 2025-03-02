@@ -315,7 +315,6 @@ function BookingForm() {
   })
 
   const { mutateAsync, isPending } = api.users.createAppointment.useMutation()
-
   const router = useRouter()
   const utils = api.useUtils()
   const onSubmit = async (data: z.infer<typeof appointmentSchema>) => {
@@ -328,10 +327,8 @@ function BookingForm() {
           searchParams.get('time') ?? '',
         ),
       }
-
       await mutateAsync(finalData)
       form.reset()
-
       if (currentUser) {
         toast({
           description: (
