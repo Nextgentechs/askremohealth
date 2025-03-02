@@ -1,4 +1,4 @@
-import React from 'react'
+import { CalendarClock, FileSearch, Hospital } from 'lucide-react'
 import {
   Card,
   CardContent,
@@ -6,16 +6,8 @@ import {
   CardHeader,
   CardTitle,
 } from './ui/card'
-import { FileSearch, CalendarClock, Hospital } from 'lucide-react'
 
-type HowItWorksItem = {
-  title: string
-  icon: React.ReactNode
-  description: string
-  bgColor: string
-}
-
-const howItWorks: HowItWorksItem[] = [
+const howItWorks = [
   {
     title: 'Search for Doctor or Hospital',
     icon: <FileSearch color="#B95000" size={40} absoluteStrokeWidth={true} />,
@@ -41,15 +33,15 @@ const howItWorks: HowItWorksItem[] = [
   },
 ]
 
-const HowItWorksCard = ({ item }: { item: HowItWorksItem }) => (
-  <Card className="flex h-full max-h-80 flex-col items-center justify-center gap-6 border p-6 shadow-sm">
-    <CardHeader>
+const HowItWorksCard = ({ item }: { item: (typeof howItWorks)[number] }) => (
+  <Card className="flex h-full flex-col items-center justify-center border p-6 shadow-sm">
+    <CardHeader className="flex flex-col items-center">
       <CardTitle
-        className={`flex size-16 items-center justify-center ${item.bgColor}`}
+        className={`flex size-16 rounded-full items-center justify-center ${item.bgColor}`}
       >
         {item.icon}
       </CardTitle>
-      <CardDescription className="text-lg font-medium text-primary">
+      <CardDescription className="text-lg lg:text-xl font-medium text-primary text-center">
         {item.title}
       </CardDescription>
     </CardHeader>
@@ -63,11 +55,11 @@ export default function HowItWorks() {
   return (
     <section
       id="how-it-works"
-      className="container mx-auto flex flex-col items-center gap-8 pb-16 pt-60 sm:pt-48 lg:pt-36"
+      className="container mx-auto flex flex-col items-center gap-6 py-16"
     >
       <h2 className="section-title">How It works</h2>
 
-      <div className="grid grid-rows-3 gap-5 md:grid-cols-3 md:grid-rows-1">
+      <div className="grid grid-rows-3 gap-6 md:grid-cols-3 md:grid-rows-1">
         {howItWorks.map((item, index) => (
           <HowItWorksCard key={index} item={item} />
         ))}

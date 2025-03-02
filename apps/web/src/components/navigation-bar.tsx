@@ -1,5 +1,6 @@
 'use client'
 
+import { useClerk } from '@clerk/nextjs'
 import { api, type RouterOutputs } from '@web/trpc/react'
 import {
   Book,
@@ -19,7 +20,6 @@ import {
   User,
 } from 'lucide-react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import Logo from './logo'
 import { Button } from './ui/button'
 import {
@@ -107,7 +107,7 @@ function MobileMenu() {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Menu className="size-6 hover:cursor-pointer lg:hidden" />
+        <Menu className="size-6 hover:cursor-pointer xl:hidden" />
       </SheetTrigger>
       <SheetContent className="flex flex-col items-start">
         <SheetTitle hidden>Menu</SheetTitle>
@@ -164,15 +164,8 @@ function CurrentUser({
 }: {
   user: RouterOutputs['users']['currentUser']
 }) {
-  const { mutateAsync: signOut } = api.auth.patients.signOut.useMutation()
+  const { signOut } = useClerk()
   const utils = api.useUtils()
-  const router = useRouter()
-  const handleSignOut = async () => {
-    await signOut()
-    await utils.users.currentUser.refetch()
-    router.refresh()
-    router.push('/')
-  }
 
   return (
     <DropdownMenu>
@@ -189,13 +182,13 @@ function CurrentUser({
         {/* <DropdownMenuLabel>My Account</DropdownMenuLabel> */}
         <DropdownMenuGroup>
           <Link href="/appointments">
-            <DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer">
               <Calendar />
               Appointments
             </DropdownMenuItem>
           </Link>
           <Link href="/profile">
-            <DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer">
               <User />
               My Profile
             </DropdownMenuItem>
@@ -203,7 +196,13 @@ function CurrentUser({
         </DropdownMenuGroup>
         <DropdownMenuSeparator className="bg-border" />
         <DropdownMenuGroup>
-          <DropdownMenuItem onClick={handleSignOut}>
+          <DropdownMenuItem
+            className="cursor-pointer"
+            onClick={async () => {
+              await signOut()
+              await utils.users.currentUser.refetch()
+            }}
+          >
             <LogOut />
             Log out
           </DropdownMenuItem>
@@ -220,7 +219,7 @@ export default function NavigationBar() {
     <div className="flex w-full flex-row items-center justify-between lg:px-5">
       <Logo />
 
-      <NavigationMenu className="hidden list-none gap-1 lg:flex">
+      <NavigationMenu className="hidden list-none gap-1 xl:flex">
         {navOptions.map((option) => (
           <NavigationMenuItem key={option.label}>
             {option.dropdownItems ? (

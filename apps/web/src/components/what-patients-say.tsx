@@ -1,57 +1,28 @@
 'use client'
 
-import React, { useEffect, useRef, useState } from 'react'
+import testimonials from '@web/data/testimonials'
+import Autoplay from 'embla-carousel-autoplay'
+import { useEffect, useRef, useState } from 'react'
+import { Card, CardContent, CardFooter } from './ui/card'
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
   type CarouselApi,
 } from './ui/carousel'
-import Autoplay from 'embla-carousel-autoplay'
-import { StarRating } from './star-rating'
-import testimonials from '@web/data/testimonials'
-import { Card, CardContent, CardFooter, CardHeader } from './ui/card'
-
-function TestimonialCard(testimonial: (typeof testimonials)[0][0]) {
-  return (
-    <Card className="border shadow-sm">
-      <CardHeader className="items-start">
-        <StarRating
-          initialRating={testimonial.rating}
-          readOnly
-          totalStars={5}
-        />
-      </CardHeader>
-      <CardContent className="flex flex-col items-start px-0 pt-6">
-        <blockquote className="w-full text-start text-sm leading-normal text-muted-foreground">
-          &quot;{testimonial.quote}&quot;
-        </blockquote>
-      </CardContent>
-      <CardFooter className="flex flex-col items-start px-0">
-        <div className="text-sm text-accent-foreground lg:text-base">
-          {testimonial.author}
-        </div>
-        <div className="text-sm text-muted-foreground">{testimonial.role}</div>
-      </CardFooter>
-    </Card>
-  )
-}
 
 function WhatPatientsSayCarousel() {
   const [api, setApi] = useState<CarouselApi>()
   const [current, setCurrent] = useState(0)
   const [count, setCount] = useState(0)
 
-  const plugin = useRef(Autoplay({ delay: 5000, stopOnInteraction: true }))
-
+  const plugin = useRef(Autoplay({ delay: 2000, stopOnInteraction: true }))
   useEffect(() => {
     if (!api) {
       return
     }
-
     setCount(api.scrollSnapList().length)
     setCurrent(api.selectedScrollSnap() + 1)
-
     api.on('select', () => {
       setCurrent(api.selectedScrollSnap() + 1)
     })
@@ -73,7 +44,21 @@ function WhatPatientsSayCarousel() {
                 className="grid grid-cols-1 gap-5 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3"
               >
                 {testimonials[carouselIndex]?.map((testimonial, index) => (
-                  <TestimonialCard key={index} {...testimonial} />
+                  <Card className="border p-6 shadow-sm" key={index}>
+                    <CardContent className="flex flex-col items-start px-0">
+                      <blockquote className="w-full text-start text-sm leading-normal text-muted-foreground">
+                        &quot;{testimonial.quote}&quot;
+                      </blockquote>
+                    </CardContent>
+                    <CardFooter className="flex flex-col items-start px-0 pb-0">
+                      <div className="text-sm text-accent-foreground">
+                        {testimonial.author}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {testimonial.role}
+                      </div>
+                    </CardFooter>
+                  </Card>
                 ))}
               </CarouselItem>
             ),
@@ -104,7 +89,7 @@ export default function WhatPatientsSay() {
     >
       <div className="mx-auto flex w-full flex-col items-center justify-center gap-2">
         <h2 className="section-title"> What Our Patients Say</h2>
-        <p className="section-description">
+        <p className="section-description text-center">
           Discover what patients say about their experiences and the care they
           received.
         </p>

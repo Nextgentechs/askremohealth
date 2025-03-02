@@ -1,5 +1,7 @@
 'use client'
-import React from 'react'
+import { useSignIn, useSignUp } from '@clerk/nextjs'
+import { type OAuthStrategy } from '@clerk/types'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@web/components/ui/button'
 import {
   Card,
@@ -10,14 +12,13 @@ import {
 } from '@web/components/ui/card'
 import { Input } from '@web/components/ui/input'
 import { Label } from '@web/components/ui/label'
-import { type SVGProps } from 'react'
-import { useState } from 'react'
-import { InputOTP, InputOTPGroup, InputOTPSlot } from './ui/input-otp'
+import { toast, useToast } from '@web/hooks/use-toast'
+import { AnimatePresence, motion } from 'framer-motion'
+import { Loader } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
+import React, { useState, type SVGProps } from 'react'
 import { useForm } from 'react-hook-form'
-import { toast } from '@web/hooks/use-toast'
 import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useToast } from '@web/hooks/use-toast'
 import {
   Form,
   FormControl,
@@ -26,11 +27,7 @@ import {
   FormLabel,
   FormMessage,
 } from './ui/form'
-import { useSignIn, useSignUp } from '@clerk/nextjs'
-import { Loader } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { type OAuthStrategy } from '@clerk/types'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { InputOTP, InputOTPGroup, InputOTPSlot } from './ui/input-otp'
 
 export default function AuthForm() {
   const [currentStep, setCurrentStep] = useState<'login' | 'signup' | 'otp'>(
@@ -88,7 +85,7 @@ function Login({
   })
   const { signIn, setActive, isLoaded } = useSignIn()
   const params = useSearchParams()
-  const redirectUrl = params.get('redirect_url') ?? '/appointments'
+  const redirectUrl = params.get('redirect_url') ?? '/'
 
   function signInWith(strategy: OAuthStrategy) {
     return signIn
