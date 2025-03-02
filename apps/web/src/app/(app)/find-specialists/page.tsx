@@ -1,6 +1,7 @@
+'use client'
+
 import DoctorFilters from '@web/components/doctor-filters'
 import DoctorList from '@web/components/doctor-list'
-import { SearchForm } from '@web/components/search-form'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -9,7 +10,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@web/components/ui/breadcrumb'
-import React from 'react'
+import SearchForm from './_components/search-form'
 
 export default function Page() {
   return (
@@ -31,7 +32,6 @@ export default function Page() {
 
       <div className="mb-10 flex flex-row gap-10 2xl:px-2">
         <DoctorFilters />
-
         <DoctorList />
       </div>
     </main>

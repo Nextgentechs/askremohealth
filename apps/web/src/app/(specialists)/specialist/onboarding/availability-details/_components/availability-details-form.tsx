@@ -1,26 +1,25 @@
 'use client'
-import { Button } from '@web/components/ui/button'
-import { CardContent } from '@web/components/ui/card'
-import { useToast } from '@web/hooks/use-toast'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Button } from '@web/components/ui/button'
+import { Card, CardContent } from '@web/components/ui/card'
+import { Checkbox } from '@web/components/ui/checkbox'
+import { Input } from '@web/components/ui/input'
+import { Label } from '@web/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@web/components/ui/select'
+import { Switch } from '@web/components/ui/switch'
+import { useToast } from '@web/hooks/use-toast'
+import { api } from '@web/trpc/react'
+import { Loader } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import React from 'react'
 import { FormProvider, useForm, useFormContext } from 'react-hook-form'
 import { z } from 'zod'
-import { Label } from '@web/components/ui/label'
-import { api } from '@web/trpc/react'
-import { Card } from '@web/components/ui/card'
-import { Input } from '@web/components/ui/input'
-import { Checkbox } from '@web/components/ui/checkbox'
-import {
-  Select,
-  SelectItem,
-  SelectContent,
-  SelectValue,
-  SelectTrigger,
-} from '@web/components/ui/select'
-import { Switch } from '@web/components/ui/switch'
-import { Loader } from 'lucide-react'
 
 const operatingHoursSchema = z.object({
   day: z.enum([
@@ -165,7 +164,6 @@ export default function AvailabilityDetailsForm() {
     api.doctors.updateAvailabilityDetails.useMutation({})
 
   const onSubmit = form.handleSubmit(async (values) => {
-    console.log(values)
     try {
       const res = await updateAvailabilityDetails(values)
       if (res.success) {

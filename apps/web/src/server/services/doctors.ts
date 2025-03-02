@@ -227,6 +227,7 @@ export class Doctors {
     userId: string,
   ) {
     const client = await clerkClient()
+
     await db.transaction(async (trx) => {
       await trx
         .update(doctorsTable)
@@ -234,14 +235,12 @@ export class Doctors {
           consultationFee: input.consultationFee,
         })
         .where(eq(doctorsTable.id, userId))
+      await trx.insert(operatingHours).values({
+        schedule: input.operatingHours,
+        consultationDuration: input.appointmentDuration,
+        doctorId: userId,
+      })
 
-      await trx
-        .update(operatingHours)
-        .set({
-          schedule: input.operatingHours,
-          consultationDuration: input.appointmentDuration,
-        })
-        .where(eq(operatingHours.doctorId, userId))
       await client.users.updateUser(userId, {
         publicMetadata: {
           onboardingComplete: true,
@@ -322,7 +321,7 @@ export class Doctors {
         .select()
         .from(facilities)
         .where(
-          and(
+          or(
             input.county
               ? eq(
                   facilities.county,
@@ -452,7 +451,7 @@ export class Doctors {
       where: (subSpecialty, { inArray }) =>
         inArray(
           subSpecialty.id,
-          (doctor?.subSpecialties as Array<{ id: string }>).map((s) => s.id),
+          (doctor?.subSpecialties as Array<{ id: string }>)?.map((s) => s.id),
         ),
     })
 

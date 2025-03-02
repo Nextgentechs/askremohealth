@@ -46,7 +46,7 @@ const navOptions = [
   },
   {
     label: 'Find a Specialist',
-    href: '/find-specialist',
+    href: '/find-specialists',
     icon: Stethoscope,
   },
   {
