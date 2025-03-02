@@ -1,11 +1,8 @@
 'use client'
 
-import { api, type RouterOutputs } from '@web/trpc/react'
-import { Check, ChevronsUpDown, Search } from 'lucide-react'
-import { useRouter } from 'next/navigation'
-import React from 'react'
-import { Button } from './ui/button'
-import { Card } from './ui/card'
+import { SelectSkeleton } from '@web/components/search-form'
+import { Button } from '@web/components/ui/button'
+import { Card } from '@web/components/ui/card'
 import {
   Command,
   CommandEmpty,
@@ -13,45 +10,79 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from './ui/command'
-import { Input } from './ui/input'
-import { Label } from './ui/label'
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
-import { Skeleton } from './ui/skeleton'
+} from '@web/components/ui/command'
+import { Input } from '@web/components/ui/input'
+import { Label } from '@web/components/ui/label'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@web/components/ui/popover'
+import { api } from '@web/trpc/react'
+import { Check, ChevronsUpDown } from 'lucide-react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import React from 'react'
 
-export function SelectSkeleton() {
-  return (
-    <div className="p-2">
-      <Skeleton className="mb-2 h-4 w-full rounded-sm" />
-      <Skeleton className="mb-2 h-4 w-full rounded-sm" />
-      <Skeleton className="mb-2 h-4 w-full rounded-sm" />
-      <Skeleton className="mb-2 h-4 w-full rounded-sm" />
-      <Skeleton className="h-4 w-full rounded-sm" />
-    </div>
+function useQueryString() {
+  const searchParams = useSearchParams()
+
+  return React.useCallback(
+    (name: string, value: string) => {
+      const params = new URLSearchParams(searchParams.toString())
+      params.set(name, value)
+      return params.toString()
+    },
+    [searchParams],
   )
 }
 
+function useDebounceValue<T>(value: T, delay = 500): T {
+  const [debouncedValue, setDebouncedValue] = React.useState(value)
+  const timeoutRef = React.useRef<NodeJS.Timeout>()
+
+  React.useMemo(() => {
+    clearTimeout(timeoutRef.current)
+    timeoutRef.current = setTimeout(() => {
+      setDebouncedValue(value)
+    }, delay)
+  }, [value, delay])
+
+  React.useEffect(() => {
+    return () => clearTimeout(timeoutRef.current)
+  }, [])
+
+  return debouncedValue
+}
+
 export default function SearchForm() {
-  const [selectedSpecialty, setSelectedSpecialty] = React.useState<{
-    id: string
-    name: string
-  } | null>(null)
-  const [selectedCounty, setSelectedCounty] =
-    React.useState<RouterOutputs['locations']['counties'][number]>()
-  const [selectedTown, setSelectedTown] =
-    React.useState<RouterOutputs['locations']['towns'][number]>()
-  const [query, setQuery] = React.useState('')
+  const searchParams = useSearchParams()
+  const selectedSpecialty = searchParams.get('specialty')
+  const selectedCounty = searchParams.get('county')
+  const selectedTown = searchParams.get('town')
+  const query = searchParams.get('query')
+
   const router = useRouter()
+  const pathname = usePathname()
+  const createQueryString = useQueryString()
 
   const [specialties] = api.specialties.listSpecialties.useSuspenseQuery()
   const [counties] = api.locations.counties.useSuspenseQuery()
   const { data: towns, isLoading: townsLoading } = api.locations.towns.useQuery(
-    { countyCode: selectedCounty?.code },
+    { countyCode: selectedCounty ?? undefined },
     { enabled: !!selectedCounty },
   )
+
+  const [searchInput, setSearchInput] = React.useState(query ?? '')
+  const debouncedQuery = useDebounceValue(searchInput, 500)
+
+  React.useEffect(() => {
+    router.push(pathname + '?' + createQueryString('query', debouncedQuery))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedQuery])
+
   return (
-    <Card className="p-6 mx-auto xl:grid xl:grid-cols-5 gap-3 transition-all duration-300 w-90 xl:h-32 items-center 2xl:w-[1184px] xl:w-[1088px] sm:w-[500px] lg:w-[888px] md:w-[600px]">
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 xl:col-span-4">
+    <Card className="p-6 mx-auto grid grid-cols-4 gap-3 transition-all duration-300 w-90 h-32 items-center w-full">
+      <div className="grid grid-cols-4 gap-3 col-span-4">
         <div className="w-full">
           <Label>Doctor Specialty</Label>
           <Popover>
@@ -62,7 +93,9 @@ export default function SearchForm() {
                 data-state={selectedSpecialty ? 'true' : 'false'}
                 className="w-full justify-between data-[state=false]:text-muted-foreground"
               >
-                {selectedSpecialty?.name ?? 'Select a specialty'}
+                {specialties.find(
+                  (specialty) => specialty.id === selectedSpecialty,
+                )?.name ?? 'Select a specialty'}
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
@@ -78,16 +111,24 @@ export default function SearchForm() {
                         className="cursor-pointer"
                         key={specialty.id}
                         onSelect={() => {
-                          if (specialty.id === selectedSpecialty?.id) {
-                            setSelectedSpecialty(null)
+                          if (specialty.id === selectedSpecialty) {
+                            router.push(
+                              pathname +
+                                '?' +
+                                createQueryString('specialty', ''),
+                            )
                           } else {
-                            setSelectedSpecialty(specialty)
+                            router.push(
+                              pathname +
+                                '?' +
+                                createQueryString('specialty', specialty.id),
+                            )
                           }
                         }}
                       >
                         {specialty.name}
                         <Check
-                          data-selected={specialty.id === selectedSpecialty?.id}
+                          data-selected={specialty.id === selectedSpecialty}
                           className="ml-auto data-[selected=true]:opacity-100 data-[selected=false]:opacity-0"
                         />
                       </CommandItem>
@@ -108,7 +149,8 @@ export default function SearchForm() {
                 data-state={selectedCounty ? 'true' : 'false'}
                 className="w-full justify-between data-[state=false]:text-muted-foreground"
               >
-                {selectedCounty?.name ?? 'Select a county'}
+                {counties.find((county) => county.code === selectedCounty)
+                  ?.name ?? 'Select a county'}
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
@@ -123,16 +165,22 @@ export default function SearchForm() {
                         value={county.name}
                         key={county.name}
                         onSelect={() => {
-                          if (county.name === selectedCounty?.name) {
-                            setSelectedCounty(undefined)
+                          if (county.code === selectedCounty) {
+                            router.push(
+                              pathname + '?' + createQueryString('county', ''),
+                            )
                           } else {
-                            setSelectedCounty(county)
+                            router.push(
+                              pathname +
+                                '?' +
+                                createQueryString('county', county.code),
+                            )
                           }
                         }}
                       >
                         {county.name}
                         <Check
-                          data-selected={county.name === selectedCounty?.name}
+                          data-selected={county.code === selectedCounty}
                           className="ml-auto data-[selected=true]:opacity-100 data-[selected=false]:opacity-0"
                         />
                       </CommandItem>
@@ -154,7 +202,8 @@ export default function SearchForm() {
                 data-state={selectedTown ? 'true' : 'false'}
                 className="w-full justify-between data-[state=false]:text-muted-foreground"
               >
-                {selectedTown?.name ?? 'Select a town'}
+                {towns?.find((town) => town.id === selectedTown)?.name ??
+                  'Select a town'}
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
@@ -176,16 +225,22 @@ export default function SearchForm() {
                           value={town.name}
                           key={town.id}
                           onSelect={() => {
-                            if (town.name === selectedTown?.name) {
-                              setSelectedTown(undefined)
+                            if (town.id === selectedTown) {
+                              router.push(
+                                pathname + '?' + createQueryString('town', ''),
+                              )
                             } else {
-                              setSelectedTown(town)
+                              router.push(
+                                pathname +
+                                  '?' +
+                                  createQueryString('town', town?.id ?? ''),
+                              )
                             }
                           }}
                         >
                           {town.name}
                           <Check
-                            data-selected={town.name === selectedTown?.name}
+                            data-selected={town.id === selectedTown}
                             className="ml-auto data-[selected=true]:opacity-100 data-[selected=false]:opacity-0"
                           />
                         </CommandItem>
@@ -204,29 +259,10 @@ export default function SearchForm() {
             type="text"
             id="search"
             placeholder="Doctor or hospital name"
-            value={query ?? ''}
-            onChange={(e) => {
-              setQuery(e.target.value)
-            }}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
           />
         </div>
-      </div>
-
-      <div className="flex w-full justify-end">
-        <Button
-          className="w-full lg:w-[216px] mt-6"
-          onClick={() => {
-            const params = new URLSearchParams()
-            if (selectedSpecialty) params.set('specialty', selectedSpecialty.id)
-            if (selectedCounty) params.set('county', selectedCounty.code)
-            if (selectedTown) params.set('town', selectedTown.id ?? '')
-            if (query) params.set('query', query)
-            router.push(`/find-specialists?${params.toString()}`)
-          }}
-        >
-          <Search />
-          Search
-        </Button>
       </div>
     </Card>
   )

@@ -1,4 +1,3 @@
-import Footer from '@web/components/footer'
 import NavigationBar from '@web/components/navigation-bar'
 
 export default async function RootLayout({
@@ -10,7 +9,6 @@ export default async function RootLayout({
         <NavigationBar />
       </div>
       {children}
-      <Footer />
     </>
   )
 }
