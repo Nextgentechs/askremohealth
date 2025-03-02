@@ -1,45 +1,41 @@
 'use client'
 
-import React, { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
-import { useRouter } from 'next-nprogress-bar'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useToast } from '@web/hooks/use-toast'
+import { combineDateTime, formatMoney, getTimeRange } from '@web/lib/utils'
 import { api } from '@web/trpc/react'
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
+import { CalendarIcon, Check, ClockIcon, Loader } from 'lucide-react'
+import { useRouter } from 'next-nprogress-bar'
+import { useParams, useSearchParams } from 'next/navigation'
+import { useState } from 'react'
+import { FormProvider, useForm, useFormContext } from 'react-hook-form'
+import { z } from 'zod'
+import AppointmentConfirmation from './appointment-confirmation'
 import DoctorDetails from './doctor-details'
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
+import { Button } from './ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
+import { Input } from './ui/input'
 import { Label } from './ui/label'
 import { RadioGroup, RadioGroupItem } from './ui/radio-group'
-import { Input } from './ui/input'
-import { CalendarIcon, Check, ClockIcon, Loader } from 'lucide-react'
 import { Textarea } from './ui/textarea'
-import { Button } from './ui/button'
-import { z } from 'zod'
-import { useForm, FormProvider, useFormContext } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { combineDateTime, formatMoney, getTimeRange } from '@web/lib/utils'
-import { useToast } from '@web/hooks/use-toast'
-import AppointmentConfirmation from './appointment-confirmation'
-import { useParams, useSearchParams } from 'next/navigation'
-
-function useDoctorDetails() {
-  const { id } = useParams<{ id: string }>()
-  return api.doctors.details.useSuspenseQuery(id)
-}
 
 function DoctorCard() {
-  const [doctorDetails] = useDoctorDetails()
+  const { id } = useParams<{ id: string }>()
+  const [doctorDetails] = api.doctors.details.useSuspenseQuery(id)
 
   if (!doctorDetails) return null
   return (
     <Card
       key={doctorDetails.id}
-      className="hidden h-fit w-full max-w-md flex-col justify-between gap-8 rounded-xl border shadow-sm transition-all duration-300 sm:flex-row lg:flex lg:flex-row xl:max-w-lg 2xl:max-w-xl"
+      className="hidden p-6 h-fit w-full max-w-md flex-col justify-between gap-8 rounded-xl border shadow-sm transition-all duration-300 sm:flex-row lg:flex lg:flex-row xl:max-w-lg 2xl:max-w-xl"
     >
       <div className="flex flex-1 flex-row gap-5 md:gap-8 xl:gap-10">
         <Avatar className="hidden md:block md:size-28">
-          <AvatarImage src={doctorDetails.user?.profilePicture?.url} />
+          <AvatarImage src={doctorDetails.profilePicture?.url} />
           <AvatarFallback>
-            {doctorDetails.user?.firstName.charAt(0)}
-            {doctorDetails.user?.lastName.charAt(0)}
+            {doctorDetails.firstName?.charAt(0)}
+            {doctorDetails.lastName?.charAt(0)}
           </AvatarFallback>
         </Avatar>
         <DoctorDetails doctor={doctorDetails} />
@@ -51,7 +47,7 @@ function DoctorCard() {
 function AppointmentType() {
   const { setValue } = useFormContext<z.infer<typeof appointmentSchema>>()
   return (
-    <Card className="rounded-xl border shadow-sm">
+    <Card className="rounded-xl p-6 border shadow-sm">
       <RadioGroup
         defaultValue="online"
         className="flex flex-col justify-between gap-4 sm:flex-row"
@@ -202,7 +198,8 @@ function NotesForDoctor() {
 }
 
 function AppointmentDetails() {
-  const [doctorDetails] = useDoctorDetails()
+  const { id } = useParams<{ id: string }>()
+  const [doctorDetails] = api.doctors.details.useSuspenseQuery(id)
   const searchParams = useSearchParams()
   const date = new Date(searchParams.get('date') ?? '').toLocaleDateString(
     'en-GB',
@@ -293,7 +290,7 @@ const appointmentSchema = z.object({
       return val
     }),
   email: z.string().email({ message: 'Invalid email address' }),
-  dob: z.string(),
+  dob: z.string().min(1, { message: 'Date of birth is required' }),
   notes: z.string().optional(),
 })
 
@@ -301,8 +298,10 @@ function BookingForm() {
   const [isOpen, setIsOpen] = useState(false)
   const searchParams = useSearchParams()
   const { toast } = useToast()
-  const [doctorDetails] = useDoctorDetails()
-  const { data: currentUser } = api.users.currentUser.useQuery()
+  const { id } = useParams<{ id: string }>()
+
+  const [doctorDetails] = api.doctors.details.useSuspenseQuery(id)
+  const [currentUser] = api.users.currentUser.useSuspenseQuery()
 
   const form = useForm<z.infer<typeof appointmentSchema>>({
     resolver: zodResolver(appointmentSchema),
@@ -310,9 +309,8 @@ function BookingForm() {
       appointmentType: 'online',
       firstName: currentUser?.firstName ?? '',
       lastName: currentUser?.lastName ?? '',
-      phone: currentUser?.phone ?? '',
-      email: currentUser?.email ?? '',
-      dob: currentUser?.dob?.toISOString().split('T')[0] ?? '',
+      phone: currentUser?.phoneNumbers?.[0]?.phoneNumber ?? '',
+      email: currentUser?.emailAddresses?.[0]?.emailAddress ?? '',
     },
   })
 
@@ -324,7 +322,7 @@ function BookingForm() {
     try {
       const finalData = {
         ...data,
-        doctorId: doctorDetails.user?.id ?? '',
+        doctorId: doctorDetails.id ?? '',
         date: combineDateTime(
           searchParams.get('date') ?? '',
           searchParams.get('time') ?? '',
@@ -339,7 +337,7 @@ function BookingForm() {
           description: (
             <div className="flex items-center gap-2">
               <Check className="h-4 w-4 text-green-500" />
-              <span>Appointment booked successfully</span>
+              <span>Appointment booked!</span>
             </div>
           ),
         })
