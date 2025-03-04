@@ -7,22 +7,11 @@ import { z } from 'zod'
 import { procedure, publicProcedure } from '../trpc'
 import { appointmentListSchema, newAppointmentSchema } from '../validators'
 
-export const signOut = procedure.mutation(async ({ ctx }) => {
-  return await User.signOut(ctx)
-})
-
 export const currentUser = publicProcedure.query(async ({ ctx }) => {
   if (!ctx.user) return null
   const clerkUser = await clerkCurrentUser()
   return clerkUser ?? null
 })
-
-export const details = procedure
-  .input(z.string().optional())
-  .query(async ({ input }) => {
-    if (!input) return null
-    return await User.getUser(input)
-  })
 
 export const createAppointment = procedure
   .input(newAppointmentSchema)

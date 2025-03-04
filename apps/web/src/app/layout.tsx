@@ -1,9 +1,9 @@
 import '@web/styles/globals.css'
 
+import { Toaster } from '@web/components/ui/toaster'
+import Provider from '@web/providers/provider'
 import { GeistSans } from 'geist/font/sans'
 import { type Metadata } from 'next'
-import Provider from '@web/providers/provider'
-import { Toaster } from '@web/components/ui/toaster'
 
 export const metadata: Metadata = {
   title: 'Ask Virtual Healthcare',
