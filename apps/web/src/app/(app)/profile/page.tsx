@@ -1,14 +1,13 @@
 import {
   Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-  BreadcrumbLink,
-  BreadcrumbItem,
-  BreadcrumbList,
 } from '@web/components/ui/breadcrumb'
 import { api } from '@web/trpc/server'
-import React from 'react'
-import { ProfileForm, UpdatePassword } from './profile-form'
+import { ProfileForm } from './profile-form'
 
 export default async function Page() {
   const user = await api.users.currentUser()
@@ -34,7 +33,6 @@ export default async function Page() {
 
       <div className="flex w-full flex-col justify-between gap-4 lg:flex-row lg:gap-8">
         <ProfileForm />
-        <UpdatePassword />
       </div>
     </main>
   )

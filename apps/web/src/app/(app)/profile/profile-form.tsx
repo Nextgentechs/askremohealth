@@ -4,11 +4,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@web/components/ui/button'
 import { Input } from '@web/components/ui/input'
 import { Label } from '@web/components/ui/label'
-import { toast, useToast } from '@web/hooks/use-toast'
+import { useToast } from '@web/hooks/use-toast'
 import { api } from '@web/trpc/react'
-import { Loader } from 'lucide-react'
 import { useRouter } from 'next-nprogress-bar'
-import React from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
@@ -48,19 +46,19 @@ export function ProfileForm() {
     defaultValues: {
       firstName: currentUser?.firstName ?? '',
       lastName: currentUser?.lastName ?? '',
-      email: currentUser?.email ?? '',
-      phone: currentUser?.phone ?? '',
-      dob: currentUser?.dob?.toISOString().split('T')[0] ?? '',
+      email: currentUser?.emailAddresses[0]?.emailAddress ?? '',
+      phone: currentUser?.phoneNumbers[0]?.phoneNumber ?? '',
+      dob: '',
     },
   })
   const { toast } = useToast()
   const router = useRouter()
   const utils = api.useUtils()
-  const { mutateAsync, isPending } = api.users.updateProfile.useMutation()
+  // const { mutateAsync, isPending } = api.users.updateProfile.useMutation()
 
   const onSubmit = async (data: z.infer<typeof profileSchema>) => {
     try {
-      await mutateAsync(data)
+      // await mutateAsync(data)
       await utils.users.currentUser.invalidate()
       router.refresh()
       toast({
@@ -157,10 +155,11 @@ export function ProfileForm() {
       <div className="mt-4 flex w-full justify-end">
         <Button
           type="submit"
-          disabled={!form.formState.isDirty || isPending}
+          // disabled={!form.formState.isDirty || isPending}
+          disabled
           className="flex items-center gap-2"
         >
-          {isPending ? <Loader className="h-4 w-4 animate-spin" /> : null}
+          {/* {isPending ? <Loader className="h-4 w-4 animate-spin" /> : null} */}
           Save Changes
         </Button>
       </div>
@@ -180,90 +179,3 @@ const passwordSchema = z
     message: 'Passwords do not match',
     path: ['confirmPassword'],
   })
-
-export function UpdatePassword() {
-  const form = useForm<z.infer<typeof passwordSchema>>({
-    resolver: zodResolver(passwordSchema),
-  })
-
-  const { mutateAsync, isPending } = api.users.updatePassword.useMutation()
-
-  const onSubmit = async (data: z.infer<typeof passwordSchema>) => {
-    try {
-      await mutateAsync({
-        oldPassword: data.oldPassword,
-        newPassword: data.newPassword,
-      })
-      toast({
-        title: 'Password updated successfully',
-        description: 'Your password has been updated successfully',
-      })
-    } catch (error) {
-      console.error(error)
-      toast({
-        title: 'Failed to update password',
-        description: 'An error occurred while updating your password',
-        variant: 'destructive',
-      })
-    }
-  }
-  return (
-    <form
-      onSubmit={form.handleSubmit(onSubmit)}
-      className="grid w-full max-w-md gap-4 rounded-xl border p-6 shadow-sm"
-    >
-      <div>
-        <Label htmlFor="oldPassword">Old Password</Label>
-        <Input
-          id="oldPassword"
-          {...form.register('oldPassword')}
-          type="password"
-        />
-        {form.formState.errors.oldPassword && (
-          <p className="text-xs font-medium text-destructive">
-            {form.formState.errors.oldPassword.message}
-          </p>
-        )}
-      </div>
-
-      <div>
-        <Label htmlFor="newPassword">New Password</Label>
-        <Input
-          id="newPassword"
-          {...form.register('newPassword')}
-          type="password"
-        />
-        {form.formState.errors.newPassword && (
-          <p className="text-xs font-medium text-destructive">
-            {form.formState.errors.newPassword.message}
-          </p>
-        )}
-      </div>
-
-      <div>
-        <Label htmlFor="confirmPassword">Confirm Password</Label>
-        <Input
-          id="confirmPassword"
-          {...form.register('confirmPassword')}
-          type="password"
-        />
-        {form.formState.errors.confirmPassword && (
-          <p className="text-xs font-medium text-destructive">
-            {form.formState.errors.confirmPassword.message}
-          </p>
-        )}
-      </div>
-
-      <div className="mt-4 flex w-full justify-end">
-        <Button
-          type="submit"
-          disabled={!form.formState.isValid || isPending}
-          className="flex items-center gap-2"
-        >
-          {isPending ? <Loader className="animate-spin" /> : null}
-          Update Password
-        </Button>
-      </div>
-    </form>
-  )
-}
