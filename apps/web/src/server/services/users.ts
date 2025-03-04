@@ -1,105 +1,13 @@
-import { count, and, eq, type InferInsertModel } from 'drizzle-orm'
-import { appointmentLogs, appointments, users } from '../db/schema'
-import { db } from '../db'
 import { TRPCError } from '@trpc/server'
-import { lucia } from '@web/lib/lucia'
-import bcrypt from 'bcrypt'
-import { type Context } from '../api/trpc'
-import { cookies } from 'next/headers'
+import { and, count, eq } from 'drizzle-orm'
 import {
   AppointmentStatus,
   type AppointmentListSchema,
-} from '../api/validation'
+} from '../api/validators'
+import { db } from '../db'
+import { appointmentLogs, appointments } from '../db/schema'
 
 export class User {
-  static async createUser(params: InferInsertModel<typeof users>) {
-    const [user] = await db
-      .insert(users)
-      .values({
-        ...params,
-      })
-      .returning()
-
-    if (!user) {
-      throw new TRPCError({
-        code: 'NOT_IMPLEMENTED',
-        message: 'Failed to create user',
-      })
-    }
-
-    return user
-  }
-
-  static async updateProfile(
-    userId: string,
-    firstName: string,
-    lastName: string,
-    email: string,
-    phone: string,
-    dob: Date,
-  ) {
-    const user = await db.query.users.findFirst({
-      where: (user, { eq }) => eq(user.id, userId),
-    })
-
-    if (!user) {
-      throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: 'User not found',
-      })
-    }
-
-    await db
-      .update(users)
-      .set({
-        firstName,
-        lastName,
-        email,
-        phone,
-        dob,
-      })
-      .where(eq(users.id, userId))
-
-    return { success: true }
-  }
-
-  static async updatePassword(
-    oldPassword: string,
-    newPassword: string,
-    ctx: Context,
-  ) {
-    const user = await db.query.users.findFirst({
-      where: (user, { eq, and }) =>
-        and(eq(user.id, ctx.user?.id ?? ''), eq(user.hasAccount, true)),
-    })
-    if (!user) {
-      throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: 'User not found',
-      })
-    }
-
-    const passwordMatch = await bcrypt.compare(oldPassword, user.password!)
-    if (!passwordMatch) {
-      throw new TRPCError({
-        code: 'UNAUTHORIZED',
-        message: 'Old Password is incorrect',
-      })
-    }
-    const hashedPassword = await bcrypt.hash(newPassword, 10)
-    await db
-      .update(users)
-      .set({ password: hashedPassword })
-      .where(eq(users.id, user.id))
-
-    if (ctx.session) await lucia.invalidateSession(ctx.session.id)
-    const cookie = lucia.createBlankSessionCookie()
-    const cookieStore = await cookies()
-    cookieStore.set(cookie.name, cookie.value, cookie.attributes)
-
-    return { success: true }
-  }
-
   static async getUserAppointments(
     userId: string,
     input: AppointmentListSchema,
@@ -136,17 +44,11 @@ export class User {
               id: true,
               title: true,
               consultationFee: true,
+              firstName: true,
+              lastName: true,
             },
             with: {
-              user: {
-                columns: {
-                  firstName: true,
-                  lastName: true,
-                },
-                with: {
-                  profilePicture: true,
-                },
-              },
+              profilePicture: true,
               specialty: {
                 columns: {
                   name: true,
@@ -276,21 +178,5 @@ export class User {
     ])
 
     return { success: true, newAppointmentId: newAppointment[0]?.id }
-  }
-
-  static async signOut(ctx: Context) {
-    if (ctx.session) await lucia.invalidateSession(ctx.session.id)
-    const cookie = lucia.createBlankSessionCookie()
-    const cookieStore = await cookies()
-    cookieStore.set(cookie.name, cookie.value, cookie.attributes)
-  }
-
-  static async getUser(userId: string) {
-    return await db.query.patients.findFirst({
-      where: (patient) => eq(patient.id, userId),
-      with: {
-        user: true,
-      },
-    })
   }
 }

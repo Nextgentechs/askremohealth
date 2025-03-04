@@ -1,93 +1,10 @@
-import { appointments, patients, type users } from '../db/schema'
+import { type DoctorAppointmentListSchema } from '../api/validators'
 import { db } from '../db'
-import { User } from './users'
-import { TRPCError } from '@trpc/server'
-import {
-  type DoctorAppointmentListSchema,
-  type NewAppointmentSchema,
-} from '../api/validation'
-import { AppointmentStatus } from '../utils'
+import { appointments } from '../db/schema'
 
-import { lte, type InferSelectModel } from 'drizzle-orm'
-import { and, eq, gte, count } from 'drizzle-orm'
+import { and, count, eq, gte, lte } from 'drizzle-orm'
 export default class Appointments {
-  static async createNewUserAppointment(input: NewAppointmentSchema) {
-    const user = await User.createUser({
-      firstName: input.firstName,
-      lastName: input.lastName,
-      email: input.email,
-      phone: input.phone,
-      role: 'patient',
-      dob: input.dob,
-    })
-
-    if (!user) {
-      throw new TRPCError({
-        code: 'NOT_IMPLEMENTED',
-        message: 'Failed to create user',
-      })
-    }
-
-    await db.insert(patients).values({
-      id: user.id,
-      lastAppointment: input.date,
-    })
-
-    await db.insert(appointments).values({
-      doctorId: input.doctorId,
-      patientId: user.id,
-      appointmentDate: input.date,
-      patientNotes: input.notes,
-      type: input.appointmentType,
-      status: AppointmentStatus.PENDING,
-    })
-
-    return { success: true }
-  }
-
-  static async createDoctorAppointment(
-    user: InferSelectModel<typeof users>,
-    date: Date,
-    appointmentType: 'online' | 'physical',
-    doctorId: string,
-    notes?: string,
-  ) {
-    const patient = await db.query.patients.findFirst({
-      where: (patient, { eq }) => eq(patient.id, user.id),
-    })
-
-    if (!patient) {
-      await Promise.all([
-        db.insert(patients).values({
-          id: user.id,
-          lastAppointment: date,
-        }),
-        db.insert(appointments).values({
-          doctorId: doctorId,
-          patientId: user.id,
-          appointmentDate: date,
-          patientNotes: notes,
-          type: appointmentType,
-          status: AppointmentStatus.PENDING,
-        }),
-      ])
-
-      return { success: true }
-    }
-
-    await db.insert(appointments).values({
-      doctorId: doctorId,
-      patientId: user.id,
-      appointmentDate: date,
-      patientNotes: notes,
-      type: appointmentType,
-      status: AppointmentStatus.PENDING,
-    })
-
-    return { success: true }
-  }
-
-  static async upcomming(
+  static async upcoming(
     doctorId: string,
     type: 'physical' | 'online',
     page: number,
@@ -123,15 +40,11 @@ export default class Appointments {
       },
       with: {
         patient: {
-          with: {
-            user: {
-              columns: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                phone: true,
-              },
-            },
+          columns: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            phone: true,
           },
         },
       },
@@ -178,8 +91,12 @@ export default class Appointments {
           input.patientId
             ? eq(appointments.patientId, input.patientId)
             : undefined,
-          gte(appointments.appointmentDate, input.startDate),
-          lte(appointments.appointmentDate, input.endDate),
+          input.startDate
+            ? gte(appointments.appointmentDate, new Date(input.startDate))
+            : undefined,
+          input.endDate
+            ? lte(appointments.appointmentDate, new Date(input.endDate))
+            : undefined,
         ),
       )
 
@@ -192,8 +109,12 @@ export default class Appointments {
           input.patientId
             ? eq(appontment.patientId, input.patientId)
             : undefined,
-          gte(appontment.appointmentDate, input.startDate),
-          lte(appontment.appointmentDate, input.endDate),
+          input.startDate
+            ? gte(appontment.appointmentDate, new Date(input.startDate))
+            : undefined,
+          input.endDate
+            ? lte(appontment.appointmentDate, new Date(input.endDate))
+            : undefined,
         ),
       columns: {
         id: true,
@@ -209,15 +130,11 @@ export default class Appointments {
           },
         },
         patient: {
-          with: {
-            user: {
-              columns: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                phone: true,
-              },
-            },
+          columns: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            phone: true,
           },
         },
       },

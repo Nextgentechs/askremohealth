@@ -1,10 +1,9 @@
-import { Hospital } from 'lucide-react'
 import { type RouterOutputs } from '@web/trpc/react'
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
-import { StarRating } from './star-rating'
-import { Stethoscope, MapPin, Banknote } from 'lucide-react'
+import { Banknote, Hospital, MapPin, Stethoscope } from 'lucide-react'
 import Link from 'next/link'
 import { Fragment } from 'react'
+import { StarRating } from './star-rating'
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
 
 export default function DoctorDetails({
   doctor,
@@ -16,10 +15,10 @@ export default function DoctorDetails({
       <div className="flex flex-row gap-3">
         <Link href={`/doctors/${doctor.id}`}>
           <Avatar className="size-24 shrink-0 cursor-pointer md:hidden md:size-28">
-            <AvatarImage src={doctor.user?.profilePicture?.url} />
+            <AvatarImage src={doctor.profilePicture?.url} />
             <AvatarFallback>
-              {doctor.user?.firstName.charAt(0)}
-              {doctor.user?.lastName.charAt(0)}
+              {doctor.firstName?.charAt(0)}
+              {doctor.lastName?.charAt(0)}
             </AvatarFallback>
           </Avatar>
         </Link>
@@ -29,8 +28,7 @@ export default function DoctorDetails({
               href={`/doctors/${doctor.id}`}
               className="font-medium text-primary underline-offset-4 hover:underline"
             >
-              {doctor.title ?? 'Dr'}. {doctor.user?.firstName}{' '}
-              {doctor.user?.lastName}
+              {doctor.title ?? 'Dr'}. {doctor.firstName} {doctor.lastName}
             </Link>
             <p className="break-words text-muted-foreground">
               {doctor.specialty?.name}

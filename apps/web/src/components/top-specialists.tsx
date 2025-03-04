@@ -1,10 +1,9 @@
-import React from 'react'
-import { Card, CardContent, CardFooter } from './ui/card'
-import Image from 'next/image'
-import { Button } from './ui/button'
 import specialists from '@web/data/doctors'
-import { Badge } from './ui/badge'
 import { ArrowRight, Calendar1Icon, Hospital, MapPin } from 'lucide-react'
+import Image from 'next/image'
+import { Badge } from './ui/badge'
+import { Button } from './ui/button'
+import { Card, CardContent, CardFooter } from './ui/card'
 
 function SpecialistCard({
   specialist,
@@ -26,7 +25,7 @@ function SpecialistCard({
           <h3 className="text-base font-semibold text-primary">
             {specialist.title} {specialist.name}
           </h3>
-          <Badge variant="secondary" className="w-fit">
+          <Badge variant="secondary" className="w-fit mb-1">
             {specialist.specialty}
           </Badge>
           <div className="flex flex-row items-start justify-start gap-1 text-xs text-muted-foreground">
@@ -58,7 +57,7 @@ export default function TopSpecialists() {
     >
       <div className="mx-auto flex w-full flex-col items-center justify-center gap-2">
         <h2 className="section-title">Meet Our Top Specialists</h2>
-        <p className="section-description">
+        <p className="section-description text-center">
           Discover highly recommended doctors and specialists trusted for their
           expertise and exceptional care.
         </p>

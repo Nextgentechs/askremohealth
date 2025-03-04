@@ -1,32 +1,27 @@
 'use client'
 
-import { Button } from './ui/button'
+import { useClerk } from '@clerk/nextjs'
+import { api, type RouterOutputs } from '@web/trpc/react'
 import {
   Book,
   BriefcaseMedical,
+  Building2,
   Calendar,
   ChevronDown,
   ChevronsUpDown,
+  FlaskConical,
   Home,
   Hospital,
   LogIn,
   LogOut,
   Menu,
+  Pill,
   Stethoscope,
   User,
-  Building2,
-  Pill,
-  FlaskConical,
 } from 'lucide-react'
-import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  navigationMenuTriggerStyle,
-} from './ui/navigation-menu'
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from './ui/sheet'
 import Link from 'next/link'
 import Logo from './logo'
+import { Button } from './ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,8 +30,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu'
-import { api, type RouterOutputs } from '@web/trpc/react'
-import { useRouter } from 'next/navigation'
+import {
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  navigationMenuTriggerStyle,
+} from './ui/navigation-menu'
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from './ui/sheet'
 
 const navOptions = [
   {
@@ -45,8 +45,8 @@ const navOptions = [
     icon: Home,
   },
   {
-    label: 'Doctors',
-    href: '/doctors',
+    label: 'Find a Specialist',
+    href: '/find-specialists',
     icon: Stethoscope,
   },
   {
@@ -71,13 +71,13 @@ const navOptions = [
     ],
   },
   {
-    label: 'Health Articles',
-    href: '/health-articles',
+    label: 'Articles',
+    href: '/articles',
     icon: Book,
   },
   {
-    label: 'For Doctors',
-    href: 'https://doctor.askvirtualhealthcare.com',
+    label: 'For Specialists',
+    href: '/specialist',
     icon: BriefcaseMedical,
     external: true,
   },
@@ -90,7 +90,7 @@ function AuthButtons({
   return (
     <div className={`${className}`} {...props}>
       <Link
-        href="/login"
+        href="/auth"
         className="inline-flex h-10 items-center justify-center py-2 text-sm font-medium text-primary underline-offset-4 hover:underline"
       >
         <LogIn className="mr-2 text-sm font-medium xl:text-sm" />
@@ -164,15 +164,8 @@ function CurrentUser({
 }: {
   user: RouterOutputs['users']['currentUser']
 }) {
-  const { mutateAsync: signOut } = api.users.signOut.useMutation()
+  const { signOut } = useClerk()
   const utils = api.useUtils()
-  const router = useRouter()
-  const handleSignOut = async () => {
-    await signOut()
-    await utils.users.currentUser.refetch()
-    router.refresh()
-    router.push('/')
-  }
 
   return (
     <DropdownMenu>
@@ -189,13 +182,13 @@ function CurrentUser({
         {/* <DropdownMenuLabel>My Account</DropdownMenuLabel> */}
         <DropdownMenuGroup>
           <Link href="/appointments">
-            <DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer">
               <Calendar />
               Appointments
             </DropdownMenuItem>
           </Link>
           <Link href="/profile">
-            <DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer">
               <User />
               My Profile
             </DropdownMenuItem>
@@ -203,7 +196,13 @@ function CurrentUser({
         </DropdownMenuGroup>
         <DropdownMenuSeparator className="bg-border" />
         <DropdownMenuGroup>
-          <DropdownMenuItem onClick={handleSignOut}>
+          <DropdownMenuItem
+            className="cursor-pointer"
+            onClick={async () => {
+              await signOut()
+              await utils.users.currentUser.refetch()
+            }}
+          >
             <LogOut />
             Log out
           </DropdownMenuItem>

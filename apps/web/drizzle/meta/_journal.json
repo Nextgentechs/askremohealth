@@ -5,85 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1736330162360,
-      "tag": "0000_common_johnny_blaze",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1736359122035,
-      "tag": "0001_skinny_dormammu",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1736361442514,
-      "tag": "0002_tearful_wolverine",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1736403241259,
-      "tag": "0003_fair_silhouette",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1736434479435,
-      "tag": "0004_special_redwing",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1736454415854,
-      "tag": "0005_overconfident_argent",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1736503674932,
-      "tag": "0006_cooing_marten_broadcloak",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "7",
-      "when": 1736504526571,
-      "tag": "0007_secret_true_believers",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "7",
-      "when": 1737474656082,
-      "tag": "0008_aberrant_charles_xavier",
-      "breakpoints": true
-    },
-    {
-      "idx": 9,
-      "version": "7",
-      "when": 1739030361502,
-      "tag": "0009_sharp_sebastian_shaw",
-      "breakpoints": true
-    },
-    {
-      "idx": 10,
-      "version": "7",
-      "when": 1739031147443,
-      "tag": "0010_military_bruce_banner",
-      "breakpoints": true
-    },
-    {
-      "idx": 11,
-      "version": "7",
-      "when": 1739040561209,
-      "tag": "0011_steep_justice",
+      "when": 1739717607861,
+      "tag": "0000_overjoyed_sue_storm",
       "breakpoints": true
     }
   ]

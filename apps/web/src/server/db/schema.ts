@@ -62,51 +62,28 @@ export const subSpecialties = pgTable('sub_specialty', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
 })
 
-export const users = pgTable('user', {
-  id: uuid('id').primaryKey().notNull().defaultRandom(),
+export const patients = pgTable('patient', {
+  id: varchar('id').primaryKey().notNull(),
   firstName: varchar('first_name').notNull(),
   lastName: varchar('last_name').notNull(),
   email: varchar('email'),
   phone: varchar('phone').unique(),
-  password: varchar('password'),
-  role: roleEnum('role').notNull(),
+  emergencyContact: varchar('emergency_contact'),
+  lastAppointment: timestamp('last_appointment'),
   dob: timestamp('dob'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at')
     .notNull()
     .$onUpdate(() => new Date()),
-  isAdmin: boolean('is_admin').default(false),
-  hasAccount: boolean('has_account').default(false),
 })
-export type User = InferSelectModel<typeof users>
-
-export const sessions = pgTable('sessions', {
-  id: varchar('id').primaryKey(),
-  userId: uuid('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  expiresAt: timestamp('expires_at', {
-    withTimezone: true,
-    mode: 'date',
-  }).notNull(),
-})
-export type Session = InferSelectModel<typeof sessions>
-
-export const patients = pgTable('patient', {
-  id: uuid('id')
-    .primaryKey()
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  emergencyContact: varchar('emergency_contact'),
-  lastAppointment: timestamp('last_appointment'),
-})
+export type Patient = InferSelectModel<typeof patients>
 
 export const doctors = pgTable('doctor', {
-  id: uuid('id')
-    .primaryKey()
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
+  id: varchar('id').primaryKey().notNull(),
+  firstName: varchar('first_name').notNull(),
+  lastName: varchar('last_name').notNull(),
+  email: varchar('email'),
+  phone: varchar('phone').unique(),
   specialty: uuid('specialty_id').references(() => specialties.id, {
     onDelete: 'set null',
   }),
@@ -123,14 +100,19 @@ export const doctors = pgTable('doctor', {
   title: varchar('title'),
   consultationFee: integer('consultation_fee'),
   status: doctorStatusEnum('status').default('pending'),
+  dob: timestamp('dob'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .notNull()
+    .$onUpdate(() => new Date()),
 })
+export type Doctor = InferSelectModel<typeof doctors>
 
 export const profilePictures = pgTable('profile_picture', {
-  id: uuid('id')
-    .primaryKey()
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  doctorId: varchar('doctor_id')
     .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
+    .references(() => doctors.id, { onDelete: 'cascade' }),
   url: varchar('url').notNull(),
   path: varchar('path').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -139,7 +121,7 @@ export const profilePictures = pgTable('profile_picture', {
 
 export const certificates = pgTable('certificate', {
   id: uuid('id').primaryKey().notNull().defaultRandom(),
-  doctorId: uuid('doctor_id')
+  doctorId: varchar('doctor_id')
     .notNull()
     .references(() => doctors.id, { onDelete: 'cascade' }),
   name: varchar('name').notNull(),
@@ -165,7 +147,7 @@ export const facilities = pgTable('facility', {
 
 export const operatingHours = pgTable('operating_hours', {
   id: uuid('id').primaryKey().defaultRandom(),
-  doctorId: uuid('doctor_id')
+  doctorId: varchar('doctor_id')
     .notNull()
     .references(() => doctors.id, { onDelete: 'cascade' }),
   consultationDuration: integer('consultation_duration'),
@@ -191,10 +173,10 @@ export const operatingHours = pgTable('operating_hours', {
 
 export const appointments = pgTable('appointment', {
   id: uuid('id').primaryKey().notNull().defaultRandom(),
-  doctorId: uuid('doctor_id')
+  doctorId: varchar('doctor_id')
     .notNull()
     .references(() => doctors.id, { onDelete: 'cascade' }),
-  patientId: uuid('patient_id')
+  patientId: varchar('patient_id')
     .notNull()
     .references(() => patients.id, { onDelete: 'cascade' }),
   appointmentDate: timestamp('appointment_date').notNull(),
@@ -232,7 +214,7 @@ export const reviews = pgTable('review', {
   appointmentId: uuid('appointment_id')
     .notNull()
     .references(() => appointments.id, { onDelete: 'cascade' }),
-  doctorId: uuid('doctor_id').references(() => doctors.id, {
+  doctorId: varchar('doctor_id').references(() => doctors.id, {
     onDelete: 'cascade',
   }),
   rating: integer('rating').notNull(),
@@ -242,9 +224,7 @@ export const reviews = pgTable('review', {
 
 export const notifications = pgTable('notification', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
+  userId: varchar('user_id').notNull(),
   title: varchar('title').notNull(),
   message: varchar('message').notNull(),
   isRead: boolean('is_read').default(false),

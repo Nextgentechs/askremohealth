@@ -1,37 +1,39 @@
+import { clerkClient } from '@clerk/nextjs/server'
+import { TRPCError } from '@trpc/server'
+import { del, put } from '@vercel/blob'
+import { db } from '@web/server/db'
 import {
   appointmentAttachments,
   appointmentLogs,
   appointments,
   certificates,
-  doctors,
   doctors as doctorsTable,
   facilities,
   operatingHours,
+  patients as patientsTable,
   profilePictures,
-  users,
 } from '@web/server/db/schema'
 import {
-  count,
-  inArray,
-  gte,
-  sql,
-  eq,
-  or,
-  between,
   and,
+  between,
+  count,
+  eq,
   exists,
+  gte,
+  ilike,
+  inArray,
+  or,
+  sql,
 } from 'drizzle-orm'
-import { db } from '@web/server/db'
-import { KENYA_COUNTIES } from '../data/kenya-counties'
-import { type DoctorSignupSchema } from '../api/validation'
-import { TRPCError } from '@trpc/server'
-import bcrypt from 'bcrypt'
-import { Facility } from './facilities'
-import { put } from '@vercel/blob'
 import sharp from 'sharp'
-import { lucia } from '@web/lib/lucia'
-import { cookies } from 'next/headers'
+import {
+  type AvailabilityDetailsSchema,
+  type PersonalDetailsSchema,
+  type ProfessionalDetailsSchema,
+} from '../api/validators'
+import { KENYA_COUNTIES } from '../data/kenya-counties'
 import { AppointmentStatus } from '../utils'
+import { Facility } from './facilities'
 
 type FilterInput = {
   specialty?: string
@@ -45,60 +47,154 @@ type FilterInput = {
 }
 
 export class Doctors {
-  static async signup(input: DoctorSignupSchema) {
-    const user = await db.query.users.findFirst({
-      where: (user, { eq }) => eq(user.phone, input.phone),
-    })
-    if (user) {
-      throw new TRPCError({
-        code: 'CONFLICT',
-        message: 'User already exists',
-      })
-    }
-
+  static async updatePersonalDetails(
+    input: PersonalDetailsSchema,
+    userId: string,
+  ) {
     await db.transaction(async (trx) => {
-      const hashedPassword = await bcrypt.hash(input.password, 10)
-
-      const [user] = await trx
-        .insert(users)
+      const [doctor] = await trx
+        .insert(doctorsTable)
         .values({
+          id: userId,
           firstName: input.firstName,
           lastName: input.lastName,
           email: input.email,
           phone: input.phone,
-          password: hashedPassword,
-          role: 'doctor',
+          bio: input.bio,
+          gender: input.gender,
+          title: input.title,
           dob: new Date(input.dob),
+          status: 'pending',
+        })
+        .onConflictDoUpdate({
+          target: doctorsTable.id,
+          set: {
+            firstName: input.firstName,
+            lastName: input.lastName,
+            email: input.email,
+            phone: input.phone,
+            bio: input.bio,
+            gender: input.gender,
+            title: input.title,
+            dob: new Date(input.dob),
+          },
         })
         .returning()
 
-      if (!user) {
+      if (!doctor) {
         throw new TRPCError({
           code: 'NOT_IMPLEMENTED',
-          message: 'Failed to create user',
+          message: 'Failed to create doctor',
+        })
+      }
+
+      if (!input.profilePicture) return { success: true }
+
+      const base64Data = input.profilePicture.replace(
+        /^data:image\/\w+;base64,/,
+        '',
+      )
+      const buffer = await sharp(Buffer.from(base64Data, 'base64'))
+        .resize(400, 400, { fit: 'cover', position: 'center' })
+        .webp({ quality: 80 })
+        .toBuffer()
+
+      const fileName = `profile-picture-${userId}.webp`
+
+      const { url, pathname } = await put(fileName, buffer, {
+        access: 'public',
+        contentType: `image/webp`,
+      })
+
+      await trx.insert(profilePictures).values({
+        doctorId: doctor.id,
+        url,
+        path: pathname,
+      })
+    })
+
+    return { success: true }
+  }
+
+  static async updateProfilePicture(input: {
+    userId: string
+    profilePicture: string
+  }) {
+    const doctor = await db.query.doctors.findFirst({
+      where: (doctor) => eq(doctor.id, input.userId),
+      with: {
+        profilePicture: true,
+      },
+    })
+
+    if (!doctor) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Doctor not found',
+      })
+    }
+
+    if (doctor.profilePicture) {
+      await del(doctor.profilePicture.url)
+    }
+
+    const base64Data = input.profilePicture.replace(
+      /^data:image\/\w+;base64,/,
+      '',
+    )
+    const buffer = await sharp(Buffer.from(base64Data, 'base64'))
+      .resize(400, 400, { fit: 'cover', position: 'center' })
+      .webp({ quality: 80 })
+      .toBuffer()
+
+    const { url, pathname } = await put(
+      `profile-picture-${input.userId}.webp`,
+      buffer,
+      {
+        access: 'public',
+        contentType: `image/webp`,
+      },
+    )
+
+    await db
+      .update(profilePictures)
+      .set({
+        url,
+        path: pathname,
+      })
+      .where(eq(profilePictures.doctorId, input.userId))
+
+    return { success: true }
+  }
+
+  static async updateProfessionalDetails(
+    input: ProfessionalDetailsSchema,
+    userId: string,
+  ) {
+    await db.transaction(async (trx) => {
+      const doctor = await db.query.doctors.findFirst({
+        where: (doctor) => eq(doctor.id, userId),
+      })
+
+      if (!doctor) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Doctor not found',
         })
       }
 
       const facility = await Facility.register(input.facility)
 
-      await trx.insert(doctors).values({
-        id: user.id,
-        bio: input.bio,
-        specialty: input.specialty,
-        subSpecialties: input.subSpecialty.map((id) => ({ id })),
-        experience: input.experience,
-        facility: facility?.placeId,
-        licenseNumber: input.registrationNumber,
-        gender: input.gender,
-        title: input.title,
-        consultationFee: input.consultationFee,
-      })
-
-      await trx.insert(operatingHours).values({
-        doctorId: user.id,
-        schedule: input.operatingHours,
-        consultationDuration: input.appointmentDuration,
-      })
+      await trx
+        .update(doctorsTable)
+        .set({
+          specialty: input.specialty,
+          subSpecialties: input.subSpecialty.map((id) => ({ id })),
+          experience: input.experience,
+          facility: facility?.placeId,
+          licenseNumber: input.registrationNumber,
+        })
+        .where(eq(doctorsTable.id, userId))
 
       if (input.medicalLicense) {
         const buffer = Buffer.from(
@@ -107,7 +203,7 @@ export class Doctors {
         )
 
         const { url, pathname } = await put(
-          `documents/${user.id}/${'medical-license'}`,
+          `documents/${userId}/${'medical-license'}`,
           buffer,
           {
             access: 'public',
@@ -116,36 +212,9 @@ export class Doctors {
         )
 
         await trx.insert(certificates).values({
-          doctorId: user.id,
+          doctorId: userId,
           name: pathname,
           url,
-        })
-      }
-
-      if (input.profilePicture) {
-        const base64Data = input.profilePicture.replace(
-          /^data:image\/\w+;base64,/,
-          '',
-        )
-        const buffer = await sharp(Buffer.from(base64Data, 'base64'))
-          .resize(400, 400, {
-            fit: 'cover',
-            position: 'center',
-          })
-          .webp({ quality: 80 })
-          .toBuffer()
-
-        const fileName = `profile-picture-${user.id}.webp`
-
-        const { url, pathname } = await put(fileName, buffer, {
-          access: 'public',
-          contentType: `image/webp`,
-        })
-
-        await trx.insert(profilePictures).values({
-          id: user.id,
-          url,
-          path: pathname,
         })
       }
     })
@@ -153,31 +222,32 @@ export class Doctors {
     return { success: true }
   }
 
-  static async login(input: { phone: string; password: string }) {
-    const user = await db.query.users.findFirst({
-      where: (user) => eq(user.phone, input.phone),
+  static async updateAvailabilityDetails(
+    input: AvailabilityDetailsSchema,
+    userId: string,
+  ) {
+    const client = await clerkClient()
+
+    await db.transaction(async (trx) => {
+      await trx
+        .update(doctorsTable)
+        .set({
+          consultationFee: input.consultationFee,
+        })
+        .where(eq(doctorsTable.id, userId))
+      await trx.insert(operatingHours).values({
+        schedule: input.operatingHours,
+        consultationDuration: input.appointmentDuration,
+        doctorId: userId,
+      })
+
+      await client.users.updateUser(userId, {
+        publicMetadata: {
+          onboardingComplete: true,
+          role: 'specialist',
+        },
+      })
     })
-
-    if (!user) {
-      throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: 'User not found',
-      })
-    }
-
-    const passwordMatch = await bcrypt.compare(input.password, user.password!)
-
-    if (!passwordMatch) {
-      throw new TRPCError({
-        code: 'UNAUTHORIZED',
-        message: 'Invalid password',
-      })
-    }
-
-    const session = await lucia.createSession(user.id, {})
-    const cookie = lucia.createSessionCookie(session.id)
-    const cookieStore = await cookies()
-    cookieStore.set(cookie.name, cookie.value, cookie.attributes)
 
     return { success: true }
   }
@@ -251,7 +321,7 @@ export class Doctors {
         .select()
         .from(facilities)
         .where(
-          and(
+          or(
             input.county
               ? eq(
                   facilities.county,
@@ -264,6 +334,14 @@ export class Doctors {
         )
 
       conditions.push(exists(query))
+    }
+    if (input.query) {
+      conditions.push(
+        or(
+          ilike(doctorsTable.firstName, `%${input.query}%`),
+          ilike(doctorsTable.lastName, `%${input.query}%`),
+        ),
+      )
     }
 
     return conditions.length ? and(...conditions) : undefined
@@ -284,16 +362,7 @@ export class Doctors {
       limit,
       offset,
       with: {
-        user: {
-          columns: {
-            id: true,
-            firstName: true,
-            lastName: true,
-          },
-          with: {
-            profilePicture: true,
-          },
-        },
+        profilePicture: true,
         facility: {
           columns: {
             placeId: true,
@@ -370,16 +439,7 @@ export class Doctors {
     const doctor = await db.query.doctors.findFirst({
       where: (doctor, { eq }) => eq(doctor.id, id),
       with: {
-        user: {
-          columns: {
-            id: true,
-            firstName: true,
-            lastName: true,
-          },
-          with: {
-            profilePicture: true,
-          },
-        },
+        profilePicture: true,
         facility: {
           columns: {
             placeId: true,
@@ -399,7 +459,7 @@ export class Doctors {
       where: (subSpecialty, { inArray }) =>
         inArray(
           subSpecialty.id,
-          (doctor?.subSpecialties as Array<{ id: string }>).map((s) => s.id),
+          (doctor?.subSpecialties as Array<{ id: string }>)?.map((s) => s.id),
         ),
     })
 
@@ -441,25 +501,14 @@ export class Doctors {
             id: true,
           },
           with: {
-            user: {
-              columns: {
-                firstName: true,
-                lastName: true,
-              },
-            },
+            profilePicture: true,
           },
         },
         patient: {
           columns: {
             id: true,
-          },
-          with: {
-            user: {
-              columns: {
-                firstName: true,
-                lastName: true,
-              },
-            },
+            firstName: true,
+            lastName: true,
           },
         },
       },
@@ -607,41 +656,72 @@ export class Doctors {
     return { success: true }
   }
 
-  static async patients(doctorId: string, page: number, limit: number) {
-    const offset = (page - 1) * limit
-    const patients = await db.query.appointments.findMany({
-      where: (appointment) => eq(appointment.doctorId, doctorId),
-      columns: {
-        patientId: true,
+  static async patients(filter: {
+    query?: string
+    doctorId: string
+    page: number
+    limit: number
+  }) {
+    const offset = (filter.page - 1) * filter.limit
+
+    const countQuery = db
+      .select({ count: count() })
+      .from(appointments)
+      .where(
+        and(
+          eq(appointments.doctorId, filter.doctorId),
+          filter.query
+            ? or(
+                ilike(patientsTable.firstName, `%${filter.query}%`),
+                ilike(patientsTable.lastName, `%${filter.query}%`),
+              )
+            : undefined,
+        ),
+      )
+
+    const patientsQuery = db
+      .select({
+        patientId: appointments.patientId,
+        firstName: patientsTable.firstName,
+        lastName: patientsTable.lastName,
+        lastAppointment: patientsTable.lastAppointment,
+        phone: patientsTable.phone,
+        email: patientsTable.email,
+        dob: patientsTable.dob,
+      })
+      .from(appointments)
+      .innerJoin(patientsTable, eq(appointments.patientId, patientsTable.id))
+      .where(
+        and(
+          eq(appointments.doctorId, filter.doctorId),
+          filter.query
+            ? or(
+                ilike(patientsTable.firstName, `%${filter.query}%`),
+                ilike(patientsTable.lastName, `%${filter.query}%`),
+              )
+            : undefined,
+        ),
+      )
+      .limit(filter.limit)
+      .offset(offset)
+
+    const [totalCount, patients] = await Promise.all([
+      countQuery,
+      patientsQuery,
+    ])
+
+    return {
+      patients: patients.map((patient) => ({
+        name: `${patient.firstName} ${patient.lastName}`,
+        lastAppointment: patient.lastAppointment,
+        phone: patient.phone,
+        email: patient.email,
+        dob: patient.dob,
+      })),
+      pagination: {
+        total: totalCount[0]?.count ?? 0,
+        pages: Math.ceil((totalCount[0]?.count ?? 0) / filter.limit),
       },
-      with: {
-        patient: {
-          columns: {
-            lastAppointment: true,
-          },
-          with: {
-            user: {
-              columns: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                phone: true,
-                email: true,
-                dob: true,
-              },
-            },
-          },
-        },
-      },
-      limit,
-      offset,
-    })
-    return patients.map((patient) => ({
-      name: `${patient.patient.user.firstName} ${patient.patient.user.lastName}`,
-      lastAppointment: patient.patient.lastAppointment,
-      phone: patient.patient.user.phone,
-      email: patient.patient.user.email,
-      dob: patient.patient.user.dob,
-    }))
+    }
   }
 }

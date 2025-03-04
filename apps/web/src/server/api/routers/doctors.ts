@@ -1,59 +1,59 @@
-import { doctorProcedure, publicProcedure } from '../trpc'
-import { z } from 'zod'
-import { Doctors } from '@web/server/services/doctors'
-import {
-  doctorAppointmentListSchema,
-  doctorListSchema,
-  doctorSignupSchema,
-} from '../validation'
-import { lucia } from '@web/lib/lucia'
-import { cookies } from 'next/headers'
+import { patients as patientsTable } from '@web/server/db/schema'
 import Appointments from '@web/server/services/appointments'
+import { Doctors } from '@web/server/services/doctors'
 import assert from 'assert'
 import { eq, ilike, or } from 'drizzle-orm'
-import { users, patients as patientsTable } from '@web/server/db/schema'
+import { z } from 'zod'
+import { doctorProcedure, procedure, publicProcedure } from '../trpc'
+import {
+  availabilityDetailsSchema,
+  doctorAppointmentListSchema,
+  doctorListSchema,
+  personalDetailsSchema,
+  professionalDetailsSchema,
+} from '../validators'
 
-export const signup = publicProcedure
-  .input(doctorSignupSchema)
-  .mutation(async ({ input }) => {
-    return Doctors.signup(input)
+export const updatePersonalDetails = procedure
+  .input(personalDetailsSchema)
+  .mutation(async ({ input, ctx }) => {
+    return Doctors.updatePersonalDetails(input, ctx.user.id ?? '')
   })
 
-export const login = publicProcedure
-  .input(
-    z.object({
-      phone: z.string(),
-      password: z.string(),
-    }),
-  )
-  .mutation(async ({ input }) => {
-    return Doctors.login(input)
+export const updateProfilePicture = doctorProcedure
+  .input(z.object({ profilePicture: z.string() }))
+  .mutation(async ({ input, ctx }) => {
+    assert(ctx.user?.id, 'User not found')
+    return Doctors.updateProfilePicture({
+      userId: ctx.user.id,
+      profilePicture: input.profilePicture,
+    })
+  })
+
+export const updateProfessionalDetails = procedure
+  .input(professionalDetailsSchema)
+  .mutation(async ({ input, ctx }) => {
+    return Doctors.updateProfessionalDetails(input, ctx.user.id ?? '')
+  })
+
+export const updateAvailabilityDetails = procedure
+  .input(availabilityDetailsSchema)
+  .mutation(async ({ input, ctx }) => {
+    return Doctors.updateAvailabilityDetails(input, ctx.user.id ?? '')
   })
 
 export const currentDoctor = publicProcedure.query(async ({ ctx }) => {
   if (!ctx.user) return null
   const doctor = await ctx.db.query.doctors.findFirst({
-    where: (doctor) => eq(doctor.id, ctx.user!.id),
+    where: (doctor) => eq(doctor.id, ctx.user.id ?? ''),
     with: {
+      profilePicture: true,
       specialty: true,
-      user: {
-        with: {
-          profilePicture: true,
-        },
-      },
       facility: true,
       operatingHours: true,
       certificates: true,
     },
   })
   return doctor ?? null
-})
-
-export const signOut = doctorProcedure.mutation(async ({ ctx }) => {
-  if (ctx.session) await lucia.invalidateSession(ctx.session.id)
-  const cookie = lucia.createBlankSessionCookie()
-  const cookieStore = await cookies()
-  cookieStore.set(cookie.name, cookie.value, cookie.attributes)
 })
 
 export const list = publicProcedure
@@ -78,7 +78,7 @@ export const upcommingAppointments = doctorProcedure
   )
   .query(async ({ ctx, input }) => {
     assert(ctx.user?.id, 'User not found')
-    return Appointments.upcomming(
+    return Appointments.upcoming(
       ctx.user.id,
       input.type,
       input.page ?? 1,
@@ -108,7 +108,7 @@ export const confirmAppointment = doctorProcedure
 export const declineAppointment = doctorProcedure
   .input(z.object({ appointmentId: z.string() }))
   .mutation(async ({ ctx, input }) => {
-    return Doctors.declineAppointment(input.appointmentId, ctx.user.id)
+    return Doctors.declineAppointment(input.appointmentId, ctx.user.id ?? '')
   })
 
 export const cancelAppointment = doctorProcedure
@@ -127,7 +127,7 @@ export const postAppointment = doctorProcedure
   )
   .mutation(async ({ input, ctx }) => {
     return Doctors.postAppointment(
-      ctx.user.id,
+      ctx.user.id ?? '',
       input.appointmentId,
       input.doctorNotes,
       input.attachment,
@@ -137,12 +137,18 @@ export const postAppointment = doctorProcedure
 export const patients = doctorProcedure
   .input(
     z.object({
+      query: z.string().optional(),
       page: z.number().default(1),
       limit: z.number().default(10),
     }),
   )
   .query(async ({ ctx, input }) => {
-    return Doctors.patients(ctx.user.id, input.page, input.limit)
+    return Doctors.patients({
+      query: input.query,
+      doctorId: ctx.user.id ?? '',
+      page: input.page,
+      limit: input.limit,
+    })
   })
 
 export const searchPatient = doctorProcedure
@@ -151,15 +157,14 @@ export const searchPatient = doctorProcedure
     return ctx.db
       .select({
         id: patientsTable.id,
-        firstName: users.firstName,
-        lastName: users.lastName,
+        firstName: patientsTable.firstName,
+        lastName: patientsTable.lastName,
       })
       .from(patientsTable)
-      .innerJoin(users, eq(patientsTable.id, users.id))
       .where(
         or(
-          ilike(users.firstName, `%${input.query}%`),
-          ilike(users.lastName, `%${input.query}%`),
+          ilike(patientsTable.firstName, `%${input.query}%`),
+          ilike(patientsTable.lastName, `%${input.query}%`),
         ),
       )
       .limit(6)
