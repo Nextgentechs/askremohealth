@@ -10,31 +10,11 @@ import {
   profilePictures,
   specialties,
   subSpecialties,
-  users,
   reviews,
   appointmentAttachments,
 } from './schema'
 
-export const userRelations = relations(users, ({ one }) => ({
-  doctor: one(doctors, {
-    fields: [users.id],
-    references: [doctors.id],
-  }),
-  patient: one(patients, {
-    fields: [users.id],
-    references: [patients.id],
-  }),
-  profilePicture: one(profilePictures, {
-    fields: [users.id],
-    references: [profilePictures.id],
-  }),
-}))
-
 export const doctorRelations = relations(doctors, ({ one, many }) => ({
-  user: one(users, {
-    fields: [doctors.id],
-    references: [users.id],
-  }),
   specialty: one(specialties, {
     fields: [doctors.specialty],
     references: [specialties.id],
@@ -43,23 +23,22 @@ export const doctorRelations = relations(doctors, ({ one, many }) => ({
     fields: [doctors.facility],
     references: [facilities.placeId],
   }),
+  profilePicture: one(profilePictures, {
+    fields: [doctors.id],
+    references: [profilePictures.doctorId],
+  }),
   certificates: many(certificates),
   operatingHours: many(operatingHours),
   appointments: many(appointments),
   reviews: many(reviews),
 }))
 
-export const patientRelations = relations(patients, ({ one, many }) => ({
-  user: one(users, {
-    fields: [patients.id],
-    references: [users.id],
-  }),
+export const patientRelations = relations(patients, ({ many }) => ({
   appointments: many(appointments),
 }))
 
 export const facilityRelations = relations(facilities, ({ many }) => ({
   doctors: many(doctors),
-  appointments: many(appointments),
 }))
 
 export const appointmentRelations = relations(
@@ -73,7 +52,6 @@ export const appointmentRelations = relations(
       fields: [appointments.patientId],
       references: [patients.id],
     }),
-
     logs: many(appointmentLogs),
     review: one(reviews, {
       fields: [appointments.id],
@@ -129,6 +107,16 @@ export const appointmentAttachmentRelations = relations(
     appointment: one(appointments, {
       fields: [appointmentAttachments.appointmentId],
       references: [appointments.id],
+    }),
+  }),
+)
+
+export const profilePictureRelations = relations(
+  profilePictures,
+  ({ one }) => ({
+    doctor: one(doctors, {
+      fields: [profilePictures.doctorId],
+      references: [doctors.id],
     }),
   }),
 )

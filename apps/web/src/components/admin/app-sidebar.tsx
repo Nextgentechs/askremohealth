@@ -7,15 +7,15 @@ import {
   SidebarGroup,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuItem,
   SidebarMenuButton,
+  SidebarMenuItem,
   SidebarRail,
 } from '@web/components/ui/sidebar'
-import Logo from '../logo'
-import Link from 'next/link'
 import { Users } from 'lucide-react'
+import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { cn } from '@web/lib/utils'
+import Logo from '../logo'
+
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
   const currentPath = pathname.split('/').pop()

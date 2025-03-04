@@ -1,52 +1,8 @@
-import { z } from 'zod'
-import { adminProcedure, publicProcedure } from '../trpc'
 import { TRPCError } from '@trpc/server'
-import bcrypt from 'bcrypt'
-import { lucia } from '@web/lib/lucia'
-import { cookies } from 'next/headers'
-import { count, eq, sql } from 'drizzle-orm'
 import { doctors, type subSpecialties } from '@web/server/db/schema'
-
-export const login = publicProcedure
-  .input(
-    z.object({
-      phone: z.string(),
-      password: z.string(),
-    }),
-  )
-  .mutation(async ({ ctx, input }) => {
-    const user = await ctx.db.query.users.findFirst({
-      where: (user, { eq }) => eq(user.phone, input.phone),
-    })
-    if (!user) {
-      throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: 'user not found',
-      })
-    }
-
-    if (!user.isAdmin) {
-      throw new TRPCError({
-        code: 'UNAUTHORIZED',
-        message: 'user not found',
-      })
-    }
-
-    const passwordMatch = await bcrypt.compare(input.password, user.password!)
-    if (!passwordMatch) {
-      throw new TRPCError({
-        code: 'UNAUTHORIZED',
-        message: 'Invalid password',
-      })
-    }
-
-    const session = await lucia.createSession(user.id, {})
-    const cookie = lucia.createSessionCookie(session.id)
-    const cookieStore = await cookies()
-    cookieStore.set(cookie.name, cookie.value, cookie.attributes)
-
-    return { success: true }
-  })
+import { count, eq, sql } from 'drizzle-orm'
+import { z } from 'zod'
+import { adminProcedure } from '../trpc'
 
 export const getDoctors = adminProcedure
   .input(
@@ -56,9 +12,6 @@ export const getDoctors = adminProcedure
     const [total, data] = await Promise.all([
       ctx.db.select({ count: count() }).from(doctors),
       ctx.db.query.doctors.findMany({
-        with: {
-          user: true,
-        },
         offset: Math.max(1, (input.page - 1) * input.limit),
         limit: input.limit,
         orderBy: (doctors, { desc }) => [
@@ -90,15 +43,11 @@ export const getDoctor = adminProcedure
     const doctor = await ctx.db.query.doctors.findFirst({
       where: (doctor, { eq }) => eq(doctor.id, input.id),
       with: {
-        user: {
-          with: {
-            profilePicture: true,
-          },
-        },
         certificates: true,
         specialty: true,
         facility: true,
         operatingHours: true,
+        profilePicture: true,
       },
     })
 

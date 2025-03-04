@@ -1,25 +1,24 @@
 'use client'
-
-import React, { useEffect, useState } from 'react'
-import { Card, CardContent } from './ui/card'
-import Image from 'next/image'
-
 import specialities from '@web/data/specialities'
+import Autoplay from 'embla-carousel-autoplay'
+import Image from 'next/image'
+import { useEffect, useState } from 'react'
+import { Card, CardContent } from './ui/card'
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
   type CarouselApi,
 } from './ui/carousel'
-import Autoplay from 'embla-carousel-autoplay'
 
 function Specialty({ specialty, icon }: (typeof specialities)[0][0]) {
   const [mouseOver, setMouseOver] = useState(false)
+
   return (
     <Card
       onMouseEnter={() => setMouseOver(true)}
       onMouseLeave={() => setMouseOver(false)}
-      className="shadow-sm transition-transform duration-200 hover:scale-105 hover:cursor-pointer hover:text-primary"
+      className="shadow-none border-none"
     >
       <CardContent className="flex flex-col items-center justify-center gap-2 px-6 py-4 pb-0">
         <Image src={icon} alt={specialty} width={40} height={40} />
@@ -99,10 +98,10 @@ function SpecialistsCarousel() {
 export default function MedicalSpecialist() {
   return (
     <section id="medical-specialists" className="w-full bg-secondary py-16">
-      <div className="container mx-auto flex flex-col items-center justify-center gap-10">
+      <div className="container mx-auto flex flex-col items-center justify-center gap-8">
         <div className="mx-auto flex w-full flex-col items-center justify-center gap-2">
           <h2 className="section-title">Our Medical Specialities</h2>
-          <p className="section-description">
+          <p className="section-description text-center">
             Explore a variety of medical specialties to find the right expert
             for your needs
           </p>

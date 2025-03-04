@@ -22,7 +22,6 @@ const createContext = cache(async () => {
   })
 
   return createTRPCContext({
-    auth: null,
     req,
   })
 })

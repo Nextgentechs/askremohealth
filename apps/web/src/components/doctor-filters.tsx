@@ -1,14 +1,14 @@
 'use client'
 
-import React from 'react'
-import { Filter } from 'lucide-react'
-import { Switch } from './ui/switch'
-import { Label } from './ui/label'
 import { api } from '@web/trpc/react'
-import { useDoctorSearchParams } from './search-form'
+import { Filter } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
+import React from 'react'
+import { Label } from './ui/label'
 import { Skeleton } from './ui/skeleton'
+import { Switch } from './ui/switch'
 
-function SubSpecialtiesFilterSkeleton() {
+export function SubSpecialtiesFilterSkeleton() {
   return (
     <div className="space-y-4 py-6">
       <div className="flex items-center justify-between">
@@ -27,9 +27,10 @@ function SubSpecialtiesFilterSkeleton() {
   )
 }
 
-function SubSpecialtiesFilter() {
-  const [{ specialty, subSpecialties }, setSearchParams] =
-    useDoctorSearchParams()
+export function SubSpecialtiesFilter() {
+  const [subSpecialties, setSubSpecialties] = React.useState<string[]>([])
+  const searchParams = useSearchParams()
+  const specialty = searchParams.get('specialty')
   const { data, isLoading } = api.specialties.listSubSpecialties.useQuery(
     { specialityId: specialty ?? '' },
     { enabled: !!specialty },
@@ -48,14 +49,11 @@ function SubSpecialtiesFilter() {
               id={subSpecialty.id}
               checked={subSpecialties?.includes(subSpecialty.id)}
               onCheckedChange={(checked) => {
-                const currentSubSpecialties = subSpecialties ?? []
-                setSearchParams({
-                  subSpecialties: checked
-                    ? [...currentSubSpecialties, subSpecialty.id]
-                    : currentSubSpecialties.filter(
-                        (id) => id !== subSpecialty.id,
-                      ),
-                })
+                setSubSpecialties(
+                  checked
+                    ? [...subSpecialties, subSpecialty.id]
+                    : subSpecialties.filter((id) => id !== subSpecialty.id),
+                )
               }}
             />
             <Label className="text-sm font-normal" htmlFor={subSpecialty.id}>
@@ -75,8 +73,8 @@ const experienceOptions = [
   { label: '15+ years', value: '15+' },
 ]
 
-function ExperienceFilter() {
-  const [{ experiences }, setSearchParams] = useDoctorSearchParams()
+export function ExperienceFilter() {
+  const [experiences, setExperiences] = React.useState<string[]>([])
 
   return (
     <div className="flex flex-col gap-4 border-b py-6">
@@ -88,12 +86,11 @@ function ExperienceFilter() {
               id={option.value}
               checked={experiences?.includes(option.value)}
               onCheckedChange={(checked) => {
-                const currentExperiences = experiences ?? []
-                setSearchParams({
-                  experiences: checked
-                    ? [...currentExperiences, option.value]
-                    : currentExperiences.filter((id) => id !== option.value),
-                })
+                setExperiences(
+                  checked
+                    ? [...experiences, option.value]
+                    : experiences.filter((id) => id !== option.value),
+                )
               }}
             />
             <Label className="text-sm font-normal" htmlFor={option.value}>
@@ -111,8 +108,8 @@ const genderOptions = [
   { label: 'Female', value: 'female' },
 ]
 
-function GenderFilter() {
-  const [{ genders }, setSearchParams] = useDoctorSearchParams()
+export function GenderFilter() {
+  const [genders, setGenders] = React.useState<string[]>([])
 
   return (
     <div className="flex flex-col gap-4 border-b py-6">
@@ -124,12 +121,11 @@ function GenderFilter() {
               id={option.value}
               checked={genders?.includes(option.value)}
               onCheckedChange={(checked) => {
-                const currentGenders = genders ?? []
-                setSearchParams({
-                  genders: checked
-                    ? [...currentGenders, option.value]
-                    : currentGenders.filter((id) => id !== option.value),
-                })
+                setGenders(
+                  checked
+                    ? [...genders, option.value]
+                    : genders.filter((id) => id !== option.value),
+                )
               }}
             />
             <Label className="text-sm font-normal" htmlFor={option.value}>
@@ -148,7 +144,7 @@ const entityOptions = [
 ]
 
 function EntityFilter() {
-  const [{ entities }, setSearchParams] = useDoctorSearchParams()
+  const [entities, setEntities] = React.useState<string[]>([])
 
   return (
     <div className="flex flex-col gap-4 border-b py-6">
@@ -160,12 +156,11 @@ function EntityFilter() {
               id={option.value}
               checked={entities?.includes(option.value)}
               onCheckedChange={(checked) => {
-                const currentEntities = entities ?? []
-                setSearchParams({
-                  entities: checked
-                    ? [...currentEntities, option.value]
-                    : currentEntities.filter((id) => id !== option.value),
-                })
+                setEntities(
+                  checked
+                    ? [...entities, option.value]
+                    : entities.filter((id) => id !== option.value),
+                )
               }}
             />
             <Label className="text-sm font-normal" htmlFor={option.value}>
@@ -180,7 +175,7 @@ function EntityFilter() {
 
 export default function DoctorFilters() {
   return (
-    <div className="mb-10 hidden h-fit w-full max-w-xs rounded-xl p-0 shadow-sm lg:block">
+    <div className="mb-10 hidden h-fit w-full max-w-xs rounded-xl p-0 shadow-sm xl:block">
       <div className="flex flex-row items-start gap-2 rounded-b-none rounded-t-xl border border-primary bg-primary p-6 text-primary-foreground">
         <Filter />
         <span className="text-lg font-semibold">Filters</span>

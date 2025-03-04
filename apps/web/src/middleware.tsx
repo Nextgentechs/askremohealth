@@ -1,34 +1,49 @@
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
 
-const protectedPaths = ['/appointments', '/profile']
-const publicPaths = [
-  '/login',
-  '/signup',
-  '/about-us',
-  '/contact-us',
-  '/doctors/:path*',
-  '/find-hospital',
-  '/api',
-]
+const isProtectedRoute = createRouteMatcher([
+  '/appointments',
+  '/profile',
+  '/admin',
+  '/find-specialists/:id/book',
+  '/specialists/(.*)',
+  '/specialist/(.*)',
+])
+const isAdminRoute = createRouteMatcher(['/admin', '/admin/doctors'])
+const isSpecialistRoute = createRouteMatcher([
+  '/specialist/patients',
+  '/specialist/upcoming',
+  '/specialist/online',
+  '/specialist/physical',
+  '/specialist/profile',
+])
 
-export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
-  if (publicPaths.some((path) => pathname.startsWith(path))) {
-    return NextResponse.next()
-  }
+export default clerkMiddleware(async (auth, req) => {
+  const { sessionClaims } = await auth()
 
-  if (protectedPaths.some((path) => pathname.startsWith(path))) {
-    const sessionId = request.cookies.get('auth_session')?.value
-    if (!sessionId) {
-      return NextResponse.redirect(new URL('/login', request.url))
+  if (isProtectedRoute(req)) await auth.protect()
+
+  if (isSpecialistRoute(req)) {
+    if (!sessionClaims?.metadata.onboardingComplete) {
+      return NextResponse.redirect(
+        new URL('/specialist/onboarding/personal-details', req.url),
+      )
     }
-    return NextResponse.next()
   }
 
-  return NextResponse.next()
-}
+  if (isAdminRoute(req)) {
+    const isAdmin = sessionClaims?.metadata.role === 'admin'
+    if (!isAdmin) {
+      return NextResponse.redirect(new URL('/', req.url))
+    }
+  }
+})
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|public).*)'],
+  matcher: [
+    // Skip Next.js internals and all static files, unless found in search params
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Always run for API routes
+    '/(api|trpc)(.*)',
+  ],
 }

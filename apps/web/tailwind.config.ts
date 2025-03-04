@@ -7,6 +7,10 @@ export default {
   theme: {
     extend: {
       keyframes: {
+        'caret-blink': {
+          '0%,70%,100%': { opacity: '1' },
+          '20%,50%': { opacity: '0' },
+        },
         'streaming-progress': {
           '0%': {
             transform: 'translateX(-100%)',
@@ -18,6 +22,7 @@ export default {
       },
       animation: {
         'streaming-progress': 'streaming-progress 1.5s linear infinite',
+        'caret-blink': 'caret-blink 1.25s ease-out infinite',
       },
       fontFamily: {
         sans: ['var(--font-geist-sans)', ...fontFamily.sans],

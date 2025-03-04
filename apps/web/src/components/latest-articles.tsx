@@ -1,10 +1,10 @@
-import Image from 'next/image'
-import { Card, CardContent } from './ui/card'
-import { Button } from './ui/button'
-import { ArrowRight } from 'lucide-react'
-import Link from 'next/link'
-import { client, urlFor } from '@web/sanity/client'
 import { type SanityImageSource } from '@sanity/image-url/lib/types/types'
+import { client, urlFor } from '@web/sanity/client'
+import { ArrowRight } from 'lucide-react'
+import Image from 'next/image'
+import Link from 'next/link'
+import { Button } from './ui/button'
+import { Card, CardContent } from './ui/card'
 
 export type Post = {
   title: string
@@ -30,20 +30,20 @@ async function getPosts(limit: number) {
 
 function ArticleCard({ post }: { post: Post }) {
   return (
-    <Card className="h-96 overflow-hidden rounded-none bg-transparent p-0 transition-all hover:bg-muted/10">
+    <Card className="h-96 overflow-hidden rounded-none bg-transparent shadow-none border-none transition-all hover:bg-muted/10">
       <Link
         href={`/articles/${post.slug.current}`}
         className="group block h-full"
         aria-label={`Read article: ${post.title}`}
       >
         <CardContent className="h-full p-0">
-          <div className="relative h-48 w-full overflow-hidden">
+          <div className="relative h-48 w-full overflow-hidden rounded-md">
             <Image
               src={urlFor(post.image).url()}
               alt={post.title}
               width={450}
               height={350}
-              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+              className="h-full w-full object-cover rounded-sm transition-transform duration-300 group-hover:scale-105"
             />
           </div>
           <div className="flex h-[calc(100%-14rem)] flex-col items-start justify-between pt-4">
@@ -76,7 +76,7 @@ export default async function LatestArticles() {
       <div className="container mx-auto flex flex-col items-center justify-center gap-10">
         <div className="mx-auto flex w-full flex-col items-center justify-center gap-2">
           <h2 className="section-title">Latest Articles</h2>
-          <p className="section-description">
+          <p className="section-description text-center">
             Expert tips and insights to support your health and wellness
             journey.
           </p>
@@ -88,8 +88,10 @@ export default async function LatestArticles() {
         </div>
 
         <Button variant={'link'}>
-          <span>Explore More Articles</span>
-          <ArrowRight />
+          <Link href="/articles" className="flex items-center gap-1">
+            <span>Explore More Articles</span>
+            <ArrowRight />
+          </Link>
         </Button>
       </div>
     </section>

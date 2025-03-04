@@ -1,1 +1,0 @@
-ALTER TABLE "doctor" ADD COLUMN "is_verified" boolean DEFAULT false;
