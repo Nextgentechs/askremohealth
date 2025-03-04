@@ -43,8 +43,8 @@ export default function SearchForm() {
   const [query, setQuery] = React.useState('')
   const router = useRouter()
 
-  const [specialties] = api.specialties.listSpecialties.useSuspenseQuery()
-  const [counties] = api.locations.counties.useSuspenseQuery()
+  const { data: specialties } = api.specialties.listSpecialties.useQuery()
+  const { data: counties } = api.locations.counties.useQuery()
   const { data: towns, isLoading: townsLoading } = api.locations.towns.useQuery(
     { countyCode: selectedCounty?.code },
     { enabled: !!selectedCounty },

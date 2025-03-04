@@ -1,9 +1,10 @@
-import React from 'react'
-import { Button } from '@web/components/ui/button'
 import Logo from '@web/components/logo'
+import { Button } from '@web/components/ui/button'
 import PersonalDetailsForm from './_components/personal-details-form'
 
-export default async function page() {
+export const dynamic = 'force-dynamic'
+
+export default function Page() {
   return (
     <div className="flex flex-col">
       <div className="fixed left-0 right-0 top-0 flex items-end justify-between border-b border-b-border bg-background px-6 py-4 sm:px-12">

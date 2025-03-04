@@ -8,6 +8,8 @@ import ConsultationSettings from './_components/consultation-settings'
 import PersonalInfo from './_components/personal-info'
 import ProfessionalInfo from './_components/professional-info'
 
+export const dynamic = 'force-dynamic'
+
 export default function Page() {
   return (
     <div className="mb-20 flex flex-col gap-8 md:mt-4">
