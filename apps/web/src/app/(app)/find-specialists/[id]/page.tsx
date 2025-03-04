@@ -18,42 +18,6 @@ import {
 import { type RouterOutputs } from '@web/trpc/react'
 import { api } from '@web/trpc/server'
 
-export default async function Page({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
-  const doctor = await api.doctors.details((await params).id)
-  return (
-    <main className="container mx-auto mb-48 mt-12 flex min-h-screen w-full flex-col gap-12">
-      <Breadcrumb className="lg:ps-3">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/">Home</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink href={`/doctors`}>Doctors</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>
-              {doctor.firstName} {doctor.lastName}
-            </BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-      <div className="flex flex-col gap-8 lg:flex-row">
-        <DoctorCard doctor={doctor} />
-        <div className="flex flex-1 flex-col gap-8">
-          <AboutDoctor about={doctor.bio} />
-          <PatientsReviews />
-        </div>
-      </div>
-    </main>
-  )
-}
-
 function DoctorCard({
   doctor,
 }: {
@@ -62,7 +26,7 @@ function DoctorCard({
   return (
     <Card
       key={doctor.id}
-      className="h-fit w-full flex-col justify-between gap-8 rounded-xl border shadow-sm transition-all duration-300 sm:flex-row lg:flex lg:max-w-md lg:flex-row xl:max-w-lg 2xl:max-w-xl"
+      className="h-fit w-full p-6 flex-col justify-between gap-8 rounded-xl border shadow-sm transition-all duration-300 sm:flex-row lg:flex lg:max-w-md lg:flex-row xl:max-w-lg 2xl:max-w-xl"
     >
       <div className="flex flex-1 flex-row gap-5 md:gap-8 xl:gap-10">
         <Avatar className="hidden md:block md:size-28">
@@ -159,5 +123,41 @@ function PatientsReviews() {
         ))}
       </CardContent>
     </Card>
+  )
+}
+
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const doctor = await api.doctors.details((await params).id)
+  return (
+    <main className="container mx-auto mb-48 mt-12 flex min-h-screen w-full flex-col gap-12">
+      <Breadcrumb className="lg:ps-3">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/">Home</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink href={`/doctors`}>Doctors</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>
+              {doctor.firstName} {doctor.lastName}
+            </BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+      <div className="flex flex-col gap-8 lg:flex-row">
+        <DoctorCard doctor={doctor} />
+        <div className="flex flex-1 flex-col gap-8">
+          <AboutDoctor about={doctor.bio} />
+          <PatientsReviews />
+        </div>
+      </div>
+    </main>
   )
 }
