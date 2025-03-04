@@ -45,8 +45,11 @@ export const appointmentsColumns: ColumnDef<Appointment>[] = [
     },
   },
   {
-    accessorKey: 'patient.user.phone',
+    accessorKey: 'patient.phone',
     header: 'Phone Number',
+    accessorFn: (row) => {
+      return row.patient.phone
+    },
   },
   {
     accessorKey: 'notes',
@@ -275,14 +278,15 @@ function ScheduledAppointmentActions({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {row.type === 'online' && (
-          <Link href={`specialist/appointment-room/${row.id}`}>
-            <DropdownMenuItem>
+          <Link href={`/specialist/appointment-room/${row.id}`}>
+            <DropdownMenuItem className="cursor-pointer">
               <Video className="mr-2 h-4 w-4" />
               Start Consultation
             </DropdownMenuItem>
           </Link>
         )}
         <DropdownMenuItem
+          className="cursor-pointer"
           onClick={handleCancelAppointment}
           disabled={isCancelling}
         >

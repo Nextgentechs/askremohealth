@@ -36,8 +36,8 @@ export const createAppointment = procedure
         id: ctx.user?.id ?? '',
         firstName: currentUser?.firstName ?? '',
         lastName: currentUser?.lastName ?? '',
-        email: currentUser?.emailAddresses[0]?.emailAddress ?? '',
-        phone: currentUser?.phoneNumbers[0]?.phoneNumber ?? '',
+        email: input.email ?? currentUser?.emailAddresses[0]?.emailAddress,
+        phone: input.phone,
         dob: input.dob,
         lastAppointment: input.date,
       })

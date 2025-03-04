@@ -1,4 +1,3 @@
-import useVideoSetup from '@web/app/(app)/appointments/[id]/video/use-video-setup'
 import { useVideoStore } from '@web/app/(app)/appointments/[id]/video/video-room'
 import { Alert, AlertDescription, AlertTitle } from '@web/components/ui/alert'
 import { Button } from '@web/components/ui/button'
@@ -13,6 +12,7 @@ import {
   VideoOff,
   Volume2,
 } from 'lucide-react'
+import useVideoSetup from './use-video-setup'
 
 function VideoControls({ isEndingSessions }: { isEndingSessions: boolean }) {
   const { isMuted, isVideoOff, volume, toggleMute, toggleVideo, setVolume } =

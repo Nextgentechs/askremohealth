@@ -1,7 +1,7 @@
 import { useToast } from '@web/hooks/use-toast'
 import { api } from '@web/trpc/react'
 
-import { useRouter } from '@tanstack/react-router'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import {
   connect,
@@ -164,10 +164,7 @@ export default function useVideoSetup(appointmentId: string) {
         }
       }
 
-      router.navigate({
-        to: '/dashboard/appointment/post/$id',
-        params: { id: roomAppointmentId ?? '' },
-      })
+      router.push(`/specialist/appointment-room/${roomAppointmentId}/post`)
     } catch (error) {
       console.error('Error in handleEndCall:', error)
       toast({

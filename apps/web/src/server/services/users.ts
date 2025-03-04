@@ -1,7 +1,5 @@
 import { TRPCError } from '@trpc/server'
-import { and, count, eq, type InferInsertModel } from 'drizzle-orm'
-import { cookies } from 'next/headers'
-import { type Context } from '../api/trpc'
+import { and, count, eq } from 'drizzle-orm'
 import {
   AppointmentStatus,
   type AppointmentListSchema,
@@ -10,57 +8,6 @@ import { db } from '../db'
 import { appointmentLogs, appointments } from '../db/schema'
 
 export class User {
-  static async createUser(params: InferInsertModel<typeof users>) {
-    const [user] = await db
-      .insert(users)
-      .values({
-        ...params,
-      })
-      .returning()
-
-    if (!user) {
-      throw new TRPCError({
-        code: 'NOT_IMPLEMENTED',
-        message: 'Failed to create user',
-      })
-    }
-
-    return user
-  }
-
-  static async updateProfile(
-    userId: string,
-    firstName: string,
-    lastName: string,
-    email: string,
-    phone: string,
-    dob: Date,
-  ) {
-    const user = await db.query.users.findFirst({
-      where: (user, { eq }) => eq(user.id, userId),
-    })
-
-    if (!user) {
-      throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: 'User not found',
-      })
-    }
-
-    await db
-      .update(users)
-      .set({
-        firstName,
-        lastName,
-        email,
-        phone,
-        dob,
-      })
-      .where(eq(users.id, userId))
-
-    return { success: true }
-  }
-
   static async getUserAppointments(
     userId: string,
     input: AppointmentListSchema,
@@ -231,21 +178,5 @@ export class User {
     ])
 
     return { success: true, newAppointmentId: newAppointment[0]?.id }
-  }
-
-  static async signOut(ctx: Context) {
-    if (ctx.session) await lucia.invalidateSession(ctx.session ?? '')
-    const cookie = lucia.createBlankSessionCookie()
-    const cookieStore = await cookies()
-    cookieStore.set(cookie.name, cookie.value, cookie.attributes)
-  }
-
-  static async getUser(userId: string) {
-    return await db.query.patients.findFirst({
-      where: (patient) => eq(patient.id, userId),
-      with: {
-        user: true,
-      },
-    })
   }
 }
