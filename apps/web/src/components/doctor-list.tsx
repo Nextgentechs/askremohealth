@@ -1,12 +1,12 @@
 'use client'
 
 import { getScheduleForWeek } from '@web/lib/utils'
-import { api, type RouterOutputs } from '@web/trpc/react'
+import { type RouterOutputs } from '@web/trpc/react'
 import { Stethoscope } from 'lucide-react'
 import { useRouter } from 'next-nprogress-bar'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { Suspense, useState } from 'react'
+import { useState } from 'react'
 import DoctorDetails from './doctor-details'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
 import { Button } from './ui/button'
@@ -140,98 +140,70 @@ function EmptyDoctors() {
   )
 }
 
-function DoctorCardSkeleton() {
-  return (
-    <div className="flex w-full flex-col p-6 justify-between gap-8 rounded-xl sm:flex-row lg:flex-row animate-pulse bg-muted h-72"></div>
-  )
-}
-
-export default function DoctorList() {
+export default function DoctorList({
+  data,
+}: {
+  data: RouterOutputs['doctors']['list']
+}) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const page = Number(searchParams.get('page'))
 
-  const { data, isPending } = api.doctors.list.useQuery({
-    specialty: searchParams.get('specialty') ?? undefined,
-    subSpecialties: searchParams.get('subSpecialties')?.split(',') ?? undefined,
-    genders:
-      searchParams
-        .get('genders')
-        ?.split(',')
-        .map((g) => g as 'male' | 'female') ?? undefined,
-    query: searchParams.get('query') ?? undefined,
-    town: searchParams.get('town') ?? undefined,
-    page: page ? page : 1,
-    limit: 10,
-  })
-
-  if (isPending) {
-    return (
-      <div className="flex w-full flex-col gap-6">
-        {Array.from({ length: 10 }, (_, i) => (
-          <DoctorCardSkeleton key={i} />
-        ))}
-      </div>
-    )
-  }
-
-  if (!data?.doctors.length && !isPending) {
+  if (!data?.doctors.length) {
     return <EmptyDoctors />
   }
 
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <div className="flex w-full flex-col gap-6">
-        {data?.doctors.map((doctor) => (
-          <Card
-            key={doctor.id}
-            className="flex h-fit w-full flex-col p-6 justify-between gap-8 rounded-xl border shadow-sm sm:flex-row lg:flex-row"
+    <div className="flex w-full flex-col gap-6">
+      {data?.doctors.map((doctor) => (
+        <Card
+          key={doctor.id}
+          className="flex h-fit w-full flex-col p-6 justify-between gap-8 rounded-xl border shadow-sm sm:flex-row lg:flex-row"
+        >
+          <div
+            className="flex flex-1 flex-row gap-5 md:gap-8 xl:gap-10"
+            onClick={() => router.push(`/find-specialists/${doctor.id}`)}
           >
-            <div
-              className="flex flex-1 flex-row gap-5 md:gap-8 xl:gap-10"
-              onClick={() => router.push(`/find-specialists/${doctor.id}`)}
-            >
-              <Avatar className="hidden cursor-pointer md:block md:size-28">
-                <AvatarImage src={doctor.profilePicture?.url} />
-                <AvatarFallback>
-                  {doctor.firstName.charAt(0)}
-                  {doctor.lastName.charAt(0)}
-                </AvatarFallback>
-              </Avatar>
-              <DoctorDetails doctor={doctor} />
-            </div>
-            <TimeSlotCarousel
-              operatingHours={doctor.operatingHours}
-              bookedSlots={doctor.bookedSlots ?? []}
-              doctorId={doctor.id}
-            />
-          </Card>
-        ))}
-        <Pagination className="py-5">
-          <PaginationContent>
-            {Array.from(
-              { length: Math.ceil((data?.count ?? 0) / 10) },
-              (_, i) => i + 1,
-            ).map((p) => (
-              <PaginationItem key={p}>
-                <PaginationLink
-                  href={`/find-specialists?page=${p}`}
-                  isActive={p === (page || 1)}
-                  onClick={(e) => {
-                    e.preventDefault()
-                    const params = new URLSearchParams(searchParams)
-                    params.delete('page')
-                    params.set('page', p.toString())
-                    router.push(`/find-specialists?${params.toString()}`)
-                  }}
-                >
-                  {p}
-                </PaginationLink>
-              </PaginationItem>
-            ))}
-          </PaginationContent>
-        </Pagination>
-      </div>
-    </Suspense>
+            <Avatar className="hidden cursor-pointer md:block md:size-28">
+              <AvatarImage src={doctor.profilePicture?.url} />
+              <AvatarFallback>
+                {doctor.firstName.charAt(0)}
+                {doctor.lastName.charAt(0)}
+              </AvatarFallback>
+            </Avatar>
+            <DoctorDetails doctor={doctor} />
+          </div>
+          <TimeSlotCarousel
+            operatingHours={doctor.operatingHours}
+            bookedSlots={doctor.bookedSlots ?? []}
+            doctorId={doctor.id}
+          />
+        </Card>
+      ))}
+      <Pagination className="py-5">
+        <PaginationContent>
+          {Array.from(
+            { length: Math.ceil((data?.count ?? 0) / 10) },
+            (_, i) => i + 1,
+          ).map((p) => (
+            <PaginationItem key={p}>
+              <PaginationLink
+                href={`/find-specialists?page=${p}`}
+                isActive={p === (page || 1)}
+                onClick={(e) => {
+                  e.preventDefault()
+                  const params = new URLSearchParams(searchParams)
+                  params.delete('page')
+                  params.set('page', p.toString())
+                  router.push(`/find-specialists?${params.toString()}`)
+                }}
+              >
+                {p}
+              </PaginationLink>
+            </PaginationItem>
+          ))}
+        </PaginationContent>
+      </Pagination>
+    </div>
   )
 }

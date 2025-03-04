@@ -335,6 +335,14 @@ export class Doctors {
 
       conditions.push(exists(query))
     }
+    if (input.query) {
+      conditions.push(
+        or(
+          ilike(doctorsTable.firstName, `%${input.query}%`),
+          ilike(doctorsTable.lastName, `%${input.query}%`),
+        ),
+      )
+    }
 
     return conditions.length ? and(...conditions) : undefined
   }
