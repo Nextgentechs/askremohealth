@@ -1,3 +1,4 @@
+import Footer from '@web/components/footer'
 import { type Post } from '@web/components/latest-articles'
 import Article from '@web/components/ui/article'
 import {
@@ -11,7 +12,7 @@ import {
 import { client } from '@web/sanity/client'
 import { FileSearch } from 'lucide-react'
 
-const LIMIT = 5
+const LIMIT = 10
 
 async function getPosts(page: number, limit: number) {
   const start = (page - 1) * limit
@@ -65,7 +66,7 @@ export default async function Articles({
   }
 
   return (
-    <div className="py-6">
+    <div className="pt-6">
       <h2 className="text-center font-bold text-4xl sm:text-3xl md:text-6xl py-6 sm:py-11 text-primary font-sans">
         Blogs &amp; Resources
       </h2>
@@ -76,7 +77,7 @@ export default async function Articles({
       </div>
 
       {totalPages > 1 && (
-        <Pagination className="mt-10 flex justify-center">
+        <Pagination className="my-10 flex justify-center">
           <PaginationContent className="flex flex-wrap gap-2 justify-center">
             {page > 1 && (
               <PaginationItem>
@@ -110,6 +111,7 @@ export default async function Articles({
           </PaginationContent>
         </Pagination>
       )}
+      <Footer />
     </div>
   )
 }

@@ -1,9 +1,10 @@
-import { type SanityImageSource } from '@sanity/image-url/lib/types/types'
-import { client, urlFor } from '@web/sanity/client'
 import { PortableText } from '@portabletext/react'
-import Image from 'next/image'
-import { ArrowLeft } from 'lucide-react'
+import { type SanityImageSource } from '@sanity/image-url/lib/types/types'
+import { AspectRatio } from '@web/components/ui/aspect-ratio'
 import { Button } from '@web/components/ui/button'
+import { client, urlFor } from '@web/sanity/client'
+import { ArrowLeft } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
 
 type Post = {
@@ -58,12 +59,14 @@ export default async function ArticlePage({
       </div>
 
       <div className="relative mb-12 aspect-video w-full overflow-hidden rounded-lg">
-        <Image
-          src={urlFor(post.image).url()}
-          alt={post.title}
-          fill
-          className="rounded-md object-cover shadow-sm"
-        />
+        <AspectRatio ratio={3 / 4}>
+          <Image
+            src={urlFor(post.image).url()}
+            alt={post.title}
+            fill
+            className="rounded-md object-cover shadow-sm"
+          />
+        </AspectRatio>
       </div>
 
       <div className="prose prose-lg dark:prose-invert">
