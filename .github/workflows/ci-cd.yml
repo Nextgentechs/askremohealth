@@ -48,17 +48,19 @@ jobs:
     needs: ci
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 5 # Add timeout to prevent hanging
+    timeout-minutes: 5
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Setup project for Vercel
+        run: |
+          mkdir -p .vercel
+          echo '{"orgId":"${{ secrets.VERCEL_ORG_ID }}","projectId":"${{ secrets.VERCEL_PROJECT_ID }}"}' > .vercel/project.json
+
       - name: Install Vercel CLI
         run: npm install -g vercel
 
-      - name: Deploy to Vercel Production
-        run: vercel --token ${{ secrets.VERCEL_TOKEN }} --prod --yes --cwd .
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      - name: Deploy to Vercel
+        run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
