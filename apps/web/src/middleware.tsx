@@ -12,9 +12,9 @@ const isProtectedRoute = createRouteMatcher([
 const isAdminRoute = createRouteMatcher(['/admin', '/admin/doctors'])
 const isSpecialistRoute = createRouteMatcher([
   '/specialist/patients',
-  '/specialist/upcoming',
-  '/specialist/online',
-  '/specialist/physical',
+  '/specialist/upcoming-appointments',
+  '/specialist/online-appointments',
+  '/specialist/physical-appointments',
   '/specialist/profile',
 ])
 

@@ -153,10 +153,9 @@ export default function AvailabilityDetailsForm() {
   const form = useForm<AvailabilityDetails>({
     resolver: zodResolver(availabilityDetailsSchema),
     defaultValues: {
-      consultationFee: '',
-      appointmentDuration: '',
       operatingHours: initialOperatingHours,
     },
+    mode: 'onBlur',
   })
   const { toast } = useToast()
 
@@ -255,14 +254,7 @@ export default function AvailabilityDetailsForm() {
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 flex justify-end border-t border-t-border bg-background px-6 py-4 sm:px-12">
-        <Button
-          size="lg"
-          disabled={form.formState.isSubmitting}
-          onClick={(e) => {
-            e.preventDefault()
-            onSubmit()
-          }}
-        >
+        <Button size="lg" disabled={form.formState.isSubmitting} type="submit">
           {form.formState.isSubmitting ? (
             <Loader className="h-4 w-4 animate-spin" />
           ) : (
