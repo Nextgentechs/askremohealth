@@ -2,63 +2,78 @@
 
 ## Tech Stack and Philosophy
 
-This project implements a modern healthcare platform using TypeScript and follows the Backend for Frontend (BFF) pattern. Our technical choices prioritize type safety, performance, and developer experience.
+This project implements a modern virtual healthcare platform using TypeScript in a monorepo structure. Our technical choices prioritize type safety, performance, scalability, and developer experience.
 
 ### Core Technologies
 
-- [Next.js](https://nextjs.org): React framework for production-grade applications
-- [Neon](https://neon.tech): Serverless PostgreSQL with instant database branching
-- [tRPC](https://trpc.io): End-to-end typesafe APIs without schemas or code generation
+- [Next.js](https://nextjs.org): React framework for server-rendered applications
+- [TypeScript](https://www.typescriptlang.org/): Strongly typed programming language
 - [Drizzle ORM](https://orm.drizzle.team): TypeScript ORM for SQL databases
+- [PostgreSQL](https://www.postgresql.org/): Robust, open-source relational database
+- [tRPC](https://trpc.io): End-to-end typesafe APIs
+- [Clerk](https://clerk.com/): Authentication and user management
 - [Tailwind CSS](https://tailwindcss.com): Utility-first CSS framework
 - [shadcn/ui](https://ui.shadcn.com): Accessible and customizable component library
-- [Lucia Auth](https://lucia-auth.com): Authentication library
-- [TanStack Router](https://tanstack.com/router): Type-safe routing for React applications
+- [Sanity.io](https://www.sanity.io/): Headless CMS for content management
+- [Turborepo](https://turbo.build/repo): High-performance build system for JavaScript/TypeScript monorepos
 
 ### Development Philosophy
 
-We embrace the Backend for Frontend pattern with tight frontend-backend integration:
+We embrace a modern, component-based architecture with a focus on:
 
 1. **Type-Safe Data Layer**
 
-- Using tRPC with React Query for automatic type inference
-- Server state management without boilerplate
-- End-to-end type safety from database to UI
+   - End-to-end type safety from database to UI with Drizzle ORM and TypeScript
+   - tRPC for secure, type-safe API communication
+   - Structured data validation
 
-2. **Modern React Patterns**
+2. **Modern Frontend Architecture**
 
-- Server Components for automatic server-side rendering and caching
-- Server Actions for direct server code invocation
-- Reduced client-side complexity and improved performance
+   - Component-based UI development with React and Next.js
+   - Server-side rendering for improved performance and SEO
+   - Responsive design for all device sizes
 
-3. **Database & Schema**
+3. **Scalable Backend**
 
-- PostgreSQL with Neon for serverless scaling
-- Drizzle ORM for type-safe database operations
-- Instant development database branching
+   - Modular service-based architecture
+   - Clean separation of concerns
+   - PostgreSQL database with efficient query patterns
+
+4. **Content Management**
+   - Headless CMS architecture with Sanity.io
+   - Structured content models
+   - Flexible content delivery
 
 ## Applications
 
 ### Web Platform (`apps/web`)
 
-- Next.js application for patients
-- Book appointments and search doctors
-- Access healthcare services
-- View medical articles
+- Next.js application for patients and doctors
+- Patient features:
+  - Doctor discovery and appointment booking
+  - Manage healthcare appointments
+  - View medical information
+  - Both physical and virtual consultation options
+- Doctor features:
+  - Appointment management dashboard
+  - Patient interaction
+  - Schedule management
+  - Online and in-person appointment handling
 
-### Doctor Portal (`apps/web/doctor`)
+### CMS (`apps/cms`)
 
-- Vite-based dashboard for healthcare professionals
-- TanStack Router for type-safe routing and data management
-- Manage appointments and patient interactions
-- Update availability and professional details
-- Handle virtual consultations
+- Sanity.io-based content management system
+- Manage platform content including:
+  - Medical articles
+  - Doctor information
+  - Healthcare facility details
+  - Platform documentation
 
 ## Prerequisites
 
-- [Node.js](https://nodejs.org/) (v20 or later)
-- [npm](https://www.npmjs.com/) (v10 or later)
-- PostgreSQL database (we recommend Neon)
+- [Node.js](https://nodejs.org/) (v18 or later)
+- [npm](https://www.npmjs.com/) (v9 or later)
+- PostgreSQL database
 
 ## Getting Started
 
@@ -78,45 +93,38 @@ npm install
 3. Set up environment variables:
 
 ```bash
-# Copy example env files for both apps
+# Copy example env files
 cp apps/web/.env.example apps/web/.env
-cp apps/doctor/.env.example apps/doctor/.env
 ```
 
-Required environment variables:
+Required environment variables for the web app:
 
 - `DATABASE_URL`: PostgreSQL connection string
-- `NEXT_PUBLIC_APP_URL`: Application URL
+- `CLERK_SECRET_KEY`: Clerk authentication secret key
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`: Clerk publishable key
 - Additional variables as specified in `.env.example` files
 
-4. Initialize the database:
-
-```bash
-cd apps/web
-npm run db:push
-```
-
-5. Start development servers:
+4. Start development servers:
 
 ```bash
 # From root directory
 npm run dev
 ```
 
-The web app will be available at `http://localhost:3000` and the doctor portal at `http://localhost:3001`
+The web app will be available at `http://localhost:3000` and the CMS at `http://localhost:3333`
 
 ## Available Scripts
 
 ```bash
 # Development (root)
 npm run dev           # Start all development servers
-npm run lint         # Lint all packages
-npm run format       # Format all code
-npm run clean        # Clean all builds
+npm run lint          # Lint all packages
+npm run format        # Format all code
+npm run clean         # Clean all builds
 
 # Production (root)
-npm run build        # Build all applications
-npm run start        # Start all production servers
+npm run build         # Build all applications
+npm run start         # Start all production servers
 ```
 
 ## Project Structure
@@ -124,16 +132,51 @@ npm run start        # Start all production servers
 ```
 askvirtualhealthcare/
 ├── apps/
-│   ├── web/          # Patient platform (Next.js)
+│   ├── web/            # Web application (Next.js)
 │   │   ├── src/
-│   │   └── public/
-│   └── doctor/       # Doctor dashboard (Vite)
-│       ├── src/
-│       └── public/
+│   │   │   ├── app/    # Next.js app router
+│   │   │   ├── components/ # Reusable UI components
+│   │   │   ├── server/ # Server-side code
+│   │   │   │   ├── api/      # API endpoints
+│   │   │   │   ├── db/       # Database schema and config
+│   │   │   │   └── services/ # Business logic services
+│   │   │   ├── trpc/   # tRPC configuration
+│   │   │   └── styles/ # Global styles
+│   │   └── public/     # Static assets
+│   └── cms/            # Content Management System (Sanity)
+│       ├── schemaTypes/ # Content models
+│       └── static/      # Static assets
 ├── packages/
-│   └── eslint-config/ # Shared ESLint configurations
-└── package.json      # Root package.json
+│   └── eslint-config/  # Shared ESLint configurations
+└── package.json        # Root package.json
 ```
+
+## Key Features
+
+1. **Healthcare Appointment Management**
+
+   - Book and manage appointments
+   - Support for both physical and virtual consultations
+   - Comprehensive appointment status tracking
+   - Appointment filtering and searching
+
+2. **Doctor Discovery**
+
+   - Browse and search for healthcare specialists
+   - Doctor profiles with detailed information
+   - Specialization and availability filtering
+   - Patient reviews and ratings
+
+3. **User Authentication**
+
+   - Secure authentication with Clerk
+   - Role-based access control
+   - Profile management
+
+4. **Content Management**
+   - Medical articles and information
+   - Doctor and facility data management
+   - Platform documentation
 
 ## Learning Resources
 
@@ -141,6 +184,8 @@ askvirtualhealthcare/
 - [tRPC Documentation](https://trpc.io/docs)
 - [Drizzle Documentation](https://orm.drizzle.team/docs/overview)
 - [Tailwind CSS Documentation](https://tailwindcss.com/docs)
+- [Clerk Documentation](https://clerk.com/docs)
+- [Sanity.io Documentation](https://www.sanity.io/docs)
 
 ## Deployment
 
@@ -148,4 +193,4 @@ The applications are optimized for deployment on [Vercel](https://vercel.com).
 
 ## Questions?
 
-If you're new to tRPC or have questions about our implementation, please reach out to the team for a walkthrough.
+If you have questions about implementation details or need assistance with setup, please reach out to the development team.
