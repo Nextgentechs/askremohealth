@@ -1,6 +1,7 @@
 import Footer from '@web/components/footer'
 import HeroSection from '@web/components/hero-section'
 import HowItWorks from '@web/components/how-it-works'
+import StatsSection from '@web/components/stats-section'
 import LatestArticles from '@web/components/latest-articles'
 import MedicalSpecialist from '@web/components/medical-specialists'
 import SearchForm from '@web/components/search-form'
@@ -23,6 +24,7 @@ export default async function Home() {
       </div>
 
       <div className="absolute top-[584px] sm:top-[488px] xl:top-[552px] mx-auto flex w-full flex-col items-center justify-center">
+        <StatsSection/>
         <HowItWorks />
         <MedicalSpecialist />
         <TopSpecialists />
