@@ -70,12 +70,17 @@ const StatsSection: React.FC = () => {
     },
   ]
 
+  // Compute the incremented values outside of the map loop
+  const incrementedValues = stats.map((stat) =>
+    useIncrement(stat.value, 3000, startIncrement)
+  )
+
   return (
     <div className="container flex flex-col mx-auto items-center py-16">
-      <h2 className="section-title">By the Numbers</h2>
+      <h2 className="section-title">Ask Remohealth at Glance</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-2">
         {stats.map((stat, index) => {
-          const currentValue = useIncrement(stat.value, 3000, startIncrement) // Pass startIncrement
+          const currentValue = incrementedValues[index] // Use precomputed values here
           return (
             <motion.div
               key={index}
