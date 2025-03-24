@@ -18,8 +18,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@web/components/ui/select'
+import { toast } from '@web/hooks/use-toast'
 import { api } from '@web/trpc/react'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, Loader } from 'lucide-react'
 import React from 'react'
 import { FormProvider, useForm, useFormContext } from 'react-hook-form'
 import {
@@ -30,11 +31,19 @@ import {
 function SubSpecialtySelect({ specialty }: { specialty: string }) {
   const [open, setOpen] = React.useState(false)
   const { setValue, watch } = useFormContext<ProfessionalDetails>()
-  const selectedSubSpecialties = watch('subSpecialty')
+  const selectedSubSpecialties = watch('subSpecialty') || []
 
   const { data: subspecialties } = api.specialties.listSubSpecialties.useQuery({
     specialityId: specialty,
   })
+
+  const handleCheckboxChange = (id: string) => {
+    const updatedSelected = selectedSubSpecialties.includes(id)
+      ? selectedSubSpecialties.filter((subId: string) => subId !== id)
+      : [...selectedSubSpecialties, id]
+
+    setValue('subSpecialty', updatedSelected)
+  }
 
   const selected = React.useMemo(() => {
     if (!subspecialties) return ''
@@ -67,8 +76,12 @@ function SubSpecialtySelect({ specialty }: { specialty: string }) {
             <div
               className="mb-1 flex w-full cursor-pointer flex-row gap-4 text-sm"
               key={option.id}
+              onClick={() => handleCheckboxChange(option.id)}
             >
-              <Checkbox />
+              <Checkbox
+                checked={selectedSubSpecialties.includes(option.id)}
+                onCheckedChange={() => handleCheckboxChange(option.id)}
+              />
               <span> {option.name}</span>
             </div>
           ))}
@@ -79,7 +92,8 @@ function SubSpecialtySelect({ specialty }: { specialty: string }) {
 }
 
 const updateProfessionalDetailsSchema = professionalDetailsSchema.omit({
-  facility: true,
+  county: true,
+  town: true,
 })
 
 function ProfessionalInfoForm() {
@@ -91,7 +105,7 @@ function ProfessionalInfoForm() {
   const { data: facilities } = api.facilities.listFacilities.useQuery()
 
   const methods = useForm<ProfessionalDetails>({
-    resolver: zodResolver(professionalDetailsSchema),
+    resolver: zodResolver(updateProfessionalDetailsSchema),
     defaultValues: {
       experience: doctor?.experience ?? 0,
       registrationNumber: doctor?.licenseNumber ?? '',
@@ -100,106 +114,142 @@ function ProfessionalInfoForm() {
     },
   })
 
+  const utils = api.useUtils()
+  const { mutateAsync: updateProfessionalDetails, isPending } =
+    api.doctors.updateProfessionalDetails.useMutation()
+
+  const onSubmit = async (data: ProfessionalDetails) => {
+    try {
+      await updateProfessionalDetails(data)
+      utils.doctors.currentDoctor.invalidate()
+      toast({
+        title: 'Success',
+        description: 'Personal details updated',
+      })
+    } catch (error) {
+      console.error(error)
+      toast({
+        title: 'Error',
+        description: 'Failed to update personal details',
+        variant: 'destructive',
+      })
+    }
+  }
+  console.log(methods.formState.errors, 'errorss')
+
   return (
     <Card className="w-full shadow-sm">
       <CardHeader></CardHeader>
       <CardContent>
-        <form className="space-y-8">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="specialty">Specialty</Label>
-              <Select
-                onValueChange={(value) => {
-                  setSelectedSpecialty(value)
-                  methods.setValue('specialty', value)
-                }}
+        <FormProvider {...methods}>
+          <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-8">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="specialty">Specialty</Label>
+                <Select
+                  onValueChange={(value) => {
+                    setSelectedSpecialty(value)
+                    methods.setValue('specialty', value, { shouldDirty: true })
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={doctor?.specialty?.name} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {specialties?.map((specialty) => (
+                      <SelectItem key={specialty.id} value={specialty.id}>
+                        {specialty.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <p className="text-destructive text-[0.8rem] font-medium">
+                  {methods.formState.errors.specialty?.message}
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="subSpecialty">Sub Specialty</Label>
+                <FormProvider {...methods}>
+                  <SubSpecialtySelect specialty={selectedSpecialty ?? ''} />
+                </FormProvider>
+
+                <p className="text-destructive text-[0.8rem] font-medium">
+                  {methods.formState.errors.subSpecialty?.message}
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="experience">Years of Experience</Label>
+                <Input
+                  {...methods.register('experience')}
+                  id="experience"
+                  type="number"
+                />
+
+                <p className="text-destructive text-[0.8rem] font-medium">
+                  {methods.formState.errors.experience?.message}
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="registerionNumber">
+                  Medical Registration Number
+                </Label>
+                <Input
+                  {...methods.register('registrationNumber')}
+                  id="registerionNumber"
+                  type="text"
+                />
+
+                <p className="text-destructive text-[0.8rem] font-medium">
+                  {methods.formState.errors.registrationNumber?.message}
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="facility">Facility</Label>
+                <Select
+                  onValueChange={(value) => methods.setValue('facility', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={doctor?.facility?.name} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {facilities?.map((facility) => (
+                      <SelectItem
+                        key={facility.placeId}
+                        value={facility.placeId}
+                      >
+                        {facility.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <p className="text-destructive text-[0.8rem] font-medium">
+                  {methods.formState.errors.facility?.message}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-between">
+              <Button variant="outline">Edit</Button>
+              <Button
+                size={'sm'}
+                type="submit"
+                disabled={isPending || !methods.formState.isDirty}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder={doctor?.specialty?.name} />
-                </SelectTrigger>
-                <SelectContent>
-                  {specialties?.map((specialty) => (
-                    <SelectItem key={specialty.id} value={specialty.id}>
-                      {specialty.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <p className="text-destructive text-[0.8rem] font-medium">
-                {methods.formState.errors.specialty?.message}
-              </p>
+                {isPending ? (
+                  <Loader className="size-4 animate-spin" />
+                ) : (
+                  'Save Changes'
+                )}
+              </Button>
             </div>
-
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="subSpecialty">Sub Specialty</Label>
-              <FormProvider {...methods}>
-                <SubSpecialtySelect specialty={selectedSpecialty ?? ''} />
-              </FormProvider>
-
-              <p className="text-destructive text-[0.8rem] font-medium">
-                {methods.formState.errors.subSpecialty?.message}
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="experience">Years of Experience</Label>
-              <Input
-                {...methods.register('experience')}
-                id="experience"
-                type="number"
-              />
-
-              <p className="text-destructive text-[0.8rem] font-medium">
-                {methods.formState.errors.experience?.message}
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="registerionNumber">
-                Medical Registration Number
-              </Label>
-              <Input
-                {...methods.register('registrationNumber')}
-                id="registerionNumber"
-                type="text"
-              />
-
-              <p className="text-destructive text-[0.8rem] font-medium">
-                {methods.formState.errors.registrationNumber?.message}
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="facility">Facility</Label>
-              <Select
-                onValueChange={(value) => methods.setValue('facility', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={doctor?.facility?.name} />
-                </SelectTrigger>
-                <SelectContent>
-                  {facilities?.map((facility) => (
-                    <SelectItem key={facility.placeId} value={facility.placeId}>
-                      {facility.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <p className="text-destructive text-[0.8rem] font-medium">
-                {methods.formState.errors.facility?.message}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex justify-between">
-            <Button variant="outline">Edit</Button>
-            <Button type="submit" disabled>
-              Save Changes
-            </Button>
-          </div>
-        </form>
+          </form>
+        </FormProvider>
       </CardContent>
     </Card>
   )
