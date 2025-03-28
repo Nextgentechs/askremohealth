@@ -4,6 +4,7 @@ import HowItWorks from '@web/components/how-it-works'
 import LatestArticles from '@web/components/latest-articles'
 import MedicalSpecialist from '@web/components/medical-specialists'
 import SearchForm from '@web/components/search-form'
+import ServicesSection from '@web/components/services-section'
 import TopSpecialists from '@web/components/top-specialists'
 import WhatPatientsSay from '@web/components/what-patients-say'
 
@@ -23,6 +24,7 @@ export default async function Home() {
       </div>
 
       <div className="absolute top-[584px] sm:top-[488px] xl:top-[552px] mx-auto flex w-full flex-col items-center justify-center">
+        <ServicesSection />
         <HowItWorks />
         <MedicalSpecialist />
         <TopSpecialists />
