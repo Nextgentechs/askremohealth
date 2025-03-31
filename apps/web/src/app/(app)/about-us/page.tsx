@@ -1,7 +1,10 @@
 import React from "react";
+import AboutSection from "@web/components/about-section";
 
 const AboutUs = () => {
-  return <div>AboutUs</div>;
+  return <div>
+    <AboutSection/>
+  </div>;
 };
 
 export default AboutUs;
