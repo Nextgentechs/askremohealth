@@ -13,7 +13,7 @@ export default async function Home() {
     <main className="h-full w-full relative">
       <div className="relative">
         <div className="h-80 sm:h-96 w-full bg-gradient-to-b from-white to-secondary lg:h-[416px] xl:h-[496px]">
-          <div className="mx-auto flex h-full w-full max-w-[1440px] flex-col items-start justify-start rounded-sm px-4 pt-2 transition-all duration-300 sm:px-6 lg:px-8 xl:px-16">
+          <div className="mx-auto flex h-full w-full flex-col items-start justify-start rounded-sm px-0 pt-2 transition-all duration-300 sm:px-0 lg:px-0 xl:px-0">
             <HeroSection />
           </div>
         </div>
