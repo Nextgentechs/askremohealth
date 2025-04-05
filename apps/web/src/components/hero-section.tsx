@@ -23,9 +23,9 @@ const carouselItems: CarouselItem[] = [
     ],
     description: "We take the guesswork out of finding the right doctors, hospitals, and care for your family.",
     image: "/assets/hero.webp",
-    bgColor: "bg-blue-50",
+    bgColor: "bg-white-50",
     textColor: "text-[#553DA6]",
-    accentColor: "text-blue-600"
+    accentColor: "text-[#65BA00]"
   },
   {
     id: 2,
@@ -36,9 +36,9 @@ const carouselItems: CarouselItem[] = [
     ],
     description: "Our advanced matching system connects you with the perfect healthcare providers.",
     image: "/assets/hero2.png",
-    bgColor: "bg-purple-50",
+    bgColor: "bg-white-50",
     textColor: "text-[#553DA6]",
-    accentColor: "text-teal-600"
+    accentColor: "text-[#65BA00]"
   },
   {
     id: 3,
@@ -48,10 +48,10 @@ const carouselItems: CarouselItem[] = [
       "advice and support"
     ],
     description: "Connect with healthcare professionals anytime, anywhere through our platform.",
-    image: "/assets/hero3.webp",
-    bgColor: "bg-cyan-50",
+    image: "/assets/hero4.png",
+    bgColor: "bg-white-50",
     textColor: "text-[#553DA6]",
-    accentColor: "text-cyan-600"
+    accentColor: "text-[#65BA00]"
   }
 ]
 
@@ -76,13 +76,13 @@ export default function HeroSection() {
   }
 
   return (
-    <section className={`mt-4 flex w-full px-8 sm:h-96 sm:flex-row sm:justify-between lg:mt-0 lg:h-[416px] lg:gap-16 lg:px-56 xl:mt-0 xl:h-[496px] transition-all duration-1000 ${currentItem.bgColor}`}>
+    <section className={`mt-4 flex w-full px-8 sm:h-96 sm:flex-row sm:justify-between lg:mt-0 lg:h-[496px] lg:gap-16 lg:px-16 xl:px-56 xl:mt-0 xl:h-[496px] transition-all duration-1000 ${currentItem.bgColor}`}>
       <div className="flex flex-grow flex-col items-center justify-center text-center gap-4 lg:items-start lg:text-left">
-        <h1 className={`text-2xl font-extrabold leading-tight transition-all duration-300 sm:text-3xl md:text-4xl xl:text-5xl ${currentItem.textColor}`}>
+        <h1 className={`text-2xl font-extrabold leading-tight transition-all duration-300 sm:text-3xl md:text-4xl lg:text-3xl xl:text-4xl lg:w-full  ${currentItem.textColor}`}>
           {currentItem.titleLines.map((line, index) => (
-            <div key={index} className="whitespace-nowrap">
+            <div key={index} className="whitespace-wrap">
               {line.includes("Good Health") || line.includes("Long Life") || line.includes("unique needs") || line.includes("advice and support") ? (
-                <span className={`underline decoration-wavy decoration-2 underline-offset-4 ${currentItem.accentColor}`}>
+                <span className={`${currentItem.accentColor}`}>
                   {line}
                 </span>
               ) : (
@@ -114,7 +114,7 @@ export default function HeroSection() {
         width={488}
         height={488}
         priority
-        className="hidden lg:block w-[408px] h-[408px] xl:w-[488px] xl:h-[488px] transition-all duration-1000"
+        className="hidden lg:block w-[408px] h-[408px] xl:w-[488px] xl:h-[488px] object-cover transition-all duration-1000"
       />
     </section>
   )
