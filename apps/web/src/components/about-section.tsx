@@ -33,14 +33,14 @@ const AboutSection = () => {
             </h2>
 
             <div className="mb-12">
-              <p className="text-lg text-gray-600 mb-6">
+              <p className="text-lg text-gray-500 mb-6">
                 Ask RemoHealth is a leading web and mobile telemedicine platform
                 dedicated to making healthcare more accessible and affordable.
                 Our AI assistant sets us apart by providing smart pre-screening,
                 symptom analysis, and linking you to the most suitable doctor
                 based on urgency, availability, and convenience.
               </p>
-              <p className="text-lg text-gray-600">
+              <p className="text-lg text-gray-500">
                 By combining advanced technology with expert medical care, we
                 bridge the healthcare gap and ensure you get the right treatment
                 when you need it.
@@ -52,7 +52,7 @@ const AboutSection = () => {
                 <h3 className="text-xl font-semibold mb-3 text-primary">
                   Our Mission
                 </h3>
-                <p className="text-gray-600 italic">
+                <p className="text-primary italic">
                   &quot;Quality healthcare, anytime, anywhere&quot;
                 </p>
               </div>
@@ -60,7 +60,7 @@ const AboutSection = () => {
                 <h3 className="text-xl font-semibold mb-3 text-primary">
                   Our Vision
                 </h3>
-                <p className="text-gray-600">
+                <p className="text-primary">
                   To establish an inclusive and connected healthcare ecosystem
                   where patients, healthcare providers, and medical facilities
                   seamlessly interact, ensuring efficient, high-quality

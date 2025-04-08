@@ -1,10 +1,72 @@
-import React from "react";
-import AboutSection from "@web/components/about-section";
+import AboutSection from '@web/components/about-section'
+import { FacilityServices } from '@web/components/facility-services'
+import Footer from '@web/components/footer'
+import { HealthcareFacilitiesComponent } from '@web/components/healthcare-facilities'
+import { PatientServices } from '@web/components/patient-services'
+import { ProviderServices } from '@web/components/provider-services'
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@web/components/ui/tabs'
 
 const AboutUs = () => {
-  return <div>
-    <AboutSection/>
-  </div>;
-};
+  return (
+    <div>
+      <AboutSection />
 
-export default AboutUs;
+      <div className="container mx-auto px-4 py-12">
+        <h1 className="section-title text-center mb-4">
+          Comprehensive Healthcare Services
+        </h1>
+        <p className="text-center text-muted-foreground mb-10 max-w-2xl mx-auto">
+          Connecting patients, healthcare providers, and facilities through
+          innovative digital solutions
+        </p>
+
+        <Tabs defaultValue="patients" className="w-full max-w-6xl mx-auto">
+          <TabsList className="flex flex-col sm:grid sm:grid-cols-3 mb-8 h-auto">
+            <TabsTrigger
+              className="justify-start text-start sm:justify-center sm:text-center"
+              value="patients"
+            >
+              For Patients
+            </TabsTrigger>
+            <TabsTrigger
+              className="justify-start text-start sm:justify-center sm:text-center"
+              value="providers"
+            >
+              For Healthcare Providers
+            </TabsTrigger>
+            <TabsTrigger
+              className="justify-start text-start sm:justify-center sm:text-center"
+              value="facilities"
+            >
+              For Healthcare Facilities
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="patients">
+            <PatientServices />
+          </TabsContent>
+
+          <TabsContent value="providers">
+            <ProviderServices />
+          </TabsContent>
+
+          <TabsContent value="facilities">
+            <FacilityServices />
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      <div className="bg-secondary mx-auto px-4">
+        <HealthcareFacilitiesComponent />
+      </div>
+      <Footer />
+    </div>
+  )
+}
+
+export default AboutUs
