@@ -4,16 +4,24 @@ import HowItWorks from '@web/components/how-it-works'
 import LatestArticles from '@web/components/latest-articles'
 import MedicalSpecialist from '@web/components/medical-specialists'
 import SearchForm from '@web/components/search-form'
-import ServicesSection from '@web/components/services-section'
+import { FacilityServices } from '@web/components/facility-services'
 import TopSpecialists from '@web/components/top-specialists'
 import WhatPatientsSay from '@web/components/what-patients-say'
+import { PatientServices } from '@web/components/patient-services'
+import { ProviderServices } from '@web/components/provider-services'
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@web/components/ui/tabs'
 
 export default async function Home() {
   return (
     <main className="h-full w-full relative">
       <div className="relative">
         <div className="h-80 sm:h-96 w-full bg-gradient-to-b from-white to-secondary lg:h-[416px] xl:h-[496px]">
-          <div className="mx-auto flex h-full w-full flex-col items-start justify-start rounded-sm px-0 pt-2 transition-all duration-300 sm:px-0 lg:px-0 xl:px-0">
+          <div className="mx-auto flex h-full w-full flex-col items-center justify-center rounded-sm px-0 pt-2 transition-all duration-300 sm:px-0 lg:px-0 xl:px-0">
             <HeroSection />
           </div>
         </div>
@@ -24,7 +32,51 @@ export default async function Home() {
       </div>
 
       <div className="absolute top-[584px] sm:top-[488px] xl:top-[552px] mx-auto flex w-full flex-col items-center justify-center">
-        <ServicesSection />
+      <div className="container mx-auto px-4 py-12">
+        <h1 className="section-title text-center mb-4">
+          Comprehensive Healthcare Services
+        </h1>
+        <p className="text-center text-muted-foreground mb-10 max-w-2xl mx-auto">
+          Connecting patients, healthcare providers, and facilities through
+          innovative digital solutions
+        </p>
+
+        <Tabs defaultValue="patients" className="w-full max-w-6xl mx-auto">
+          <TabsList className="flex flex-col sm:grid sm:grid-cols-3 mb-8 h-auto">
+            <TabsTrigger
+              className="justify-start text-start sm:justify-center sm:text-center"
+              value="patients"
+            >
+              For Patients
+            </TabsTrigger>
+            <TabsTrigger
+              className="justify-start text-start sm:justify-center sm:text-center"
+              value="providers"
+            >
+              For Healthcare Providers
+            </TabsTrigger>
+            <TabsTrigger
+              className="justify-start text-start sm:justify-center sm:text-center"
+              value="facilities"
+            >
+              For Healthcare Facilities
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="patients">
+            <PatientServices />
+          </TabsContent>
+
+          <TabsContent value="providers">
+            <ProviderServices />
+          </TabsContent>
+
+          <TabsContent value="facilities">
+            <FacilityServices />
+          </TabsContent>
+        </Tabs>
+      </div>
+
         <HowItWorks />
         <MedicalSpecialist />
         <TopSpecialists />

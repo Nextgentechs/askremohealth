@@ -1,16 +1,16 @@
 'use client';
 
-import Image from 'next/image'
-import { useState, useEffect } from 'react'
+import Image from 'next/image';
+import { useState, useEffect } from 'react';
 
 interface CarouselItem {
-  id: number
-  titleLines: string[]
-  description: string
-  image: string
-  bgColor: string
-  textColor: string
-  accentColor: string
+  id: number;
+  titleLines: string[];
+  description: string;
+  image: string;
+  bgColor: string;
+  textColor: string;
+  accentColor: string;
 }
 
 const carouselItems: CarouselItem[] = [
@@ -53,32 +53,45 @@ const carouselItems: CarouselItem[] = [
     textColor: "text-[#553DA6]",
     accentColor: "text-[#65BA00]"
   }
-]
+];
 
 export default function HeroSection() {
-  const [currentIndex, setCurrentIndex] = useState(0)
-  
-  // Auto-rotate carousel every 5 seconds
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isLargeScreen, setIsLargeScreen] = useState(false);
+
+  // Detect screen size
   useEffect(() => {
+    const checkScreenSize = () => {
+      setIsLargeScreen(window.innerWidth >= 640); 
+    };
+
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
+
+  // Auto-rotate only on large screens
+  useEffect(() => {
+    if (!isLargeScreen) return;
+
     const interval = setInterval(() => {
-      setCurrentIndex((prevIndex) => 
+      setCurrentIndex((prevIndex) =>
         prevIndex === carouselItems.length - 1 ? 0 : prevIndex + 1
-      )
-    }, 5000)
-    return () => clearInterval(interval)
-  }, [])
+      );
+    }, 5000);
 
-  const currentItem = carouselItems[currentIndex]
+    return () => clearInterval(interval);
+  }, [isLargeScreen]);
 
-  // Guard clause in case carouselItems is empty (though it shouldn't be)
-  if (!currentItem) {
-    return null
-  }
+  const currentItem = carouselItems[currentIndex];
+
+  if (!currentItem) return null;
 
   return (
-    <section className={`mt-4 flex w-full px-8 sm:h-96 sm:flex-row sm:justify-between lg:mt-0 lg:h-[496px] lg:gap-16 lg:px-16 xl:px-56 xl:mt-0 xl:h-[496px] transition-all duration-1000 ${currentItem.bgColor}`}>
-      <div className="flex flex-grow flex-col items-center justify-center text-center gap-4 lg:items-start lg:text-left">
-        <h1 className={`text-2xl font-extrabold leading-tight transition-all duration-300 sm:text-3xl md:text-4xl lg:text-3xl xl:text-4xl lg:w-full  ${currentItem.textColor}`}>
+    <section className={`mt-4 flex w-full px-8 sm:h-100 sm:flex-row sm:justify-between lg:mt-0 lg:h-[496px] lg:gap-16 lg:px-16 xl:px-24 xl:mt-0 max-w-[1300px] xl:h-[496px] transition-all duration-1000 ${currentItem.bgColor}`}>
+      <div className="flex flex-grow flex-col items-center justify-center text-center gap-4 mb-24 sm:mb-16 lg:items-start lg:text-left">
+        <h1 className={`text-2xl font-extrabold leading-tight transition-all duration-300 sm:text-3xl md:text-4xl lg:text-3xl xl:text-4xl lg:w-full ${currentItem.textColor}`}>
           {currentItem.titleLines.map((line, index) => (
             <div key={index} className="whitespace-wrap">
               {line.includes("Good Health") || line.includes("Long Life") || line.includes("unique needs") || line.includes("advice and support") ? (
@@ -94,18 +107,20 @@ export default function HeroSection() {
         <p className={`mt-4 sm:text-lg ${currentItem.textColor}`}>
           {currentItem.description}
         </p>
-        
-        {/* Carousel indicators */}
-        <div className="flex gap-2 mt-6">
-          {carouselItems.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentIndex(index)}
-              className={`h-2 w-2 rounded-full transition-all duration-300 ${index === currentIndex ? currentItem.accentColor + ' w-6' : 'bg-gray-300'}`}
-              aria-label={`Go to slide ${index + 1}`}
-            />
-          ))}
-        </div>
+
+        {/* Carousel indicators (only show on large screens) */}
+        {isLargeScreen && (
+          <div className="flex gap-2 mt-6">
+            {carouselItems.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentIndex(index)}
+                className={`h-2 w-2 rounded-full transition-all duration-300 ${index === currentIndex ? currentItem.accentColor + ' w-6' : 'bg-gray-300'}`}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       <Image
@@ -117,5 +132,5 @@ export default function HeroSection() {
         className="hidden lg:block w-[408px] h-[408px] xl:w-[488px] xl:h-[488px] object-cover transition-all duration-1000"
       />
     </section>
-  )
+  );
 }

@@ -11,10 +11,10 @@ export default function Logo({
     <Link href={href}>
       <div className="relative w-[120px] h-[40px] md:w-[158px] md:h-[48px]">
         <Image
-          src="/assets/logo.svg"
+          src="/assets/ask-logo.png"
           alt="askvirtualhealthcare logo"
           fill
-          className="object-contain"
+          className="object-cover"
           {...props}
         />
       </div>
