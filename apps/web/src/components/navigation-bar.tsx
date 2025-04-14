@@ -3,6 +3,7 @@
 import { useClerk } from '@clerk/nextjs'
 import { api, type RouterOutputs } from '@web/trpc/react'
 import {
+  Ambulance,
   Book,
   BriefcaseMedical,
   Building2,
@@ -18,6 +19,7 @@ import {
   Pill,
   Stethoscope,
   User,
+  Info,
 } from 'lucide-react'
 import Link from 'next/link'
 import Logo from './logo'
@@ -36,7 +38,7 @@ import {
   NavigationMenuLink,
   navigationMenuTriggerStyle,
 } from './ui/navigation-menu'
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from './ui/sheet'
+import { Sheet, SheetContent, SheetTitle, SheetTrigger, SheetClose } from './ui/sheet'
 
 const navOptions = [
   {
@@ -54,7 +56,12 @@ const navOptions = [
     icon: Hospital,
     dropdownItems: [
       {
-        label: 'Hospitals and Clinics',
+        label: 'Private Hospitals',
+        href: '/hospitals',
+        icon: Building2,
+      },
+      {
+        label: 'Public Hospitals',
         href: '/hospitals',
         icon: Building2,
       },
@@ -68,6 +75,16 @@ const navOptions = [
         href: '/laboratories',
         icon: FlaskConical,
       },
+      {
+        label: 'Home-based Care Services',
+        href: '/hospitals',
+        icon: Home,
+      },
+      {
+        label: 'Ambulance Service Providers',
+        href: '/hospitals',
+        icon: Ambulance
+      }
     ],
   },
   {
@@ -80,6 +97,11 @@ const navOptions = [
     href: '/specialist',
     icon: BriefcaseMedical,
     external: true,
+  },
+  {
+    label: 'About Us',
+    href: '/about-us',
+    icon: Info,
   },
 ]
 
@@ -123,30 +145,35 @@ function MobileMenu() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
                     {option.dropdownItems.map((item) => (
-                      <Link key={item.label} href={item.href}>
-                        <DropdownMenuItem className="gap-2">
-                          <item.icon className="size-4" />
-                          {item.label}
-                        </DropdownMenuItem>
-                      </Link>
+                      <SheetClose asChild key={item.label}>
+                        <Link href={item.href}>
+                          <DropdownMenuItem className="gap-2">
+                            <item.icon className="size-4" />
+                            {item.label}
+                          </DropdownMenuItem>
+                        </Link>
+                      </SheetClose>
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <Link
-                  href={option.href ?? ''}
-                  className="inline-flex h-9 items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
-                  {...(option.external
-                    ? { target: '_blank', rel: 'noopener noreferrer' }
-                    : {})}
-                >
-                  <option.icon className="size-4" />
-                  <span>{option.label}</span>
-                </Link>
+                <SheetClose asChild>
+                  <Link
+                    href={option.href ?? ''}
+                    className="inline-flex h-9 items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+                    {...(option.external
+                      ? { target: '_blank', rel: 'noopener noreferrer' }
+                      : {})}
+                  >
+                    <option.icon className="size-4" />
+                    <span>{option.label}</span>
+                  </Link>
+                </SheetClose>
               )}
             </div>
           ))}
         </div>
+
         {user ? (
           <div className="ms-4">
             <CurrentUser user={user} />

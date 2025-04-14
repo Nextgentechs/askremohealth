@@ -113,7 +113,7 @@ export default function Footer() {
           </div>
 
           <div className="text-center text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} Askvirtualhealthcare
+            &copy; {new Date().getFullYear()} Askremohealth
           </div>
         </div>
 
