@@ -67,12 +67,12 @@ const navOptions = [
       },
       {
         label: 'Pharmacies',
-        href: '/pharmacies',
+        href: '/hospitals',
         icon: Pill,
       },
       {
         label: 'Laboratories',
-        href: '/laboratories',
+        href: '/hospitals',
         icon: FlaskConical,
       },
       {

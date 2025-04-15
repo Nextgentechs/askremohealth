@@ -94,7 +94,7 @@ const StatsSection: React.FC = () => {
   
 
   return (
-    <div className="container flex flex-col mx-auto items-center py-16">
+    <div className="container flex flex-col mx-auto text-center items-center py-16">
       <h2 className="section-title">Ask Remohealth at Glance</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 ">
         {stats.map((stat, index) => (
