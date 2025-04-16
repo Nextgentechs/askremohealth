@@ -1,0 +1,17 @@
+{
+    "sqltools.connections": [
+        {
+            "pgOptions": {
+                "ssl": {
+                    "rejectUnauthorized": true
+                }
+            },
+            "previewLimit": 50,
+            "server": "localhost",
+            "driver": "PostgreSQL",
+            "name": "remo-health",
+            "group": "postgress",
+            "connectString": "postgresql://neondb_owner:yaZM4jvs2TOk@ep-tight-art-a1z186jf-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
+        }
+    ]
+}
