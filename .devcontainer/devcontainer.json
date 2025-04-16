@@ -14,7 +14,16 @@
 	// "forwardPorts": [3000, 5432],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "git config --global user.email ${localEnv:GIT_USER_EMAIL} && git config --global user.name ${localEnv:GIT_USER_NAME} && chown -R 1000:1000 /var/www/html 2>/dev/null || true"
+	"postCreateCommand": "git config --global user.email ${localEnv:GIT_USER_EMAIL} && git config --global user.name ${localEnv:GIT_USER_NAME} && chown -R 1000:1000 /var/www/html 2>/dev/null || true",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"mtxr.sqltools",
+				"mtxr.sqltools-driver-pg",
+				"ms-azuretools.vscode-docker"
+			]
+		}
+	}
 
 	// Configure tool-specific properties.
 	// "customizations": {},
