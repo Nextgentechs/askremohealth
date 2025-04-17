@@ -1,6 +1,6 @@
 # AskVirtualHealthcare Platform
 
-## Tech Stack and Philosophy
+## Tech Stack and Philosophy 
 
 This project implements a modern virtual healthcare platform using TypeScript in a monorepo structure. Our technical choices prioritize type safety, performance, scalability, and developer experience.
 
