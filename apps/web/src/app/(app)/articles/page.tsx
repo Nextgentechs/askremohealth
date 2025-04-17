@@ -1,6 +1,7 @@
 import Footer from '@web/components/footer'
 import { type Post } from '@web/components/latest-articles'
 import Article from '@web/components/ui/article'
+import { Button } from '@web/components/ui/button'
 import {
   Pagination,
   PaginationContent,
@@ -56,21 +57,24 @@ export default async function Articles({
           <FileSearch size={48} color="#0F172A" />
         </div>
         <p className="text-3xl sm:text-4xl lg:text-5xl text-primary">
-          Nothing to see here!
+          We do not have any articles for now!
         </p>
         <p className="text-lg sm:text-xl text-muted-foreground opacity-75">
-          Check back later!
+          You can check back later.
         </p>
       </div>
     )
   }
 
   return (
-    <div className="pt-6">
+    <div className="container pt-6">
+      <div className="flex items-center justify-between">
       <h2 className="text-center font-bold text-4xl sm:text-3xl md:text-6xl py-6 sm:py-11 text-primary font-sans">
         Blogs &amp; Resources
-      </h2>
-      <div className="flex flex-col gap-8 sm:gap-12 lg:gap-14 px-4 sm:px-10 md:px-20 lg:px-36">
+        </h2>
+        <Button variant="default">Post Article</Button>
+      </div>
+      <div className="flex flex-col gap-8 sm:gap-12 lg:gap-14">
         {posts.map((post) => (
           <Article key={post.slug.current} post={post} />
         ))}
@@ -111,7 +115,7 @@ export default async function Articles({
           </PaginationContent>
         </Pagination>
       )}
-      <Footer />
+      {/* <Footer /> */}
     </div>
   )
 }
