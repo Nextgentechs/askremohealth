@@ -31,4 +31,16 @@ export class ArticleService {
             articlesList,
         }
     }
+    
+    static async createArticle(input: { title: string; content: string }, userId: string) {
+        return db
+            .insert(articles)
+            .values({
+                title: input.title,
+                content: input.content,
+                authorId: userId,
+            })
+            .returning()
+            .then((res) => res[0])
+    }
 }

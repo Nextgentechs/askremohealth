@@ -164,3 +164,10 @@ export const articleListSchema = z.object({
   limit: z.number().default(10)
 })
 export type ArticleListSchema = z.infer<typeof articleListSchema>
+
+export const articleSchema = z.object({
+  title: z.string().min(1, { message: 'Title is required.' }).max(100, { message: "Title must be at most 100 characters long" }),
+  content: z.string().min(150, { message: "Content must be at least 150 characters long" }),
+})
+
+export type ArticleSchema = z.infer<typeof articleSchema>

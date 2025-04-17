@@ -1,7 +1,5 @@
-import Footer from '@web/components/footer'
 import { type Post } from '@web/components/latest-articles'
 import Article from '@web/components/ui/article'
-import { Button } from '@web/components/ui/button'
 import {
   Pagination,
   PaginationContent,
@@ -12,6 +10,7 @@ import {
 } from '@web/components/ui/pagination'
 import { client } from '@web/sanity/client'
 import { FileSearch } from 'lucide-react'
+import Link from 'next/link'
 
 const LIMIT = 10
 
@@ -72,7 +71,7 @@ export default async function Articles({
       <h2 className="text-center font-bold text-4xl sm:text-3xl md:text-6xl py-6 sm:py-11 text-primary font-sans">
         Blogs &amp; Resources
         </h2>
-        <Button variant="default">Post Article</Button>
+        <Link href={'/articles/post'} className="inline-flex h-10 items-center justify-center py-2 text-sm font-medium text-primary underline-offset-4 hover:underline">Post Article</Link>
       </div>
       <div className="flex flex-col gap-8 sm:gap-12 lg:gap-14">
         {posts.map((post) => (
