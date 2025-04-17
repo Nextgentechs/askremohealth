@@ -1,0 +1,34 @@
+import { count } from "drizzle-orm"
+import type { ArticleListSchema } from "../api/validators"
+import { db } from "../db"
+import { articles } from "../db/schema"
+
+export class ArticleService {
+    static async getArticles(input: ArticleListSchema) {
+        const offset = (input.page - 1) * input.limit
+
+        const [countResult, articlesList] = await Promise.all([
+            db
+                .select({ count: count() })
+                .from(articles)
+                .then((res) => Number(res[0]?.count)),
+            db.query.articles.findMany({
+                columns: {
+                    id: true,
+                    title: true,
+                    content: true,
+                    publishedAt: true,
+                    createdAt: true,
+                    updatedAt: true,
+                },
+                limit: input.limit,
+                offset,
+            }),
+        ])
+
+        return {
+            totalCount: countResult,
+            articlesList,
+        }
+    }
+}

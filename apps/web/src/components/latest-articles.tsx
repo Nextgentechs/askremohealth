@@ -5,6 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from './ui/button'
 import { Card, CardContent } from './ui/card'
+import { api } from '@web/trpc/server'
 
 export type Post = {
   title: string
@@ -70,6 +71,10 @@ function ArticleCard({ post }: { post: Post }) {
 }
 
 export default async function LatestArticles() {
+  const latestArticles = await api.articles.listArticles({
+    page:  1,
+    limit: 4,
+  });
   const posts = await getPosts(4)
   return (
     <section id="latest-articles" className="w-full bg-secondary py-16">
