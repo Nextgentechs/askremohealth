@@ -8,6 +8,7 @@ import {
   uuid,
   varchar,
   boolean,
+  text,
 } from 'drizzle-orm/pg-core'
 
 export const roleEnum = pgEnum('role', ['patient', 'doctor', 'admin'])
@@ -229,4 +230,14 @@ export const notifications = pgTable('notification', {
   message: varchar('message').notNull(),
   isRead: boolean('is_read').default(false),
   createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+export const articles = pgTable('articles', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  authorId: varchar('author_id').notNull(),
+  title: varchar('title').notNull(),
+  content: text('content').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  publishedAt: timestamp('published_at'),
+  updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
 })

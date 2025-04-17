@@ -157,4 +157,10 @@ export const availabilityDetailsSchema = z.object({
 })
 export type AvailabilityDetailsSchema = z.infer<
   typeof availabilityDetailsSchema
->
+  >
+
+export const articleListSchema = z.object({
+  page: z.number().default(1),
+  limit: z.number().default(10)
+})
+export type ArticleListSchema = z.infer<typeof articleListSchema>
