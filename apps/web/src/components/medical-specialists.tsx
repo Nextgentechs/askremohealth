@@ -100,7 +100,7 @@ export default function MedicalSpecialist() {
     <section id="medical-specialists" className="w-full bg-secondary py-16">
       <div className="container mx-auto flex flex-col items-center justify-center gap-8">
         <div className="mx-auto flex w-full flex-col items-center justify-center gap-2">
-          <h2 className="section-title">Our Medical Specialities</h2>
+          <h2 className="section-title text-center">Our Medical Specialities</h2>
           <p className="section-description text-center">
             Explore a variety of medical specialties to find the right expert
             for your needs
