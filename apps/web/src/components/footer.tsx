@@ -70,13 +70,13 @@ function SocialIcon({
   return (
     <Link
       href={href}
-      className="flex size-10 items-center justify-center rounded-full hover:bg-accent"
+      className="flex size-7 sm:size-10 items-center justify-center rounded-full hover:bg-accent"
       target="_blank"
       rel="noopener noreferrer"
       aria-label={label}
     >
       {React.cloneElement(icon as React.ReactElement, {
-        className: 'size-6',
+        className: 'size-5 sm:size-6',
       })}
     </Link>
   )
@@ -89,7 +89,7 @@ export default function Footer() {
         <div className="flex flex-col items-start gap-8">
           <Logo />
 
-          <div className="flex flex-row gap-2 border-y border-border py-4">
+          <div className="flex flex-row gap-1 sm:gap-2 border-y border-border py-4">
             <SocialIcon
               href="https://facebook.com"
               icon={<Facebook />}

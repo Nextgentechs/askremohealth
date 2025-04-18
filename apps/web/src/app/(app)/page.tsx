@@ -1,4 +1,3 @@
-import { FacilityServices } from '@web/components/facility-services'
 import Footer from '@web/components/footer'
 import HeroSection from '@web/components/hero-section'
 import HowItWorks from '@web/components/how-it-works'
@@ -37,7 +36,7 @@ export default async function Home() {
 
           <section className="mx-auto px-4 py-12">
             <h1 className="section-title text-center mb-4">
-              Comprehensive Healthcare Services
+              Our Services
             </h1>
             <p className="text-center text-muted-foreground mb-10 max-w-2xl mx-auto">
               Connecting patients, healthcare providers, and facilities through
@@ -45,7 +44,7 @@ export default async function Home() {
             </p>
 
             <Tabs defaultValue="patients" className="w-full max-w-6xl mx-auto">
-              <TabsList className="flex flex-col sm:grid sm:grid-cols-3 mb-8 h-auto">
+              <TabsList className="flex flex-col sm:grid sm:grid-cols-2 mb-8 h-auto">
                 <TabsTrigger
                   className="justify-start text-start sm:justify-center sm:text-center"
                   value="patients"
@@ -58,12 +57,7 @@ export default async function Home() {
                 >
                   For Healthcare Providers
                 </TabsTrigger>
-                <TabsTrigger
-                  className="justify-start text-start sm:justify-center sm:text-center"
-                  value="facilities"
-                >
-                  For Healthcare Facilities
-                </TabsTrigger>
+               
               </TabsList>
 
               <TabsContent value="patients">
@@ -74,9 +68,7 @@ export default async function Home() {
                 <ProviderServices />
               </TabsContent>
 
-              <TabsContent value="facilities">
-                <FacilityServices />
-              </TabsContent>
+              
             </Tabs>
           </section>
 

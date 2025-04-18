@@ -56,7 +56,7 @@ export default function TopSpecialists() {
       className="container mx-auto flex w-full flex-col items-center justify-center gap-10 py-16"
     >
       <div className="mx-auto flex w-full flex-col items-center justify-center gap-2">
-        <h2 className="section-title">Meet Our Top Specialists</h2>
+        <h2 className="section-title text-center">Meet Our Top Specialists</h2>
         <p className="section-description text-center">
           Discover highly recommended doctors and specialists trusted for their
           expertise and exceptional care.
