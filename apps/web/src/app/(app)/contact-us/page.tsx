@@ -1,5 +1,16 @@
 import React from "react";
+import ContactSection from "@web/components/contact-section";
+import ContactHeroSection from "@web/components/contact-hero";
+import Footer from "@web/components/footer";
 
-export default function ContactUs() {
-  return <div>Contact</div>;
+const Contact = () => {
+  return (
+    <div>
+      <ContactHeroSection/>
+      <ContactSection/>
+      <Footer/>
+    </div>
+  )
 }
+
+export default Contact
