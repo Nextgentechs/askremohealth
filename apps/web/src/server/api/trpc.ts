@@ -32,7 +32,7 @@ export const createTRPCContext = async (opts: { req: Request }) => {
   return {
     user: {
       id: auth.userId,
-      role: auth.sessionClaims?.metadata.role,
+      role: auth.sessionClaims?.metadata?.role,
     },
     session: auth.sessionId,
     db,
