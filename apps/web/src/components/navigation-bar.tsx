@@ -115,9 +115,7 @@ function AuthButtons({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div className={`${className}`} {...props}>
-      <Link href="/auth">
-        <Button variant="default">Book Appointment</Button>
-      </Link>
+      
     </div>
   )
 }

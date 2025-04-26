@@ -56,7 +56,7 @@ export default function HowItWorks() {
     
     <section
       id="how-it-works"
-      className="container mx-auto flex flex-col items-center gap-6 py-16"
+      className="container mx-auto mt-20 sm:mt-0 flex flex-col items-center gap-6 py-16"
     >
       <h2 className="section-title">How It works</h2>
 
