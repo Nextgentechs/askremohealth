@@ -12,9 +12,9 @@ import {
   CardTitle,
 } from './ui/card'
 
-export default function ResourcesSection() {
+export default function ProvidersSection() {
   return (
-    <section className="bg-gray-50 container mx-auto flex w-full flex-col items-center justify-center gap-10 py-16">
+    <section id="providers-cta" className="bg-gray-50 container mx-auto flex w-full flex-col items-center justify-center gap-10 py-16">
       <div className="mx-auto flex w-full flex-col items-center justify-center gap-2">
         <h2 className="section-title text-center">
           List your Laboratory, Hospital or Clinic!

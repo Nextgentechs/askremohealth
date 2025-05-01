@@ -1,13 +1,14 @@
 import RegisterProviderHero from "@web/components/register-provider-hero"
-import { ProviderFeatures } from "@web/components/provider-features"
+import HealthcareNavigation from "@web/components/healthcare-navigation"
+import Footer from "@web/components/footer"
 
 
 const RegisterProvider = () => {
     return (
       <div>
       <RegisterProviderHero/>
-      <ProviderFeatures/>
-
+      <HealthcareNavigation/>
+      <Footer/>
       </div>
     )
   }

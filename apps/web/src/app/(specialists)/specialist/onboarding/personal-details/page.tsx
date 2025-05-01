@@ -8,7 +8,7 @@ export default function Page() {
   return (
     <div className="flex flex-col">
       <div className="fixed left-0 right-0 top-0 flex items-end justify-between border-b border-b-border bg-background px-6 py-4 sm:px-12">
-        <Logo href="/home" />
+        <Logo href="/" />
         <Button variant="outline" className="rounded-full">
           Back
         </Button>

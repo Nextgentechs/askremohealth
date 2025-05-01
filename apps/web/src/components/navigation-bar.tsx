@@ -56,19 +56,15 @@ const navOptions = [
     href: '/about-us',
     icon: Info,
   },
+  
   {
-    label: 'Register as Provider',
-    href: '/register-provider',
-    icon: Stethoscope,
-  },
-  {
-    label: 'Find a Doctor',
+    label: 'Consult a Doctor',
     href: '/find-specialists',
     icon: Stethoscope,
   },
   {
     label: 'Lab Tests',
-    href: '/hospitals',
+    href: '/laboratories',
     icon: FlaskConical,
   },
   {
@@ -82,7 +78,7 @@ const navOptions = [
       },
       {
         label: 'Laboratories',
-        href: '/hospitals',
+        href: '/laboratories',
         icon: FlaskConical,
       },
       {
@@ -101,6 +97,11 @@ const navOptions = [
         icon: Home,
       },
     ],
+  },
+  {
+    label: 'Register as Provider',
+    href: '/register-provider',
+    icon: Stethoscope,
   },
   {
     label: 'Blogs',

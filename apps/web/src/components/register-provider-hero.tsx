@@ -9,7 +9,7 @@ export default function RegisterProviderHero() {
             <h1 className="section-title">
               Elevate Your Healthcare Practice
             </h1>
-            <p className="mx-auto max-w-[800px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+            <p className="mx-auto max-w-[900px] text-gray-500 md:text-md/relaxed lg:text-base/relaxed xl:text-md/relaxed">
               Seamlessly connect with your target patient demographic, establishing meaningful and direct engagement.
               Our tailored solutions empower medical practitioners like you to not only attract but also retain a
               growing patient base. By leveraging our expertise, enhance your brand visibility and credibility, ensuring
