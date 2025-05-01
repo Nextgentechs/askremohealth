@@ -8,7 +8,6 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
 
-    "typeRoots": ["./node_modules/@types", "./types"],
 
     /* Strictness */
     "strict": true,
@@ -37,7 +36,8 @@
     "**/*.tsx",
     "**/*.cjs",
     "**/*.js",
-    "types/**/*.d.ts",
+    "src",
+     "emailjs.d.ts",
     ".next/types/**/*.ts"
   ],
   "exclude": ["node_modules"]
