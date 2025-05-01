@@ -22,6 +22,11 @@
   },
   "packageManager": "npm@10.9.0",
   "dependencies": {
-    "emailjs": "^4.0.3"
+    "@sanity/client": "^7.0.0",
+    "@sanity/presentation-comlink": "^1.0.18",
+    "@sanity/preview-url-secret": "^2.1.10",
+    "@sanity/vision": "^3.87.0",
+    "emailjs": "^4.0.3",
+    "sanity": "^3.87.0"
   }
 }
