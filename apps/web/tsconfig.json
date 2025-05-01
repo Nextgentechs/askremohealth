@@ -8,6 +8,8 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
 
+    "typeRoots": ["./node_modules/@types", "./types"],
+
     /* Strictness */
     "strict": true,
     "noUncheckedIndexedAccess": true,
@@ -35,6 +37,7 @@
     "**/*.tsx",
     "**/*.cjs",
     "**/*.js",
+    "types/**/*.d.ts",
     ".next/types/**/*.ts"
   ],
   "exclude": ["node_modules"]
