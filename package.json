@@ -20,5 +20,8 @@
     "turbo": "latest",
     "typescript": "^5.7.2"
   },
-  "packageManager": "npm@10.9.0"
+  "packageManager": "npm@10.9.0",
+  "dependencies": {
+    "emailjs": "^4.0.3"
+  }
 }

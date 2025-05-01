@@ -1,71 +1,10 @@
 import { Mail, Phone } from 'lucide-react'
-import Image from 'next/image'
 import Link from 'next/link'
 
 export default function ContactSection() {
   return (
     <section className="max-w-6xl mx-auto py-12 px-4 sm:px-6">
       <div className="relative">
-        <div className="flex flex-col lg:flex-row justify-between py-8 gap-6 px-4 sm:px-6 lg:px-8">
-          <div className="w-full lg:w-auto flex justify-center lg:block">
-            <Image
-              className="rounded-[10px] object-cover w-full max-w-[450px] h-auto lg:h-[450px] lg:w-[350px]"
-              src="/assets/contact.jpg" 
-              alt="Contact Us"
-              width={350} 
-              height={450} 
-              priority={false} 
-              quality={85} 
-            />
-          </div>
-          <div className="flex flex-col text-center items-center justify-center w-full lg:min-w-[600px]">
-            <div className="text-center w-full">
-              <h2 className="section-title text-xl sm:text-2xl lg:text-4xl">
-                Our Contacts
-              </h2>
-            </div>
-            <div className="text-center mt-8 w-full">
-              <Mail className="h-6 w-6 text-[#402D7C] mx-auto flex-shrink-0 mt-1" />
-              <p className="text-muted-foreground mt-2">
-                <Link
-                  href="mailto:info@askremohealth.com"
-                  className="text-gray-600 hover:text-[#402D7C] transition-colors hover:underline"
-                >
-                  info@askremohealth.com
-                </Link>
-              </p>
-              <p className="text-muted-foreground mt-2">
-                <Link
-                  href="mailto:virtualhealthcarenetwork@gmail.com"
-                  className="text-gray-600 hover:text-[#402D7C] transition-colors hover:underline"
-                >
-                  virtualhealthcarenetwork@gmail.com
-                </Link>
-              </p>
-            </div>
-
-            <div className="text-center mt-4 w-full">
-              <p className="flex flex-col sm:flex-row gap-2 items-center justify-center">
-                <Phone className="h-6 w-6 text-[#402D7C] flex-shrink-0 mt-1" />
-                <Link
-                  href="tel:+254727815187"
-                  className="text-gray-600 hover:text-[#402D7C] transition-colors hover:underline"
-                >
-                  (+254) 727815187
-                </Link>
-                <span className="hidden sm:inline text-[#402D7C]"> or </span>
-                <span className="sm:hidden text-[#402D7C]">or</span>
-                <Link
-                  href="tel:+254784815187"
-                  className="text-gray-600 hover:text-[#402D7C] transition-colors hover:underline"
-                >
-                  (+254) 784815187
-                </Link>
-              </p>
-            </div>
-          </div>
-        </div>
-
         {/* Location */}
         <div className="grid grid-cols-1 md:grid-cols-[60%_40%] py-8 gap-3">
           <div>
@@ -76,6 +15,53 @@ export default function ContactSection() {
               Chandaria Business Innovation and Incubation Centre, The World tta
               University, Off Thika Superhighway, Nairobi, The World
             </p>
+
+            <div className="flex flex-col justify-center w-full lg:min-w-[600px] mt-8">
+              <div className=" w-full">
+                <h2 className="section-title text-xl sm:text-2xl lg:text-4xl">
+                  Contacts
+                </h2>
+              </div>
+              <div className="mt-8 w-full">
+                <Mail className="h-6 w-6 text-[#402D7C] flex-shrink-0 mt-1" />
+                <p className="text-muted-foreground mt-2">
+                  <Link
+                    href="mailto:info@askremohealth.com"
+                    className="text-gray-600 hover:text-[#402D7C] transition-colors hover:underline"
+                  >
+                    info@askremohealth.com
+                  </Link>
+                </p>
+                <p className="text-muted-foreground mt-2">
+                  <Link
+                    href="mailto:virtualhealthcarenetwork@gmail.com"
+                    className="text-gray-600 hover:text-[#402D7C] transition-colors hover:underline"
+                  >
+                    virtualhealthcarenetwork@gmail.com
+                  </Link>
+                </p>
+              </div>
+
+              <div className="mt-8 w-full">
+                <p className="flex flex-col sm:flex-row gap-2">
+                  <Phone className="h-6 w-6 text-[#402D7C] flex-shrink-0 mt-1" />
+                  <Link
+                    href="tel:+254727815187"
+                    className="text-gray-600 hover:text-[#402D7C] transition-colors hover:underline"
+                  >
+                    (+254) 727815187
+                  </Link>
+                  <span className="hidden sm:inline text-[#402D7C]"> or </span>
+                  <span className="sm:hidden text-[#402D7C]">or</span>
+                  <Link
+                    href="tel:+254784815187"
+                    className="text-gray-600 hover:text-[#402D7C] transition-colors hover:underline"
+                  >
+                    (+254) 784815187
+                  </Link>
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className="md:pl-4">

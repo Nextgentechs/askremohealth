@@ -57,6 +57,11 @@ const navOptions = [
     icon: Info,
   },
   {
+    label: 'Register as Provider',
+    href: '/register-provider',
+    icon: Stethoscope,
+  },
+  {
     label: 'Find a Doctor',
     href: '/find-specialists',
     icon: Stethoscope,
