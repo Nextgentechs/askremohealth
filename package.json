@@ -26,7 +26,7 @@
     "@sanity/presentation-comlink": "^1.0.18",
     "@sanity/preview-url-secret": "^2.1.10",
     "@sanity/vision": "^3.87.0",
-    "emailjs": "^4.0.3",
+    "emailjs": "^3.8.1",
     "sanity": "^3.87.0"
   }
 }
