@@ -3,7 +3,7 @@ import HeroSection from '@web/components/hero-section'
 import HowItWorks from '@web/components/how-it-works'
 import LatestArticles from '@web/components/latest-articles'
 import MedicalSpecialist from '@web/components/medical-specialists'
-import ResourcesSection from '@web/components/resources-section'
+import ProvidersSection from '@web/components/providers-section'
 
 import SearchForm from '@web/components/search-form'
 import TopSpecialists from '@web/components/top-specialists'
@@ -27,12 +27,9 @@ export default async function Home() {
         <div className="absolute top-[584px] sm:top-[488px] xl:top-[552px] mx-auto flex w-full flex-col items-center justify-center">
           
           <HowItWorks />
-
-          
-
           <MedicalSpecialist />
+          <ProvidersSection/>
           <TopSpecialists />
-          <ResourcesSection/>
           <LatestArticles />
           <WhatPatientsSay />
           <Footer />
