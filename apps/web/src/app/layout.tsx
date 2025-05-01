@@ -6,7 +6,7 @@ import { GeistSans } from 'geist/font/sans'
 import { type Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Ask Remo Health',
+  title: 'Ask RemoHealth',
   description: 'Solutions that help you and your loved ones enjoy Good Health and Long Life',
 }
 

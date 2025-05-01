@@ -1,0 +1,20 @@
+{
+    "sqltools.connections": [
+        {
+            "pgOptions": {
+                "ssl": {
+                    "rejectUnauthorized": true
+                }
+            },
+            "previewLimit": 50,
+            "server": "ep-tight-art-a1z186jf-pooler.ap-southeast-1.aws.neon.tech",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "Askremohealth",
+            "database": "neondb",
+            "username": "neondb_owner",
+            "password": "yaZM4jvs2TOk",
+            "connectionTimeout": 30
+        }
+    ]
+}

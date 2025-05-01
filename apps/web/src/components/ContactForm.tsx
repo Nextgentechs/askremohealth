@@ -1,6 +1,5 @@
 'use client'
 
-import { Mail, MapPin, Phone } from 'lucide-react'
 import React, { useState } from 'react'
 
 type FormData = {
@@ -19,6 +18,7 @@ const ContactForm: React.FC = () => {
   const [formData, setFormData] = useState<FormData>(initialFormData)
   const [submitted, setSubmitted] = useState(false)
   const [errors, setErrors] = useState<Partial<FormData>>({})
+  const [loading] = useState(false)
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -36,41 +36,39 @@ const ContactForm: React.FC = () => {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
     if (!validate()) return
 
-    // Simulate sending data (you can replace with API call)
-    console.log('Form submitted:', formData)
-    setSubmitted(true)
-    setFormData(initialFormData)
+    try {
+      const response = await fetch('/api/email/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        setSubmitted(true)
+        setFormData(initialFormData)
+      } else {
+        console.error('Form submission error:', result)
+      }
+    } catch (error) {
+      console.error('Error during form submission:', error)
+    }
   }
 
   return (
     <section className="container flex flex-col md:flex-row justify-center items-center gap-20 py-16">
-      <div className="w-full flex flex-col p-10 gap-10 bg-gradient-to-r from-secondary to-[#FFFBF8] shadow-md md:max-w-[400px]">
-        <h4 className="text-xl font-bold text-gray-600">Contact Us</h4>
-        <div className="flex items-center gap-2">
-          <Phone className="w-4 h-4" />
-          <p className="m-0">+254727 815 187
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Mail className="w-4 h-4" />
-          <p className="m-0">info@askremohealth.com</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <MapPin className="w-4 h-4" />
-          <p className="m-0">Nairobi, Kenya</p>
-        </div>
-      </div>
-
-      <div className="p-6 bg-white rounded-lg">
-        <h2 className="text-2xl font-bold mb-4 text-gray-800">
+      <div className="w-full lg:mx-40 xl:mx-48 p-6 bg-white rounded-lg border">
+        <h2 className="text-2xl section-title text-center lg:text-left mb-8">
           We Value Your Feedback
         </h2>
         {submitted && (
-          <p className="mb-4 text-green-600">
+          <p className="mb-4 text-center text-green-600">
             Thanks for reaching out! We’ll be in touch.
           </p>
         )}
@@ -78,7 +76,10 @@ const ContactForm: React.FC = () => {
         <form onSubmit={handleSubmit} noValidate>
           <div className="lg:flex gap-10">
             <div className="mb-4">
-              <label className="block mb-1 font-medium text-gray-600" htmlFor="name">
+              <label
+                className="block mb-1 font-medium text-gray-600"
+                htmlFor="name"
+              >
                 Name
               </label>
               <input
@@ -95,7 +96,10 @@ const ContactForm: React.FC = () => {
             </div>
 
             <div className="mb-4">
-              <label className="block mb-1 font-medium text-gray-600" htmlFor="email">
+              <label
+                className="block mb-1 font-medium text-gray-600"
+                htmlFor="email"
+              >
                 Email
               </label>
               <input
@@ -113,7 +117,10 @@ const ContactForm: React.FC = () => {
           </div>
 
           <div className="mb-4">
-            <label className="block mb-1 font-medium text-gray-600" htmlFor="message">
+            <label
+              className="block mb-1 font-medium text-gray-600"
+              htmlFor="message"
+            >
               Message
             </label>
             <textarea
@@ -131,9 +138,10 @@ const ContactForm: React.FC = () => {
 
           <button
             type="submit"
+            disabled={loading}
             className="w-full bg-[#3B006E] text-white py-2 rounded hover:bg-[#5600A1] transition"
           >
-            Submit Feedback
+            {loading ? 'Submitting...' : 'Submit Feedback'}
           </button>
         </form>
       </div>
