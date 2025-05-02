@@ -24,7 +24,7 @@ export default clerkMiddleware(async (auth, req) => {
   if (isProtectedRoute(req)) await auth.protect()
 
   if (isSpecialistRoute(req)) {
-    if (!sessionClaims?.metadata?.onboardingComplete) {
+    if (sessionClaims?.metadata?.onboardingComplete) {
       return NextResponse.redirect(
         new URL('/specialist/onboarding/personal-details', req.url),
       )
@@ -33,7 +33,7 @@ export default clerkMiddleware(async (auth, req) => {
 
   if (isAdminRoute(req)) {
     const isAdmin = sessionClaims?.metadata?.role === 'admin'
-    if (!isAdmin) {
+    if (isAdmin) {
       return NextResponse.redirect(new URL('/', req.url))
     }
   }
