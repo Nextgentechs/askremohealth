@@ -4,6 +4,7 @@ import HowItWorks from '@web/components/how-it-works'
 import LatestArticles from '@web/components/latest-articles'
 import MedicalSpecialist from '@web/components/medical-specialists'
 import ProvidersSection from '@web/components/providers-section'
+import { ChatBot } from '@web/components/chat-bot'
 
 import SearchForm from '@web/components/search-form'
 import TopSpecialists from '@web/components/top-specialists'
@@ -34,6 +35,7 @@ export default async function Home() {
           <WhatPatientsSay />
           <Footer />
         </div>
+        <ChatBot/>
       </div>
     </main>
   )
