@@ -52,11 +52,11 @@ export default async function Page({
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <div className="hidden lg:block">
+      <div className="block">
         <SearchForm />
       </div>
 
-      <div className="mb-10 flex flex-row gap-10 2xl:px-2">
+      <div className="mb-10 w-full flex flex-col lg:flex-row gap-10 2xl:px-2">
         <DoctorFilters />
         <Suspense
           fallback={

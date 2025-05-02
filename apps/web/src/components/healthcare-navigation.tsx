@@ -18,22 +18,22 @@ export default function HealthcareNavigation({ className }: HealthcareNavigation
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <NavigationCard
-            title="Healthcare Providers"
-            description="Access patient records, schedules, and medical resources"
+            title="Doctors"
+            description="Manage patient appointments"
             icon={<Stethoscope className="h-8 w-8" />}
             href="/specialist"
           />
 
           <NavigationCard
-            title="Healthcare Facilities"
-            description="Manage facility operations, staff, and patient care"
+            title="Hospitals/Clinics"
+            description="Get listed for visibility"
             icon={<Building2 className="h-8 w-8" />}
             href="/hospitals"
           />
 
           <NavigationCard
             title="Labs"
-            description="Submit and access test results and research data"
+            description="Submit and access test results"
             icon={<Flask className="h-8 w-8" />}
             href="/laboratories"
           />

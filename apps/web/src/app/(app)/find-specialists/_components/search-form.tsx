@@ -84,8 +84,8 @@ export default function SearchForm() {
   }, [debouncedQuery, pathname, createQueryString, router])
 
   return (
-    <Card className="p-6 mx-auto grid grid-cols-4 gap-3 transition-all duration-300 w-90 h-32 items-center w-full">
-      <div className="grid grid-cols-4 gap-3 col-span-4">
+    <Card className="p-6 mx-auto grid grid-cols-4 gap-3 transition-all duration-300 w-90 items-center w-full">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 col-span-4">
         <div className="w-full">
           <Label>Doctor Specialty</Label>
           <div className="relative">
