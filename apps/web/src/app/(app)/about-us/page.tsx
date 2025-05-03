@@ -1,4 +1,5 @@
 import AboutSection from '@web/components/about-section'
+import { ChatBot } from '@web/components/chat-bot'
 import Footer from '@web/components/footer'
 import { PatientServices } from '@web/components/patient-services'
 import { ProviderServices } from '@web/components/provider-services'
@@ -52,7 +53,7 @@ const AboutUs = () => {
             </Tabs>
           </section>
 
-      
+      <ChatBot/>
       <Footer />
     </div>
   )

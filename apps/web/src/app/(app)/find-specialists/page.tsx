@@ -12,6 +12,7 @@ import { api } from '@web/trpc/server'
 import { Loader2 } from 'lucide-react'
 import { Suspense } from 'react'
 import SearchForm from './_components/search-form'
+import { ChatBot } from '@web/components/chat-bot'
 
 export default async function Page({
   searchParams,
@@ -68,6 +69,7 @@ export default async function Page({
           <DoctorList data={data} />
         </Suspense>
       </div>
+      <ChatBot/>
     </main>
   )
 }

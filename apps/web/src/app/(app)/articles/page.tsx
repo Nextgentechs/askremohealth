@@ -1,3 +1,4 @@
+import { ChatBot } from '@web/components/chat-bot'
 import Footer from '@web/components/footer'
 import { type Post } from '@web/components/latest-articles'
 import Article from '@web/components/ui/article'
@@ -111,6 +112,7 @@ export default async function Articles({
           </PaginationContent>
         </Pagination>
       )}
+      <ChatBot/>
       <Footer />
     </div>
   )
