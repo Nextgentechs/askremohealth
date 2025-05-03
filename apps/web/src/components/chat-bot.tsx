@@ -1,29 +1,29 @@
-"use client"
+'use client'
 
-import type React from "react"
-import { useState, useRef, useEffect } from "react"
-import { Send, X, Minimize2, Maximize2, MessageSquare } from "lucide-react"
-import { Button } from "./ui/button"
-import { Avatar } from "./ui/avatar"
-import { Card } from "./ui/card"
-import { cn } from "@web/lib/utils"
+import { cn } from '@web/lib/utils'
+import { Maximize2, MessageSquare, Minimize2, Send, X } from 'lucide-react'
+import type React from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { Avatar } from './ui/avatar'
+import { Button } from './ui/button'
+import { Card } from './ui/card'
 
 type Message = {
   id: string
   content: string
-  sender: "user" | "bot"
+  sender: 'user' | 'bot'
   timestamp: Date
 }
 
 export function ChatBot() {
   const [isOpen, setIsOpen] = useState(false)
   const [isMinimized, setIsMinimized] = useState(false)
-  const [input, setInput] = useState("")
+  const [input, setInput] = useState('')
   const [messages, setMessages] = useState<Message[]>([
     {
-      id: "1",
-      content: "Hi there! How can I help you today?",
-      sender: "bot",
+      id: '1',
+      content: 'Hi there! How can I help you today?',
+      sender: 'bot',
       timestamp: new Date(),
     },
   ])
@@ -32,11 +32,11 @@ export function ChatBot() {
 
   // Create a persistent session ID
   const [sessionId] = useState(() => {
-    return "session-" + Math.random().toString(36).substring(2, 15)
+    return 'session-' + Math.random().toString(36).substring(2, 15)
   })
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -46,12 +46,12 @@ export function ChatBot() {
     const userMessage: Message = {
       id: Date.now().toString(),
       content: input,
-      sender: "user",
+      sender: 'user',
       timestamp: new Date(),
     }
 
     setMessages((prev) => [...prev, userMessage])
-    setInput("")
+    setInput('')
     setIsTyping(true)
 
     try {
@@ -59,7 +59,7 @@ export function ChatBot() {
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         content: botReply,
-        sender: "bot",
+        sender: 'bot',
         timestamp: new Date(),
       }
       setMessages((prev) => [...prev, botMessage])
@@ -68,8 +68,9 @@ export function ChatBot() {
         ...prev,
         {
           id: (Date.now() + 2).toString(),
-          content: "There was a problem connecting to the assistant. Please try again later.",
-          sender: "bot",
+          content:
+            'There was a problem connecting to the assistant. Please try again later.',
+          sender: 'bot',
           timestamp: new Date(),
         },
       ])
@@ -80,22 +81,25 @@ export function ChatBot() {
 
   const getBotResponse = async (userInput: string): Promise<string> => {
     try {
-      const res = await fetch("https://remo-health-assistant.onrender.com/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ session_id: sessionId, message: userInput }),
-      })
+      const res = await fetch(
+        'https://remo-health-assistant.onrender.com/chat',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: sessionId, message: userInput }),
+        },
+      )
 
       if (!res.ok) {
         const text = await res.text()
-        console.error("Backend error:", text)
-        throw new Error("Bad response")
+        console.error('Backend error:', text)
+        throw new Error('Bad response')
       }
 
       const data = await res.json()
       return data.response || "I'm sorry, I didn't understand that."
     } catch (error) {
-      console.error("Fetch failed:", error)
+      console.error('Fetch failed:', error)
       throw error
     }
   }
@@ -104,10 +108,11 @@ export function ChatBot() {
     return (
       <Button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 rounded-full w-14 h-14 lg:w-18 lg:h-18 p-0 bg-[#402E7D] hover:bg-[#402E7D] shadow-lg"
+        className="fixed bottom-6 right-6 px-4 py-8 bg-[#402E7D] hover:bg-[#402E7D] text-white rounded-3xl flex items-center space-x-2 shadow-lg"
         aria-label="Open chat"
       >
-        <MessageSquare className="h-6 w-6 lg:w-10 lg:h-10" />
+        <MessageSquare className="h-5 w-5" />
+        <span className="text-sm md:text-md font-medium">Ask RemoHealth Assistant</span>
       </Button>
     )
   }
@@ -115,8 +120,8 @@ export function ChatBot() {
   return (
     <Card
       className={cn(
-        "fixed bottom-6 right-6 w-80 sm:w-96 md:w-[500px] bg-white rounded-lg shadow-xl transition-all duration-300 overflow-hidden z-[4]",
-        isMinimized ? "h-14" : "h-[500px] max-h-[80vh]"
+        'fixed bottom-6 right-6 w-80 sm:w-96 md:w-[500px] bg-white rounded-lg shadow-xl transition-all duration-300 overflow-hidden z-[4]',
+        isMinimized ? 'h-14' : 'h-[500px] max-h-[80vh]',
       )}
     >
       {/* Header */}
@@ -127,7 +132,9 @@ export function ChatBot() {
               <MessageSquare className="h-4 w-4 text-[#fff]" />
             </div>
           </Avatar>
-          <span className="text-sm md:font-medium">Ask RemoHealth Assistant</span>
+          <span className="text-sm md:font-medium">
+            Ask RemoHealth Assistant
+          </span>
         </div>
         <div className="flex items-center space-x-1">
           <Button
@@ -135,9 +142,13 @@ export function ChatBot() {
             size="icon"
             className="h-7 w-7 text-[#fff] hover:text-white"
             onClick={() => setIsMinimized(!isMinimized)}
-            aria-label={isMinimized ? "Maximize chat" : "Minimize chat"}
+            aria-label={isMinimized ? 'Maximize chat' : 'Minimize chat'}
           >
-            {isMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
+            {isMinimized ? (
+              <Maximize2 className="h-4 w-4" />
+            ) : (
+              <Minimize2 className="h-4 w-4" />
+            )}
           </Button>
           <Button
             variant="ghost"
@@ -159,14 +170,17 @@ export function ChatBot() {
               {messages.map((message) => (
                 <div
                   key={message.id}
-                  className={cn("flex", message.sender === "user" ? "justify-end" : "justify-start")}
+                  className={cn(
+                    'flex',
+                    message.sender === 'user' ? 'justify-end' : 'justify-start',
+                  )}
                 >
                   <div
                     className={cn(
-                      "max-w-[80%] rounded-lg p-3 animate-fadeIn",
-                      message.sender === "user"
-                        ? "bg-[#402E7D] text-white rounded-br-none"
-                        : "bg-gray-100 text-gray-800 rounded-bl-none"
+                      'max-w-[80%] rounded-lg p-3 animate-fadeIn',
+                      message.sender === 'user'
+                        ? 'bg-[#402E7D] text-white rounded-br-none'
+                        : 'bg-gray-100 text-gray-800 rounded-bl-none',
                     )}
                   >
                     {message.content}
@@ -177,9 +191,18 @@ export function ChatBot() {
                 <div className="flex justify-start">
                   <div className="bg-gray-100 text-gray-800 rounded-lg rounded-bl-none p-3 max-w-[80%]">
                     <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
+                      <div
+                        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                        style={{ animationDelay: '0ms' }}
+                      ></div>
+                      <div
+                        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                        style={{ animationDelay: '150ms' }}
+                      ></div>
+                      <div
+                        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                        style={{ animationDelay: '300ms' }}
+                      ></div>
                     </div>
                   </div>
                 </div>
