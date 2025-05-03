@@ -1,4 +1,5 @@
 import Logo from '@web/components/logo'
+import Link from 'next/link'
 import { Button } from '@web/components/ui/button'
 import PersonalDetailsForm from './_components/personal-details-form'
 
@@ -9,9 +10,11 @@ export default function Page() {
     <div className="flex flex-col">
       <div className="fixed left-0 right-0 top-0 flex items-end justify-between border-b border-b-border bg-background px-6 py-4 sm:px-12">
         <Logo href="/" />
-        <Button variant="outline" className="rounded-full">
-          Back
-        </Button>
+        <Link href="/">
+          <Button variant="outline" className="rounded-full">
+            Back
+          </Button>
+        </Link>
       </div>
       <div className="mx-auto grid min-h-screen content-center px-6 py-24 sm:px-8 sm:py-28">
         <div className="flex max-w-2xl flex-col gap-4 sm:gap-8">
