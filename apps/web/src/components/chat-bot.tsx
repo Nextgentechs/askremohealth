@@ -67,7 +67,7 @@ export function ChatBot() {
     }, 1500)
   }
 
-  // Simple bot response logic - would be replaced with actual AI in a real implementation
+  // Chat Logic
   const getBotResponse = (userInput: string): string => {
     const input = userInput.toLowerCase()
 
@@ -90,10 +90,10 @@ export function ChatBot() {
     return (
       <Button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 rounded-full w-14 h-14 p-0 bg-[#402E7D] hover:bg-[#402E7D] shadow-lg"
+        className="fixed bottom-6 right-6 rounded-full w-14 h-14 lg:w-18 lg:h-18 p-0 bg-[#402E7D] hover:bg-[#402E7D] shadow-lg"
         aria-label="Open chat"
       >
-        <MessageSquare className="h-6 w-6" />
+        <MessageSquare className="h-6 w-6 lg:w-10 lg:h-10" />
       </Button>
     )
   }
@@ -113,7 +113,7 @@ export function ChatBot() {
               <MessageSquare className="h-4 w-4 text-[#fff]" />
             </div>
           </Avatar>
-          <span className="font-medium">AI Assistant</span>
+          <span className="text-sm md:font-medium">Ask RemoHealth Assistant</span>
         </div>
         <div className="flex items-center space-x-1">
           <Button
