@@ -5,30 +5,28 @@ import { Button } from "@web/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@web/components/ui/card"
 import { Input } from "@web/components/ui/input"
 import { Label } from "@web/components/ui/label"
+import { Textarea } from "@web/components/ui/textarea"
 import { useToast } from "@web/hooks/use-toast"
 import { articleSchema } from "@web/server/api/validators"
 import { api } from "@web/trpc/react"
 import { Loader } from "lucide-react"
 import { useRouter } from "next-nprogress-bar"
-import { useForm, useFormContext } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { type z } from "zod"
-
-// const articleSchema = z.object({
-//     title: z.string().min(1, {message: 'Title is required.'}).max(100, {message: "Title must be at most 100 characters long"}),
-//     content: z.string().min(150, {message: "Content must be at least 150 characters long"}),
-// })
 
 function CreateArticle() {
     const { toast } = useToast()
     const form = useForm<z.infer<typeof articleSchema>>({
         resolver: zodResolver(articleSchema),
+        defaultValues: {
+            title: "",
+            content: "",
+        },
     })
-    const {
-        register,
-        formState: { errors },
-    } = useFormContext<z.infer<typeof articleSchema>>()
+    const { register, formState: { errors }, handleSubmit } = form
     const { mutateAsync, isPending } = api.articles.createArticle.useMutation()
     const router = useRouter()
+
     const onSubmit = async (data: z.infer<typeof articleSchema>) => {
         try {
             const article = await mutateAsync(data)
@@ -38,11 +36,9 @@ function CreateArticle() {
                 description: "Your article has been created successfully",
             })
             form.reset()
-            // Redirect to the article page
             router.push(`/articles`)
         } catch (error) {
-            console.error("Error creating article", error);
-
+            console.error("Error creating article", error)
             toast({
                 title: "Error creating article",
                 description: "There was an error creating your article",
@@ -52,35 +48,46 @@ function CreateArticle() {
     }
 
     return (
-        <>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-1 flex-col gap-6">
-                <div className="flex justify-end">
-                    <div className="flex w-full flex-col items-start gap-2">
-                        <Label className="text-foreground" htmlFor="title">
-                            Article Title
-                        </Label>
-                        <Input
-                            {...register("title")}
-                            id="title"
-                            placeholder="Enter article title"
-                            type="text"
-                            className="ps-4"
-                        />
-                    </div>
-                    <Button type="submit" className="w-fit" disabled={isPending}>
-                        {isPending && <Loader className={`animate-spin`} />}
-                        Post Article
-                    </Button>
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-1 flex-col gap-6">
+            <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-2">
+                    <Label className="text-foreground" htmlFor="title">
+                        Article Title
+                    </Label>
+                    <Input
+                        {...register("title")}
+                        id="title"
+                        placeholder="Enter article title"
+                        type="text"
+                        className="ps-4"
+                    />
+                    {errors.title && <p className="text-red-500 text-sm">{errors.title.message}</p>}
                 </div>
-            </form>
-        </>
+                <div className="flex flex-col gap-2">
+                    <Label className="text-foreground" htmlFor="content">
+                        Article Content
+                    </Label>
+                    <Textarea
+                        {...register("content")}
+                        id="content"
+                        placeholder="Enter article content (minimum 150 characters)"
+                        className="min-h-[200px] p-4"
+                    />
+                    {errors.content && <p className="text-red-500 text-sm">{errors.content.message}</p>}
+                </div>
+                <Button type="submit" className="w-fit self-end" disabled={isPending}>
+                    {isPending && <Loader className="animate-spin mr-2" />}
+                    Post Article
+                </Button>
+            </div>
+        </form>
     )
 }
 
 export default function ArticleForm() {
     return (
         <div className="flex justify-center p-4 mx-auto">
-            <Card className="flex flex-col rounded-xl border px-0 shadow-sm">
+            <Card className="flex flex-col rounded-xl border px-0 shadow-sm w-full max-w-2xl">
                 <CardHeader className="flex w-full items-start border-b px-6 pb-6">
                     <CardTitle className="text-lg font-semibold md:text-xl">
                         Article Details
