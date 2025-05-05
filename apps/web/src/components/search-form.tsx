@@ -50,7 +50,7 @@ export default function SearchForm() {
     { enabled: !!selectedCounty },
   )
   return (
-    <Card className="p-6 mx-auto xl:grid xl:grid-cols-5 gap-3 transition-all duration-300 w-90 xl:h-32 items-center 2xl:w-[1184px] xl:w-[1088px] sm:w-[500px] lg:w-[888px] md:w-[600px]">
+    <Card className="p-6 mx-auto mt-20 sm:mt-8 xl:mt-0 xl:grid xl:grid-cols-5 gap-3 transition-all duration-300 w-90 xl:h-32 items-center 2xl:w-[1184px] xl:w-[1088px] sm:w-[500px] lg:w-[888px] md:w-[600px]">
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 xl:col-span-4">
         <div className="w-full">
           <Label>Doctor Specialty</Label>

@@ -6,8 +6,8 @@ import { GeistSans } from 'geist/font/sans'
 import { type Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Ask Virtual Healthcare',
-  description: 'Ask Virtual Healthcare',
+  title: 'Ask RemoHealth',
+  description: 'Solutions that help you and your loved ones enjoy Good Health and Long Life',
 }
 
 export default async function RootLayout({

@@ -1,24 +1,39 @@
-'use client'
-import specialities from '@web/data/specialities'
-import Autoplay from 'embla-carousel-autoplay'
-import Image from 'next/image'
-import { useEffect, useState } from 'react'
-import { Card, CardContent } from './ui/card'
+'use client';
+import { useRouter } from 'next/navigation';
+import specialities from '@web/data/specialities';
+import Autoplay from 'embla-carousel-autoplay';
+import Image from 'next/image';
+import { useEffect, useState } from 'react';
+import { Card, CardContent } from './ui/card';
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
   type CarouselApi,
-} from './ui/carousel'
+} from './ui/carousel';
+import { api } from '@web/trpc/react'
 
-function Specialty({ specialty, icon }: (typeof specialities)[0][0]) {
-  const [mouseOver, setMouseOver] = useState(false)
+function Specialty({
+  specialty,
+  icon,
+}: (typeof specialities)[0][0]) {
+  const [mouseOver, setMouseOver] = useState(false);
+  const router = useRouter();
+  const { data: specialties } = api.specialties.listSpecialties.useQuery();
+
+  // Find the specialty ID by matching the name
+  const specialtyId = specialties?.find((s) => s.name === specialty)?.id;
 
   return (
     <Card
       onMouseEnter={() => setMouseOver(true)}
       onMouseLeave={() => setMouseOver(false)}
-      className="shadow-none border-none"
+      onClick={() => {
+        if (specialtyId) {
+          router.push(`/find-specialists?specialty=${encodeURIComponent(specialtyId)}`);
+        }
+      }}
+      className="shadow-none border-none cursor-pointer transition-transform hover:scale-105"
     >
       <CardContent className="flex flex-col items-center justify-center gap-2 px-6 py-4 pb-0">
         <Image src={icon} alt={specialty} width={40} height={40} />
@@ -29,28 +44,29 @@ function Specialty({ specialty, icon }: (typeof specialities)[0][0]) {
         </span>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 function SpecialistsCarousel() {
-  const [api, setApi] = useState<CarouselApi>()
-  const [current, setCurrent] = useState(0)
-  const [count, setCount] = useState(0)
+  const [api, setApi] = useState<CarouselApi>();
+  const [current, setCurrent] = useState(0);
+  const [count, setCount] = useState(0);
 
   const sortedSpecialities = specialities.map((group) =>
     [...group].sort((a, b) => a.specialty.localeCompare(b.specialty)),
-  )
-  useEffect(() => {
-    if (!api) return
+  );
 
-    const snaps = api.scrollSnapList()
-    setCount(snaps.length)
-    setCurrent(api.selectedScrollSnap() + 1)
+  useEffect(() => {
+    if (!api) return;
+
+    const snaps = api.scrollSnapList();
+    setCount(snaps.length);
+    setCurrent(api.selectedScrollSnap() + 1);
 
     api.on('select', () => {
-      setCurrent(api.selectedScrollSnap() + 1)
-    })
-  }, [api])
+      setCurrent(api.selectedScrollSnap() + 1);
+    });
+  }, [api]);
 
   return (
     <div className="flex w-full flex-col gap-8">
@@ -92,7 +108,7 @@ function SpecialistsCarousel() {
         ))}
       </div>
     </div>
-  )
+  );
 }
 
 export default function MedicalSpecialist() {
@@ -100,7 +116,7 @@ export default function MedicalSpecialist() {
     <section id="medical-specialists" className="w-full bg-secondary py-16">
       <div className="container mx-auto flex flex-col items-center justify-center gap-8">
         <div className="mx-auto flex w-full flex-col items-center justify-center gap-2">
-          <h2 className="section-title">Our Medical Specialities</h2>
+          <h2 className="section-title text-center">Our Medical Specialities</h2>
           <p className="section-description text-center">
             Explore a variety of medical specialties to find the right expert
             for your needs
@@ -109,5 +125,5 @@ export default function MedicalSpecialist() {
         <SpecialistsCarousel />
       </div>
     </section>
-  )
+  );
 }

@@ -1,9 +1,10 @@
 'use client'
 
 import { api } from '@web/trpc/react'
-import { Filter } from 'lucide-react'
+import { Filter, X } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
-import React from 'react'
+import  React from 'react'
+import { useState } from 'react'
 import { Label } from './ui/label'
 import { Skeleton } from './ui/skeleton'
 import { Switch } from './ui/switch'
@@ -174,14 +175,30 @@ function EntityFilter() {
 }
 
 export default function DoctorFilters() {
+  const [showFilters, setShowFilters] = useState(false)
+
   return (
-    <div className="mb-10 hidden h-fit w-full max-w-xs rounded-xl p-0 shadow-sm xl:block">
-      <div className="flex flex-row items-start gap-2 rounded-b-none rounded-t-xl border border-primary bg-primary p-6 text-primary-foreground">
-        <Filter />
-        <span className="text-lg font-semibold">Filters</span>
+    <div className="mb-10 w-full lg:max-w-[200px] xl:max-w-xs rounded-xl p-0 shadow-sm">
+      {/* Header with toggle for small screens */}
+      <div className="flex items-center justify-between border border-primary bg-primary p-6 text-primary-foreground rounded-t-xl lg:rounded-b-none">
+        <div className="flex items-center gap-2">
+          <Filter />
+          <span className="text-lg font-semibold">Filters</span>
+        </div>
+        <button
+          className="lg:hidden"
+          onClick={() => setShowFilters((prev) => !prev)}
+        >
+          {showFilters ? <X /> : <Filter />}
+        </button>
       </div>
 
-      <div className="flex flex-col rounded-b-xl border-x border-b px-6 pb-6">
+      {/* Filter content, hidden on small screens unless toggled */}
+      <div
+        className={`${
+          showFilters ? 'block' : 'hidden'
+        } flex flex-col border-x border-b px-6 pb-6 rounded-b-xl lg:block`}
+      >
         <SubSpecialtiesFilter />
         <ExperienceFilter />
         <GenderFilter />
