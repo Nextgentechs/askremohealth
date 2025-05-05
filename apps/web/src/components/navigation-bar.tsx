@@ -208,10 +208,10 @@ function CurrentUser({
       <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width] min-w-44 rounded-lg">
         {/* <DropdownMenuLabel>My Account</DropdownMenuLabel> */}
         <DropdownMenuGroup>
-          <Link href="/appointments">
+          <Link href="/specialist/upcoming-appointments">
             <DropdownMenuItem className="cursor-pointer">
               <Calendar />
-              Appointments
+              Dashboard
             </DropdownMenuItem>
           </Link>
           <Link href="/profile">

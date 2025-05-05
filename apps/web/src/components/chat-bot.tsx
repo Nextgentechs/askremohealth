@@ -1,88 +1,106 @@
-"use client"
+'use client'
 
-import type React from "react"
-
-import { useState, useRef, useEffect } from "react"
-import { Send, X, Minimize2, Maximize2, MessageSquare } from "lucide-react"
-import { Button } from "./ui/button"
-import { Avatar } from "./ui/avatar"
-import { Card } from "./ui/card"
-import { cn } from "@web/lib/utils"
+import { cn } from '@web/lib/utils'
+import { Maximize2, MessageSquare, Minimize2, Send, X } from 'lucide-react'
+import type React from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { Avatar } from './ui/avatar'
+import { Button } from './ui/button'
+import { Card } from './ui/card'
 
 type Message = {
   id: string
   content: string
-  sender: "user" | "bot"
+  sender: 'user' | 'bot'
   timestamp: Date
 }
 
 export function ChatBot() {
   const [isOpen, setIsOpen] = useState(false)
   const [isMinimized, setIsMinimized] = useState(false)
-  const [input, setInput] = useState("")
+  const [input, setInput] = useState('')
   const [messages, setMessages] = useState<Message[]>([
     {
-      id: "1",
-      content: "Hi there! How can I help you today?",
-      sender: "bot",
+      id: '1',
+      content: 'Hi there! How can I help you today?',
+      sender: 'bot',
       timestamp: new Date(),
     },
   ])
   const [isTyping, setIsTyping] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  // Auto-scroll to bottom of messages
+  // Create a persistent session ID
+  const [sessionId] = useState(() => {
+    return 'session-' + Math.random().toString(36).substring(2, 15)
+  })
+
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
-
     if (!input.trim()) return
 
-    // Add user message
     const userMessage: Message = {
       id: Date.now().toString(),
       content: input,
-      sender: "user",
+      sender: 'user',
       timestamp: new Date(),
     }
 
     setMessages((prev) => [...prev, userMessage])
-    setInput("")
+    setInput('')
     setIsTyping(true)
 
-    // Simulate bot response after a delay
-    setTimeout(() => {
+    try {
+      const botReply = await getBotResponse(input)
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: getBotResponse(input),
-        sender: "bot",
+        content: botReply,
+        sender: 'bot',
         timestamp: new Date(),
       }
-
       setMessages((prev) => [...prev, botMessage])
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 2).toString(),
+          content:
+            'There was a problem connecting to the assistant. Please try again later.',
+          sender: 'bot',
+          timestamp: new Date(),
+        },
+      ])
+    } finally {
       setIsTyping(false)
-    }, 1500)
+    }
   }
 
-  // Simple bot response logic - would be replaced with actual AI in a real implementation
-  const getBotResponse = (userInput: string): string => {
-    const input = userInput.toLowerCase()
+  const getBotResponse = async (userInput: string): Promise<string> => {
+    try {
+      const res = await fetch(
+        'https://remo-health-assistant.onrender.com/chat',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: sessionId, message: userInput }),
+        },
+      )
 
-    if (input.includes("hello") || input.includes("hi")) {
-      return "Hello! How can I assist you today?"
-    } else if (input.includes("help")) {
-      return "I can help you with information about our products, services, or answer general questions. What would you like to know?"
-    } else if (input.includes("product") || input.includes("service")) {
-      return "We offer a range of innovative products and services. Would you like me to tell you more about a specific one?"
-    } else if (input.includes("contact") || input.includes("support")) {
-      return "You can reach our support team at support@example.com or call us at (555) 123-4567."
-    } else if (input.includes("price") || input.includes("cost")) {
-      return "Our pricing varies depending on the product or service. Can you specify which one you're interested in?"
-    } else {
-      return "I'm not sure I understand. Could you rephrase your question or ask me something else?"
+      if (!res.ok) {
+        const text = await res.text()
+        console.error('Backend error:', text)
+        throw new Error('Bad response')
+      }
+
+      const data = await res.json()
+      return data.response || "I'm sorry, I didn't understand that."
+    } catch (error) {
+      console.error('Fetch failed:', error)
+      throw error
     }
   }
 
@@ -90,10 +108,11 @@ export function ChatBot() {
     return (
       <Button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 rounded-full w-14 h-14 p-0 bg-[#402E7D] hover:bg-[#402E7D] shadow-lg"
+        className="fixed bottom-6 right-6 px-4 py-8 bg-[#402E7D] hover:bg-[#402E7D] text-white rounded-3xl flex items-center space-x-2 shadow-lg"
         aria-label="Open chat"
       >
-        <MessageSquare className="h-6 w-6" />
+        <MessageSquare className="h-5 w-5" />
+        <span className="text-sm md:text-md font-medium">Ask RemoHealth Assistant</span>
       </Button>
     )
   }
@@ -101,11 +120,11 @@ export function ChatBot() {
   return (
     <Card
       className={cn(
-        "fixed bottom-6 right-6 w-80 sm:w-96 md:w-[500px] bg-white rounded-lg shadow-xl transition-all duration-300 overflow-hidden z-[4]",
-        isMinimized ? "h-14" : "h-[500px] max-h-[80vh]",
+        'fixed bottom-6 right-6 w-80 sm:w-96 md:w-[500px] bg-white rounded-lg shadow-xl transition-all duration-300 overflow-hidden z-[4]',
+        isMinimized ? 'h-14' : 'h-[500px] max-h-[80vh]',
       )}
     >
-      {/* Chat header */}
+      {/* Header */}
       <div className="bg-[#402E7D] text-white p-3 flex justify-between items-center">
         <div className="flex items-center space-x-2">
           <Avatar className="h-8 w-8 border-2 border-white-300">
@@ -113,17 +132,23 @@ export function ChatBot() {
               <MessageSquare className="h-4 w-4 text-[#fff]" />
             </div>
           </Avatar>
-          <span className="font-medium">AI Assistant</span>
+          <span className="text-sm md:font-medium">
+            Ask RemoHealth Assistant
+          </span>
         </div>
         <div className="flex items-center space-x-1">
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 text-[#fff] hover:text-white "
+            className="h-7 w-7 text-[#fff] hover:text-white"
             onClick={() => setIsMinimized(!isMinimized)}
-            aria-label={isMinimized ? "Maximize chat" : "Minimize chat"}
+            aria-label={isMinimized ? 'Maximize chat' : 'Minimize chat'}
           >
-            {isMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
+            {isMinimized ? (
+              <Maximize2 className="h-4 w-4" />
+            ) : (
+              <Minimize2 className="h-4 w-4" />
+            )}
           </Button>
           <Button
             variant="ghost"
@@ -139,20 +164,23 @@ export function ChatBot() {
 
       {!isMinimized && (
         <>
-          {/* Chat messages */}
+          {/* Messages */}
           <div className="p-4 h-[calc(100%-120px)] overflow-y-auto">
             <div className="space-y-4">
               {messages.map((message) => (
                 <div
                   key={message.id}
-                  className={cn("flex", message.sender === "user" ? "justify-end" : "justify-start")}
+                  className={cn(
+                    'flex',
+                    message.sender === 'user' ? 'justify-end' : 'justify-start',
+                  )}
                 >
                   <div
                     className={cn(
-                      "max-w-[80%] rounded-lg p-3 animate-fadeIn",
-                      message.sender === "user"
-                        ? "bg-[#402E7D] text-white rounded-br-none"
-                        : "bg-gray-100 text-gray-800 rounded-bl-none",
+                      'max-w-[80%] rounded-lg p-3 animate-fadeIn',
+                      message.sender === 'user'
+                        ? 'bg-[#402E7D] text-white rounded-br-none'
+                        : 'bg-gray-100 text-gray-800 rounded-bl-none',
                     )}
                   >
                     {message.content}
@@ -165,15 +193,15 @@ export function ChatBot() {
                     <div className="flex space-x-1">
                       <div
                         className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                        style={{ animationDelay: "0ms" }}
+                        style={{ animationDelay: '0ms' }}
                       ></div>
                       <div
                         className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                        style={{ animationDelay: "150ms" }}
+                        style={{ animationDelay: '150ms' }}
                       ></div>
                       <div
                         className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                        style={{ animationDelay: "300ms" }}
+                        style={{ animationDelay: '300ms' }}
                       ></div>
                     </div>
                   </div>
@@ -183,7 +211,7 @@ export function ChatBot() {
             </div>
           </div>
 
-          {/* Chat input */}
+          {/* Input */}
           <div className="p-3 border-t">
             <form onSubmit={handleSendMessage} className="flex space-x-2">
               <input
