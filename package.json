@@ -20,5 +20,13 @@
     "turbo": "latest",
     "typescript": "^5.7.2"
   },
-  "packageManager": "npm@10.9.0"
+  "packageManager": "npm@10.9.0",
+  "dependencies": {
+    "@sanity/client": "^7.0.0",
+    "@sanity/presentation-comlink": "^1.0.18",
+    "@sanity/preview-url-secret": "^2.1.10",
+    "@sanity/vision": "^3.87.0",
+    "emailjs": "^3.8.1",
+    "sanity": "^3.87.0"
+  }
 }

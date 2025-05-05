@@ -12,7 +12,7 @@ const footerNavOptions = {
       links: [
         { title: 'Account Signup', href: '/signup' },
         { title: 'Login', href: '/login' },
-        { title: 'Doctors', href: '/doctors' },
+        { title: 'Doctors', href: '/find-specialists' },
         { title: 'Hospitals', href: '/hospitals' },
         { title: 'Laboratories', href: '/laboratories' },
         { title: 'Pharmacies', href: '/pharmacies' },
@@ -25,7 +25,7 @@ const footerNavOptions = {
     {
       header: 'For Specialists',
       links: [
-        { title: 'Login', href: '/specialists/onboarding/' },
+        { title: 'Login', href: '/specialist' },
         { title: 'How to register', href: '/specialists/onboarding/' },
         { title: 'Promote your practice', href: '/specialists/onboarding/' },
         { title: 'FAQ', href: '/faq' },
@@ -37,9 +37,9 @@ const footerNavOptions = {
     {
       header: 'For Healthcare Facilities',
       links: [
-        { title: 'Login', href: '/facilities/login' },
+        { title: 'Login', href: '/hospitals' },
         { title: 'How to register', href: '/how-to-register' },
-        { title: 'Promote your facility', href: '/promote-your-facility' },
+        { title: 'Promote your facility', href: '/#providers-cta' },
         { title: 'FAQ', href: '/faq' },
       ],
     },
@@ -70,13 +70,13 @@ function SocialIcon({
   return (
     <Link
       href={href}
-      className="flex size-10 items-center justify-center rounded-full hover:bg-accent"
+      className="flex size-7 sm:size-10 items-center justify-center rounded-full hover:bg-accent"
       target="_blank"
       rel="noopener noreferrer"
       aria-label={label}
     >
       {React.cloneElement(icon as React.ReactElement, {
-        className: 'size-6',
+        className: 'size-5 sm:size-6',
       })}
     </Link>
   )
@@ -89,7 +89,7 @@ export default function Footer() {
         <div className="flex flex-col items-start gap-8">
           <Logo />
 
-          <div className="flex flex-row gap-2 border-y border-border py-4">
+          <div className="flex flex-row gap-1 sm:gap-2 border-y border-border py-4">
             <SocialIcon
               href="https://facebook.com"
               icon={<Facebook />}

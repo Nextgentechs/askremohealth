@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 export default async function Page() {
   const { sessionClaims } = await auth()
 
-  if (sessionClaims?.metadata.onboardingComplete) {
+  if (sessionClaims?.metadata?.onboardingComplete) {
     return redirect('/specialists/upcoming-appointments')
   }
 
