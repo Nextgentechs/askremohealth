@@ -1,11 +1,11 @@
 'use client'
 
-import { useState } from 'react'
-import { api } from '@web/trpc/react'
-import { Card, CardContent, CardHeader, CardTitle } from '@web/components/ui/card'
-import { Button } from '@web/components/ui/button'
-import Link from 'next/link'
 import { useUser } from '@clerk/nextjs'
+import { Button } from '@web/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@web/components/ui/card'
+import { api } from '@web/trpc/react'
+import Link from 'next/link'
+import { useState } from 'react'
 
 interface Article {
     id: string
@@ -31,7 +31,7 @@ export default function ArticlesPage() {
 
     if (isLoading) return <div className="container mx-auto p-4">Loading articles...</div>
     if (error) return <div className="container mx-auto p-4">Error: {error.message}</div>
-    if (!data || !data.articlesList || data.articlesList.length === 0) {
+    if (!data?.articlesList || data.articlesList.length === 0) {
         return <div className="container mx-auto p-4">No articles found.</div>
     }
 
