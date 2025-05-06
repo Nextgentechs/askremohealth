@@ -1,7 +1,8 @@
-import { count } from "drizzle-orm"
+import { count, and } from "drizzle-orm"
 import type { ArticleListSchema } from "../api/validators"
 import { db } from "../db"
 import { articles } from "../db/schema"
+import { eq, isNotNull } from "drizzle-orm"
 
 export class ArticleService {
     static async getArticles(input: ArticleListSchema) {
@@ -23,6 +24,21 @@ export class ArticleService {
             }),
         ])
         return { totalCount: countResult, articlesList }
+    }
+
+    static async getArticleById(id: string) {
+        const article = await db.query.articles.findFirst({
+            where: and(eq(articles.id, id), isNotNull(articles.publishedAt)),
+            columns: {
+                id: true,
+                title: true,
+                content: true,
+                publishedAt: true,
+                createdAt: true,
+                updatedAt: true
+            }
+        })
+        return article
     }
     
     static async createArticle(input: { title: string; content: string }, userId: string) {
