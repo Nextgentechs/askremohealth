@@ -9,33 +9,43 @@ export const getDoctors = adminProcedure
     z.object({ page: z.number().default(1), limit: z.number().default(10) }),
   )
   .query(async ({ ctx, input }) => {
-    const [total, data] = await Promise.all([
-      ctx.db.select({ count: count() }).from(doctors),
-      ctx.db.query.doctors.findMany({
-        offset: Math.max(1, (input.page - 1) * input.limit),
-        limit: input.limit,
-        orderBy: (doctors, { desc }) => [
-          desc(
-            sql<number>`CASE 
-              WHEN ${doctors.status} = 'pending' THEN 3
-              WHEN ${doctors.status} = 'verified' THEN 2
-              WHEN ${doctors.status} = 'rejected' THEN 1
-              ELSE 0 
-            END`,
-          ),
-          desc(doctors.createdAt),
-        ],
-      }),
-    ])
+    try {
+      const [total, data] = await Promise.all([
+        ctx.db.select({ count: count() }).from(doctors),
+        ctx.db.query.doctors.findMany({
+          offset: Math.max(0, (input.page - 1) * input.limit), // Changed offset to start at 0
+          limit: input.limit,
+          orderBy: (doctors, { desc }) => [
+            desc(
+              sql<number>`CASE 
+                WHEN ${doctors.status} = 'pending' THEN 3
+                WHEN ${doctors.status} = 'verified' THEN 2
+                WHEN ${doctors.status} = 'rejected' THEN 1
+                ELSE 0 
+              END`,
+            ),
+            desc(doctors.createdAt),
+          ],
+        }),
+      ])
 
-    return {
-      pagination: {
-        total: total[0]?.count ?? 0,
-        pages: Math.ceil((total[0]?.count ?? 0) / input.limit),
-      },
-      data,
+      return {
+        pagination: {
+          total: total[0]?.count ?? 0,
+          pages: Math.ceil((total[0]?.count ?? 0) / input.limit),
+        },
+        data,
+      }
+    } catch (error) {
+      console.error('Error in getDoctors procedure:', error)
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to fetch doctors',
+        cause: error,
+      })
     }
   })
+
 
 export const getDoctor = adminProcedure
   .input(z.object({ id: z.string() }))

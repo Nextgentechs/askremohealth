@@ -18,32 +18,46 @@ const isSpecialistRoute = createRouteMatcher([
   '/specialist/profile',
 ])
 
-export default clerkMiddleware(async (auth, req) => {
-  const { sessionClaims } = await auth()
+const TEST_ADMIN_EMAILS = ['kristinenyaga@gmail.com']
 
-  if (isProtectedRoute(req)) await auth.protect()
+export default clerkMiddleware(async (auth, req) => {
+  if (isProtectedRoute(req)) {
+    // ⛔️ Make sure to call protect() *before* calling auth()
+    await auth().protect()
+  }
+
+  const { sessionClaims } = await auth()
+  console.log(sessionClaims,sessionClaims)
 
   if (isSpecialistRoute(req)) {
-    if (sessionClaims?.metadata?.onboardingComplete) {
+    const onboardingComplete = sessionClaims?.metadata?.onboardingComplete
+
+    if (!onboardingComplete) {
       return NextResponse.redirect(
-        new URL('/specialist/onboarding/personal-details', req.url),
+        new URL('/specialist/onboarding/personal-details', req.url)
       )
     }
   }
 
   if (isAdminRoute(req)) {
-    const isAdmin = sessionClaims?.metadata?.role === 'admin'
-    if (isAdmin) {
-      return NextResponse.redirect(new URL('/', req.url))
+    // Already protected above, but double-check
+
+    const email = sessionClaims?.email
+    const isAdmin =
+      sessionClaims?.metadata?.role === 'admin' ||
+      TEST_ADMIN_EMAILS.includes(email)
+
+    if (!isAdmin) {
+      return NextResponse.redirect(new URL('/auth', req.url))
     }
   }
+
+  return NextResponse.next()
 })
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
     '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    // Always run for API routes
     '/(api|trpc)(.*)',
   ],
 }
