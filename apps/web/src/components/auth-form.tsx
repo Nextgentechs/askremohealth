@@ -28,7 +28,7 @@ import {
   FormMessage,
 } from './ui/form'
 import { InputOTP, InputOTPGroup, InputOTPSlot } from './ui/input-otp'
-
+import { useRouter } from 'next/navigation'
 export default function AuthForm() {
   const [currentStep, setCurrentStep] = useState<'login' | 'signup' | 'otp'>(
     'login',
@@ -85,7 +85,9 @@ function Login({
   })
   const { signIn, setActive, isLoaded } = useSignIn()
   const params = useSearchParams()
-  const redirectUrl = params.get('redirect_url') ?? '/'
+  const redirectUrl = params.get('redirect_url') ?? '/admin/doctors'
+  const router = useRouter()
+
 
   function signInWith(strategy: OAuthStrategy) {
     return signIn
@@ -101,6 +103,7 @@ function Login({
   }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    console.log('logging in')
     e.preventDefault()
     setIsLoading(true)
     if (!isLoaded) {
@@ -112,12 +115,19 @@ function Login({
         identifier: loginForm.email,
         password: loginForm.password,
       })
+      console.log('signInAttempt', signInAttempt)
       if (signInAttempt?.status === 'complete') {
+        console.log('redirecturl', redirectUrl)
         await setActive({
           session: signInAttempt.createdSessionId,
-          redirectUrl: redirectUrl,
         })
+
+        // ✅ Force hard reload to sync session server-side
+        window.location.href = redirectUrl
+        return
       }
+
+
     } catch (error) {
       console.error(error)
       toast({

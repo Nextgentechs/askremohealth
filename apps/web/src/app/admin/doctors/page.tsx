@@ -10,19 +10,22 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@web/components/ui/breadcrumb'
+import { auth } from '@clerk/nextjs/server'
 
-export default async function page({
-  searchParams,
-}: {
-  searchParams: Promise<{ page: string }>
-}) {
-  const pageParam = Number((await searchParams).page)
+export default async function Page({ searchParams }: { searchParams?: Record<string, string> }) {
+  const pageParam = Number(searchParams?.page)
   const page = !isNaN(pageParam) && pageParam > 0 ? pageParam : 1
 
-  const data = await api.admin.getDoctors({
-    page,
-    limit: 15,
-  })
+  let data
+  try {
+    data = await api.admin.getDoctors({ page, limit: 15 })
+  } catch (error) {
+    console.error('Error in admin/doctors page:', error)
+    throw error
+  }
+  const { userId } = auth()
+  console.log('userId', userId) // should NOT be null
+
   return (
     <div className="flex flex-col gap-8">
       <Breadcrumb>

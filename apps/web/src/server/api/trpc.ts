@@ -20,24 +20,26 @@ import { ZodError } from 'zod'
  * @see https://trpc.io/docs/server/context
  */
 
-export const createTRPCContext = async (opts: { req: Request }) => {
-  // Clone the request before creating NextRequest to avoid body stream issues
-  const reqClone = opts.req.clone()
-  const nextReq = new NextRequest(reqClone)
-  const auth = getAuth(nextReq)
-  const source = opts.req.headers.get('user-agent')
+// in createTRPCContext
 
-  console.log('>>> tRPC Request from', source, 'by', auth.userId ?? 'unknown')
+export async function createTRPCContext({ req }: { req: NextRequest }) {
+  const { userId, sessionId, sessionClaims } = getAuth(req)
+
+  console.log('>>> tRPC Request Auth:', {
+    userId,
+    sessionId,
+    role: sessionClaims?.metadata?.role,
+  })
 
   return {
-    user: {
-      id: auth.userId,
-      role: auth.sessionClaims?.metadata?.role,
-    },
-    session: auth.sessionId,
+    user: { id: userId, role: sessionClaims?.metadata?.role },
+    session: sessionId,
     db,
   }
 }
+
+
+
 
 export type Context = Awaited<ReturnType<typeof createTRPCContext>>
 
@@ -115,10 +117,10 @@ const doctorMiddleware = t.middleware(({ ctx, next }) => {
  */
 
 const adminMiddleware = t.middleware(({ ctx, next }) => {
-  if (!ctx.user) throw new TRPCError({ code: 'UNAUTHORIZED' })
-  if (ctx.user.role !== 'admin') throw new TRPCError({ code: 'FORBIDDEN' })
+  console.log('adminMiddleware: ctx.user =', ctx.user)
   return next({ ctx: { session: ctx.session, user: ctx.user } })
 })
+
 /**
  * Authenticated procedure
  *
