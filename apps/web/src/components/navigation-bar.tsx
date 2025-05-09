@@ -269,11 +269,12 @@ export default function NavigationBar() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Link href={option.href ?? '#'} legacyBehavior passHref>
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  {option.label}
-                </NavigationMenuLink>
-              </Link>
+                <Link href={option.href ?? '#'}>
+                  <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                    <span>{option.label}</span>
+                  </NavigationMenuLink>
+                </Link>
+
             )}
           </NavigationMenuItem>
         ))}
