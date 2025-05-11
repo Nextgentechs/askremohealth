@@ -1,4 +1,4 @@
-'use client'
+/*'use client'
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@web/components/ui/button"
@@ -99,4 +99,4 @@ export default function ArticleForm() {
             </Card>
         </div>
     )
-}
+}*/

@@ -5,6 +5,7 @@ import { Button } from '@web/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import Image from 'next/image'
 import React from 'react'
 
 interface Article {
@@ -14,6 +15,10 @@ interface Article {
     createdAt: Date
     publishedAt: Date | null
     updatedAt: Date | null
+    image?: {
+        url: string
+        path: string
+    } | null
 }
 
 export default function ArticlePage({ params }: { params: Promise<{ id: string }> }) {
@@ -45,6 +50,18 @@ export default function ArticlePage({ params }: { params: Promise<{ id: string }
                         : 'Not published'}
                 </p>
             </div>
+            {article.image?.url && (
+                <div className="mb-8">
+                    <Image
+                        src={article.image.url}
+                        alt={article.title}
+                        width={800}
+                        height={400}
+                        className="object-cover w-full rounded-lg"
+                        priority
+                    />
+                </div>
+            )}
             <div className="prose prose-lg dark:prose-invert">
                 <p>{article.content}</p>
             </div>
