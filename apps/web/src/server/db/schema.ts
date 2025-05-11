@@ -241,3 +241,15 @@ export const articles = pgTable('articles', {
   publishedAt: timestamp('published_at'),
   updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
 })
+
+export const article_images = pgTable('article_images', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  articleId: uuid('article_id')
+      .notNull()
+      .unique()
+      .references(() => articles.id, { onDelete: 'cascade' }),
+  url: varchar('url').notNull(),
+  path: varchar('path').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
+})

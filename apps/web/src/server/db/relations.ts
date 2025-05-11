@@ -12,6 +12,8 @@ import {
   subSpecialties,
   reviews,
   appointmentAttachments,
+  articles,
+  article_images,
 } from './schema'
 
 export const doctorRelations = relations(doctors, ({ one, many }) => ({
@@ -120,3 +122,17 @@ export const profilePictureRelations = relations(
     }),
   }),
 )
+
+export const articleRelations = relations(articles, ({ one }) => ({
+  image: one(article_images, {
+    fields: [articles.id],
+    references: [article_images.articleId],
+  }),
+}))
+
+export const articleImageRelations = relations(article_images, ({ one }) => ({
+  article: one(articles, {
+    fields: [article_images.articleId],
+    references: [articles.id],
+  }),
+}))
