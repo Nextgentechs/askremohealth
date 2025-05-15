@@ -67,6 +67,7 @@ export const users = pgTable('user', {
   firstName: varchar('first_name').notNull(),
   lastName: varchar('last_name').notNull(),
   email: varchar('email'),
+  phone: varchar('phone').unique(),
   password: varchar('password').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at')
@@ -80,10 +81,7 @@ export const patients = pgTable('patient', {
   userId: varchar('user_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
-  firstName: varchar('first_name').notNull(),
-  lastName: varchar('last_name').notNull(),
-  email: varchar('email'),
-  phone: varchar('phone').unique(),
+  
   emergencyContact: varchar('emergency_contact'),
   lastAppointment: timestamp('last_appointment'),
   dob: timestamp('dob'),
@@ -99,10 +97,6 @@ export const doctors = pgTable('doctor', {
   userId: varchar('user_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
-  firstName: varchar('first_name').notNull(),
-  lastName: varchar('last_name').notNull(),
-  email: varchar('email'),
-  phone: varchar('phone').unique(),
   specialty: uuid('specialty_id').references(() => specialties.id, {
     onDelete: 'set null',
   }),
