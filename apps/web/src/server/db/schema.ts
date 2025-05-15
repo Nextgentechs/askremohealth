@@ -1,4 +1,4 @@
-import { type InferSelectModel } from 'drizzle-orm'
+import { sql, type InferSelectModel } from 'drizzle-orm'
 import {
   integer,
   jsonb,
@@ -62,8 +62,24 @@ export const subSpecialties = pgTable('sub_specialty', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
 })
 
+export const users = pgTable('user', {
+  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  firstName: varchar('first_name').notNull(),
+  lastName: varchar('last_name').notNull(),
+  email: varchar('email'),
+  password: varchar('password').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .notNull()
+    .$onUpdate(() => new Date()),
+})
+export type User = InferSelectModel<typeof users>
+
 export const patients = pgTable('patient', {
   id: varchar('id').primaryKey().notNull(),
+  userId: varchar('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
   firstName: varchar('first_name').notNull(),
   lastName: varchar('last_name').notNull(),
   email: varchar('email'),
@@ -80,6 +96,9 @@ export type Patient = InferSelectModel<typeof patients>
 
 export const doctors = pgTable('doctor', {
   id: varchar('id').primaryKey().notNull(),
+  userId: varchar('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
   firstName: varchar('first_name').notNull(),
   lastName: varchar('last_name').notNull(),
   email: varchar('email'),

@@ -1,10 +1,11 @@
-import { fetchRequestHandler } from '@trpc/server/adapters/fetch'
 import { appRouter } from 'src/server/api'
 import { createTRPCContext } from 'src/server/api/trpc'
+import { fetchRequestHandler } from '@trpc/server/adapters/fetch'
 
-export const runtime = 'edge' // Optional: only if you're using the edge runtime
+export const runtime = 'nodejs';
 
-async function handler(req: Request): Promise<Response> {
+
+const handler = (req: Request) => {
   return fetchRequestHandler({
     endpoint: '/api/trpc',
     req,
@@ -16,8 +17,8 @@ async function handler(req: Request): Promise<Response> {
   })
 }
 
-export const GET = handler
-export const POST = handler
+export { handler as GET, handler as POST }
+
 
 // Optional CORS preflight handler if calling tRPC from another domain
 export async function OPTIONS() {

@@ -1,6 +1,4 @@
 'use client'
-import { useSignIn, useSignUp } from '@clerk/nextjs'
-import { type OAuthStrategy } from '@clerk/types'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@web/components/ui/button'
 import {
@@ -28,7 +26,9 @@ import {
   FormMessage,
 } from './ui/form'
 import { InputOTP, InputOTPGroup, InputOTPSlot } from './ui/input-otp'
-import { useRouter } from 'next/navigation'
+import { api } from '@web/trpc/react'
+import { TRPCClientError } from '@trpc/client'
+
 export default function AuthForm() {
   const [currentStep, setCurrentStep] = useState<'login' | 'signup' | 'otp'>(
     'login',
@@ -83,57 +83,39 @@ function Login({
     email: '',
     password: '',
   })
-  const { signIn, setActive, isLoaded } = useSignIn()
-  const params = useSearchParams()
-  const redirectUrl = params.get('redirect_url') ?? '/admin/doctors'
-  const router = useRouter()
 
 
-  function signInWith(strategy: OAuthStrategy) {
-    return signIn
-      ?.authenticateWithRedirect({
-        strategy,
-        redirectUrl: '/auth/sso-callback',
-        redirectUrlComplete: redirectUrl,
-      })
-      .catch((err) => {
-        console.log(err.errors)
-        console.error(err, null, 2)
-      })
-  }
+
+  const signInMutation = api.auth.signIn.useMutation()
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    console.log('logging in')
     e.preventDefault()
     setIsLoading(true)
-    if (!isLoaded) {
-      return
-    }
-
     try {
-      const signInAttempt = await signIn?.create({
-        identifier: loginForm.email,
+      const result = await signInMutation.mutateAsync({
+        email: loginForm.email,
         password: loginForm.password,
       })
-      console.log('signInAttempt', signInAttempt)
-      if (signInAttempt?.status === 'complete') {
-        console.log('redirecturl', redirectUrl)
-        await setActive({
-          session: signInAttempt.createdSessionId,
-        })
+      console.log('Login successful', result)
 
-        // ✅ Force hard reload to sync session server-side
-        window.location.href = redirectUrl
-        return
-      }
-
+      // TODO: Redirect or show OTP step if needed
+      setCurrentStep('otp')
 
     } catch (error) {
       console.error(error)
+
+      let description = 'An error occurred'
+
+      if (error instanceof TRPCClientError) {
+        description = error.message
+        console.log('error',description)
+      } else if (error instanceof Error) {
+        description = error.message
+      }
+
       toast({
         title: 'Error',
-        description:
-          error instanceof Error ? error.message : 'An error occurred',
+        description,
         color: 'destructive',
       })
     } finally {
@@ -156,7 +138,6 @@ function Login({
                   type="button"
                   variant="outline"
                   className="w-full"
-                  onClick={() => signInWith('oauth_google')}
                 >
                   <Google className="mr-2 h-4 w-4" />
                   Login with Google
@@ -244,62 +225,75 @@ function SignUp({
     email: '',
     password: '',
   })
-  const { isLoaded, signUp } = useSignUp()
-  const { signIn } = useSignIn()
-  const params = useSearchParams()
-  const redirectUrl = params.get('redirect_url') ?? '/appointments'
-  if (!signIn) {
-    return null
-  }
 
-  function signInWith(strategy: OAuthStrategy) {
-    return signIn
-      ?.authenticateWithRedirect({
-        strategy,
-        redirectUrl: '/auth/sso-callback',
-        redirectUrlComplete: redirectUrl,
-      })
-      .catch((err) => {
-        console.log(err.errors)
-        console.error(err, null, 2)
-      })
-  }
+
+  const signUpMutation = api.auth.signUp.useMutation()
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setIsLoading(true)
-    if (!isLoaded) {
-      return
-    }
 
     try {
-      await signUp.create({
+      const result = await signUpMutation.mutateAsync({
+        email: signUpForm.email,
+        password: signUpForm.password,
         firstName: signUpForm.firstName,
         lastName: signUpForm.lastName,
-        emailAddress: signUpForm.email,
-        password: signUpForm.password,
-        redirectUrl: redirectUrl,
       })
+      console.log('Sign up successful', result);
 
-      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
-      setCurrentStep('otp')
+      toast({
+        title: 'Success',
+        description: 'Sign up was successful!',
+        duration: 3000, // optional
+        variant: 'default', // or 'success' if you're using variants
+      });
+
+      setCurrentStep('otp');
+
+
     } catch (error) {
-      if (error instanceof Error) {
+      if (error instanceof TRPCClientError) {
+        // Try to extract Zod field errors
+        const zodError = error?.data?.zodError
+        const fieldErrors = zodError?.fieldErrors
+
+        if (fieldErrors) {
+          // Flatten all error messages into a string
+          const allMessages = Object.entries(fieldErrors)
+            .map(([field, errors]) => `${field}: ${errors?.join(', ')}`)
+            .join('\n')
+
+          console.error("Zod field validation errors:", fieldErrors)
+
+          toast({
+            title: 'Validation Error',
+            description: allMessages,
+            variant: 'destructive',
+          })
+          return
+        }
+
+        // Fallback if no zodError exists
         toast({
           title: 'Error',
           description: error.message,
+          variant: 'destructive',
         })
       } else {
         toast({
-          title: 'Error',
-          description: 'An error occurred',
-          color: 'destructive',
+          title: 'Unknown Error',
+          description: 'An unexpected error occurred.',
+          variant: 'destructive',
         })
+        console.error("Unknown error during sign up:", error)
       }
-    } finally {
+    }
+    finally {
       setIsLoading(false)
     }
   }
+
 
   return (
     <div className="flex flex-col gap-6">
@@ -435,25 +429,12 @@ function InputOTPForm() {
     },
   })
   const { toast } = useToast()
-  const { isLoaded, signUp, setActive } = useSignUp()
   const params = useSearchParams()
-  const redirectUrl = params.get('redirect_url') ?? '/appointments'
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    if (!isLoaded) return
     setIsLoading(true)
     try {
-      const signUpAttempt = await signUp.attemptEmailAddressVerification({
-        code: data.pin,
-      })
 
-      if (signUpAttempt.status === 'complete') {
-        setActive({ session: signUpAttempt.createdSessionId, redirectUrl })
-        toast({
-          title: 'Account created',
-          description: 'Redirecting...',
-        })
-      }
     } catch (error) {
       console.error(error)
     } finally {
