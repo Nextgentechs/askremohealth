@@ -8,6 +8,7 @@ import {
   uuid,
   varchar,
   boolean,
+  text,
 } from 'drizzle-orm/pg-core'
 
 export const roleEnum = pgEnum('role', ['patient', 'doctor', 'admin'])
@@ -63,7 +64,7 @@ export const subSpecialties = pgTable('sub_specialty', {
 })
 
 export const users = pgTable('user', {
-  id: varchar('id').primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar('id').primaryKey().notNull().default(sql`gen_random_uuid()`),
   firstName: varchar('first_name').notNull(),
   lastName: varchar('last_name').notNull(),
   email: varchar('email'),
@@ -237,9 +238,31 @@ export const reviews = pgTable('review', {
 
 export const notifications = pgTable('notification', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: varchar('user_id').notNull(),
+  userId: varchar('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   title: varchar('title').notNull(),
   message: varchar('message').notNull(),
   isRead: boolean('is_read').default(false),
   createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+export const articles = pgTable('articles', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  authorId: varchar('author_id').notNull(),
+  title: varchar('title').notNull(),
+  content: text('content').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  publishedAt: timestamp('published_at'),
+  updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
+})
+
+export const article_images = pgTable('article_images', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  articleId: uuid('article_id')
+      .notNull()
+      .unique()
+      .references(() => articles.id, { onDelete: 'cascade' }),
+  url: varchar('url').notNull(),
+  path: varchar('path').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
 })
