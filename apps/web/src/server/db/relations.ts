@@ -60,6 +60,7 @@ export const userRelations = relations(users, ({ one,many }) => ({
     references: [patients.userId],
   }),
   notifications: many(notifications),
+  articles: many(articles),
 }));
 
 
@@ -151,6 +152,10 @@ export const articleRelations = relations(articles, ({ one }) => ({
   image: one(article_images, {
     fields: [articles.id],
     references: [article_images.articleId],
+  }),
+   author: one(users, {
+    fields: [articles.authorId],
+    references: [users.id],
   }),
 }))
 
