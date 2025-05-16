@@ -64,3 +64,10 @@ export const getArticleById = publicProcedure
         log("Article found:", article)
         return article
     })
+
+export const getLatestArticles = publicProcedure
+    .input(z.object({ limit: z.number().int().positive().max(100) }))
+    .query(async ({ input }) => {
+        log("Fetching latest articles with limit:", input.limit)
+        return await ArticleService.getLatestArticles(input)
+    })
