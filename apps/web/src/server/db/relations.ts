@@ -12,7 +12,10 @@ import {
   subSpecialties,
   reviews,
   appointmentAttachments,
-  users
+  users,
+  articles,
+  article_images,
+  notifications
 } from './schema'
 
 export const doctorRelations = relations(doctors, ({ one, many }) => ({
@@ -47,7 +50,7 @@ export const patientRelations = relations(patients, ({ many,one }) => ({
 
 }))
 
-export const userRelations = relations(users, ({ one }) => ({
+export const userRelations = relations(users, ({ one,many }) => ({
   doctor: one(doctors, {
     fields: [users.id],
     references: [doctors.userId],
@@ -56,6 +59,7 @@ export const userRelations = relations(users, ({ one }) => ({
     fields: [users.id],
     references: [patients.userId],
   }),
+  notifications: many(notifications),
 }));
 
 
@@ -142,3 +146,17 @@ export const profilePictureRelations = relations(
     }),
   }),
 )
+
+export const articleRelations = relations(articles, ({ one }) => ({
+  image: one(article_images, {
+    fields: [articles.id],
+    references: [article_images.articleId],
+  }),
+}))
+
+export const articleImageRelations = relations(article_images, ({ one }) => ({
+  article: one(articles, {
+    fields: [article_images.articleId],
+    references: [articles.id],
+  }),
+}))
