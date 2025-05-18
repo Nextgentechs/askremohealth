@@ -85,7 +85,6 @@ function Login({
   })
 
 
-
   const signInMutation = api.auth.signIn.useMutation()
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -96,8 +95,13 @@ function Login({
         email: loginForm.email,
         password: loginForm.password,
       })
-      console.log('Login successful', result)
-
+      toast({
+        title: 'Success',
+        description: 'Sign up was successful!',
+        duration: 3000,
+        variant: 'default',
+      });
+      console.log('result',result)
       setCurrentStep('otp')
 
     } catch (error) {
