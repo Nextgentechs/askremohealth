@@ -82,11 +82,11 @@ static async signIn({ email, password }: SignInInput, ctx: Context) {
     }
 
     const sessionUser = { id: user.id, email: user.email };
-    const sessionToken = await createUserSession(sessionUser, ctx.cookies);
+    const sessionToken = await createUserSession(sessionUser);
 
     console.log('sessionToken',sessionToken)
 
-    return { success: true, userId: user.id };
+    return { success: true, userId: user.id,sessionToken };
   } catch (error) {
     console.error('Error in signIn:', error);
     // If it's already a TRPCError, rethrow it
