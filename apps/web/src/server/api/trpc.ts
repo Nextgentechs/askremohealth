@@ -17,18 +17,13 @@ export async function createTRPCContext(opts: { req: Request }) {
   const sessionToken = parsedCookies['session']
   const user = sessionToken ? await getUserFromToken(sessionToken) : null
 
-  const cookies = {
-    get: (key: string) => {
-      const value = parsedCookies[key]
-      return value ? { name: key, value } : undefined
-    },
-    set: (_key: string, _value: string, _options: any) => {
-      console.warn("Set cookie not supported in Edge runtime.")
-    },
-    delete: (_key: string) => {
-      console.warn("Delete cookie not supported in Edge runtime.")
-    },
+const cookies = {
+  get: (key: string) => {
+    const value = parsedCookies[key]
+    return value ? { name: key, value } : undefined
   }
+}
+
 
   return {
     req,

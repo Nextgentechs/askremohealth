@@ -96,7 +96,7 @@ function Login({
         password: loginForm.password,
       })
 
-      console.log('loginForm',loginform)
+      console.log('loginForm',loginForm)
       // toast({
       //   title: 'Success',
       //   description: 'Sign up was successful!',
