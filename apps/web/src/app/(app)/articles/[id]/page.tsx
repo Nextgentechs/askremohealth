@@ -62,9 +62,10 @@ export default function ArticlePage({ params }: { params: Promise<{ id: string }
                     />
                 </div>
             )}
-            <div className="prose prose-lg dark:prose-invert">
-                <p>{article.content}</p>
-            </div>
+            <div
+                className="prose prose-lg dark:prose-invert"
+                dangerouslySetInnerHTML={{ __html: article.content }}
+            />
         </article>
     )
 }
