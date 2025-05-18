@@ -67,17 +67,22 @@ static async signIn({ email, password }: SignInInput, ctx: Context) {
     });
 
     if (!user) {
+      console.warn(`SignIn attempt with unknown email: ${email}`)
       throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid credentials' });
     }
+    
+
 
     const isValidPassword = await bcrypt.compare(password, user.password);
-
     if (!isValidPassword) {
+      console.warn(`SignIn failed due to incorrect password for email: ${email}`)
       throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid credentials' });
     }
 
     const sessionUser = { id: user.id, email: user.email };
     const sessionToken = await createUserSession(sessionUser, ctx.cookies);
+
+    console.log('sessionToken',sessionToken)
 
     return { success: true, userId: user.id };
   } catch (error) {

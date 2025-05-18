@@ -98,17 +98,17 @@ function Login({
       })
       console.log('Login successful', result)
 
-      // TODO: Redirect or show OTP step if needed
       setCurrentStep('otp')
 
     } catch (error) {
-      console.error(error)
+      console.error('Login error:', error)
 
       let description = 'An error occurred'
 
       if (error instanceof TRPCClientError) {
         description = error.message
-        console.log('error',description)
+        console.log('TRPC error code:', error.data?.code)
+        console.log('Full error data:', error.data)
       } else if (error instanceof Error) {
         description = error.message
       }
@@ -245,8 +245,8 @@ function SignUp({
       toast({
         title: 'Success',
         description: 'Sign up was successful!',
-        duration: 3000, // optional
-        variant: 'default', // or 'success' if you're using variants
+        duration: 3000, 
+        variant: 'default', 
       });
 
       setCurrentStep('otp');
