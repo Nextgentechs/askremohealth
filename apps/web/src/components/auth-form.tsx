@@ -95,12 +95,14 @@ function Login({
         email: loginForm.email,
         password: loginForm.password,
       })
-      toast({
-        title: 'Success',
-        description: 'Sign up was successful!',
-        duration: 3000,
-        variant: 'default',
-      });
+
+      console.log('loginForm',loginform)
+      // toast({
+      //   title: 'Success',
+      //   description: 'Sign up was successful!',
+      //   duration: 3000,
+      //   variant: 'default',
+      // });
       console.log('result',result)
       setCurrentStep('otp')
 

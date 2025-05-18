@@ -66,6 +66,8 @@ static async signIn({ email, password }: SignInInput, ctx: Context) {
       where: { email }
     });
 
+    console.log('user',user)
+
     if (!user) {
       console.warn(`SignIn attempt with unknown email: ${email}`)
       throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid credentials' });
