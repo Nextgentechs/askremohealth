@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@web/components/ui/car
 import { api } from '@web/trpc/react'
 import Link from 'next/link'
 import { useState } from 'react'
+import Image from 'next/image'
 
 interface Article {
     id: string
@@ -14,6 +15,10 @@ interface Article {
     createdAt: Date
     publishedAt: Date | null
     updatedAt: Date | null
+    image?: {
+        url: string
+        path: string
+    } | null
 }
 
 interface ArticleListResponse {
@@ -54,6 +59,21 @@ export default function ArticlesPage() {
                             <CardTitle>{article.title}</CardTitle>
                         </CardHeader>
                         <CardContent>
+                            <div className="relative h-48 w-full overflow-hidden rounded-md mb-4">
+                                {article.image?.url ? (
+                                    <Image
+                                        src={article.image.url}
+                                        alt={article.title}
+                                        width={450}
+                                        height={350}
+                                        className="h-full w-full object-cover rounded-sm"
+                                    />
+                                ) : (
+                                    <div className="h-full w-full bg-gray-200 flex items-center justify-center rounded-sm">
+                                        <span className="text-gray-500">No image</span>
+                                    </div>
+                                )}
+                            </div>
                             <p className="text-sm text-gray-600">
                                 Published: {article.publishedAt ? new Date(article.publishedAt).toLocaleDateString() : 'Not published'}
                             </p>
