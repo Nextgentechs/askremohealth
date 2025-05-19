@@ -1,11 +1,11 @@
 // server/services/auth.ts
-import { db } from "../db";
-import { TRPCError } from "@trpc/server";
+import { TRPCError } from '@trpc/server'
 import bcrypt from 'bcrypt'
+import { eq } from 'drizzle-orm'
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { createUserSession } from "../lib/session";
-import { users } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { db } from '../db'
+import { users } from '../db/schema'
+import { createUserSession } from '../lib/session'
 
 type Context = {
   req: NextApiRequest
@@ -17,9 +17,9 @@ type Context = {
       options: {
         secure?: boolean
         httpOnly?: boolean
-        sameSite?: "strict" | "lax"
+        sameSite?: 'strict' | 'lax'
         expires?: number
-      }
+      },
     ) => void
   }
 }
@@ -32,68 +32,79 @@ type SignUpInput = {
 }
 
 type SignInInput = {
-  email: string;
-  password: string;
-};
+  email: string
+  password: string
+}
 
 export class AuthService {
+  static async signUp({ email, password, firstName, lastName }: SignUpInput) {
+    try {
+      const existing = await db.query.users.findFirst({
+        where: eq(users.email, email),
+      })
 
-static async signUp({ email, password, firstName, lastName }: SignUpInput) {
+      if (existing) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'User already exists',
+        })
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10)
+
+      await db
+        .insert(users)
+        .values({ email, password: hashedPassword, firstName, lastName })
+
+      return { success: true }
+    } catch (error) {
+      console.error('Error in signUp:', error)
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to create user',
+      })
+    }
+  }
+
+  static async signIn({ email, password }: SignInInput, ctx: Context) {
   try {
-    const existing = await db.query.users.findFirst({
+    const user = await db.query.users.findFirst({
       where: eq(users.email, email),
     });
 
-
-    if (existing) {
-      throw new TRPCError({ code: 'CONFLICT', message: 'User already exists' });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    await db.insert(users).values({ email, password: hashedPassword, firstName, lastName });
-
-    return { success: true };
-  } catch (error) {
-    console.error('Error in signUp:', error);
-    throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to create user' });
-  }
-}
-
-static async signIn({ email, password }: SignInInput, ctx: Context) {
-  try {
-    const user = await db.query.users.findFirst({
-      where: { email }
-    });
-
-    console.log('user',user)
+    console.log('user', user);
 
     if (!user) {
-      console.warn(`SignIn attempt with unknown email: ${email}`)
-      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid credentials' });
+      console.warn(`SignIn attempt with unknown email: ${email}`);
+      throw new TRPCError({
+        code: 'UNAUTHORIZED',
+        message: 'Invalid credentials',
+      });
     }
-    
-
 
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
-      console.warn(`SignIn failed due to incorrect password for email: ${email}`)
-      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid credentials' });
+      console.warn(`SignIn failed due to incorrect password for email: ${email}`);
+      throw new TRPCError({
+        code: 'UNAUTHORIZED',
+        message: 'Invalid credentials',
+      });
     }
 
-    const sessionUser = { id: user.id, email: user.email };
-    const sessionToken = await createUserSession(sessionUser);
+    const sessionUser = { id: user.id, email: user.email ?? '' };
+    await createUserSession(sessionUser, ctx.cookies);
 
-    console.log('sessionToken',sessionToken)
-
-    return { success: true, userId: user.id,sessionToken };
+    return { success: true, userId: user.id };
   } catch (error) {
     console.error('Error in signIn:', error);
     // If it's already a TRPCError, rethrow it
     if (error instanceof TRPCError) {
       throw error;
     }
-    throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to sign in' });
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'Failed to sign in',
+    });
   }
 }
 

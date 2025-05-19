@@ -1,5 +1,6 @@
 'use client'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { TRPCClientError } from '@trpc/client'
 import { Button } from '@web/components/ui/button'
 import {
   Card,
@@ -11,6 +12,7 @@ import {
 import { Input } from '@web/components/ui/input'
 import { Label } from '@web/components/ui/label'
 import { toast, useToast } from '@web/hooks/use-toast'
+import { api } from '@web/trpc/react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Loader } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
@@ -26,8 +28,6 @@ import {
   FormMessage,
 } from './ui/form'
 import { InputOTP, InputOTPGroup, InputOTPSlot } from './ui/input-otp'
-import { api } from '@web/trpc/react'
-import { TRPCClientError } from '@trpc/client'
 
 export default function AuthForm() {
   const [currentStep, setCurrentStep] = useState<'login' | 'signup' | 'otp'>(
@@ -77,13 +77,12 @@ function Login({
   setCurrentStep,
 }: {
   setCurrentStep: (step: 'login' | 'signup' | 'otp') => void
-}) {
+}): JSX.Element {
   const [isLoading, setIsLoading] = useState(false)
   const [loginForm, setLoginForm] = useState({
     email: '',
     password: '',
   })
-
 
   const signInMutation = api.auth.signIn.useMutation()
 
@@ -96,16 +95,19 @@ function Login({
         password: loginForm.password,
       })
 
-      console.log('loginForm',loginForm)
-      // toast({
-      //   title: 'Success',
-      //   description: 'Sign up was successful!',
-      //   duration: 3000,
-      //   variant: 'default',
-      // });
-      console.log('result',result)
-      setCurrentStep('otp')
-
+      console.log('loginForm', loginForm)
+      toast({
+        title: 'Success',
+        description: 'Sign up was successful!',
+        duration: 3000,
+        variant: 'default',
+      })
+      console.log('result', result)
+      // Replace with your actual logic (e.g. router.push)
+      toast({
+        title: 'Success',
+        description: 'Logged in successfully!',
+      })
     } catch (error) {
       console.error('Login error:', error)
 
@@ -140,11 +142,7 @@ function Login({
           <form onSubmit={onSubmit}>
             <div className="grid gap-6">
               <div className="flex flex-col gap-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                >
+                <Button type="button" variant="outline" className="w-full">
                   <Google className="mr-2 h-4 w-4" />
                   Login with Google
                 </Button>
@@ -232,7 +230,6 @@ function SignUp({
     password: '',
   })
 
-
   const signUpMutation = api.auth.signUp.useMutation()
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -246,18 +243,16 @@ function SignUp({
         firstName: signUpForm.firstName,
         lastName: signUpForm.lastName,
       })
-      console.log('Sign up successful', result);
+      console.log('Sign up successful', result)
 
       toast({
         title: 'Success',
         description: 'Sign up was successful!',
-        duration: 3000, 
-        variant: 'default', 
-      });
+        duration: 3000,
+        variant: 'default',
+      })
 
-      setCurrentStep('otp');
-
-
+      setCurrentStep('otp')
     } catch (error) {
       if (error instanceof TRPCClientError) {
         // Try to extract Zod field errors
@@ -267,10 +262,10 @@ function SignUp({
         if (fieldErrors) {
           // Flatten all error messages into a string
           const allMessages = Object.entries(fieldErrors)
-            .map(([field, errors]) => `${field}: ${errors?.join(', ')}`)
+            .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : ''}`)
             .join('\n')
 
-          console.error("Zod field validation errors:", fieldErrors)
+          console.error('Zod field validation errors:', fieldErrors)
 
           toast({
             title: 'Validation Error',
@@ -292,14 +287,12 @@ function SignUp({
           description: 'An unexpected error occurred.',
           variant: 'destructive',
         })
-        console.error("Unknown error during sign up:", error)
+        console.error('Unknown error during sign up:', error)
       }
-    }
-    finally {
+    } finally {
       setIsLoading(false)
     }
   }
-
 
   return (
     <div className="flex flex-col gap-6">
@@ -440,7 +433,6 @@ function InputOTPForm() {
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     setIsLoading(true)
     try {
-
     } catch (error) {
       console.error(error)
     } finally {
