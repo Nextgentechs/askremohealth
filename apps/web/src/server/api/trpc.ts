@@ -2,101 +2,62 @@
 import { initTRPC, TRPCError } from '@trpc/server'
 import superjson from 'superjson'
 import { ZodError } from 'zod'
-import { parse, serialize } from 'cookie'
-import { db } from '../db'
-import { getUserFromToken } from '../utils'
+import { serialize } from 'cookie'
+import type { CreateNextContextOptions } from "@trpc/server/adapters/next"
 
-/**
- * CONTEXT (Edge-Compatible)
- *
- * Expects an object with:
- *  - req: Request (Fetch API Request)
- *  - resHeaders: Headers (mutable Headers object from response)
- */
-export async function createTRPCContext(opts: { req: Request; resHeaders: Headers }) {
-  const { req, resHeaders } = opts
-
-  // Parse incoming cookies from request
-  const cookieHeader = req.headers.get('cookie') ?? ''
-  const parsedCookies = parse(cookieHeader)
-
-  // Collect multiple Set-Cookie headers safely
-  // Headers API doesn't allow multiple 'Set-Cookie' entries,
-  // so we collect cookies in an array and set all at once after context is created.
-  const setCookieArray: string[] = []
-
-  const cookies = {
-    get: (key: string) => {
-      const value = parsedCookies[key]
-      return value ? { name: key, value } : undefined
-    },
-    set: (
-      key: string,
-      value: string,
-      options: {
-        secure?: boolean
-        httpOnly?: boolean
-        sameSite?: 'strict' | 'lax'
-        expires?: number
-      } = {}
-    ) => {
-      const cookieStr = serialize(key, value, {
-        path: '/',
-        httpOnly: options.httpOnly ?? true,
-        secure: options.secure ?? true,
-        sameSite: options.sameSite ?? 'lax',
-        expires: options.expires ? new Date(options.expires) : undefined,
-      })
-      setCookieArray.push(cookieStr)
-    },
-    delete: (key: string) => {
-      const cookieStr = serialize(key, '', {
-        path: '/',
-        maxAge: 0,
-      })
-      setCookieArray.push(cookieStr)
-    },
-    // helper to apply collected cookies to response headers
-    applyToHeaders: () => {
-      if (setCookieArray.length === 0) return
-      // Set all cookies by calling resHeaders.set multiple times is not allowed,
-      // so we use resHeaders.append if available or join with \n (rarely supported)
-      // Here we assume append is available:
-      setCookieArray.forEach(cookie => {
-        // Use resHeaders.append if available, otherwise fallback to set
-        if (typeof resHeaders.append === 'function') {
-          resHeaders.append('Set-Cookie', cookie)
-        } else {
-          // fallback: combine all cookies separated by newline (not standard but better than comma)
-          const prev = resHeaders.get('Set-Cookie')
-          if (prev) {
-            resHeaders.set('Set-Cookie', prev + '\n' + cookie)
-          } else {
-            resHeaders.set('Set-Cookie', cookie)
-          }
-        }
-      })
-    },
-  }
-
-  const sessionToken = parsedCookies['session']
-  const user = sessionToken ? await getUserFromToken(sessionToken) : null
-
+export function createContext({ req, res }: CreateNextContextOptions) {
   return {
     req,
-    cookies,
-    user,
-    session: user ? { ...user } : null,
-    db,
+    res,
+    cookies: {
+      set: (key: string, value: string, options: any) => {
+        // Multiple cookies? Merge headers carefully (handle multiple calls)
+        const existing = res.getHeader("Set-Cookie")
+        const cookie = serialize(key, value, options)
+        if (!existing) {
+          res.setHeader("Set-Cookie", cookie)
+        } else if (Array.isArray(existing)) {
+          res.setHeader("Set-Cookie", [...existing, cookie])
+        } else {
+          res.setHeader("Set-Cookie", [existing, cookie])
+        }
+      },
+      get: (key: string) => {
+        const cookies = req.headers.cookie
+        if (!cookies) return undefined
+        const parsed = Object.fromEntries(
+          cookies.split("; ").map((c) => {
+            const [k, v] = c.split("=")
+            return [k, v]
+          })
+        )
+        if (!parsed[key]) return undefined
+        return { name: key, value: parsed[key] }
+      },
+      delete: (key: string) => {
+        // Not fully needed for signIn but good to have
+        const cookie = serialize(key, "", {
+          maxAge: -1,
+          path: "/",
+        })
+        const existing = res.getHeader("Set-Cookie")
+        if (!existing) {
+          res.setHeader("Set-Cookie", cookie)
+        } else if (Array.isArray(existing)) {
+          res.setHeader("Set-Cookie", [...existing, cookie])
+        } else {
+          res.setHeader("Set-Cookie", [existing, cookie])
+        }
+      },
+    },
   }
 }
 
-export type Context = Awaited<ReturnType<typeof createTRPCContext>>
 
 /**
  * TRPC Initialization
  */
-const t = initTRPC.context<Context>().create({
+const t = initTRPC.context().create({
   transformer: superjson,
   errorFormatter({ shape, error }) {
     return {

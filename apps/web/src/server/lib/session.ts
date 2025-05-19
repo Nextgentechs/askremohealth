@@ -35,12 +35,13 @@ export async function createUserSession(
   user: UserSession,
   cookies: Pick<Cookies, "set">
 ) {
-  const sessionId = crypto.randomBytes(32).toString("hex") // shorter ID
+  const sessionId = crypto.randomBytes(32).toString("hex") 
   await redisClient.set(`session:${sessionId}`, JSON.stringify(sessionSchema.parse(user)), {
     ex: SESSION_EXPIRATION_SECONDS,
   })
 
   setCookie(sessionId, cookies)
+  console.log('session created successfully')
 }
 
 export function getUserFromSession(cookies: Pick<Cookies, "get">) {
@@ -102,7 +103,7 @@ function setCookie(sessionId: string, cookies: Pick<Cookies, "set">) {
 
 // Internal helper to get session from Redis
 async function getUserSessionById(sessionId: string) {
-  const rawUser = await redisClient.get(`session:${sessionId}`) as string | null
+  const rawUser = await redisClient.get(`session:${sessionId}`)
   if (!rawUser) return null
 
   const parsed = sessionSchema.safeParse(JSON.parse(rawUser))

@@ -94,6 +94,7 @@ export class AuthService {
     const sessionUser = { id: user.id, email: user.email ?? '' };
     await createUserSession(sessionUser, ctx.cookies);
 
+    console.log('sessionUser',sessionUser)
     return { success: true, userId: user.id };
   } catch (error) {
     console.error('Error in signIn:', error);
