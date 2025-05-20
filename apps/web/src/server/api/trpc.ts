@@ -2,62 +2,46 @@
 import { initTRPC, TRPCError } from '@trpc/server'
 import superjson from 'superjson'
 import { ZodError } from 'zod'
-import { serialize } from 'cookie'
-import type { CreateNextContextOptions } from "@trpc/server/adapters/next"
+import { redisClient } from '@web/redis/redis'
+import type { FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch'
+import { sessionSchema } from '../lib/session'
 
-export function createContext({ req, res }: CreateNextContextOptions) {
+
+export async function createContext({ req }: FetchCreateContextFnOptions) {
+  const cookieHeader = req.headers.get('cookie') ?? ''
+  const cookies = Object.fromEntries(cookieHeader.split('; ').map(c => {
+    const [k, v] = c.trim().split('=')
+    return [k, v]
+  }))
+
+  const sessionToken = cookies['session-id']
+
+  let user = null
+
+  if (sessionToken) {
+    const rawSession = await redisClient.get(`session:${sessionToken}`)
+    if (rawSession) {
+      const parsed = sessionSchema.safeParse(JSON.parse(rawSession))
+      if (parsed.success) {
+        user = parsed.data
+      }
+    }
+  }
+
   return {
     req,
-    res,
     cookies: {
-      set: (key: string, value: string, options: any) => {
-        // Multiple cookies? Merge headers carefully (handle multiple calls)
-        const existing = res.getHeader("Set-Cookie")
-        const cookie = serialize(key, value, options)
-        if (!existing) {
-          res.setHeader("Set-Cookie", cookie)
-        } else if (Array.isArray(existing)) {
-          res.setHeader("Set-Cookie", [...existing, cookie])
-        } else {
-          res.setHeader("Set-Cookie", [existing, cookie])
-        }
-      },
       get: (key: string) => {
-        const cookies = req.headers.cookie
-        if (!cookies) return undefined
-        const parsed = Object.fromEntries(
-          cookies.split("; ").map((c) => {
-            const [k, v] = c.split("=")
-            return [k, v]
-          })
-        )
-        if (!parsed[key]) return undefined
-        return { name: key, value: parsed[key] }
-      },
-      delete: (key: string) => {
-        // Not fully needed for signIn but good to have
-        const cookie = serialize(key, "", {
-          maxAge: -1,
-          path: "/",
-        })
-        const existing = res.getHeader("Set-Cookie")
-        if (!existing) {
-          res.setHeader("Set-Cookie", cookie)
-        } else if (Array.isArray(existing)) {
-          res.setHeader("Set-Cookie", [...existing, cookie])
-        } else {
-          res.setHeader("Set-Cookie", [existing, cookie])
-        }
-      },
+        const value = cookies[key]
+        return value ? { name: key, value } : undefined
+      }
     },
+    user,
   }
 }
 
 
-/**
- * TRPC Initialization
- */
-const t = initTRPC.context().create({
+const t = initTRPC.context<typeof createContext>().create({
   transformer: superjson,
   errorFormatter({ shape, error }) {
     return {
@@ -71,28 +55,27 @@ const t = initTRPC.context().create({
   },
 })
 
-/**
- * Middleware and Procedures
- */
+// Middleware
 const isAuthed = t.middleware(({ ctx, next }) => {
   if (!ctx.user) throw new TRPCError({ code: 'UNAUTHORIZED' })
   return next({ ctx: { ...ctx, user: ctx.user, session: ctx.session } })
 })
 
 const isDoctor = t.middleware(({ ctx, next }) => {
-  if (!ctx.user || ctx.user.role !== 'doctor') {
+  if (!ctx.user) {
     throw new TRPCError({ code: 'FORBIDDEN', message: 'Not a doctor' })
   }
   return next({ ctx })
 })
 
 const isAdmin = t.middleware(({ ctx, next }) => {
-  if (!ctx.user || ctx.user.role !== 'admin') {
+  if (!ctx.user ) {
     throw new TRPCError({ code: 'FORBIDDEN', message: 'Not an admin' })
   }
   return next({ ctx })
 })
 
+// tRPC exports
 export const createTRPCRouter = t.router
 export const publicProcedure = t.procedure
 export const procedure = t.procedure.use(isAuthed)
