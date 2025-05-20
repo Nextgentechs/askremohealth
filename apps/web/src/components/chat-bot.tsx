@@ -210,7 +210,7 @@ export function ChatBot() {
                                   target="_blank"
                                   rel="noopener noreferrer"
                                 >
-                                  Book Appointment
+                                  Consult a Doctor
                                 </a>
                               </Button>
                             )}
