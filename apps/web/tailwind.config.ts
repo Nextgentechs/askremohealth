@@ -26,6 +26,10 @@ export default {
       },
       fontFamily: {
         sans: ['var(--font-geist-sans)', ...fontFamily.sans],
+        arial: ['Arial', 'sans-serif'],
+        times: ['"Times New Roman"', 'serif'],
+        roboto: ['Roboto', 'sans-serif'],
+        georgia: ['Georgia', 'serif'],
       },
       borderRadius: {
         lg: 'var(--radius)',
@@ -105,5 +109,5 @@ export default {
       },
     },
   },
-  plugins: [require('tailwindcss-animate')],
+  plugins: [require('tailwindcss-animate'), require('@tailwindcss/typography')],
 } satisfies Config
