@@ -70,6 +70,7 @@ export const users = pgTable('user', {
   email: varchar('email'),
   phone: varchar('phone').unique(),
   password: varchar('password').notNull(),
+  role: roleEnum('role').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at')
     .notNull()
@@ -252,7 +253,7 @@ export const articles = pgTable('articles', {
   content: text('content').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   publishedAt: timestamp('published_at'),
-  updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
+  updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
 })
 
 export const article_images = pgTable('article_images', {
