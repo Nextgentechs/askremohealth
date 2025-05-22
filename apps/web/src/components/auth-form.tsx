@@ -11,11 +11,11 @@ import {
 } from '@web/components/ui/card'
 import { Input } from '@web/components/ui/input'
 import { Label } from '@web/components/ui/label'
-import { toast, useToast } from '@web/hooks/use-toast'
+import { toast } from '@web/hooks/use-toast'
 import { api } from '@web/trpc/react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Loader } from 'lucide-react'
-import { useSearchParams } from 'next/navigation'
+import { signIn } from 'next-auth/react'
 import React, { useState, type SVGProps } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -77,54 +77,44 @@ function Login({
   setCurrentStep,
 }: {
   setCurrentStep: (step: 'login' | 'signup' | 'otp') => void
-}): JSX.Element {
+}) {
   const [isLoading, setIsLoading] = useState(false)
-  const [loginForm, setLoginForm] = useState({
-    email: '',
-    password: '',
-  })
-
+  const [loginForm, setLoginForm] = useState({ email: '', password: '' })
   const signInMutation = api.auth.signIn.useMutation()
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setIsLoading(true)
     try {
-      const result = await signInMutation.mutateAsync({
-        email: loginForm.email,
-        password: loginForm.password,
-      })
-
-      console.log('loginForm', loginForm)
-      toast({
-        title: 'Success',
-        description: 'Sign up was successful!',
-        duration: 3000,
-        variant: 'default',
-      })
-      console.log('result', result)
-      // Replace with your actual logic (e.g. router.push)
+      const result = await signInMutation.mutateAsync(loginForm)
       toast({
         title: 'Success',
         description: 'Logged in successfully!',
+        duration: 3000,
       })
     } catch (error) {
-      console.error('Login error:', error)
-
-      let description = 'An error occurred'
-
-      if (error instanceof TRPCClientError) {
-        description = error.message
-        console.log('TRPC error code:', error.data?.code)
-        console.log('Full error data:', error.data)
-      } else if (error instanceof Error) {
-        description = error.message
-      }
-
       toast({
         title: 'Error',
-        description,
-        color: 'destructive',
+        description:
+          error instanceof TRPCClientError
+            ? error.message
+            : 'An error occurred',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  async function handleGoogleSignIn() {
+    setIsLoading(true)
+    try {
+      await signIn('google', { callbackUrl: '/' })
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Google sign-in failed',
+        variant: 'destructive',
       })
     } finally {
       setIsLoading(false)
@@ -135,84 +125,67 @@ function Login({
     <div className="flex flex-col gap-6">
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-xl">Welcome back</CardTitle>
-          <CardDescription>Login to complete your booking</CardDescription>
+          <CardTitle className="text-xl">Login to your account</CardTitle>
+          <CardDescription>
+            Sign in with your email or Google account
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit}>
             <div className="grid gap-6">
-              <div className="flex flex-col gap-4">
-                <Button type="button" variant="outline" className="w-full">
-                  <Google className="mr-2 h-4 w-4" />
-                  Login with Google
-                </Button>
-              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full gap-2"
+                onClick={handleGoogleSignIn}
+                disabled={isLoading}
+              >
+                <Google className="h-5 w-5" />
+                Sign in with Google
+              </Button>
               <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
                 <span className="relative z-10 bg-background px-2 text-muted-foreground">
                   Or continue with
                 </span>
               </div>
-              <div className="grid gap-6">
-                <div className="grid gap-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="m@example.com"
-                    value={loginForm.email}
-                    onChange={(e) =>
-                      setLoginForm({ ...loginForm, email: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <div className="flex items-center">
-                    <Label htmlFor="password">Password</Label>
-                    <a
-                      href="#"
-                      className="ml-auto text-sm underline-offset-4 hover:underline"
-                    >
-                      Forgot your password?
-                    </a>
-                  </div>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={loginForm.password}
-                    onChange={(e) =>
-                      setLoginForm({ ...loginForm, password: e.target.value })
-                    }
-                  />
-                </div>
-
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={
-                    !loginForm.email || !loginForm.password || isLoading
+              <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="m@example.com"
+                  value={loginForm.email}
+                  onChange={(e) =>
+                    setLoginForm({ ...loginForm, email: e.target.value })
                   }
-                >
-                  {isLoading ? <Loader className="animate-spin" /> : 'Login'}
-                </Button>
+                />
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={loginForm.password}
+                  onChange={(e) =>
+                    setLoginForm({ ...loginForm, password: e.target.value })
+                  }
+                />
               </div>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? <Loader className="animate-spin" /> : 'Login'}
+              </Button>
               <div className="text-center text-sm">
-                Don&apos;t have an account?{' '}
+                Don't have an account?{' '}
                 <button
                   type="button"
                   onClick={() => setCurrentStep('signup')}
                   className="underline underline-offset-4"
                 >
-                  Sign up
+                  Sign Up
                 </button>
               </div>
             </div>
           </form>
         </CardContent>
       </Card>
-      <div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 [&_a]:hover:text-primary">
-        By clicking continue, you agree to our <a href="#">Terms of Service</a>{' '}
-        and <a href="#">Privacy Policy</a>.
-      </div>
     </div>
   )
 }
@@ -229,65 +202,37 @@ function SignUp({
     email: '',
     password: '',
   })
-
   const signUpMutation = api.auth.signUp.useMutation()
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setIsLoading(true)
-
     try {
-      const result = await signUpMutation.mutateAsync({
-        email: signUpForm.email,
-        password: signUpForm.password,
-        firstName: signUpForm.firstName,
-        lastName: signUpForm.lastName,
-      })
-      console.log('Sign up successful', result)
-
-      toast({
-        title: 'Success',
-        description: 'Sign up was successful!',
-        duration: 3000,
-        variant: 'default',
-      })
-
+      await signUpMutation.mutateAsync(signUpForm)
+      toast({ title: 'Success', description: 'Sign up was successful!' })
       setCurrentStep('otp')
     } catch (error) {
-      if (error instanceof TRPCClientError) {
-        // Try to extract Zod field errors
-        const zodError = error?.data?.zodError
-        const fieldErrors = zodError?.fieldErrors
-
-        if (fieldErrors) {
-          // Flatten all error messages into a string
-          const allMessages = Object.entries(fieldErrors)
-            .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : ''}`)
-            .join('\n')
-
-          console.error('Zod field validation errors:', fieldErrors)
-
-          toast({
-            title: 'Validation Error',
-            description: allMessages,
-            variant: 'destructive',
-          })
-          return
-        }
-
-        // Fallback if no zodError exists
+      if (
+        error instanceof TRPCClientError &&
+        error.data?.zodError?.fieldErrors
+      ) {
+        const messages = Object.entries(error.data.zodError.fieldErrors)
+          .map(([field, errors]) => `${field}: ${errors?.join(', ')}`)
+          .join('\n')
         toast({
-          title: 'Error',
-          description: error.message,
+          title: 'Validation Error',
+          description: messages,
           variant: 'destructive',
         })
       } else {
         toast({
-          title: 'Unknown Error',
-          description: 'An unexpected error occurred.',
+          title: 'Error',
+          description:
+            error instanceof Error
+              ? error.message
+              : 'An unknown error occurred',
           variant: 'destructive',
         })
-        console.error('Unknown error during sign up:', error)
       }
     } finally {
       setIsLoading(false)
@@ -306,25 +251,24 @@ function SignUp({
         <CardContent>
           <form onSubmit={onSubmit}>
             <div className="grid gap-6">
-              <div className="flex flex-col gap-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => signInWith('oauth_google')}
-                >
-                  <Google className="mr-2 h-4 w-4" />
-                  Sign up with Google
-                </Button>
-              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full gap-2"
+                onClick={() => signIn('google', { callbackUrl: '/' })}
+                disabled={isLoading}
+              >
+                <Google className="h-5 w-5" />
+                Sign up with Google
+              </Button>
               <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
                 <span className="relative z-10 bg-background px-2 text-muted-foreground">
                   Or continue with
                 </span>
               </div>
-              <div className="grid gap-6">
-                <div className="flex flex-row justify-between gap-2">
-                  <div className="grid gap-2">
+              <div className="grid gap-2">
+                <div className="flex gap-2">
+                  <div className="flex-1">
                     <Label htmlFor="firstName">First Name</Label>
                     <Input
                       id="firstName"
@@ -335,10 +279,9 @@ function SignUp({
                           firstName: e.target.value,
                         })
                       }
-                      placeholder="John"
                     />
                   </div>
-                  <div className="grid gap-2">
+                  <div className="flex-1">
                     <Label htmlFor="lastName">Last Name</Label>
                     <Input
                       id="lastName"
@@ -349,48 +292,31 @@ function SignUp({
                           lastName: e.target.value,
                         })
                       }
-                      placeholder="Doe"
                     />
                   </div>
                 </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="m@example.com"
-                    value={signUpForm.email}
-                    onChange={(e) =>
-                      setSignUpForm({ ...signUpForm, email: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <div className="flex items-center">
-                    <Label htmlFor="password">Password</Label>
-                    <a
-                      href="#"
-                      className="ml-auto text-sm underline-offset-4 hover:underline"
-                    >
-                      Forgot your password?
-                    </a>
-                  </div>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={signUpForm.password}
-                    onChange={(e) =>
-                      setSignUpForm({ ...signUpForm, password: e.target.value })
-                    }
-                  />
-                </div>
-
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? <Loader className="animate-spin" /> : 'Sign Up'}
-                </Button>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={signUpForm.email}
+                  onChange={(e) =>
+                    setSignUpForm({ ...signUpForm, email: e.target.value })
+                  }
+                />
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={signUpForm.password}
+                  onChange={(e) =>
+                    setSignUpForm({ ...signUpForm, password: e.target.value })
+                  }
+                />
               </div>
-              <div id="clerk-captcha"></div>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? <Loader className="animate-spin" /> : 'Sign Up'}
+              </Button>
               <div className="text-center text-sm">
                 Already have an account?{' '}
                 <button
@@ -405,36 +331,25 @@ function SignUp({
           </form>
         </CardContent>
       </Card>
-      <div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 [&_a]:hover:text-primary">
-        By clicking continue, you agree to our <a href="#">Terms of Service</a>{' '}
-        and <a href="#">Privacy Policy</a>.
-      </div>
     </div>
   )
 }
 
 const FormSchema = z.object({
-  pin: z.string().min(6, {
-    message: 'Invalid OTP',
-  }),
+  pin: z.string().min(6, { message: 'Invalid OTP' }),
 })
 
 function InputOTPForm() {
   const [isLoading, setIsLoading] = useState(false)
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
-    defaultValues: {
-      pin: '',
-    },
+    defaultValues: { pin: '' },
   })
-  const { toast } = useToast()
-  const params = useSearchParams()
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     setIsLoading(true)
     try {
-    } catch (error) {
-      console.error(error)
+      console.log('OTP submitted:', data.pin)
     } finally {
       setIsLoading(false)
     }
@@ -451,41 +366,33 @@ function InputOTPForm() {
             Please enter the one-time password sent to your email
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex items-center justify-center text-center">
-          <div>
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="mx-auto w-full space-y-6"
-              >
-                <FormField
-                  control={form.control}
-                  name="pin"
-                  render={({ field }) => (
-                    <FormItem className="mx-auto w-full">
-                      <FormLabel>One-Time Password</FormLabel>
-                      <FormControl>
-                        <InputOTP maxLength={6} {...field}>
-                          <InputOTPGroup>
-                            <InputOTPSlot index={0} />
-                            <InputOTPSlot index={1} />
-                            <InputOTPSlot index={2} />
-                            <InputOTPSlot index={3} />
-                            <InputOTPSlot index={4} />
-                            <InputOTPSlot index={5} />
-                          </InputOTPGroup>
-                        </InputOTP>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading ? <Loader className="animate-spin" /> : 'Submit'}
-                </Button>
-              </form>
-            </Form>
-          </div>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="pin"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>One-Time Password</FormLabel>
+                    <FormControl>
+                      <InputOTP maxLength={6} {...field}>
+                        <InputOTPGroup>
+                          {[...Array(6)].map((_, i) => (
+                            <InputOTPSlot key={i} index={i} />
+                          ))}
+                        </InputOTPGroup>
+                      </InputOTP>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? <Loader className="animate-spin" /> : 'Submit'}
+              </Button>
+            </form>
+          </Form>
         </CardContent>
       </Card>
     </div>
@@ -494,29 +401,22 @@ function InputOTPForm() {
 
 function Google(props: SVGProps<SVGSVGElement>) {
   return (
-    <svg
-      width="1em"
-      height="1em"
-      viewBox="0 0 256 262"
-      xmlns="http://www.w3.org/2000/svg"
-      preserveAspectRatio="xMidYMid"
-      {...props}
-    >
+    <svg {...props} viewBox="0 0 533.5 544.3">
       <path
-        d="M255.878 133.451c0-10.734-.871-18.567-2.756-26.69H130.55v48.448h71.947c-1.45 12.04-9.283 30.172-26.69 42.356l-.244 1.622 38.755 30.023 2.685.268c24.659-22.774 38.875-56.282 38.875-96.027"
-        fill="#4285F4"
+        fill="#4285f4"
+        d="M533.5 278.4c0-17.4-1.4-34.1-4-50.4H272v95.4h147.6c-6.3 34.1-25 62.9-53.4 82.2l86.3 67c50.2-46.3 80-114.7 80-194.2z"
       />
       <path
-        d="M130.55 261.1c35.248 0 64.839-11.605 86.453-31.622l-41.196-31.913c-11.024 7.688-25.82 13.055-45.257 13.055-34.523 0-63.824-22.773-74.269-54.25l-1.531.13-40.298 31.187-.527 1.465C35.393 231.798 79.49 261.1 130.55 261.1"
-        fill="#34A853"
+        fill="#34a853"
+        d="M272 544.3c72.6 0 133.5-24.1 178-65.4l-86.3-67c-24 16-54.6 25.5-91.7 25.5-70.5 0-130.3-47.6-151.6-111.2l-88.9 69c43.9 86.5 134 149.1 240.5 149.1z"
       />
       <path
-        d="M56.281 156.37c-2.756-8.123-4.351-16.827-4.351-25.82 0-8.994 1.595-17.697 4.206-25.82l-.073-1.73L15.26 71.312l-1.335.635C5.077 89.644 0 109.517 0 130.55s5.077 40.905 13.925 58.602l42.356-32.782"
-        fill="#FBBC05"
+        fill="#fbbc04"
+        d="M120.4 325.8C114.8 310.2 111.7 293.1 111.7 275s3.1-35.2 8.6-50.8L31.5 153.7C11.4 192.4 0 232.7 0 275s11.4 82.6 31.5 121.3l88.9-70.5z"
       />
       <path
-        d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0 79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251"
-        fill="#EB4335"
+        fill="#ea4335"
+        d="M272 109.7c39.5 0 75.1 13.6 103.1 40.5l77.3-77.3C407.1 27.5 351.4 0 272 0 165.5 0 75.4 62.6 31.5 153.7l88.9 70.5C141.7 157.3 201.5 109.7 272 109.7z"
       />
     </svg>
   )

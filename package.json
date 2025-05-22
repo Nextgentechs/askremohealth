@@ -28,7 +28,7 @@
     "@sanity/vision": "^3.87.0",
     "bcrypt": "^6.0.0",
     "emailjs": "^3.8.1",
-    "next-auth": "^4.24.11",
+    "next-auth": "^5.0.0-beta.27",
     "postgres": "^3.4.5",
     "sanity": "^3.87.0"
   }

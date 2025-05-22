@@ -46,7 +46,13 @@ export class AuthService {
 
       await db
         .insert(users)
-        .values({ email, password: hashedPassword, firstName, lastName })
+        .values({ 
+          email, 
+          password: hashedPassword, 
+          firstName, 
+          lastName,
+          role: 'doctor' // Always set role to doctor
+        })
 
       return { success: true }
     } catch (error) {
