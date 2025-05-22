@@ -5,19 +5,14 @@ import { ZodError } from 'zod'
 import { redisClient } from '@web/redis/redis'
 import type { FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch'
 import { sessionSchema } from '../lib/session'
+import { cookies } from 'next/headers'
 
 
-export async function createContext({ req }: FetchCreateContextFnOptions) {
-  const cookieHeader = req.headers.get('cookie') ?? ''
-  const cookies = Object.fromEntries(cookieHeader.split('; ').map(c => {
-    const [k, v] = c.trim().split('=')
-    return [k, v]
-  }))
-
-  const sessionToken = cookies['session-id']
+export async function createTRPCContext({ req }: FetchCreateContextFnOptions) {
+  const cookieStore = cookies()
+  const sessionToken = (await cookieStore).get('session-id')?.value
 
   let user = null
-
   if (sessionToken) {
     const rawSession = await redisClient.get(`session:${sessionToken}`)
     if (rawSession) {
@@ -32,16 +27,33 @@ export async function createContext({ req }: FetchCreateContextFnOptions) {
     req,
     cookies: {
       get: (key: string) => {
-        const value = cookies[key]
-        return value ? { name: key, value } : undefined
-      }
+        const cookie = cookieStore.get(key)
+        return cookie ? { name: cookie.name, value: cookie.value } : undefined
+      },
+      set: (key: string, value: string, options: any = {}) => {
+        cookieStore.set(key, value, {
+          secure: options.secure ?? true,
+          httpOnly: options.httpOnly ?? false,
+          sameSite: options.sameSite ?? 'lax',
+          maxAge: options.maxAge
+        })
+      },
+      delete: (key: string) => cookieStore.delete(key)
     },
     user,
   }
 }
 
+export type Context = Awaited<ReturnType<typeof createTRPCContext>>
 
-const t = initTRPC.context<typeof createContext>().create({
+/**
+ * 2. INITIALIZATION
+ *
+ * This is where the tRPC API is initialized, connecting the context and transformer. We also parse
+ * ZodErrors so that you get typesafety on the frontend if your procedure fails due to validation
+ * errors on the backend.
+ */
+const t = initTRPC.context<Context>().create({
   transformer: superjson,
   errorFormatter({ shape, error }) {
     return {
@@ -55,30 +67,73 @@ const t = initTRPC.context<typeof createContext>().create({
   },
 })
 
-// Middleware
-const isAuthed = t.middleware(({ ctx, next }) => {
-  if (!ctx.user) throw new TRPCError({ code: 'UNAUTHORIZED' })
-  return next({ ctx: { ...ctx, user: ctx.user, session: ctx.session } })
-})
-
-const isDoctor = t.middleware(({ ctx, next }) => {
-  if (!ctx.user) {
-    throw new TRPCError({ code: 'FORBIDDEN', message: 'Not a doctor' })
-  }
-  return next({ ctx })
-})
-
-const isAdmin = t.middleware(({ ctx, next }) => {
-  if (!ctx.user ) {
-    throw new TRPCError({ code: 'FORBIDDEN', message: 'Not an admin' })
-  }
-  return next({ ctx })
-})
-
-// tRPC exports
-export const createTRPCRouter = t.router
-export const publicProcedure = t.procedure
-export const procedure = t.procedure.use(isAuthed)
-export const doctorProcedure = t.procedure.use(isDoctor)
-export const adminProcedure = t.procedure.use(isAdmin)
+/**
+ * Create a server-side caller.
+ *
+ * @see https://trpc.io/docs/server/server-side-calls
+ */
 export const createCallerFactory = t.createCallerFactory
+
+/**
+ * 3. ROUTER & PROCEDURE (THE IMPORTANT BIT)
+ *
+ * These are the pieces you use to build your tRPC API. You should import these a lot in the
+ * "/src/server/api/routers" directory.
+ */
+
+/**
+ * This is how you create new routers and sub-routers in your tRPC API.
+ *
+ * @see https://trpc.io/docs/router
+ */
+export const createTRPCRouter = t.router
+
+/**
+ * Public (unauthenticated) procedure
+ *
+ * This is the base piece you use to build new queries and mutations on your tRPC API. It does not
+ * guarantee that a user querying is authorized, but you can still access user session data if they
+ * are logged in.
+ */
+export const publicProcedure = t.procedure
+
+/**
+ * Reusable middleware that enforces users are logged in before running the
+ * procedure
+ */
+const authMiddleware = t.middleware(({ ctx, next }) => {
+  if (!ctx.user) throw new TRPCError({ code: 'UNAUTHORIZED' })
+  return next({ ctx: {user: ctx.user } })
+})
+
+/**
+ * this filters out queries and mutations that are only accessible to doctors
+ */
+
+const doctorMiddleware = t.middleware(({ ctx, next }) => {
+  
+  return next({ ctx: {user: ctx.user } })
+})
+
+/**
+ * this filters out queries and mutations that are only accessible to admins
+ */
+
+const adminMiddleware = t.middleware(({ ctx, next }) => {
+  if (!ctx.user) throw new TRPCError({ code: 'UNAUTHORIZED' })
+  
+  return next({ ctx: {user: ctx.user } })
+})
+/**
+ * Authenticated procedure
+ *
+ * If you want a query or mutation to ONLY be accessible to logged in users, use
+ * this. It verifies the session is valid and guarantees ctx.session.user is not
+ * null
+ *
+ * @see https://trpc.io/docs/procedures
+ */
+export const procedure = t.procedure.use(authMiddleware)
+export const doctorProcedure = t.procedure.use(doctorMiddleware)
+
+export const adminProcedure = t.procedure.use(adminMiddleware)

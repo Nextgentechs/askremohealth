@@ -1,35 +1,22 @@
 import { z } from 'zod'
 import crypto from "crypto"
 import { redisClient } from '@web/redis/redis'
-// Seven days in seconds
+
 const SESSION_EXPIRATION_SECONDS = 60 * 60 * 24 * 7
 const COOKIE_SESSION_KEY = "session-id"
 
 export const sessionSchema = z.object({
   id: z.string(),
-  email:z.string()
-  
+  email: z.string()
 })
-
 
 type UserSession = z.infer<typeof sessionSchema>
 
 export type Cookies = {
-  set: (
-    key: string,
-    value: string,
-    options: {
-      secure?: boolean
-      httpOnly?: boolean
-      sameSite?: "strict" | "lax"
-      expires?: number
-    }
-  ) => void
+  set: (key: string, value: string, options: any) => void
   get: (key: string) => { name: string; value: string } | undefined
   delete: (key: string) => void
 }
-
-// creates a session
 
 export async function createUserSession(
   user: UserSession,
@@ -51,7 +38,6 @@ export function getUserFromSession(cookies: Pick<Cookies, "get">) {
   return getUserSessionById(sessionId)
 }
 
-// Update session data in Redis
 export async function updateUserSessionData(
   user: UserSession,
   cookies: Pick<Cookies, "get">
@@ -64,7 +50,6 @@ export async function updateUserSessionData(
   })
 }
 
-// Extend session life
 export async function updateUserSessionExpiration(
   cookies: Pick<Cookies, "get" | "set">
 ) {
@@ -80,7 +65,6 @@ export async function updateUserSessionExpiration(
   setCookie(sessionId, cookies)
 }
 
-// Log out (delete session from Redis + clear cookie)
 export async function removeUserFromSession(
   cookies: Pick<Cookies, "get" | "delete">
 ) {
@@ -91,17 +75,15 @@ export async function removeUserFromSession(
   cookies.delete(COOKIE_SESSION_KEY)
 }
 
-// Internal helper to set the cookie
 function setCookie(sessionId: string, cookies: Pick<Cookies, "set">) {
   cookies.set(COOKIE_SESSION_KEY, sessionId, {
     secure: true,
     httpOnly: false,
     sameSite: "lax",
-    expires: Date.now() + SESSION_EXPIRATION_SECONDS * 1000,
+    maxAge: SESSION_EXPIRATION_SECONDS
   })
 }
 
-// Internal helper to get session from Redis
 async function getUserSessionById(sessionId: string) {
   const rawUser = await redisClient.get(`session:${sessionId}`)
   if (!rawUser) return null

@@ -1,32 +1,38 @@
-// app/api/trpc/[trpc]/route.ts
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch'
+import { headers } from 'next/headers'
 import { appRouter } from 'src/server/api'
-import { createContext } from 'src/server/api/trpc'
+import { createTRPCContext } from 'src/server/api/trpc'
 
-export const runtime = 'nodejs'
-
-const handler = (req: Request) => {
-  return fetchRequestHandler({
-    endpoint: '/api/trpc',
-    req,
-    router: appRouter,
-    createContext,
-    onError({ error, path }) {
-      console.error(`❌ tRPC failed on ${path ?? '<no-path>'}: ${error.message}`)
-    },
-  })
+async function setCorsHeaders(res: Response) {
+  const origin = (await headers()).get('Origin')
+  res.headers.set('Access-Control-Allow-Origin', origin ?? '*')
+  res.headers.set('Access-Control-Request-Method', '*')
+  res.headers.set('Access-Control-Allow-Methods', 'OPTIONS, GET, POST')
+  res.headers.set('Access-Control-Allow-Headers', 'content-type')
+  res.headers.set('Access-Control-Allow-Credentials', 'true')
 }
-
-export { handler as GET, handler as POST }
 
 export async function OPTIONS() {
-  return new Response(null, {
-    status: 204,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'OPTIONS, GET, POST',
-      'Access-Control-Allow-Headers': 'content-type',
-      'Access-Control-Allow-Credentials': 'true',
+  const response = new Response(null, { status: 204 })
+  await setCorsHeaders(response)
+  return response
+}
+
+async function handler(req: Request) {
+  const response = await fetchRequestHandler({
+    endpoint: '/api/trpc',
+    router: appRouter,
+    req,
+    createContext: () => createTRPCContext({ req }),
+    onError({ error, path }) {
+      console.error(
+        `❌ tRPC failed on ${path ?? '<no-path>'}: ${error.message}`,
+      )
     },
   })
+  await setCorsHeaders(response)
+  return response
 }
+
+export const GET = handler
+export const POST = handler
