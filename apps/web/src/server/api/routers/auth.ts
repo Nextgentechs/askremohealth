@@ -13,6 +13,7 @@ export const signUp = publicProcedure
     }),
   )
   .mutation(async ({ input }) => {
+    console.log('SignUp data being passed:', input)
     return AuthService.signUp(input)
   })
 
