@@ -9,8 +9,9 @@ import { cookies } from 'next/headers'
 
 
 export async function createTRPCContext({ req }: FetchCreateContextFnOptions) {
-  const cookieStore = cookies()
-  const sessionToken = (await cookieStore).get('session-id')?.value
+  // Await cookies() before using it!
+  const cookieStore = await cookies()
+  const sessionToken = cookieStore.get('session-id')?.value
 
   let user = null
   if (sessionToken) {
@@ -32,13 +33,13 @@ export async function createTRPCContext({ req }: FetchCreateContextFnOptions) {
       },
       set: (key: string, value: string, options: any = {}) => {
         cookieStore.set(key, value, {
-          secure: options.secure ?? true,
+          secure: options.secure ?? false,
           httpOnly: options.httpOnly ?? false,
           sameSite: options.sameSite ?? 'lax',
-          maxAge: options.maxAge
+          maxAge: options.maxAge,
         })
       },
-      delete: (key: string) => cookieStore.delete(key)
+      delete: (key: string) => cookieStore.delete(key),
     },
     user,
   }
