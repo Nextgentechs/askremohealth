@@ -77,7 +77,8 @@ export async function removeUserFromSession(
 
 function setCookie(sessionId: string, cookies: Pick<Cookies, "set">) {
   cookies.set(COOKIE_SESSION_KEY, sessionId, {
-    secure: true,
+    path: '/',
+    secure: false,
     httpOnly: false,
     sameSite: "lax",
     maxAge: SESSION_EXPIRATION_SECONDS
