@@ -2,6 +2,7 @@ import { patients as patientsTable } from '@web/server/db/schema'
 import Appointments from '@web/server/services/appointments'
 import { Doctors } from '@web/server/services/doctors'
 import assert from 'assert'
+import { db } from '@web/server/db'
 import { eq, ilike, or } from 'drizzle-orm'
 import { z } from 'zod'
 import { doctorProcedure, procedure, publicProcedure } from '../trpc'
@@ -43,7 +44,7 @@ export const updateAvailabilityDetails = procedure
 
 export const currentDoctor = publicProcedure.query(async ({ ctx }) => {
   if (!ctx.user) return null
-  const doctor = await ctx.db.query.doctors.findFirst({
+  const doctor = await db.query.doctors.findFirst({
     where: (doctor) => eq(doctor.id, ctx.user.id ?? ''),
     with: {
       profilePicture: true,
