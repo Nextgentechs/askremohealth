@@ -1,6 +1,7 @@
 'use client'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { TRPCClientError } from '@trpc/client'
+import { useRouter } from 'next/navigation'
 import { Button } from '@web/components/ui/button'
 import {
   Card,
@@ -33,6 +34,7 @@ export default function AuthForm() {
   const [currentStep, setCurrentStep] = useState<'login' | 'signup' | 'otp'>(
     'login',
   )
+
 
   return (
     <AnimatePresence mode="wait">
@@ -80,25 +82,36 @@ function Login({
 }) {
   const [isLoading, setIsLoading] = useState(false)
   const [loginForm, setLoginForm] = useState({ email: '', password: '' })
-  const signInMutation = api.auth.signIn.useMutation()
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setIsLoading(true)
     try {
-      const result = await signInMutation.mutateAsync(loginForm)
-      toast({
-        title: 'Success',
-        description: 'Logged in successfully!',
-        duration: 3000,
+      const res = await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(loginForm),
       })
+      const result = await res.json()
+      if (result.success) {
+        toast({
+          title: 'Success',
+          description: 'Logged in successfully!',
+          duration: 3000,
+        })
+        // Optionally reload or redirect
+        window.location.reload()
+      } else {
+        toast({
+          title: 'Error',
+          description: result.message || 'Login failed',
+          variant: 'destructive',
+        })
+      }
     } catch (error) {
       toast({
         title: 'Error',
-        description:
-          error instanceof TRPCClientError
-            ? error.message
-            : 'An error occurred',
+        description: 'An error occurred',
         variant: 'destructive',
       })
     } finally {
@@ -190,6 +203,8 @@ function Login({
   )
 }
 
+
+
 function SignUp({
   setCurrentStep,
 }: {
@@ -202,38 +217,34 @@ function SignUp({
     email: '',
     password: '',
   })
-  const signUpMutation = api.auth.signUp.useMutation()
+  const router = useRouter()
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setIsLoading(true)
     try {
-      await signUpMutation.mutateAsync(signUpForm)
-      toast({ title: 'Success', description: 'Sign up was successful!' })
-      setCurrentStep('otp')
-    } catch (error) {
-      if (
-        error instanceof TRPCClientError &&
-        error.data?.zodError?.fieldErrors
-      ) {
-        const messages = Object.entries(error.data.zodError.fieldErrors)
-          .map(([field, errors]) => `${field}: ${errors?.join(', ')}`)
-          .join('\n')
-        toast({
-          title: 'Validation Error',
-          description: messages,
-          variant: 'destructive',
-        })
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(signUpForm),
+      })
+      const result = await res.json()
+      if (result.success) {
+        toast({ title: 'Success', description: 'Sign up was successful!' })
+        router.push('/specialist/onboarding/personal-details') // Redirect to your desired page
       } else {
         toast({
           title: 'Error',
-          description:
-            error instanceof Error
-              ? error.message
-              : 'An unknown error occurred',
+          description: result.message || 'Sign up failed',
           variant: 'destructive',
         })
       }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
+        variant: 'destructive',
+      })
     } finally {
       setIsLoading(false)
     }

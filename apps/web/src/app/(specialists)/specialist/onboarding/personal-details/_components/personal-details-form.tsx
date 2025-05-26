@@ -1,6 +1,7 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useCurrentUser } from '@web/hooks/use-current-user'
 import { Button } from '@web/components/ui/button'
 import { Input } from '@web/components/ui/input'
 import { Label } from '@web/components/ui/label'
@@ -23,32 +24,32 @@ import { z } from 'zod'
 
 export const personalDetailsSchema = z.object({
   title: z.string().optional(),
-  firstName: z.string(),
-  lastName: z.string(),
+  // firstName: z.string(),
+  // lastName: z.string(),
   gender: z.enum(['male', 'female']),
   dob: z.string().min(1, 'Date of birth is required'),
-  email: z.string().email(),
-  phone: z
-    .string()
-    .refine((val) => /^\d{10}$/.test(val) || /^254\d{9}$/.test(val), {
-      message: 'Invalid phone number',
-    })
-    .refine(
-      (val) =>
-        val.startsWith('07') ||
-        val.startsWith('01') ||
-        val.startsWith('2547') ||
-        val.startsWith('2541'),
-      {
-        message: 'Invalid phone number',
-      },
-    )
-    .transform((val) => {
-      if (val.startsWith('0')) {
-        return `254${val.slice(1)}`
-      }
-      return val
-    }),
+  // email: z.string().email(),
+  // phone: z
+  //   .string()
+  //   .refine((val) => /^\d{10}$/.test(val) || /^254\d{9}$/.test(val), {
+  //     message: 'Invalid phone number',
+  //   })
+  //   .refine(
+  //     (val) =>
+  //       val.startsWith('07') ||
+  //       val.startsWith('01') ||
+  //       val.startsWith('2547') ||
+  //       val.startsWith('2541'),
+  //     {
+  //       message: 'Invalid phone number',
+  //     },
+   // )
+    // .transform((val) => {
+    //   if (val.startsWith('0')) {
+    //     return `254${val.slice(1)}`
+    //   }
+    //   return val
+    // }),
 
   bio: z
     .string()
@@ -72,15 +73,16 @@ export type PersonalDetails = z.infer<typeof personalDetailsSchema>
 
 export default function PersonalDetails() {
   const [user] = api.users.currentUser.useSuspenseQuery()
+  //console.log('Current user:', user)
   const form = useForm<PersonalDetails>({
     resolver: zodResolver(personalDetailsSchema),
     defaultValues: {
       title: '',
-      firstName: user?.firstName ?? '',
-      lastName: user?.lastName ?? '',
+      // firstName: user?.firstName ?? '',
+      // lastName: user?.lastName ?? '',
 
-      email: user?.emailAddresses[0]?.emailAddress ?? '',
-      phone: user?.phoneNumbers[0]?.phoneNumber ?? '',
+    //  email: user?.email ?? '',
+      // phone: user?.phone ?? '',
       bio: '',
     },
   })
@@ -108,7 +110,7 @@ export default function PersonalDetails() {
   return (
     <form className="space-y-8">
       <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2 sm:gap-x-4 sm:gap-y-3">
-        <div className="flex flex-col gap-2">
+        {/* <div className="flex flex-col gap-2">
           <Label htmlFor="firstName">First Name</Label>
           <Input {...form.register('firstName')} id="firstName" type="text" />
           <p className="text-[0.8rem] font-medium text-destructive">
@@ -121,7 +123,7 @@ export default function PersonalDetails() {
           <p className="text-[0.8rem] font-medium text-destructive">
             {form.formState.errors.lastName?.message}
           </p>
-        </div>
+        </div> */}
         <div className="flex flex-col gap-2">
           <Label htmlFor="title">Title</Label>
           <Input
@@ -153,20 +155,20 @@ export default function PersonalDetails() {
             {form.formState.errors.gender?.message}
           </p>
         </div>
-        <div className="flex flex-col gap-2">
+        {/* <div className="flex flex-col gap-2">
           <Label htmlFor="email">Email</Label>
           <Input {...form.register('email')} id="email" type="email" />
           <p className="text-[0.8rem] font-medium text-destructive">
             {form.formState.errors.email?.message}
           </p>
-        </div>
-        <div className="flex flex-col gap-2">
+        </div> */}
+        {/* <div className="flex flex-col gap-2">
           <Label htmlFor="phone">Phone Number</Label>
           <Input {...form.register('phone')} id="phone" type="tel" />
           <p className="text-[0.8rem] font-medium text-destructive">
             {form.formState.errors.phone?.message}
           </p>
-        </div>
+        </div> */}
         <div className="flex flex-col gap-2">
           <Label htmlFor="email">Date of Birth</Label>
           <Input
