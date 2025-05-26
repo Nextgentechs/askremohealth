@@ -8,7 +8,7 @@ export async function POST(request: Request) {
     const result = await AuthService.signIn({ email, password })
 
     if (result?.sessionId) {
-      cookies().set('session-id', result.sessionId, {
+      (await cookies()).set('session-id', result.sessionId, {
         path: '/',
         secure: process.env.NODE_ENV === 'production',
         httpOnly: false,

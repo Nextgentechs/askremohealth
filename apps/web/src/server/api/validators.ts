@@ -127,10 +127,10 @@ export type AppointmentListSchema = z.infer<typeof appointmentListSchema>
 
 export const personalDetailsSchema = z.object({
   title: z.string().optional(),
-  firstName: z.string(),
-  lastName: z.string(),
-  email: z.string().email().optional(),
-  phone: z.string(),
+  // firstName: z.string(),
+  // lastName: z.string(),
+  // email: z.string().email().optional(),
+  // phone: z.string(),
   dob: z.string(),
   gender: z.enum(['male', 'female']).optional(),
   bio: z.string().optional(),

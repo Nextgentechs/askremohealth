@@ -7,14 +7,14 @@ export async function POST(request: Request) {
     const { email, password, firstName, lastName } = await request.json()
     const result = await AuthService.signUp({ email, password, firstName, lastName })
     //auto-login after signup
-    if (result?.sessionId) {
-      (await cookies()).set('session-id', result.sessionId, {
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
-        httpOnly: false,
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 7,
-      })
+    if ('sessionId' in result && result.sessionId) {
+      (await cookies()).set('session-id', String(result.sessionId), {
+              path: '/',
+              secure: process.env.NODE_ENV === 'production',
+              httpOnly: false,
+              sameSite: 'lax',
+              maxAge: 60 * 60 * 24 * 7,
+            })
     }
     return NextResponse.json(result)
   } catch (error) {
