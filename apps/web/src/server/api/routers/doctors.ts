@@ -1,10 +1,17 @@
 import { patients as patientsTable } from '@web/server/db/schema'
 import Appointments from '@web/server/services/appointments'
 import { Doctors } from '@web/server/services/doctors'
-import { users as usersTable } from '@web/server/db/schema'
+import { 
+  users as usersTable,
+  doctors as doctorsTable,
+  specialties as specialtiesTable,
+  facilities as facilitiesTable,
+  profilePictures as profilePicturesTable,
+  reviews as reviewsTable
+} from '@web/server/db/schema'
 import assert from 'assert'
 import { db } from '@web/server/db'
-import { eq, ilike, or } from 'drizzle-orm'
+import { eq, ilike, or, and, inArray } from 'drizzle-orm'
 import { z } from 'zod'
 import { doctorProcedure, procedure, publicProcedure } from '../trpc'
 import {
@@ -14,6 +21,11 @@ import {
   personalDetailsSchema,
   professionalDetailsSchema,
 } from '../validators'
+import { KENYA_COUNTIES } from '@web/server/data/kenya-counties'
+import { Client } from '@googlemaps/google-maps-services-js'
+import { env } from '@web/env'
+
+const googleMapsClient = new Client({})
 
 export const updatePersonalDetails = procedure
   .input(personalDetailsSchema)
@@ -181,4 +193,162 @@ export const searchPatient = doctorProcedure
         ),
       )
       .limit(6)
+  })
+
+export const searchByLocation = publicProcedure
+  .input(
+    z.object({
+      countyCode: z.string().optional(),
+      townId: z.string().optional(),
+      specialtyId: z.string().optional(),
+      query: z.string().optional(),
+    }),
+  )
+  .query(async ({ input }) => {
+    const { countyCode, townId, specialtyId, query } = input
+
+    // Build base conditions
+    const conditions = []
+    
+    if (countyCode || townId) {
+      const facilityConditions = []
+      
+      if (countyCode) {
+        const county = KENYA_COUNTIES.find((c) => c.code === countyCode)
+        if (county) {
+          facilityConditions.push(eq(facilitiesTable.county, county.name))
+        }
+      }
+
+      if (townId) {
+        // Get the town name from the Google Places API
+        const placeDetails = await googleMapsClient.placeDetails({
+          params: {
+            place_id: townId,
+            fields: ['name'],
+            key: env.GOOGLE_MAPS_API_KEY,
+          },
+        })
+        const townName = placeDetails.data.result.name
+        if (townName) {
+          facilityConditions.push(eq(facilitiesTable.town, townName))
+        }
+      }
+
+      // Create a subquery to find facilities matching the location criteria
+      const facilitySubquery = db
+        .select({ placeId: facilitiesTable.placeId })
+        .from(facilitiesTable)
+        .where(facilityConditions.length > 0 ? and(...facilityConditions) : undefined)
+
+      // Add condition to find doctors in those facilities
+      conditions.push(inArray(doctorsTable.facility, facilitySubquery))
+    }
+
+    if (specialtyId) {
+      conditions.push(eq(doctorsTable.specialty, specialtyId))
+    }
+
+    if (query) {
+      conditions.push(
+        or(
+          ilike(usersTable.firstName, `%${query}%`),
+          ilike(usersTable.lastName, `%${query}%`),
+          ilike(facilitiesTable.name, `%${query}%`),
+        ),
+      )
+    }
+
+    // Start building the query with conditions
+    const doctorsQuery = db.query.doctors.findMany({
+      where: conditions.length > 0 ? and(...conditions) : undefined,
+      with: {
+        profilePicture: true,
+        facility: {
+          columns: {
+            placeId: true,
+            name: true,
+            address: true,
+            town: true,
+            county: true,
+          },
+        },
+        specialty: true,
+        operatingHours: true,
+        user: {
+          columns: {
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+          },
+        },
+      },
+    })
+
+    // Execute the query
+    const doctors = await doctorsQuery
+
+    // Get upcoming appointments for all doctors
+    const upcomingAppointments = await Doctors.getUpcomingAppointments(
+      doctors.map((d) => d.id),
+    )
+
+    // Get reviews for all doctors
+    const reviews = await db.query.reviews.findMany({
+      where: (review) =>
+        inArray(
+          review.doctorId,
+          doctors.map((d) => d.id),
+        ),
+      columns: {
+        doctorId: true,
+        rating: true,
+      },
+    })
+
+    // Get subspecialties for all doctors
+    const subSpecialtyIds = doctors.flatMap((d) =>
+      (d.subSpecialties as Array<{ id: string }>).map((s) => s.id),
+    )
+
+    const subspecialties = await db.query.subSpecialties.findMany({
+      where: (subSpecialty) => inArray(subSpecialty.id, subSpecialtyIds),
+    })
+
+    // Format the results
+    const doctorsWithAllData = doctors.map((doctor) => {
+      const bookedSlots = upcomingAppointments
+        .filter((apt) => apt.doctorId === doctor.id)
+        .map((apt) => apt.appointmentDate)
+
+      const doctorReviews = reviews.filter((r) => r.doctorId === doctor.id)
+      const averageRating = doctorReviews.length
+        ? doctorReviews.reduce((acc, r) => acc + r.rating, 0) /
+          doctorReviews.length
+        : 0
+
+      return {
+        ...doctor,
+        firstName: doctor.user?.firstName,
+        lastName: doctor.user?.lastName,
+        email: doctor.user?.email,
+        phone: doctor.user?.phone,
+        subSpecialties: subspecialties.filter((sub) =>
+          (doctor.subSpecialties as Array<{ id: string }>).some(
+            (ds) => ds.id === sub.id,
+          ),
+        ),
+        bookedSlots,
+        reviewStats: {
+          averageRating,
+          totalReviews: doctorReviews.length,
+        },
+      }
+    })
+
+    return {
+      doctors: doctorsWithAllData,
+      count: doctors.length,
+    }
   })
