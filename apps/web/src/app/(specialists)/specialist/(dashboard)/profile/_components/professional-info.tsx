@@ -31,7 +31,7 @@ import {
 function SubSpecialtySelect({ specialty }: { specialty: string }) {
   const [open, setOpen] = React.useState(false)
   const { setValue, watch } = useFormContext<ProfessionalDetails>()
-  const selectedSubSpecialties = watch('subSpecialty') || []
+  const selectedSubSpecialties = React.useMemo(() => watch('subSpecialty') || [], [watch])
 
   const { data: subspecialties } = api.specialties.listSubSpecialties.useQuery({
     specialityId: specialty,

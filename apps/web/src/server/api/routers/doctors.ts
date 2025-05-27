@@ -54,10 +54,11 @@ export const currentDoctor = publicProcedure.query(async ({ ctx }) => {
       facility: true,
       operatingHours: true,
       certificates: true,
-      user: { // <-- join user table for names
+      user: {
         columns: {
           firstName: true,
           lastName: true,
+          email: true,
         },
       },
     },

@@ -46,7 +46,7 @@ export default async function page({
           <BreadcrumbSeparator />
 
           <BreadcrumbItem>
-            <BreadcrumbPage>{`${doctor?.title}. ${doctor?.firstName} ${doctor?.lastName}`}</BreadcrumbPage>
+            <BreadcrumbPage>{`${doctor?.title}. ${doctor?.user?.firstName} ${doctor?.user?.lastName}`}</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
@@ -95,7 +95,7 @@ function ProfilePhoto({
       <AspectRatio className="bg-muted" ratio={3 / 4}>
         <Image
           src={doctor?.profilePicture?.url ?? ''}
-          alt={doctor?.firstName ?? ''}
+          alt={doctor?.user?.firstName ?? ''}
           fill
           className="rounded-lg object-cover"
           priority
@@ -119,7 +119,7 @@ function PersonalInfo({
           </Label>
           <Input
             readOnly
-            value={doctor?.firstName}
+            value={doctor?.user?.firstName}
             id="firstName"
             type="text"
           />
@@ -129,12 +129,12 @@ function PersonalInfo({
           <Label htmlFor="lastName" className="">
             Last Name
           </Label>
-          <Input readOnly value={doctor?.lastName} id="lastName" type="text" />
+          <Input readOnly value={doctor?.user?.lastName} id="lastName" type="text" />
         </div>
 
         <div className="flex flex-col items-start gap-2 text-foreground">
           <Label htmlFor="email">Email</Label>
-          <Input readOnly value={doctor?.email ?? ''} id="email" type="email" />
+          <Input readOnly value={doctor?.user?.email ?? ''} id="email" type="email" />
         </div>
 
         <div className="flex flex-col items-start gap-2 text-foreground">

@@ -44,10 +44,14 @@ export class User {
               id: true,
               title: true,
               consultationFee: true,
-              firstName: true,
-              lastName: true,
             },
             with: {
+              user: {
+                columns: {
+                  firstName: true,
+                  lastName: true,
+                }
+              },
               profilePicture: true,
               specialty: {
                 columns: {

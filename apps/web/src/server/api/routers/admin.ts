@@ -15,6 +15,14 @@ export const getDoctors = adminProcedure
         ctx.db.query.doctors.findMany({
           offset: Math.max(0, (input.page - 1) * input.limit), // Changed offset to start at 0
           limit: input.limit,
+          with: {
+            user: {
+              columns: {
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
           orderBy: (doctors, { desc }) => [
             desc(
               sql<number>`CASE 
@@ -58,6 +66,13 @@ export const getDoctor = adminProcedure
         facility: true,
         operatingHours: true,
         profilePicture: true,
+        user: {
+          columns: {
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
       },
     })
 

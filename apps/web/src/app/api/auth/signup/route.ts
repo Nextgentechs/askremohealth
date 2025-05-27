@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
+// import { cookies } from 'next/headers'
 import { AuthService } from '@web/server/services/auth'
 
 export async function POST(request: Request): Promise<Response> {

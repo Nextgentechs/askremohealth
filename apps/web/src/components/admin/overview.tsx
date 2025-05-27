@@ -8,6 +8,12 @@ import {
   BreadcrumbSeparator,
 } from '@web/components/ui/breadcrumb'
 
+interface StatCardProps {
+  title: string;
+  value: number;
+  bgColor: string;
+}
+
 const Overview = () => {
   const stats = [
     { title: "Total Patients", value: 100, bgColor: "#f3f4f6", textColor: "#0077B6" },
@@ -41,10 +47,12 @@ const Overview = () => {
     </div>
   )
 }
-const StatCard = ({ title, value, bgColor, textColor }) => (
+
+const StatCard = ({ title, value, bgColor }: StatCardProps) => (
   <div className={`bg-white p-6 rounded-md text-center`} style={{ backgroundColor: bgColor }}>
     <h3 className="text-black text-base">{title}</h3>
     <p className="text-2xl mt-2 text-gray-500">{value}</p>
   </div>
 );
+
 export default Overview

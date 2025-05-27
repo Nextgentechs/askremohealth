@@ -10,13 +10,13 @@ const isProtectedRoute = createRouteMatcher([
   '/specialist/(.*)',
 ])
 const isAdminRoute = createRouteMatcher(['/admin', '/admin/doctors'])
-const isSpecialistRoute = createRouteMatcher([
-  '/specialist/patients',
-  '/specialist/upcoming-appointments',
-  '/specialist/online-appointments',
-  '/specialist/physical-appointments',
-  '/specialist/profile',
-])
+// const isSpecialistRoute = createRouteMatcher([
+//   '/specialist/patients',
+//   '/specialist/upcoming-appointments',
+//   '/specialist/online-appointments',
+//   '/specialist/physical-appointments',
+//   '/specialist/profile',
+// ])
 
 const TEST_ADMIN_EMAILS = ['kristinenyaga@gmail.com']
 
