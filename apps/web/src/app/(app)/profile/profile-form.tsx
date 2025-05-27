@@ -46,8 +46,8 @@ export function ProfileForm() {
     defaultValues: {
       firstName: currentUser?.firstName ?? '',
       lastName: currentUser?.lastName ?? '',
-      email: currentUser?.emailAddresses[0]?.emailAddress ?? '',
-      phone: currentUser?.phoneNumbers[0]?.phoneNumber ?? '',
+      email: currentUser?.email ?? '',
+      phone: currentUser?.phone ?? '',
       dob: '',
     },
   })
@@ -56,9 +56,9 @@ export function ProfileForm() {
   const utils = api.useUtils()
   // const { mutateAsync, isPending } = api.users.updateProfile.useMutation()
 
-  const onSubmit = async (data: z.infer<typeof profileSchema>) => {
+  const onSubmit = async (_data: z.infer<typeof profileSchema>) => {
     try {
-      // await mutateAsync(data)
+      // await mutateAsync(_data)
       await utils.users.currentUser.invalidate()
       router.refresh()
       toast({
@@ -167,15 +167,4 @@ export function ProfileForm() {
   )
 }
 
-const passwordSchema = z
-  .object({
-    oldPassword: z.string().min(8, { message: 'Old password is required' }),
-    newPassword: z.string().min(8, { message: 'New password is required' }),
-    confirmPassword: z
-      .string()
-      .min(8, { message: 'Confirm password is required' }),
-  })
-  .refine((data) => data.newPassword === data.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
-  })
+// Removed unused passwordSchema to resolve ESLint warning

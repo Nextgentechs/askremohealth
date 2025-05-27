@@ -1,4 +1,3 @@
-import { currentUser as clerkCurrentUser } from '@clerk/nextjs/server'
 import { db } from '@web/server/db'
 import { appointmentLogs, appointments, patients } from '@web/server/db/schema'
 import { User } from '@web/server/services/users'

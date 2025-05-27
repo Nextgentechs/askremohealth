@@ -15,7 +15,7 @@ export async function GET() {
   }
 
   const rawSession = await redisClient.get(`session:${sessionId}`)
-  console.log('rawSession:', rawSession)
+  //console.log('rawSession:', rawSession)
   if (!rawSession) {
     return NextResponse.json({ user: null }, { status: 401 })
   }

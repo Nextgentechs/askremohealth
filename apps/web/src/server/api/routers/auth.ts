@@ -1,7 +1,5 @@
 // server/api/routers/auth.ts
-import { AuthService } from '@web/server/services/auth'
-import { z } from 'zod'
-import { publicProcedure } from '../trpc'
+
 
 // export const signUp = publicProcedure
 //   .input(
