@@ -250,11 +250,27 @@ export const searchByLocation = publicProcedure
     }
 
     if (query) {
+      // Create a subquery to find users matching the search criteria
+      const userSubquery = db
+        .select({ id: usersTable.id })
+        .from(usersTable)
+        .where(
+          or(
+            ilike(usersTable.firstName, `%${query}%`),
+            ilike(usersTable.lastName, `%${query}%`),
+          ),
+        )
+
+      // Create a subquery to find facilities matching the search criteria
+      const facilitySubquery = db
+        .select({ placeId: facilitiesTable.placeId })
+        .from(facilitiesTable)
+        .where(ilike(facilitiesTable.name, `%${query}%`))
+
       conditions.push(
         or(
-          ilike(usersTable.firstName, `%${query}%`),
-          ilike(usersTable.lastName, `%${query}%`),
-          ilike(facilitiesTable.name, `%${query}%`),
+          inArray(doctorsTable.userId, userSubquery),
+          inArray(doctorsTable.facility, facilitySubquery),
         ),
       )
     }
