@@ -1,6 +1,5 @@
 'use client'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { TRPCClientError } from '@trpc/client'
 import { useRouter } from 'next/navigation'
 import { Button } from '@web/components/ui/button'
 import {
@@ -13,7 +12,6 @@ import {
 import { Input } from '@web/components/ui/input'
 import { Label } from '@web/components/ui/label'
 import { toast } from '@web/hooks/use-toast'
-import { api } from '@web/trpc/react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Loader } from 'lucide-react'
 import { signIn } from 'next-auth/react'
@@ -104,11 +102,11 @@ function Login({
       } else {
         toast({
           title: 'Error',
-          description: result.message || 'Login failed',
+          description: result.message ?? 'Login failed',
           variant: 'destructive',
         })
       }
-    } catch (error) {
+    } catch {
       toast({
         title: 'Error',
         description: 'An error occurred',
@@ -123,7 +121,7 @@ function Login({
     setIsLoading(true)
     try {
       await signIn('google', { callbackUrl: '/' })
-    } catch (error) {
+    } catch {
       toast({
         title: 'Error',
         description: 'Google sign-in failed',
@@ -186,7 +184,7 @@ function Login({
                 {isLoading ? <Loader className="animate-spin" /> : 'Login'}
               </Button>
               <div className="text-center text-sm">
-                Don't have an account?{' '}
+                Don&apos;t have an account?{' '}
                 <button
                   type="button"
                   onClick={() => setCurrentStep('signup')}
@@ -235,14 +233,14 @@ function SignUp({
       } else {
         toast({
           title: 'Error',
-          description: result.message || 'Sign up failed',
+          description: result.message ?? 'Sign up failed',
           variant: 'destructive',
         })
       }
-    } catch (error) {
+    } catch {
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
+        description: 'An unknown error occurred',
         variant: 'destructive',
       })
     } finally {
