@@ -61,6 +61,7 @@ export class Doctors {
           gender: input.gender,
           title: input.title,
           dob: new Date(input.dob),
+          phone: input.phone,
           status: 'pending',
         })
         .onConflictDoUpdate({
@@ -215,26 +216,33 @@ export class Doctors {
     return { success: true }
   }
 
- static async updateAvailabilityDetails(
-  input: AvailabilityDetailsSchema,
-  userId: string,
-) {
-  await db.transaction(async (trx) => {
-    await trx
-      .update(doctorsTable)
-      .set({
-        consultationFee: input.consultationFee,
-      })
-      .where(eq(doctorsTable.id, userId))
-    await trx.insert(operatingHours).values({
-      schedule: input.operatingHours,
-      consultationDuration: input.appointmentDuration,
-      doctorId: userId,
-    })
-  })
+  static async updateAvailabilityDetails(
+    input: AvailabilityDetailsSchema,
+    userId: string,
+  ) {
+    await db.transaction(async (trx) => {
+      await trx
+        .update(doctorsTable)
+        .set({
+          consultationFee: input.consultationFee,
+        })
+        .where(eq(doctorsTable.id, userId))
 
-  return { success: true }
-}
+      await trx.insert(operatingHours).values({
+        schedule: input.operatingHours,
+        consultationDuration: input.appointmentDuration,
+        doctorId: userId,
+      })
+
+      // Update profileComplete to true in users table
+      await trx
+        .update(usersTable)
+        .set({ onboardingComplete: true })
+        .where(eq(usersTable.id, userId))
+    })
+
+    return { success: true }
+  }
 
   static async getUpcomingAppointments(doctorIds: string[]) {
     const today = new Date()
@@ -359,6 +367,7 @@ export class Doctors {
             address: true,
             town: true,
             county: true,
+            phone: true,
           },
         },
         specialty: true,
@@ -369,7 +378,6 @@ export class Doctors {
             firstName: true,
             lastName: true,
             email: true,
-            phone: true,
           },
         },
       },
@@ -417,7 +425,7 @@ export class Doctors {
         firstName: doctor.user?.firstName,
         lastName: doctor.user?.lastName,
         email: doctor.user?.email,
-        phone: doctor.user?.phone,
+        phone: doctor?.phone,
         subSpecialties: subspecialties.filter((sub) =>
           (doctor.subSpecialties as Array<{ id: string }>).some(
             (ds) => ds.id === sub.id,
@@ -449,6 +457,7 @@ export class Doctors {
             address: true,
             town: true,
             county: true,
+            phone: true,
           },
         },
         specialty: true,
@@ -460,7 +469,6 @@ export class Doctors {
             firstName: true,
             lastName: true,
             email: true,
-            phone: true,
           },
         },
       },
@@ -487,7 +495,7 @@ export class Doctors {
       firstName: doctor?.user?.firstName,
       lastName: doctor?.user?.lastName,
       email: doctor?.user?.email,
-      phone: doctor?.user?.phone,
+      phone: doctor?.phone,
       subSpecialties,
       reviewStats: {
         averageRating,
@@ -514,6 +522,7 @@ export class Doctors {
         doctor: {
           columns: {
             id: true,
+            phone: true,
           },
           with: {
             profilePicture: true,
@@ -522,7 +531,6 @@ export class Doctors {
                 firstName: true,
                 lastName: true,
                 email: true,
-                phone: true,
               },
             },
           },
@@ -530,6 +538,7 @@ export class Doctors {
         patient: {
           columns: {
             id: true,
+            phone: true,
           },
           with: {
             user: {
@@ -537,7 +546,6 @@ export class Doctors {
                 firstName: true,
                 lastName: true,
                 email: true,
-                phone: true,
               },
             },
           },
@@ -720,7 +728,7 @@ export class Doctors {
         dob: patientsTable.dob,
         firstName: usersTable.firstName,
         lastName: usersTable.lastName,
-        phone: usersTable.phone,
+        phone: patientsTable.phone,
         email: usersTable.email,
       })
       .from(appointments)

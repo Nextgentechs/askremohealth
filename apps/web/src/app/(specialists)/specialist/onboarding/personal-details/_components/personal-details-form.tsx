@@ -1,7 +1,6 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useCurrentUser } from '@web/hooks/use-current-user'
 import { Button } from '@web/components/ui/button'
 import { Input } from '@web/components/ui/input'
 import { Label } from '@web/components/ui/label'
@@ -18,7 +17,6 @@ import { fileToBase64 } from '@web/lib/utils'
 import { api } from '@web/trpc/react'
 import { Loader } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import React from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
@@ -29,27 +27,27 @@ export const personalDetailsSchema = z.object({
   gender: z.enum(['male', 'female']),
   dob: z.string().min(1, 'Date of birth is required'),
   // email: z.string().email(),
-  // phone: z
-  //   .string()
-  //   .refine((val) => /^\d{10}$/.test(val) || /^254\d{9}$/.test(val), {
-  //     message: 'Invalid phone number',
-  //   })
-  //   .refine(
-  //     (val) =>
-  //       val.startsWith('07') ||
-  //       val.startsWith('01') ||
-  //       val.startsWith('2547') ||
-  //       val.startsWith('2541'),
-  //     {
-  //       message: 'Invalid phone number',
-  //     },
-   // )
-    // .transform((val) => {
-    //   if (val.startsWith('0')) {
-    //     return `254${val.slice(1)}`
-    //   }
-    //   return val
-    // }),
+  phone: z
+    .string()
+    .refine((val) => /^\d{10}$/.test(val) || /^254\d{9}$/.test(val), {
+      message: 'Invalid phone number',
+    })
+    .refine(
+      (val) =>
+        val.startsWith('07') ||
+        val.startsWith('01') ||
+        val.startsWith('2547') ||
+        val.startsWith('2541'),
+      {
+        message: 'Invalid phone number',
+      },
+    )
+    .transform((val) => {
+      if (val.startsWith('0')) {
+        return `254${val.slice(1)}`
+      }
+      return val
+    }),
 
   bio: z
     .string()
@@ -81,7 +79,7 @@ export default function PersonalDetails() {
       // firstName: user?.firstName ?? '',
       // lastName: user?.lastName ?? '',
 
-    //  email: user?.email ?? '',
+      //  email: user?.email ?? '',
       // phone: user?.phone ?? '',
       bio: '',
     },
@@ -162,13 +160,13 @@ export default function PersonalDetails() {
             {form.formState.errors.email?.message}
           </p>
         </div> */}
-        {/* <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2">
           <Label htmlFor="phone">Phone Number</Label>
           <Input {...form.register('phone')} id="phone" type="tel" />
           <p className="text-[0.8rem] font-medium text-destructive">
             {form.formState.errors.phone?.message}
           </p>
-        </div> */}
+        </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="email">Date of Birth</Label>
           <Input

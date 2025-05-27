@@ -130,7 +130,7 @@ export const personalDetailsSchema = z.object({
   // firstName: z.string(),
   // lastName: z.string(),
   // email: z.string().email().optional(),
-  // phone: z.string(),
+  phone: z.string(),
   dob: z.string(),
   gender: z.enum(['male', 'female']).optional(),
   bio: z.string().optional(),

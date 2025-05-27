@@ -68,9 +68,9 @@ export const users = pgTable('user', {
   firstName: varchar('first_name').notNull(),
   lastName: varchar('last_name').notNull(),
   email: varchar('email'),
-  phone: varchar('phone').unique(),
   password: varchar('password').notNull(),
   role: roleEnum('role').notNull(),
+  onboardingComplete: boolean('onboarding_complete').notNull().default(false),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at')
     .notNull()
@@ -85,6 +85,7 @@ export const patients = pgTable('patient', {
     .references(() => users.id, { onDelete: 'cascade' }),
   
   emergencyContact: varchar('emergency_contact'),
+  phone: varchar('phone').unique(),
   lastAppointment: timestamp('last_appointment'),
   dob: timestamp('dob'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -113,6 +114,7 @@ export const doctors = pgTable('doctor', {
   bio: varchar('bio'),
   gender: genderEnum('gender'),
   title: varchar('title'),
+  phone: varchar('phone').unique(),
   consultationFee: integer('consultation_fee'),
   status: doctorStatusEnum('status').default('pending'),
   dob: timestamp('dob'),
