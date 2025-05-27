@@ -3,6 +3,9 @@ import { publicProcedure } from '../trpc'
 import { eq } from 'drizzle-orm'
 
 export const listSpecialties = publicProcedure.query(async ({ ctx }) => {
+  if (!ctx.db) {
+    throw new Error('Database client not found in context');
+  }
   const data = await ctx.db.query.specialties.findMany({
     columns: {
       id: true,

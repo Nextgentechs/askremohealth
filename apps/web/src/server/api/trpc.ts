@@ -40,6 +40,7 @@ export async function createTRPCContext({ req }: FetchCreateContextFnOptions) {
 
   return {
     req,
+    db,
     cookies: {
       get: (key: string) => {
         const cookie = cookieStore.get(key)

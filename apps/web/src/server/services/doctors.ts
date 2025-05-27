@@ -12,6 +12,7 @@ import {
   operatingHours,
   patients as patientsTable,
   profilePictures,
+  users as usersTable,
 } from '@web/server/db/schema'
 import {
   and,
@@ -57,10 +58,6 @@ export class Doctors {
         .values({
           id: userId,
           userId: userId,
-          // firstName: input.firstName,
-          // lastName: input.lastName,
-          // email: input.email,
-          // phone: input.phone,
           bio: input.bio,
           gender: input.gender,
           title: input.title,
@@ -70,10 +67,6 @@ export class Doctors {
         .onConflictDoUpdate({
           target: doctorsTable.id,
           set: {
-            // firstName: input.firstName,
-            // lastName: input.lastName,
-            // email: input.email,
-            // phone: input.phone,
             bio: input.bio,
             gender: input.gender,
             title: input.title,
@@ -223,35 +216,26 @@ export class Doctors {
     return { success: true }
   }
 
-  static async updateAvailabilityDetails(
-    input: AvailabilityDetailsSchema,
-    userId: string,
-  ) {
-    const client = await clerkClient()
-
-    await db.transaction(async (trx) => {
-      await trx
-        .update(doctorsTable)
-        .set({
-          consultationFee: input.consultationFee,
-        })
-        .where(eq(doctorsTable.id, userId))
-      await trx.insert(operatingHours).values({
-        schedule: input.operatingHours,
-        consultationDuration: input.appointmentDuration,
-        doctorId: userId,
+ static async updateAvailabilityDetails(
+  input: AvailabilityDetailsSchema,
+  userId: string,
+) {
+  await db.transaction(async (trx) => {
+    await trx
+      .update(doctorsTable)
+      .set({
+        consultationFee: input.consultationFee,
       })
-
-      await client.users.updateUser(userId, {
-        publicMetadata: {
-          onboardingComplete: true,
-          role: 'specialist',
-        },
-      })
+      .where(eq(doctorsTable.id, userId))
+    await trx.insert(operatingHours).values({
+      schedule: input.operatingHours,
+      consultationDuration: input.appointmentDuration,
+      doctorId: userId,
     })
+  })
 
-    return { success: true }
-  }
+  return { success: true }
+}
 
   static async getUpcomingAppointments(doctorIds: string[]) {
     const today = new Date()
@@ -337,12 +321,17 @@ export class Doctors {
       conditions.push(exists(query))
     }
     if (input.query) {
-      conditions.push(
-        or(
-          ilike(doctorsTable.firstName, `%${input.query}%`),
-          ilike(doctorsTable.lastName, `%${input.query}%`),
-        ),
-      )
+      // Join with users table for name search
+      const userSubquery = db
+        .select({ id: usersTable.id })
+        .from(usersTable)
+        .where(
+          or(
+            ilike(usersTable.firstName, `%${input.query}%`),
+            ilike(usersTable.lastName, `%${input.query}%`),
+          ),
+        )
+      conditions.push(inArray(doctorsTable.userId, userSubquery))
     }
 
     return conditions.length ? and(...conditions) : undefined
@@ -375,6 +364,15 @@ export class Doctors {
         },
         specialty: true,
         operatingHours: true,
+        user: {
+          // join users table for name and contact info
+          columns: {
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+          },
+        },
       },
     })
 
@@ -417,6 +415,10 @@ export class Doctors {
 
       return {
         ...doctor,
+        firstName: doctor.user?.firstName,
+        lastName: doctor.user?.lastName,
+        email: doctor.user?.email,
+        phone: doctor.user?.phone,
         subSpecialties: subspecialties.filter((sub) =>
           (doctor.subSpecialties as Array<{ id: string }>).some(
             (ds) => ds.id === sub.id,
@@ -453,6 +455,15 @@ export class Doctors {
         specialty: true,
         operatingHours: true,
         reviews: true,
+        user: {
+          // join users table for name and contact info
+          columns: {
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+          },
+        },
       },
     })
 
@@ -474,6 +485,10 @@ export class Doctors {
 
     return {
       ...doctor,
+      firstName: doctor?.user?.firstName,
+      lastName: doctor?.user?.lastName,
+      email: doctor?.user?.email,
+      phone: doctor?.user?.phone,
       subSpecialties,
       reviewStats: {
         averageRating,
@@ -503,13 +518,29 @@ export class Doctors {
           },
           with: {
             profilePicture: true,
+            user: {
+              columns: {
+                firstName: true,
+                lastName: true,
+                email: true,
+                phone: true,
+              },
+            },
           },
         },
         patient: {
           columns: {
             id: true,
-            firstName: true,
-            lastName: true,
+          },
+          with: {
+            user: {
+              columns: {
+                firstName: true,
+                lastName: true,
+                email: true,
+                phone: true,
+              },
+            },
           },
         },
       },
@@ -665,16 +696,19 @@ export class Doctors {
   }) {
     const offset = (filter.page - 1) * filter.limit
 
+    // Join patients with users for name search and selection
     const countQuery = db
       .select({ count: count() })
       .from(appointments)
+      .innerJoin(patientsTable, eq(appointments.patientId, patientsTable.id))
+      .innerJoin(usersTable, eq(patientsTable.userId, usersTable.id))
       .where(
         and(
           eq(appointments.doctorId, filter.doctorId),
           filter.query
             ? or(
-                ilike(patientsTable.firstName, `%${filter.query}%`),
-                ilike(patientsTable.lastName, `%${filter.query}%`),
+                ilike(usersTable.firstName, `%${filter.query}%`),
+                ilike(usersTable.lastName, `%${filter.query}%`),
               )
             : undefined,
         ),
@@ -683,22 +717,23 @@ export class Doctors {
     const patientsQuery = db
       .select({
         patientId: appointments.patientId,
-        firstName: patientsTable.firstName,
-        lastName: patientsTable.lastName,
         lastAppointment: patientsTable.lastAppointment,
-        phone: patientsTable.phone,
-        email: patientsTable.email,
         dob: patientsTable.dob,
+        firstName: usersTable.firstName,
+        lastName: usersTable.lastName,
+        phone: usersTable.phone,
+        email: usersTable.email,
       })
       .from(appointments)
       .innerJoin(patientsTable, eq(appointments.patientId, patientsTable.id))
+      .innerJoin(usersTable, eq(patientsTable.userId, usersTable.id))
       .where(
         and(
           eq(appointments.doctorId, filter.doctorId),
           filter.query
             ? or(
-                ilike(patientsTable.firstName, `%${filter.query}%`),
-                ilike(patientsTable.lastName, `%${filter.query}%`),
+                ilike(usersTable.firstName, `%${filter.query}%`),
+                ilike(usersTable.lastName, `%${filter.query}%`),
               )
             : undefined,
         ),

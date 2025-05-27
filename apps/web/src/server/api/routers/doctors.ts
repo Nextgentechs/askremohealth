@@ -158,14 +158,15 @@ export const searchPatient = doctorProcedure
     return ctx.db
       .select({
         id: patientsTable.id,
-        firstName: patientsTable.firstName,
-        lastName: patientsTable.lastName,
+        firstName: usersTable.firstName,
+        lastName: usersTable.lastName,
       })
       .from(patientsTable)
+      .innerJoin(usersTable, eq(patientsTable.userId, usersTable.id))
       .where(
         or(
-          ilike(patientsTable.firstName, `%${input.query}%`),
-          ilike(patientsTable.lastName, `%${input.query}%`),
+          ilike(usersTable.firstName, `%${input.query}%`),
+          ilike(usersTable.lastName, `%${input.query}%`),
         ),
       )
       .limit(6)
