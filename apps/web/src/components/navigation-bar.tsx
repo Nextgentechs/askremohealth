@@ -1,7 +1,6 @@
 'use client'
 
-import { useClerk } from '@clerk/nextjs'
-import { api, type RouterOutputs } from '@web/trpc/react'
+import { useCurrentUser } from '@web/hooks/use-current-user'
 import {
   Ambulance,
   Book,
@@ -56,7 +55,6 @@ const navOptions = [
     href: '/about-us',
     icon: Info,
   },
-  
   {
     label: 'Consult a Doctor',
     href: '/find-specialists',
@@ -121,13 +119,13 @@ function AuthButtons({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div className={`${className}`} {...props}>
-      
+      {/* Add your login/signup buttons here if needed */}
     </div>
   )
 }
 
 function MobileMenu() {
-  const { data: user } = api.users.currentUser.useQuery()
+  const { user } = useCurrentUser()
 
   return (
     <Sheet>
@@ -189,11 +187,8 @@ function MobileMenu() {
 function CurrentUser({
   user,
 }: {
-  user: RouterOutputs['users']['currentUser']
+  user: { firstName?: string; lastName?: string }
 }) {
-  const { signOut } = useClerk()
-  const utils = api.useUtils()
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -206,7 +201,6 @@ function CurrentUser({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width] min-w-44 rounded-lg">
-        {/* <DropdownMenuLabel>My Account</DropdownMenuLabel> */}
         <DropdownMenuGroup>
           <Link href="/specialist/upcoming-appointments">
             <DropdownMenuItem className="cursor-pointer">
@@ -226,8 +220,8 @@ function CurrentUser({
           <DropdownMenuItem
             className="cursor-pointer"
             onClick={async () => {
-              await signOut()
-              await utils.users.currentUser.refetch()
+              await fetch('/api/auth/signout', { method: 'POST' })
+              window.location.reload()
             }}
           >
             <LogOut />
@@ -240,7 +234,7 @@ function CurrentUser({
 }
 
 export default function NavigationBar() {
-  const { data: user } = api.users.currentUser.useQuery()
+  const { user } = useCurrentUser()
 
   return (
     <div className="flex w-full flex-row items-center justify-between lg:px-5">
@@ -269,12 +263,11 @@ export default function NavigationBar() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-                <Link href={option.href ?? '#'}>
-                  <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-                    <span>{option.label}</span>
-                  </NavigationMenuLink>
-                </Link>
-
+              <Link href={option.href ?? '#'}>
+                <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                  <span>{option.label}</span>
+                </NavigationMenuLink>
+              </Link>
             )}
           </NavigationMenuItem>
         ))}

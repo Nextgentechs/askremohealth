@@ -56,10 +56,11 @@ export class Doctors {
         .insert(doctorsTable)
         .values({
           id: userId,
-          firstName: input.firstName,
-          lastName: input.lastName,
-          email: input.email,
-          phone: input.phone,
+          userId: userId,
+          // firstName: input.firstName,
+          // lastName: input.lastName,
+          // email: input.email,
+          // phone: input.phone,
           bio: input.bio,
           gender: input.gender,
           title: input.title,
@@ -69,10 +70,10 @@ export class Doctors {
         .onConflictDoUpdate({
           target: doctorsTable.id,
           set: {
-            firstName: input.firstName,
-            lastName: input.lastName,
-            email: input.email,
-            phone: input.phone,
+            // firstName: input.firstName,
+            // lastName: input.lastName,
+            // email: input.email,
+            // phone: input.phone,
             bio: input.bio,
             gender: input.gender,
             title: input.title,

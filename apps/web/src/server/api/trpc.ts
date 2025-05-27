@@ -6,22 +6,37 @@ import { redisClient } from '@web/redis/redis'
 import type { FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch'
 import { sessionSchema } from '../lib/session'
 import { cookies } from 'next/headers'
+import { db } from '../db'
+import { users } from '../db/schema'
+import { eq } from 'drizzle-orm'
 
 
 export async function createTRPCContext({ req }: FetchCreateContextFnOptions) {
-  const cookieStore = cookies()
-  const sessionToken = (await cookieStore).get('session-id')?.value
+  // Await cookies() before using it!
+ 
+  const cookieStore = await cookies()
+  const sessionToken = cookieStore.get('session-id')?.value
+
+   
 
   let user = null
-  if (sessionToken) {
-    const rawSession = await redisClient.get(`session:${sessionToken}`)
-    if (rawSession) {
-      const parsed = sessionSchema.safeParse(JSON.parse(rawSession))
-      if (parsed.success) {
-        user = parsed.data
-      }
+ if (sessionToken) {
+  const rawSession = await redisClient.get(`session:${sessionToken}`)
+ // console.log('Raw Session:', rawSession)
+  if (rawSession) {
+    const parsed = sessionSchema.safeParse(
+      typeof rawSession === 'string' ? JSON.parse(rawSession) : rawSession
+    )
+    if (parsed.success) {
+      // Fetch the full user from the database
+      user = await db.query.users.findFirst({
+        where: eq(users.id, parsed.data.id),
+      })
     }
   }
+}
+
+ // console.log('tRPC context user:', user)
 
   return {
     req,
@@ -35,10 +50,10 @@ export async function createTRPCContext({ req }: FetchCreateContextFnOptions) {
           secure: options.secure ?? true,
           httpOnly: options.httpOnly ?? false,
           sameSite: options.sameSite ?? 'lax',
-          maxAge: options.maxAge
+          maxAge: options.maxAge,
         })
       },
-      delete: (key: string) => cookieStore.delete(key)
+      delete: (key: string) => cookieStore.delete(key),
     },
     user,
   }
