@@ -20,12 +20,12 @@ export const createAppointment = procedure
       where: (patient, { eq }) => eq(patient.id, ctx.user?.id ?? ''),
     })
     if (!patient) {
-      const currentUser = await clerkCurrentUser()
+      const currentUser = ctx.user
       await ctx.db.insert(patients).values({
         id: ctx.user?.id ?? '',
         firstName: currentUser?.firstName ?? '',
         lastName: currentUser?.lastName ?? '',
-        email: input.email ?? currentUser?.emailAddresses[0]?.emailAddress,
+        email: input.email ?? currentUser?.email ?? '',
         phone: input.phone,
         dob: input.dob,
         lastAppointment: input.date,
