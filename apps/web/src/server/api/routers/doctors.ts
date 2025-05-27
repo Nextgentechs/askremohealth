@@ -1,6 +1,7 @@
 import { patients as patientsTable } from '@web/server/db/schema'
 import Appointments from '@web/server/services/appointments'
 import { Doctors } from '@web/server/services/doctors'
+import { users as usersTable } from '@web/server/db/schema'
 import assert from 'assert'
 import { db } from '@web/server/db'
 import { eq, ilike, or } from 'drizzle-orm'
@@ -44,14 +45,21 @@ export const updateAvailabilityDetails = procedure
 
 export const currentDoctor = publicProcedure.query(async ({ ctx }) => {
   if (!ctx.user) return null
+  const userId = ctx.user.id ?? ''
   const doctor = await db.query.doctors.findFirst({
-    where: (doctor) => eq(doctor.id, ctx.user.id ?? ''),
+    where: (doctor) => eq(doctor.id, userId),
     with: {
       profilePicture: true,
       specialty: true,
       facility: true,
       operatingHours: true,
       certificates: true,
+      user: { // <-- join user table for names
+        columns: {
+          firstName: true,
+          lastName: true,
+        },
+      },
     },
   })
   return doctor ?? null
@@ -109,7 +117,8 @@ export const confirmAppointment = doctorProcedure
 export const declineAppointment = doctorProcedure
   .input(z.object({ appointmentId: z.string() }))
   .mutation(async ({ ctx, input }) => {
-    return Doctors.declineAppointment(input.appointmentId, ctx.user.id ?? '')
+    assert(ctx.user?.id, 'User not found')
+    return Doctors.declineAppointment(input.appointmentId, ctx.user.id)
   })
 
 export const cancelAppointment = doctorProcedure
@@ -127,8 +136,9 @@ export const postAppointment = doctorProcedure
     }),
   )
   .mutation(async ({ input, ctx }) => {
+    assert(ctx.user?.id, 'User not found')
     return Doctors.postAppointment(
-      ctx.user.id ?? '',
+      ctx.user.id,
       input.appointmentId,
       input.doctorNotes,
       input.attachment,
@@ -144,9 +154,10 @@ export const patients = doctorProcedure
     }),
   )
   .query(async ({ ctx, input }) => {
+    assert(ctx.user?.id, 'User not found')
     return Doctors.patients({
       query: input.query,
-      doctorId: ctx.user.id ?? '',
+      doctorId: ctx.user.id,
       page: input.page,
       limit: input.limit,
     })

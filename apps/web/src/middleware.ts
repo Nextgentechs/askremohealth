@@ -45,7 +45,7 @@ export default clerkMiddleware(async (auth, req) => {
     const email = sessionClaims?.email
     const isAdmin =
       sessionClaims?.metadata?.role === 'admin' ||
-      TEST_ADMIN_EMAILS.includes(email)
+      (typeof email === 'string' && TEST_ADMIN_EMAILS.includes(email))
 
     if (!isAdmin) {
       return NextResponse.redirect(new URL('/auth', req.url))
