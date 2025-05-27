@@ -1,0 +1,27 @@
+import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
+import { AuthService } from '@web/server/services/auth'
+
+export async function POST(request: Request) {
+  try {
+    const { email, password, firstName, lastName } = await request.json()
+    const result = await AuthService.signUp({ email, password, firstName, lastName })
+    //auto-login after signup
+    if ('sessionId' in result && result.sessionId) {
+      (await cookies()).set('session-id', String(result.sessionId), {
+              path: '/',
+              secure: process.env.NODE_ENV === 'production',
+              httpOnly: false,
+              sameSite: 'lax',
+              maxAge: 60 * 60 * 24 * 7,
+            })
+    }
+    return NextResponse.json(result)
+  } catch (error) {
+    console.error('Error in signUp:', error)
+    return NextResponse.json(
+      { success: false, message: 'Sign up failed', error: error instanceof Error ? error.message : String(error) },
+      { status: 500 }
+    )
+  }
+}

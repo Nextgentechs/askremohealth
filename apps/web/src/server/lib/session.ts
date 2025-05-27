@@ -18,19 +18,19 @@ export type Cookies = {
   delete: (key: string) => void
 }
 
+// Create a session in Redis and return the sessionId (do not set cookies here)
 export async function createUserSession(
-  user: UserSession,
-  cookies: Pick<Cookies, "set">
+  user: UserSession
 ) {
   const sessionId = crypto.randomBytes(32).toString("hex") 
   await redisClient.set(`session:${sessionId}`, JSON.stringify(sessionSchema.parse(user)), {
     ex: SESSION_EXPIRATION_SECONDS,
   })
-
-  setCookie(sessionId, cookies)
   console.log('session created successfully')
+  return sessionId
 }
 
+// Only for server-side usage (SSR, not API route)
 export function getUserFromSession(cookies: Pick<Cookies, "get">) {
   const sessionId = cookies.get(COOKIE_SESSION_KEY)?.value
   if (!sessionId) return null
@@ -50,8 +50,9 @@ export async function updateUserSessionData(
   })
 }
 
+// Only update expiration in Redis (do not set cookies here)
 export async function updateUserSessionExpiration(
-  cookies: Pick<Cookies, "get" | "set">
+  cookies: Pick<Cookies, "get">
 ) {
   const sessionId = cookies.get(COOKIE_SESSION_KEY)?.value
   if (!sessionId) return null
@@ -62,9 +63,9 @@ export async function updateUserSessionExpiration(
   await redisClient.set(`session:${sessionId}`, JSON.stringify(user), {
     ex: SESSION_EXPIRATION_SECONDS,
   })
-  setCookie(sessionId, cookies)
 }
 
+// Remove session from Redis and delete cookie (for SSR/server-side usage)
 export async function removeUserFromSession(
   cookies: Pick<Cookies, "get" | "delete">
 ) {
@@ -75,9 +76,11 @@ export async function removeUserFromSession(
   cookies.delete(COOKIE_SESSION_KEY)
 }
 
-function setCookie(sessionId: string, cookies: Pick<Cookies, "set">) {
+// Use this ONLY in API routes where you have access to the cookies() object from next/headers
+export function setCookie(sessionId: string, cookies: Pick<Cookies, "set">) {
   cookies.set(COOKIE_SESSION_KEY, sessionId, {
-    secure: true,
+    path: '/',
+    secure: process.env.NODE_ENV === 'production',
     httpOnly: false,
     sameSite: "lax",
     maxAge: SESSION_EXPIRATION_SECONDS

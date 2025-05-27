@@ -23,21 +23,21 @@ const TEST_ADMIN_EMAILS = ['kristinenyaga@gmail.com']
 export default clerkMiddleware(async (auth, req) => {
   if (isProtectedRoute(req)) {
     // ⛔️ Make sure to call protect() *before* calling auth()
-    await auth().protect()
+    //await auth().protect()
   }
 
   const { sessionClaims } = await auth()
   console.log(sessionClaims,sessionClaims)
 
-  if (isSpecialistRoute(req)) {
-    const onboardingComplete = sessionClaims?.metadata?.onboardingComplete
+  // if (isSpecialistRoute(req)) {
+  //   const onboardingComplete = sessionClaims?.metadata?.onboardingComplete
 
-    if (!onboardingComplete) {
-      return NextResponse.redirect(
-        new URL('/specialist/onboarding/personal-details', req.url)
-      )
-    }
-  }
+  //   if (!onboardingComplete) {
+  //     return NextResponse.redirect(
+  //       new URL('/specialist/onboarding/personal-details', req.url)
+  //     )
+  //   }
+  // }
 
   if (isAdminRoute(req)) {
     // Already protected above, but double-check

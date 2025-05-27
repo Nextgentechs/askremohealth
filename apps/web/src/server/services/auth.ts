@@ -28,6 +28,8 @@ type SignInInput = {
   password: string
 }
 
+// ...existing code...
+
 export class AuthService {
   static async signUp({ email, password, firstName, lastName }: SignUpInput) {
     try {
@@ -63,8 +65,8 @@ export class AuthService {
       })
     }
   }
-
-  static async signIn({ email, password }: SignInInput, ctx: Context) {
+  
+  static async signIn({ email, password }: SignInInput) {
     try {
       const user = await db.query.users.findFirst({
         where: eq(users.email, email),
@@ -90,10 +92,11 @@ export class AuthService {
       }
 
       const sessionUser = { id: user.id, email: user.email ?? '' };
-      await createUserSession(sessionUser, ctx.cookies);
+      // Only create the session and return the sessionId
+      const sessionId = await createUserSession(sessionUser); // <-- No cookies argument
 
       console.log('sessionUser', sessionUser)
-      return { success: true, userId: user.id };
+      return { success: true, userId: user.id, sessionId };
     } catch (error) {
       console.error('Error in signIn:', error);
       if (error instanceof TRPCError) {

@@ -8,9 +8,9 @@ import { procedure, publicProcedure } from '../trpc'
 import { appointmentListSchema, newAppointmentSchema } from '../validators'
 
 export const currentUser = publicProcedure.query(async ({ ctx }) => {
+  // Return the user from ctx, which is set in your tRPC context (from your own session logic)
   if (!ctx.user) return null
-  const clerkUser = await clerkCurrentUser()
-  return clerkUser ?? null
+  return ctx.user
 })
 
 export const createAppointment = procedure
