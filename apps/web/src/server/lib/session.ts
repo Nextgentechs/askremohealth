@@ -12,8 +12,16 @@ export const sessionSchema = z.object({
 
 type UserSession = z.infer<typeof sessionSchema>
 
+type CookieOptions = {
+  secure?: boolean
+  httpOnly?: boolean
+  sameSite?: 'lax' | 'strict' | 'none'
+  maxAge?: number
+  path?: string
+}
+
 export type Cookies = {
-  set: (key: string, value: string, options: any) => void
+  set: (key: string, value: string, options: Partial<CookieOptions>) => void
   get: (key: string) => { name: string; value: string } | undefined
   delete: (key: string) => void
 }
@@ -89,7 +97,7 @@ export function setCookie(sessionId: string, cookies: Pick<Cookies, "set">) {
 
 async function getUserSessionById(sessionId: string) {
   const rawUser = await redisClient.get(`session:${sessionId}`)
-  if (!rawUser) return null
+  if (!rawUser || typeof rawUser !== 'string') return null
 
   const parsed = sessionSchema.safeParse(JSON.parse(rawUser))
   return parsed.success ? parsed.data : null

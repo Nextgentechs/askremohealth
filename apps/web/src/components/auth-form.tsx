@@ -100,7 +100,7 @@ function Login({
           duration: 3000,
         })
         // Optionally reload or redirect
-        window.location.reload()
+        window.location.href = '/specialist/onboarding/personal-details'
       } else {
         toast({
           title: 'Error',
@@ -231,7 +231,7 @@ function SignUp({
       const result = await res.json()
       if (result.success) {
         toast({ title: 'Success', description: 'Sign up was successful!' })
-        router.push('/specialist/onboarding/personal-details') // Redirect to your desired page
+        router.push('/auth') // Redirect to your desired page
       } else {
         toast({
           title: 'Error',

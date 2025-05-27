@@ -1,42 +1,46 @@
 // server/api/trpc.ts
 import { initTRPC, TRPCError } from '@trpc/server'
+import type { FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch'
+import { redisClient } from '@web/redis/redis'
+import { eq } from 'drizzle-orm'
+import { cookies } from 'next/headers'
 import superjson from 'superjson'
 import { ZodError } from 'zod'
-import { redisClient } from '@web/redis/redis'
-import type { FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch'
-import { sessionSchema } from '../lib/session'
-import { cookies } from 'next/headers'
 import { db } from '../db'
 import { users } from '../db/schema'
-import { eq } from 'drizzle-orm'
+import { sessionSchema } from '../lib/session'
 
+type CookieOptions = {
+  secure?: boolean
+  httpOnly?: boolean
+  sameSite?: 'lax' | 'strict' | 'none'
+  maxAge?: number
+}
 
 export async function createTRPCContext({ req }: FetchCreateContextFnOptions) {
   // Await cookies() before using it!
- 
+
   const cookieStore = await cookies()
   const sessionToken = cookieStore.get('session-id')?.value
 
-   
-
   let user = null
- if (sessionToken) {
-  const rawSession = await redisClient.get(`session:${sessionToken}`)
- // console.log('Raw Session:', rawSession)
-  if (rawSession) {
-    const parsed = sessionSchema.safeParse(
-      typeof rawSession === 'string' ? JSON.parse(rawSession) : rawSession
-    )
-    if (parsed.success) {
-      // Fetch the full user from the database
-      user = await db.query.users.findFirst({
-        where: eq(users.id, parsed.data.id),
-      })
+  if (sessionToken) {
+    const rawSession = await redisClient.get(`session:${sessionToken}`)
+    // console.log('Raw Session:', rawSession)
+    if (rawSession) {
+      const parsed = sessionSchema.safeParse(
+        typeof rawSession === 'string' ? JSON.parse(rawSession) : rawSession,
+      )
+      if (parsed.success) {
+        // Fetch the full user from the database
+        user = await db.query.users.findFirst({
+          where: eq(users.id, parsed.data.id),
+        })
+      }
     }
   }
-}
 
- // console.log('tRPC context user:', user)
+  // console.log('tRPC context user:', user)
 
   return {
     req,
@@ -46,7 +50,11 @@ export async function createTRPCContext({ req }: FetchCreateContextFnOptions) {
         const cookie = cookieStore.get(key)
         return cookie ? { name: cookie.name, value: cookie.value } : undefined
       },
-      set: (key: string, value: string, options: any = {}) => {
+      set: (
+        key: string,
+        value: string,
+        options: Partial<CookieOptions> = {},
+      ) => {
         cookieStore.set(key, value, {
           secure: options.secure ?? true,
           httpOnly: options.httpOnly ?? false,
@@ -119,7 +127,7 @@ export const publicProcedure = t.procedure
  */
 const authMiddleware = t.middleware(({ ctx, next }) => {
   if (!ctx.user) throw new TRPCError({ code: 'UNAUTHORIZED' })
-  return next({ ctx: {user: ctx.user } })
+  return next({ ctx: { user: ctx.user } })
 })
 
 /**
@@ -127,8 +135,7 @@ const authMiddleware = t.middleware(({ ctx, next }) => {
  */
 
 const doctorMiddleware = t.middleware(({ ctx, next }) => {
-  
-  return next({ ctx: {user: ctx.user } })
+  return next({ ctx: { user: ctx.user } })
 })
 
 /**
@@ -137,8 +144,8 @@ const doctorMiddleware = t.middleware(({ ctx, next }) => {
 
 const adminMiddleware = t.middleware(({ ctx, next }) => {
   if (!ctx.user) throw new TRPCError({ code: 'UNAUTHORIZED' })
-  
-  return next({ ctx: {user: ctx.user } })
+
+  return next({ ctx: { user: ctx.user } })
 })
 /**
  * Authenticated procedure
