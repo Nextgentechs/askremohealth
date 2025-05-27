@@ -1,4 +1,3 @@
-// server/services/auth.ts
 import { TRPCError } from '@trpc/server'
 import bcrypt from 'bcrypt'
 import { eq } from 'drizzle-orm'
@@ -6,15 +5,24 @@ import { db } from '../db'
 import { users } from '../db/schema'
 import { createUserSession } from '../lib/session'
 
-type Context = {
-  req: Request
-  cookies: {
-    get: (key: string) => { name: string; value: string } | undefined
-    set: (key: string, value: string, options: any) => void
-    delete: (key: string) => void
-  }
-  user: any
+type CookieOptions = {
+  secure?: boolean
+  httpOnly?: boolean
+  sameSite?: 'lax' | 'strict' | 'none'
+  maxAge?: number
+  path?: string
 }
+
+// If Context is not used, remove it entirely to fix the lint warning
+// type Context = {
+//   req: Request
+//   cookies: {
+//     get: (key: string) => { name: string; value: string } | undefined
+//     set: (key: string, value: string, options: Partial<CookieOptions>) => void
+//     delete: (key: string) => void
+//   }
+//   user: unknown
+// }
 
 type SignUpInput = {
   email: string
@@ -27,8 +35,6 @@ type SignInInput = {
   email: string
   password: string
 }
-
-// ...existing code...
 
 export class AuthService {
   static async signUp({ email, password, firstName, lastName }: SignUpInput) {
@@ -93,7 +99,7 @@ export class AuthService {
 
       const sessionUser = { id: user.id, email: user.email ?? '' };
       // Only create the session and return the sessionId
-      const sessionId = await createUserSession(sessionUser); // <-- No cookies argument
+      const sessionId = await createUserSession(sessionUser);
 
       console.log('sessionUser', sessionUser)
       return { success: true, userId: user.id, sessionId };

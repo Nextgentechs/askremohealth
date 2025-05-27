@@ -63,7 +63,7 @@ export function ChatBot() {
         timestamp: new Date(),
       }
       setMessages((prev) => [...prev, botMessage])
-    } catch (error) {
+    } catch (_) {
       setMessages((prev) => [
         ...prev,
         {
@@ -97,7 +97,7 @@ export function ChatBot() {
       }
 
       const data = await res.json()
-      return data.response || "I'm sorry, I didn't understand that."
+      return data.response ?? "I'm sorry, I didn't understand that."
     } catch (error) {
       console.error('Fetch failed:', error)
       throw error

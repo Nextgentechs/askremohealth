@@ -1,4 +1,3 @@
-import { clerkClient } from '@clerk/nextjs/server'
 import { TRPCError } from '@trpc/server'
 import { del, put } from '@vercel/blob'
 import { db } from '@web/server/db'

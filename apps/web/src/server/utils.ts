@@ -1,5 +1,5 @@
 import { redisClient } from "@web/redis/redis"
-import { User } from "./db/schema"
+import type { User } from "./db/schema"
 
 export enum AppointmentStatus {
   SCHEDULED = 'scheduled',
