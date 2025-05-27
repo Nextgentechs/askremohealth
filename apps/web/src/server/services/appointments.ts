@@ -42,9 +42,15 @@ export default class Appointments {
         patient: {
           columns: {
             id: true,
-            firstName: true,
-            lastName: true,
             phone: true,
+          },
+          with: {
+            user: {
+              columns: {
+                firstName: true,
+                lastName: true,
+              },
+            },
           },
         },
       },
@@ -132,9 +138,15 @@ export default class Appointments {
         patient: {
           columns: {
             id: true,
-            firstName: true,
-            lastName: true,
             phone: true,
+          },
+          with: {
+            user: {
+              columns: {
+                firstName: true,
+                lastName: true,
+              },
+            },
           },
         },
       },

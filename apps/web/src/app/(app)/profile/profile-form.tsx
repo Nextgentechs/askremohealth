@@ -47,7 +47,7 @@ export function ProfileForm() {
       firstName: currentUser?.firstName ?? '',
       lastName: currentUser?.lastName ?? '',
       email: currentUser?.email ?? '',
-      phone: currentUser?.phone ?? '',
+      phone: '',
       dob: '',
     },
   })

@@ -34,8 +34,8 @@ function DoctorCard() {
         <Avatar className="hidden md:block md:size-28">
           <AvatarImage src={doctorDetails.profilePicture?.url} />
           <AvatarFallback>
-            {doctorDetails.firstName?.charAt(0)}
-            {doctorDetails.lastName?.charAt(0)}
+            {doctorDetails.user?.firstName?.charAt(0)}
+            {doctorDetails.user?.lastName?.charAt(0)}
           </AvatarFallback>
         </Avatar>
         <DoctorDetails doctor={doctorDetails} />

@@ -5,13 +5,13 @@ import { db } from '../db'
 import { users } from '../db/schema'
 import { createUserSession } from '../lib/session'
 
-type CookieOptions = {
-  secure?: boolean
-  httpOnly?: boolean
-  sameSite?: 'lax' | 'strict' | 'none'
-  maxAge?: number
-  path?: string
-}
+// type CookieOptions = {
+//   secure?: boolean
+//   httpOnly?: boolean
+//   sameSite?: 'lax' | 'strict' | 'none'
+//   maxAge?: number
+//   path?: string
+// }
 
 // If Context is not used, remove it entirely to fix the lint warning
 // type Context = {

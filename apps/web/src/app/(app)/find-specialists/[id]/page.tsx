@@ -146,7 +146,7 @@ export default async function Page({
           <BreadcrumbSeparator />
           <BreadcrumbItem>
             <BreadcrumbPage>
-              {doctor.firstName} {doctor.lastName}
+              {doctor.user?.firstName} {doctor.user?.lastName}
             </BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>

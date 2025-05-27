@@ -63,7 +63,7 @@ export function ChatBot() {
         timestamp: new Date(),
       }
       setMessages((prev) => [...prev, botMessage])
-    } catch (_) {
+    } catch (_error) {
       setMessages((prev) => [
         ...prev,
         {
