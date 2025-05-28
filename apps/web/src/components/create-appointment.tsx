@@ -309,8 +309,8 @@ function BookingForm() {
       appointmentType: 'online',
       firstName: currentUser?.firstName ?? '',
       lastName: currentUser?.lastName ?? '',
-      phone: currentUser?.phoneNumbers?.[0]?.phoneNumber ?? '',
-      email: currentUser?.emailAddresses?.[0]?.emailAddress ?? '',
+      phone: '',
+      email: currentUser?.email ?? '',
     },
   })
 
