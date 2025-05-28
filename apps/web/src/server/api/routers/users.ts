@@ -12,7 +12,7 @@ export const currentUser = publicProcedure.query(async ({ ctx }) => {
   // Get additional details based on role
   if (ctx.user.role === 'doctor') {
     const doctorDetails = await db.query.doctors.findFirst({
-      where: (doctor, { eq }) => eq(doctor.id, ctx.user?.id ?? ''),
+      where: (doctor, { eq }) => eq(doctor.userId, ctx.user?.id ?? ''),
       columns: {
         phone: true
       }
@@ -20,7 +20,7 @@ export const currentUser = publicProcedure.query(async ({ ctx }) => {
     return { ...ctx.user, phone: doctorDetails?.phone }
   } else if (ctx.user.role === 'patient') {
     const patientDetails = await db.query.patients.findFirst({
-      where: (patient, { eq }) => eq(patient.id, ctx.user?.id ?? ''),
+      where: (patient, { eq }) => eq(patient.userId, ctx.user?.id ?? ''),
       columns: {
         phone: true
       }
