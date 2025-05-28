@@ -68,6 +68,7 @@ export const users = pgTable('user', {
   firstName: varchar('first_name').notNull(),
   lastName: varchar('last_name').notNull(),
   email: varchar('email'),
+  phone: varchar('phone').unique(),
   password: varchar('password').notNull(),
   role: roleEnum('role').notNull(),
   onboardingComplete: boolean('onboarding_complete').notNull().default(false),
