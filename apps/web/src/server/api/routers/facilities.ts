@@ -1,12 +1,16 @@
-import { publicProcedure } from '../trpc'
-import { z } from 'zod'
-import { Facility } from '@web/server/services/facilities'
+import { publicProcedure } from '../trpc';
+import { z } from 'zod';
+import { Facility } from '@web/server/services/facilities';
+import { Client } from '@googlemaps/google-maps-services-js';
+import { env } from '@web/env';
+
+const googleMapsClient = new Client({});
 
 export const registerFacility = publicProcedure
   .input(z.object({ placeId: z.string() }))
   .mutation(async ({ input }) => {
-    return Facility.register(input.placeId)
-  })
+    return Facility.register(input.placeId);
+  });
 
 export const findByLocation = publicProcedure
   .input(
@@ -16,9 +20,38 @@ export const findByLocation = publicProcedure
     }),
   )
   .query(async ({ input }) => {
-    return Facility.findNearby(input.location, input.searchRadius)
-  })
+    return Facility.findNearby(input.location, input.searchRadius);
+  });
 
 export const listFacilities = publicProcedure.query(async () => {
-  return Facility.list()
-})
+  return Facility.list();
+});
+
+export const searchFacilitiesByName = publicProcedure
+  .input(
+    z.object({
+      query: z.string().min(1),
+    }),
+  )
+  .query(async ({ input }) => {
+    try {
+      const response = await googleMapsClient.placeAutocomplete({
+        params: {
+          input: input.query,
+          components: ['country:KE'],
+          key: env.GOOGLE_MAPS_API_KEY,
+        },
+      });
+
+      const suggestions = response.data.predictions.map((prediction) => ({
+        placeId: prediction.place_id,
+        name: prediction.structured_formatting.main_text,
+        address: prediction.structured_formatting.secondary_text || undefined,
+      }));
+
+      return suggestions;
+    } catch (error) {
+      console.error('Error searching facilities by name:', error);
+      throw new Error('Failed to search facilities');
+    }
+  });
