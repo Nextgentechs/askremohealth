@@ -25,6 +25,18 @@ export const operatingHoursSchema = z.object({
   isOpen: z.boolean(),
 })
 
+export const passwordSchema = z
+  .string()
+  .min(8, { message: 'Password must be at least 8 characters long' })
+  .regex(/[a-z]/, { message: 'Password must include a lowercase letter' })
+  .regex(/[A-Z]/, { message: 'Password must include an uppercase letter' })
+  .regex(/[^a-zA-Z0-9]/, { message: 'Password must include a special character' })
+  .refine((val) => !/\s/.test(val), {
+    message: 'Password must not contain spaces',
+  })
+
+export type PasswordSchema = z.infer<typeof passwordSchema>
+
 export const doctorSignupSchema = z.object({
   title: z.string().optional(),
   firstName: z.string(),

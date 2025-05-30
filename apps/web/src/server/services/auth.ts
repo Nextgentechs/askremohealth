@@ -29,6 +29,7 @@ type SignUpInput = {
   password: string
   firstName: string
   lastName: string
+  role: 'doctor' | 'admin' | 'patient'
 }
 
 type SignInInput = {
@@ -37,7 +38,7 @@ type SignInInput = {
 }
 
 export class AuthService {
-  static async signUp({ email, password, firstName, lastName }: SignUpInput) {
+  static async signUp({ email, password, firstName, lastName, role }: SignUpInput) {
     try {
       const existing = await db.query.users.findFirst({
         where: eq(users.email, email),
@@ -59,7 +60,7 @@ export class AuthService {
           password: hashedPassword, 
           firstName, 
           lastName,
-          role: 'doctor' // Always set role to doctor
+          role
         })
 
       return { success: true }
@@ -78,13 +79,12 @@ export class AuthService {
         where: eq(users.email, email),
       });
 
-      console.log('user', user);
 
       if (!user) {
         console.warn(`SignIn attempt with unknown email: ${email}`);
         throw new TRPCError({
           code: 'UNAUTHORIZED',
-          message: 'Invalid credentials',
+          message: 'SignIn attempt with unknown email',
         });
       }
 
@@ -93,7 +93,7 @@ export class AuthService {
         console.warn(`SignIn failed due to incorrect password for email: ${email}`);
         throw new TRPCError({
           code: 'UNAUTHORIZED',
-          message: 'Invalid credentials',
+          message: 'SignIn failed due to incorrect password for email',
         });
       }
 
@@ -101,10 +101,8 @@ export class AuthService {
       // Only create the session and return the sessionId
       const sessionId = await createUserSession(sessionUser);
 
-      console.log('sessionUser', sessionUser)
       return { success: true, userId: user.id, sessionId };
     } catch (error) {
-      console.error('Error in signIn:', error);
       if (error instanceof TRPCError) {
         throw error;
       }

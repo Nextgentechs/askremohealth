@@ -1,6 +1,6 @@
 'use client'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@web/components/ui/button'
 import {
   Card,
@@ -10,7 +10,6 @@ import {
   CardTitle,
 } from '@web/components/ui/card'
 import { Input } from '@web/components/ui/input'
-import { Label } from '@web/components/ui/label'
 import { toast } from '@web/hooks/use-toast'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Loader } from 'lucide-react'
@@ -27,6 +26,7 @@ import {
   FormMessage,
 } from './ui/form'
 import { InputOTP, InputOTPGroup, InputOTPSlot } from './ui/input-otp'
+import { passwordSchema } from '@web/server/api/validators'
 
 export default function AuthForm() {
   const [currentStep, setCurrentStep] = useState<'login' | 'signup' | 'otp'>(
@@ -72,6 +72,12 @@ export default function AuthForm() {
     </AnimatePresence>
   )
 }
+const loginSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: passwordSchema
+})
+
+type LoginFormData = z.infer<typeof loginSchema>
 
 function Login({
   setCurrentStep,
@@ -79,16 +85,22 @@ function Login({
   setCurrentStep: (step: 'login' | 'signup' | 'otp') => void
 }) {
   const [isLoading, setIsLoading] = useState(false)
-  const [loginForm, setLoginForm] = useState({ email: '', password: '' })
+  const form = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    }
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
+  })
+
+  async function onSubmit(data:LoginFormData) {
     setIsLoading(true)
     try {
       const res = await fetch('/api/auth/signin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(loginForm),
+        body: JSON.stringify(data),
       })
       const result = await res.json()
       if (result.success) {
@@ -102,7 +114,7 @@ function Login({
       } else {
         toast({
           title: 'Error',
-          description: result.message ?? 'Login failed',
+          description: result.error ?? 'Login failed',
           variant: 'destructive',
         })
       }
@@ -142,46 +154,52 @@ function Login({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={onSubmit}>
-            <div className="grid gap-6">
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full gap-2"
-                onClick={handleGoogleSignIn}
-                disabled={isLoading}
-              >
-                <Google className="h-5 w-5" />
-                Sign in with Google
-              </Button>
-              <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
-                <span className="relative z-10 bg-background px-2 text-muted-foreground">
-                  Or continue with
-                </span>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  value={loginForm.email}
-                  onChange={(e) =>
-                    setLoginForm({ ...loginForm, email: e.target.value })
-                  }
-                />
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={loginForm.password}
-                  onChange={(e) =>
-                    setLoginForm({ ...loginForm, password: e.target.value })
-                  }
-                />
-              </div>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full gap-2"
+            onClick={handleGoogleSignIn}
+            disabled={isLoading}
+          >
+            <Google className="h-5 w-5" />
+            Sign in with Google
+          </Button>
+          <div className="relative my-2 text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
+            <span className="relative z-10 bg-background px-2 text-muted-foreground">
+              Or continue with
+            </span>
+          </div>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="you@example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="********" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? <Loader className="animate-spin" /> : 'Login'}
+                {isLoading ? <Loader className="animate-spin" /> : 'Sign Up'}
               </Button>
               <div className="text-center text-sm">
                 Don&apos;t have an account?{' '}
@@ -193,8 +211,8 @@ function Login({
                   Sign Up
                 </button>
               </div>
-            </div>
-          </form>
+            </form>
+          </Form>
         </CardContent>
       </Card>
     </div>
@@ -202,6 +220,15 @@ function Login({
 }
 
 
+const signUpSchema = z.object({
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
+  email: z.string().email('Invalid email address'),
+  password: passwordSchema,
+  role:z.string()
+})
+
+type SignUpFormData = z.infer<typeof signUpSchema>
 
 function SignUp({
   setCurrentStep,
@@ -209,22 +236,30 @@ function SignUp({
   setCurrentStep: (step: 'login' | 'signup' | 'otp') => void
 }) {
   const [isLoading, setIsLoading] = useState(false)
-  const [signUpForm, setSignUpForm] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
+  const searchParams = useSearchParams()
+  const role = searchParams.get("role")
+
+
+  const form = useForm<SignUpFormData>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      password: '',
+      role : role ?? ''
+    }
+    
   })
   const router = useRouter()
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
+  async function onSubmit(data:SignUpFormData) {
     setIsLoading(true)
     try {
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(signUpForm),
+        body: JSON.stringify(data),
       })
       const result = await res.json()
       if (result.success) {
@@ -258,71 +293,78 @@ function SignUp({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={onSubmit}>
-            <div className="grid gap-6">
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full gap-2"
-                onClick={() => signIn('google', { callbackUrl: '/' })}
-                disabled={isLoading}
-              >
-                <Google className="h-5 w-5" />
-                Sign up with Google
-              </Button>
-              <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
-                <span className="relative z-10 bg-background px-2 text-muted-foreground">
-                  Or continue with
-                </span>
-              </div>
-              <div className="grid gap-2">
-                <div className="flex gap-2">
-                  <div className="flex-1">
-                    <Label htmlFor="firstName">First Name</Label>
-                    <Input
-                      id="firstName"
-                      value={signUpForm.firstName}
-                      onChange={(e) =>
-                        setSignUpForm({
-                          ...signUpForm,
-                          firstName: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <Label htmlFor="lastName">Last Name</Label>
-                    <Input
-                      id="lastName"
-                      value={signUpForm.lastName}
-                      onChange={(e) =>
-                        setSignUpForm({
-                          ...signUpForm,
-                          lastName: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                </div>
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={signUpForm.email}
-                  onChange={(e) =>
-                    setSignUpForm({ ...signUpForm, email: e.target.value })
-                  }
-                />
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={signUpForm.password}
-                  onChange={(e) =>
-                    setSignUpForm({ ...signUpForm, password: e.target.value })
-                  }
-                />
-              </div>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full gap-2"
+            onClick={() => signIn('google', { callbackUrl: '/' })}
+            disabled={isLoading}
+          >
+            <Google className="h-5 w-5" />
+            Sign up with Google
+          </Button>
+          <div className="relative my-2 text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
+            <span className="relative z-10 bg-background px-2 text-muted-foreground">
+              Or continue with
+            </span>
+          </div>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="firstName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>First Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="John" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="lastName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Last Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Doe" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="you@example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="********" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? <Loader className="animate-spin" /> : 'Sign Up'}
               </Button>
@@ -336,8 +378,8 @@ function SignUp({
                   Login
                 </button>
               </div>
-            </div>
-          </form>
+            </form>
+          </Form>
         </CardContent>
       </Card>
     </div>

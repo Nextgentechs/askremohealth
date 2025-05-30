@@ -119,7 +119,23 @@ function AuthButtons({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div className={`${className}`} {...props}>
-      {/* Add your login/signup buttons here if needed */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" className="flex items-center gap-2">
+            <User className="size-4" />
+            <span>Login</span>
+            <ChevronDown className="size-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="min-w-40">
+          <Link href="/auth?role=doctor">
+            <DropdownMenuItem className="cursor-pointer">Login as Doctor</DropdownMenuItem>
+          </Link>
+          <Link href="/auth?role=patient">
+            <DropdownMenuItem className="cursor-pointer">Login as Patient</DropdownMenuItem>
+          </Link>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   )
 }

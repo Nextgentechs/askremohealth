@@ -34,7 +34,6 @@ export async function createUserSession(
   await redisClient.set(`session:${sessionId}`, JSON.stringify(sessionSchema.parse(user)), {
     ex: SESSION_EXPIRATION_SECONDS,
   })
-  console.log('session created successfully')
   return sessionId
 }
 
