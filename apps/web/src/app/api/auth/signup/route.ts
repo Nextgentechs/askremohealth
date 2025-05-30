@@ -4,8 +4,8 @@ import { AuthService } from '@web/server/services/auth'
 
 export async function POST(request: Request): Promise<Response> {
   try {
-    const { email, password, firstName, lastName } = await request.json()
-    const result = await AuthService.signUp({ email, password, firstName, lastName })
+    const { email, password, firstName, lastName,role } = await request.json()
+    const result = await AuthService.signUp({ email, password, firstName, lastName,role })
     //auto-login after signup
     // if ('sessionId' in result && result.sessionId) {
     //   (await cookies()).set('session-id', String(result.sessionId), {
