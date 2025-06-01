@@ -199,7 +199,7 @@ function Login({
                 )}
               />
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? <Loader className="animate-spin" /> : 'Sign Up'}
+                {isLoading ? <Loader className="animate-spin" /> : 'Login'}
               </Button>
               <div className="text-center text-sm">
                 Don&apos;t have an account?{' '}
@@ -297,7 +297,7 @@ function SignUp({
             type="button"
             variant="outline"
             className="w-full gap-2"
-            onClick={() => signIn('google', { callbackUrl: '/' })}
+            onClick={() => signIn('google', { callbackUrl: '/specialist/upcoming-appointments' })}
             disabled={isLoading}
           >
             <Google className="h-5 w-5" />
