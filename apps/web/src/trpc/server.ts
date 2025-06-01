@@ -25,7 +25,19 @@ const createContext = cache(async () => {
     },
   })
 
-  return createTRPCContext({ req })
+  return createTRPCContext({
+    req,
+    resHeaders: new Headers(),
+    info: {
+      accept: null,
+      type: 'query',
+      isBatchCall: false,
+      calls: [],
+      connectionParams: null,
+      signal: new AbortController().signal,
+      url: null
+    },
+  })
 })
 
 
