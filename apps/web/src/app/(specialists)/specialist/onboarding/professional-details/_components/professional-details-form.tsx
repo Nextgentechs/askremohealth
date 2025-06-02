@@ -72,7 +72,7 @@ export const professionalDetailsSchema = z.object({
   facility: z.string().optional(), // place_id, now optional
   officeLocation: z.string().optional(), // place_id, optional
 }).refine(
-  (data) => data.facility || data.officeLocation,
+  (data) => data.facility ?? data.officeLocation,
   {
     message: "Either facility or office location must be provided",
     path: ["facility"], // This will show the error on the facility field
@@ -128,7 +128,7 @@ function SubSpecialtySelect({ specialty }: { specialty: string }) {
           className="flex w-full items-center justify-between disabled:cursor-not-allowed"
           disabled={!specialty}
         >
-          <span className="truncate">{selected || 'Select'}</span>
+          <span className="truncate">{selected ?? 'Select'}</span>
           <ChevronDown className="ml-2 h-4 w-4 shrink-0" />
         </Button>
       </PopoverTrigger>
@@ -240,7 +240,7 @@ export default function ProfessionalDetailsForm() {
         experience: data.experience,
         registrationNumber: data.registrationNumber,
         medicalLicense: data.medicalLicense,
-        facility: data.facility || '', // Convert undefined to empty string
+        facility: data.facility ?? '', // Convert undefined to empty string
         officeLocation: data.officeLocation,
       };
       console.log('Final API data being sent:', apiData);
@@ -481,7 +481,7 @@ export default function ProfessionalDetailsForm() {
       <div className="fixed bottom-0 left-0 right-0 flex justify-end border-t border-t-border bg-background px-6 py-4 sm:px-12">
         <Button
           size="lg"
-          disabled={form.formState.isSubmitting || !form.formState.isValid}
+          disabled={form.formState.isSubmitting ?? !form.formState.isValid}
         >
           {form.formState.isSubmitting ? (
             <Loader className="h-4 w-4 animate-spin" />

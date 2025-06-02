@@ -25,12 +25,13 @@
     "@sanity/client": "^7.0.0",
     "@sanity/presentation-comlink": "^1.0.18",
     "@sanity/preview-url-secret": "^2.1.10",
-    "@sanity/vision": "^3.89.0",
+    "@sanity/vision": "^3.90.0",
     "bcrypt": "^6.0.0",
     "emailjs": "^3.8.1",
     "next-auth": "^5.0.0-beta.27",
     "postgres": "^3.4.5",
-    "sanity": "^3.89.0",
-    "styled-components": "^6.1.18"
+    "sanity": "^3.90.0",
+    "styled-components": "^6.1.18",
+    "use-debounce": "^10.0.4"
   }
 }
