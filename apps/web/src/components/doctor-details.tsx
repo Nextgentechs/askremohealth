@@ -5,11 +5,17 @@ import { Fragment } from 'react'
 import { StarRating } from './star-rating'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
 
-export default function DoctorDetails({
-  doctor,
-}: {
-  doctor: RouterOutputs['doctors']['details']
-}) {
+type DoctorDetailsProps = {
+  doctor: Omit<RouterOutputs['doctors']['details'], 'reviews' | 'office'> & {
+    reviews?: RouterOutputs['doctors']['details']['reviews']
+    office?: RouterOutputs['doctors']['details']['office'] | null
+  }
+}
+
+export default function DoctorDetails({ doctor }: DoctorDetailsProps) {
+  // Get the location information, prioritizing facility over office
+  const locationInfo = doctor.facility ?? doctor.office ?? null
+
   return (
     <div className="flex w-full max-w-xs flex-col gap-6">
       <div className="flex flex-row gap-3">
@@ -47,7 +53,7 @@ export default function DoctorDetails({
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
         <div className="flex flex-row items-start gap-2 text-sm font-normal">
           <Stethoscope className="size-5 shrink-0" />
           <div>
@@ -68,12 +74,12 @@ export default function DoctorDetails({
 
         <div className="flex flex-row items-start gap-2 text-sm font-normal">
           <Hospital className="size-5 shrink-0" />
-          <span className="break-words">{doctor.facility?.name}</span>
+          <span className="break-words">{locationInfo?.name}</span>
         </div>
 
         <div className="flex flex-row items-start gap-2 text-sm font-normal">
           <MapPin className="size-5 shrink-0" />
-          <span className="break-words">{doctor.facility?.address}</span>
+          <span className="break-words">{locationInfo?.address}</span>
         </div>
 
         <div className="flex flex-row items-start gap-2 text-sm font-normal">

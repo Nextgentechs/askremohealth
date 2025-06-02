@@ -12,6 +12,8 @@ import {
   patients as patientsTable,
   profilePictures,
   users as usersTable,
+  officeLocation as officeLocationTable,
+  reviews as reviewsTable,
 } from '@web/server/db/schema'
 import {
   and,
@@ -34,6 +36,7 @@ import {
 import { KENYA_COUNTIES } from '../data/kenya-counties'
 import { AppointmentStatus } from '../utils'
 import { Facility } from './facilities'
+import { OfficeLocation } from './office-locations'
 
 type FilterInput = {
   specialty?: string
@@ -176,7 +179,10 @@ export class Doctors {
         })
       }
 
-      const facility = await Facility.register(input.facility)
+      // Only register facility if one is provided
+      const facility = input.facility ? await Facility.register(input.facility) : null;
+      // Register office location if provided
+      const officeLocation = input.officeLocation ? await OfficeLocation.register(input.officeLocation) : null;
 
       await trx
         .update(doctorsTable)
@@ -185,6 +191,7 @@ export class Doctors {
           subSpecialties: input.subSpecialty.map((id) => ({ id })),
           experience: input.experience,
           facility: facility?.placeId,
+          officeId: officeLocation?.placeId,
           licenseNumber: input.registrationNumber,
         })
         .where(eq(doctorsTable.id, userId))
@@ -361,10 +368,18 @@ export class Doctors {
             county: true,
           },
         },
+        office: {
+          columns: {
+            placeId: true,
+            name: true,
+            address: true,
+            town: true,
+            county: true,
+          },
+        },
         specialty: true,
         operatingHours: true,
         user: {
-          // join users table for name and contact info
           columns: {
             firstName: true,
             lastName: true,
@@ -408,7 +423,7 @@ export class Doctors {
 
       const doctorReviews = reviews.filter((r) => r.doctorId === doctor.id)
       const averageRating = doctorReviews.length
-        ? doctorReviews.reduce((acc, r) => acc + r.rating, 0) /
+        ? doctorReviews.reduce((acc: number, r) => acc + r.rating, 0) /
           doctorReviews.length
         : 0
 
@@ -451,11 +466,23 @@ export class Doctors {
             county: true,
           },
         },
+        office: {
+          columns: {
+            placeId: true,
+            name: true,
+            address: true,
+            town: true,
+            county: true,
+          },
+        },
         specialty: true,
         operatingHours: true,
-        reviews: true,
+        reviews: {
+          columns: {
+            rating: true,
+          },
+        },
         user: {
-          // join users table for name and contact info
           columns: {
             firstName: true,
             lastName: true,
@@ -466,32 +493,40 @@ export class Doctors {
       },
     })
 
+    if (!doctor) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Doctor not found',
+      })
+    }
+
     const subSpecialties = await db.query.subSpecialties.findMany({
       where: (subSpecialty, { inArray }) =>
         inArray(
           subSpecialty.id,
-          (doctor?.subSpecialties as Array<{ id: string }>)?.map((s) => s.id),
+          (doctor.subSpecialties as Array<{ id: string }>)?.map((s) => s.id),
         ),
     })
 
-    const reviews = doctor?.reviews
+    const doctorReviews = doctor.reviews as Array<{ rating: number }>
+    const reviews = doctorReviews
       .map((r) => r.rating)
-      .filter((r) => r !== null)
+      .filter((r): r is number => r !== null)
 
-    const averageRating = reviews?.length
-      ? reviews.reduce((acc, rating) => acc + rating, 0) / reviews.length
+    const averageRating = reviews.length
+      ? reviews.reduce((acc: number, rating: number) => acc + rating, 0) / reviews.length
       : 0
 
     return {
       ...doctor,
-      firstName: doctor?.user?.firstName,
-      lastName: doctor?.user?.lastName,
-      email: doctor?.user?.email,
-      phone: doctor?.user?.phone,
+      firstName: doctor.user?.firstName,
+      lastName: doctor.user?.lastName,
+      email: doctor.user?.email,
+      phone: doctor.user?.phone,
       subSpecialties,
       reviewStats: {
         averageRating,
-        totalReviews: reviews?.length ?? 0,
+        totalReviews: reviews.length,
       },
     }
   }

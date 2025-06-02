@@ -289,6 +289,15 @@ export const searchByLocation = publicProcedure
             county: true,
           },
         },
+        office: {
+          columns: {
+            placeId: true,
+            name: true,
+            address: true,
+            town: true,
+            county: true,
+          },
+        },
         specialty: true,
         operatingHours: true,
         user: {
