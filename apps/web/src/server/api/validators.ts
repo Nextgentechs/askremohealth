@@ -141,11 +141,18 @@ export type PersonalDetailsSchema = z.infer<typeof personalDetailsSchema>
 export const professionalDetailsSchema = z.object({
   specialty: z.string(),
   subSpecialty: z.array(z.string()),
-  facility: z.string(),
+  facility: z.string().optional(),
+  officeLocation: z.string().optional(),
   experience: z.number(),
   registrationNumber: z.string(),
   medicalLicense: z.string().optional(),
-})
+}).refine(
+  (data) => data.facility || data.officeLocation,
+  {
+    message: "Either facility or office location must be provided",
+    path: ["facility"],
+  }
+);
 export type ProfessionalDetailsSchema = z.infer<
   typeof professionalDetailsSchema
 >

@@ -35,17 +35,14 @@ import { FormProvider, useForm, useFormContext } from 'react-hook-form';
 import { z } from 'zod';
 import { useDebounce } from 'use-debounce';
 
+// Add type for location suggestions
+type LocationSuggestion = {
+  placeId: string;
+  name: string;
+  address?: string;
+};
+
 export const professionalDetailsSchema = z.object({
-  county: z.string().min(1, { message: 'County is required' }), // countyCode
-  town: z
-    .object({
-      id: z.string().min(1, { message: 'Town is required' }),
-      latitude: z.number(),
-      longitude: z.number(),
-    })
-    .refine((data) => data.latitude !== 0 && data.longitude !== 0, {
-      message: 'Town is required',
-    }),
   specialty: z.string().min(1, { message: 'Specialty is required' }),
   subSpecialty: z
     .array(z.string())
@@ -72,8 +69,15 @@ export const professionalDetailsSchema = z.object({
         message: 'Medical license must be less than 5MB',
       },
     ),
-  facility: z.string().min(1, { message: 'Facility is required' }), // place_id
-});
+  facility: z.string().optional(), // place_id, now optional
+  officeLocation: z.string().optional(), // place_id, optional
+}).refine(
+  (data) => data.facility || data.officeLocation,
+  {
+    message: "Either facility or office location must be provided",
+    path: ["facility"], // This will show the error on the facility field
+  }
+);
 export type ProfessionalDetails = z.infer<typeof professionalDetailsSchema>;
 
 function SelectSkeleton() {
@@ -164,63 +168,84 @@ function SubSpecialtySelect({ specialty }: { specialty: string }) {
 export default function ProfessionalDetailsForm() {
   const [selectedSpecialty, setSelectedSpecialty] = React.useState('');
   const [facilityQuery, setFacilityQuery] = React.useState('');
+  const [officeLocationQuery, setOfficeLocationQuery] = React.useState('');
   const [selectedFacility, setSelectedFacility] = React.useState<{
     placeId: string;
     name: string;
     address: string | undefined;
   } | undefined>();
+  const [selectedOfficeLocation, setSelectedOfficeLocation] = React.useState<{
+    placeId: string;
+    name: string;
+    address: string | undefined;
+  } | undefined>();
   const [openFacility, setOpenFacility] = React.useState(false);
+  const [openOfficeLocation, setOpenOfficeLocation] = React.useState(false);
   const router = useRouter();
   const form = useForm<ProfessionalDetails>({
     resolver: zodResolver(professionalDetailsSchema),
     defaultValues: {
-      county: '',
-      town: {
-        id: '',
-        latitude: 0,
-        longitude: 0,
-      },
       specialty: '',
       subSpecialty: [],
       experience: 0,
       registrationNumber: '',
       medicalLicense: '',
       facility: '',
+      officeLocation: '',
     },
   });
 
   const [debouncedFacilityQuery] = useDebounce(facilityQuery, 300);
-  const selectedCounty = form.watch('county');
-  const selectedTown = form.watch('town');
+  const [debouncedOfficeLocationQuery] = useDebounce(officeLocationQuery, 300);
 
   const { data: specialties, isPending: isPendingSpecialties } =
     api.specialties.listSpecialties.useQuery();
-  const { data: counties } = api.locations.counties.useQuery();
-  const { data: towns } = api.locations.towns.useQuery(
-    {
-      countyCode: selectedCounty,
-    },
-    {
-      enabled: !!selectedCounty,
-    },
-  );
   const { data: facilitySuggestions, isPending: isPendingFacilities } =
     api.facilities.searchFacilitiesByName.useQuery(
       { query: debouncedFacilityQuery },
       { enabled: !!debouncedFacilityQuery },
     );
+  const { data: officeLocationSuggestions, isPending: isPendingOfficeLocations } =
+    api.officeLocations.searchOfficeLocationsByName.useQuery(
+      { query: debouncedOfficeLocationQuery },
+      { enabled: !!debouncedOfficeLocationQuery },
+    );
   const { mutateAsync: updateProfessionalDetails } =
     api.doctors.updateProfessionalDetails.useMutation();
   const { mutateAsync: registerFacility } =
     api.facilities.registerFacility.useMutation();
+  const { mutateAsync: registerOfficeLocation } =
+    api.officeLocations.registerOfficeLocation.useMutation();
 
   const onSubmit = form.handleSubmit(async (data) => {
     try {
+      console.log('Initial form data:', data);
+      console.log('Selected facility:', selectedFacility);
+      console.log('Selected office location:', selectedOfficeLocation);
+
       if (selectedFacility) {
+        console.log('Registering facility:', selectedFacility.placeId);
         await registerFacility({ placeId: selectedFacility.placeId });
         data.facility = selectedFacility.placeId;
       }
-      const res = await updateProfessionalDetails(data);
+      if (selectedOfficeLocation) {
+        console.log('Registering office location:', selectedOfficeLocation.placeId);
+        await registerOfficeLocation({ placeId: selectedOfficeLocation.placeId });
+        data.officeLocation = selectedOfficeLocation.placeId;
+      }
+      // Ensure facility is always a string for the API
+      const apiData = {
+        specialty: data.specialty,
+        subSpecialty: data.subSpecialty,
+        experience: data.experience,
+        registrationNumber: data.registrationNumber,
+        medicalLicense: data.medicalLicense,
+        facility: data.facility || '', // Convert undefined to empty string
+        officeLocation: data.officeLocation,
+      };
+      console.log('Final API data being sent:', apiData);
+      const res = await updateProfessionalDetails(apiData);
+      console.log('API response:', res);
       if (res.success) {
         router.push('/specialist/onboarding/availability-details');
       }
@@ -235,12 +260,10 @@ export default function ProfessionalDetailsForm() {
   });
 
   React.useEffect(() => {
-    console.log('Selected County:', selectedCounty);
-    console.log('Selected Town:', selectedTown);
     console.log('Facility Query:', debouncedFacilityQuery);
     console.log('Facility Suggestions:', facilitySuggestions);
     console.log('Selected Facility:', selectedFacility);
-  }, [selectedCounty, selectedTown, debouncedFacilityQuery, facilitySuggestions, selectedFacility]);
+  }, [debouncedFacilityQuery, facilitySuggestions, selectedFacility]);
 
   return (
     <form onSubmit={onSubmit} className="space-y-8">
@@ -284,61 +307,7 @@ export default function ProfessionalDetailsForm() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="county">County</Label>
-          <Select
-            onValueChange={(value) => {
-              form.setValue('county', value);
-            }}
-            value={selectedCounty}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select a county" />
-            </SelectTrigger>
-            <SelectContent>
-              {counties?.map((county) => (
-                <SelectItem key={county.name} value={county.code}>
-                  {county.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="text-[0.8rem] font-medium text-destructive">
-            {form.formState.errors.county?.message}
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="city">City/Town</Label>
-          <Select
-            onValueChange={(value) => {
-              const town = towns?.find((t) => t.id === value);
-              if (town) {
-                form.setValue('town', {
-                  id: town.id ?? '',
-                  latitude: town.location?.lat ?? 0,
-                  longitude: town.location?.lng ?? 0,
-                });
-              }
-            }}
-          >
-            <SelectTrigger disabled={!selectedCounty} className="w-full">
-              <SelectValue placeholder="Select a city/town" />
-            </SelectTrigger>
-            <SelectContent>
-              {towns?.map((town) => (
-                <SelectItem key={town.id} value={town.id ?? ''}>
-                  {town.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="text-[0.8rem] font-medium text-destructive">
-            {form.formState.errors.town?.message}
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="facility">Facility</Label>
+          <Label htmlFor="facility">Facility (Optional)</Label>
           <Popover open={openFacility} onOpenChange={setOpenFacility}>
             <PopoverTrigger asChild>
               <Button
@@ -370,7 +339,6 @@ export default function ProfessionalDetailsForm() {
                             value={facility.name}
                             key={facility.placeId}
                             onSelect={(value) => {
-                              console.log('Facility selected:', value);
                               const selected = facilitySuggestions.find(
                                 (f) => f.name.toLowerCase() === value.toLowerCase(),
                               );
@@ -398,6 +366,69 @@ export default function ProfessionalDetailsForm() {
           </Popover>
           <p className="text-[0.8rem] font-medium text-destructive">
             {form.formState.errors.facility?.message}
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="officeLocation">Office Location (Optional)</Label>
+          <Popover open={openOfficeLocation} onOpenChange={setOpenOfficeLocation}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                className="w-full justify-between text-muted-foreground data-[state=true]:text-foreground"
+                data-state={selectedOfficeLocation ? 'true' : 'false'}
+              >
+                {selectedOfficeLocation?.name ?? 'Search for an office location'}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-full p-0">
+              <Command>
+                <CommandInput
+                  placeholder="Type office location name..."
+                  value={officeLocationQuery}
+                  onValueChange={setOfficeLocationQuery}
+                />
+                <CommandList>
+                  {isPendingOfficeLocations ? (
+                    <SelectSkeleton />
+                  ) : (
+                    <>
+                      <CommandEmpty>No office locations found.</CommandEmpty>
+                      <CommandGroup>
+                        {officeLocationSuggestions?.map((location: LocationSuggestion) => (
+                          <CommandItem
+                            value={location.name}
+                            key={location.placeId}
+                            onSelect={(value) => {
+                              const selected = officeLocationSuggestions.find(
+                                (l: LocationSuggestion) => l.name.toLowerCase() === value.toLowerCase(),
+                              );
+                              if (selected) {
+                                setSelectedOfficeLocation(selected);
+                                form.setValue('officeLocation', selected.placeId);
+                                setOfficeLocationQuery(selected.name);
+                              }
+                              setOpenOfficeLocation(false);
+                            }}
+                          >
+                            {location.name}{location.address ? `, ${location.address}` : ''}
+                            <Check
+                              className="ml-auto h-4 w-4 opacity-0 data-[selected=true]:opacity-100"
+                              data-selected={location.placeId === selectedOfficeLocation?.placeId}
+                            />
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </>
+                  )}
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+          <p className="text-[0.8rem] font-medium text-destructive">
+            {form.formState.errors.officeLocation?.message}
           </p>
         </div>
 

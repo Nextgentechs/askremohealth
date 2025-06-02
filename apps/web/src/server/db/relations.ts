@@ -15,7 +15,8 @@ import {
   users,
   articles,
   article_images,
-  notifications
+  notifications,
+  officeLocation
 } from './schema'
 
 export const doctorRelations = relations(doctors, ({ one, many }) => ({
@@ -30,6 +31,10 @@ export const doctorRelations = relations(doctors, ({ one, many }) => ({
   facility: one(facilities, {
     fields: [doctors.facility],
     references: [facilities.placeId],
+  }),
+  office: one(officeLocation, {
+    fields: [doctors.officeId],
+    references: [officeLocation.placeId],
   }),
   profilePicture: one(profilePictures, {
     fields: [doctors.id],

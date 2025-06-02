@@ -110,6 +110,9 @@ export const doctors = pgTable('doctor', {
   facility: varchar('hospital_id').references(() => facilities.placeId, {
     onDelete: 'set null',
   }),
+  officeId: varchar('office_id').references(() => officeLocation.placeId, {
+    onDelete: 'set null',
+  }),
   bio: varchar('bio'),
   gender: genderEnum('gender'),
   title: varchar('title'),
@@ -147,6 +150,20 @@ export const certificates = pgTable('certificate', {
 })
 
 export const facilities = pgTable('facility', {
+  placeId: varchar('place_id').primaryKey(),
+  name: varchar('name').notNull(),
+  location: jsonb('location').$type<{ lat: number; lng: number }>(),
+  address: varchar('address').notNull(),
+  county: varchar('county').notNull(),
+  town: varchar('town').notNull(),
+  phone: varchar('phone'),
+  website: varchar('website'),
+  verified: boolean('verified').default(false),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  type: varchar('type'),
+})
+
+export const officeLocation = pgTable('office_location', {
   placeId: varchar('place_id').primaryKey(),
   name: varchar('name').notNull(),
   location: jsonb('location').$type<{ lat: number; lng: number }>(),
