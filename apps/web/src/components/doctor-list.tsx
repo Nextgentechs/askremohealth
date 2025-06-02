@@ -25,6 +25,13 @@ import {
   PaginationLink,
 } from './ui/pagination'
 
+type DoctorListData = {
+  doctors: Array<Omit<RouterOutputs['doctors']['list']['doctors'][number], 'office'> & {
+    office?: RouterOutputs['doctors']['list']['doctors'][number]['office']
+  }>
+  count: number
+}
+
 export type OperatingHours =
   RouterOutputs['doctors']['list']['doctors'][number]['operatingHours'][number]
 
@@ -143,7 +150,7 @@ function EmptyDoctors() {
 export default function DoctorList({
   data,
 }: {
-  data: RouterOutputs['doctors']['list']
+  data: DoctorListData
 }) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -167,11 +174,11 @@ export default function DoctorList({
             <Avatar className="hidden cursor-pointer md:block md:size-28">
               <AvatarImage src={doctor.profilePicture?.url} />
               <AvatarFallback>
-                {doctor.firstName.charAt(0)}
-                {doctor.lastName.charAt(0)}
+                {doctor.firstName?.charAt(0)}
+                {doctor.lastName?.charAt(0)}
               </AvatarFallback>
             </Avatar>
-            <DoctorDetails doctor={doctor} />
+            <DoctorDetails doctor={doctor} showAllLocations={true} />
           </div>
           <TimeSlotCarousel
             operatingHours={doctor.operatingHours}
