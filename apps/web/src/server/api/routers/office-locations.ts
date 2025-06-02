@@ -1,15 +1,15 @@
 import { publicProcedure } from '../trpc';
 import { z } from 'zod';
-import { Facility } from '@web/server/services/facilities';
+import { OfficeLocation } from '../../services/office-locations';
 import { Client } from '@googlemaps/google-maps-services-js';
 import { env } from '@web/env';
 
 const googleMapsClient = new Client({});
 
-export const registerFacility = publicProcedure
+export const registerOfficeLocation = publicProcedure
   .input(z.object({ placeId: z.string() }))
   .mutation(async ({ input }) => {
-    return Facility.register(input.placeId);
+    return OfficeLocation.register(input.placeId);
   });
 
 export const findByLocation = publicProcedure
@@ -20,14 +20,14 @@ export const findByLocation = publicProcedure
     }),
   )
   .query(async ({ input }) => {
-    return Facility.findNearby(input.location, input.searchRadius);
+    return OfficeLocation.findNearby(input.location, input.searchRadius);
   });
 
-export const listFacilities = publicProcedure.query(async () => {
-  return Facility.list();
+export const listOfficeLocations = publicProcedure.query(async () => {
+  return OfficeLocation.list();
 });
 
-export const searchFacilitiesByName = publicProcedure
+export const searchOfficeLocationsByName = publicProcedure
   .input(
     z.object({
       query: z.string().min(1),
@@ -51,7 +51,7 @@ export const searchFacilitiesByName = publicProcedure
 
       return suggestions;
     } catch (error) {
-      console.error('Error searching facilities by name:', error);
-      throw new Error('Failed to search facilities');
+      console.error('Error searching office locations by name:', error);
+      throw new Error('Failed to search office locations');
     }
-  });
+  }); 

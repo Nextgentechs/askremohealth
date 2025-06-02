@@ -36,7 +36,7 @@ function DoctorCard({
             {doctor.lastName?.charAt(0)}
           </AvatarFallback>
         </Avatar>
-        <DoctorDetails doctor={doctor} />
+        <DoctorDetails doctor={doctor} showAllLocations={true} />
       </div>
     </Card>
   )
@@ -126,12 +126,9 @@ function PatientsReviews() {
   )
 }
 
-export default async function Page({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
-  const doctor = await api.doctors.details((await params).id)
+export default async function Page({ params }: { params: { id: string } }) {
+  const doctor = await api.doctors.details(params.id)
+
   return (
     <main className="container mx-auto mb-48 mt-12 flex min-h-screen w-full flex-col gap-12">
       <Breadcrumb className="lg:ps-3">
@@ -141,7 +138,7 @@ export default async function Page({
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink href={`/doctors`}>Doctors</BreadcrumbLink>
+            <BreadcrumbLink href="/find-specialists">Doctors</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
@@ -151,6 +148,7 @@ export default async function Page({
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
+
       <div className="flex flex-col gap-8 lg:flex-row">
         <DoctorCard doctor={doctor} />
         <div className="flex flex-1 flex-col gap-8">

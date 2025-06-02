@@ -1,19 +1,19 @@
 import { Client, AddressType } from '@googlemaps/google-maps-services-js'
 import { env } from '@web/env'
-import { facilities } from '@web/server/db/schema'
+import { officeLocation } from '@web/server/db/schema'
 import { db } from '@web/server/db'
 import { KENYA_COUNTIES } from '../data/kenya-counties'
 
 const googleMapsClient = new Client({})
 
-export class Facility {
+export class OfficeLocation {
   static async register(placeId: string) {
-    const existingFacility = await db.query.facilities.findFirst({
-      where: (f, { eq }) => eq(f.placeId, placeId),
+    const existingOffice = await db.query.officeLocation.findFirst({
+      where: (o, { eq }) => eq(o.placeId, placeId),
     })
 
-    if (existingFacility) {
-      return existingFacility
+    if (existingOffice) {
+      return existingOffice
     }
 
     const details = await googleMapsClient.placeDetails({
@@ -81,8 +81,6 @@ export class Facility {
     if (!county && place.geometry?.location) {
       const { lat, lng } = place.geometry.location
       // Find the county that contains these coordinates
-      // This is a simple implementation - you might want to use a more sophisticated
-      // geospatial query in a production environment
       const matchedCounty = KENYA_COUNTIES.find(
         (c) =>
           Math.abs(c.coordinates.lat - lat) < 1 && 
@@ -93,8 +91,8 @@ export class Facility {
       }
     }
 
-    const [facility] = await db
-      .insert(facilities)
+    const [office] = await db
+      .insert(officeLocation)
       .values({
         name: place.name ?? '',
         placeId,
@@ -110,57 +108,52 @@ export class Facility {
       })
       .returning()
 
-    return facility
+    return office
   }
 
   static async findNearby(
     location: { lat: number; lng: number },
     radius: number,
   ) {
-    const hospitalPlaces = await googleMapsClient.placesNearby({
+    const officePlaces = await googleMapsClient.placesNearby({
       params: {
         location,
         radius,
-        type: 'hospital',
+        type: 'office',
         key: env.GOOGLE_MAPS_API_KEY,
       },
     })
 
-    const healthPlaces = await googleMapsClient.placesNearby({
+    const buildingPlaces = await googleMapsClient.placesNearby({
       params: {
         location,
         radius,
-        keyword: 'clinic|medical center|laboratory|health center',
-        type: 'health',
+        keyword: 'building|commercial|business',
+        type: 'establishment',
         key: env.GOOGLE_MAPS_API_KEY,
       },
     })
 
     const allPlaces = [
-      ...hospitalPlaces.data.results,
-      ...healthPlaces.data.results,
+      ...officePlaces.data.results,
+      ...buildingPlaces.data.results,
     ]
 
     const uniquePlaces = Array.from(
       new Map(allPlaces.map((place) => [place.place_id, place])).values(),
     )
 
-    const healthcareTypes = new Set([
-      'hospital',
-      'doctor',
-      'health',
-      'clinic',
-      'medical_clinic',
-      'dentist',
-      'physiotherapist',
-      'pharmacy',
-      'laboratory',
-      'medical_office',
-      'healthcare',
+    const officeTypes = new Set([
+      'office',
+      'establishment',
+      'point_of_interest',
+      'building',
+      'commercial',
+      'business',
     ])
 
     const filteredPlaces = uniquePlaces.filter((place) =>
-      place?.types?.some((type) => healthcareTypes.has(type)),
+      place?.types?.some((type) => officeTypes.has(type)),
     )
 
     return filteredPlaces.map((place) => ({
@@ -170,17 +163,17 @@ export class Facility {
       location: place.geometry?.location,
       rating: place.rating ?? null,
       userRatingsTotal: place.user_ratings_total ?? 0,
-      types: place?.types?.filter((type) => healthcareTypes.has(type)),
+      types: place?.types?.filter((type) => officeTypes.has(type)),
       openNow: place.opening_hours?.open_now,
       photos: place.photos?.map((photo) => photo.photo_reference),
     }))
   }
 
   static async list() {
-    return db.query.facilities.findMany({
+    return db.query.officeLocation.findMany({
       with: {
         doctors: true,
       },
     })
   }
-}
+} 
