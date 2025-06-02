@@ -159,7 +159,7 @@ export const professionalDetailsSchema = z.object({
   registrationNumber: z.string(),
   medicalLicense: z.string().optional(),
 }).refine(
-  (data) => data.facility || data.officeLocation,
+  (data) => data.facility ?? data.officeLocation,
   {
     message: "Either facility or office location must be provided",
     path: ["facility"],
