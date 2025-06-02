@@ -178,7 +178,7 @@ export default function DoctorList({
                 {doctor.lastName?.charAt(0)}
               </AvatarFallback>
             </Avatar>
-            <DoctorDetails doctor={doctor} />
+            <DoctorDetails doctor={doctor} showAllLocations={true} />
           </div>
           <TimeSlotCarousel
             operatingHours={doctor.operatingHours}

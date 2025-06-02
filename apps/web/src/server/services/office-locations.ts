@@ -46,11 +46,16 @@ export class OfficeLocation {
     
     if (countyComponent) {
       // Try to match with our known counties
-      const countyName = countyComponent.long_name.replace(' County', '')
+      const countyName = countyComponent.long_name
+        .replace(' County', '')
+        .replace('Wilaya ya ', '')
+        .replace('Kaunti ya ', '')
+        .trim()
+      
       const matchedCounty = KENYA_COUNTIES.find(
-        (c) => c.name.toLowerCase().includes(countyName.toLowerCase())
+        (c) => c.name.toLowerCase() === countyName.toLowerCase()
       )
-      county = matchedCounty ? matchedCounty.name : countyComponent.long_name
+      county = matchedCounty ? matchedCounty.name : countyName
     }
 
     // Extract town information
