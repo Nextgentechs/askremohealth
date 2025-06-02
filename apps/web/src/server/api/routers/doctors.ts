@@ -7,7 +7,8 @@ import {
   specialties as specialtiesTable,
   facilities as facilitiesTable,
   profilePictures as profilePicturesTable,
-  reviews as reviewsTable
+  reviews as reviewsTable,
+  officeLocation as officeLocationTable
 } from '@web/server/db/schema'
 import assert from 'assert'
 import { db } from '@web/server/db'
@@ -212,11 +213,22 @@ export const searchByLocation = publicProcedure
     
     if (countyCode || townId) {
       const facilityConditions = []
+      const officeConditions = []
       
       if (countyCode) {
         const county = KENYA_COUNTIES.find((c) => c.code === countyCode)
         if (county) {
-          facilityConditions.push(eq(facilitiesTable.county, county.name))
+          // Clean the county name to match our database format
+          const cleanCountyName = county.name
+            .replace(' County', '')
+            .replace('Wilaya ya ', '')
+            .replace('Kaunti ya ', '')
+            .trim()
+
+          console.log('Searching for county:', cleanCountyName) // Debug log
+          
+          facilityConditions.push(eq(facilitiesTable.county, cleanCountyName))
+          officeConditions.push(eq(officeLocationTable.county, cleanCountyName))
         }
       }
 
@@ -231,18 +243,30 @@ export const searchByLocation = publicProcedure
         })
         const townName = placeDetails.data.result.name
         if (townName) {
+          console.log('Searching for town:', townName) // Debug log
           facilityConditions.push(eq(facilitiesTable.town, townName))
+          officeConditions.push(eq(officeLocationTable.town, townName))
         }
       }
 
-      // Create a subquery to find facilities matching the location criteria
+      // Create subqueries to find facilities and offices matching the location criteria
       const facilitySubquery = db
         .select({ placeId: facilitiesTable.placeId })
         .from(facilitiesTable)
         .where(facilityConditions.length > 0 ? and(...facilityConditions) : undefined)
 
-      // Add condition to find doctors in those facilities
-      conditions.push(inArray(doctorsTable.facility, facilitySubquery))
+      const officeSubquery = db
+        .select({ placeId: officeLocationTable.placeId })
+        .from(officeLocationTable)
+        .where(officeConditions.length > 0 ? and(...officeConditions) : undefined)
+
+      // Add conditions to find doctors in those facilities or offices
+      conditions.push(
+        or(
+          inArray(doctorsTable.facility, facilitySubquery),
+          inArray(doctorsTable.officeId, officeSubquery)
+        )
+      )
     }
 
     if (specialtyId) {
