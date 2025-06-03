@@ -34,9 +34,11 @@ export default async function Home() {
           <LatestArticles />
           <WhatPatientsSay />
           <Footer />
+          
         </div>
         <ChatBot/>
       </div>
+      
     </main>
   )
 }
