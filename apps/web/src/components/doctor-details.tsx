@@ -6,9 +6,8 @@ import { StarRating } from './star-rating'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
 
 type DoctorDetailsProps = {
-  doctor: Omit<RouterOutputs['doctors']['details'], 'reviews' | 'office'> & {
-    reviews?: RouterOutputs['doctors']['details']['reviews']
-    office?: RouterOutputs['doctors']['details']['office'] | null
+  doctor: Omit<RouterOutputs['doctors']['searchByLocation']['doctors'][number], 'office'> & {
+    office?: RouterOutputs['doctors']['searchByLocation']['doctors'][number]['office'] | null
   }
   showAllLocations?: boolean
 }
@@ -22,7 +21,7 @@ export default function DoctorDetails({ doctor, showAllLocations = false }: Doct
   return (
     <div className="flex w-full max-w-xs flex-col gap-6">
       <div className="flex flex-row gap-3">
-        <Link href={`/doctors/${doctor.id}`}>
+        <Link href={`/find-specialists/${doctor.id}`}>
           <Avatar className="size-24 shrink-0 cursor-pointer md:hidden md:size-28">
             <AvatarImage src={doctor.profilePicture?.url} />
             <AvatarFallback>
@@ -34,7 +33,7 @@ export default function DoctorDetails({ doctor, showAllLocations = false }: Doct
         <div className="flex flex-col gap-3">
           <div className="flex flex-col items-start gap-0.5">
             <Link
-              href={`/doctors/${doctor.id}`}
+              href={`/find-specialists/${doctor.id}`}
               className="font-medium text-primary underline-offset-4 hover:underline"
             >
               {doctor.title ?? 'Dr'}. {doctor.firstName} {doctor.lastName}

@@ -26,14 +26,14 @@ import {
 } from './ui/pagination'
 
 type DoctorListData = {
-  doctors: Array<Omit<RouterOutputs['doctors']['list']['doctors'][number], 'office'> & {
-    office?: RouterOutputs['doctors']['list']['doctors'][number]['office']
+  doctors: Array<Omit<RouterOutputs['doctors']['searchByLocation']['doctors'][number], 'office'> & {
+    office?: RouterOutputs['doctors']['searchByLocation']['doctors'][number]['office']
   }>
   count: number
 }
 
 export type OperatingHours =
-  RouterOutputs['doctors']['list']['doctors'][number]['operatingHours'][number]
+  RouterOutputs['doctors']['searchByLocation']['doctors'][number]['operatingHours'][number]
 
 function TimeSlotCarousel({
   operatingHours,

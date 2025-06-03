@@ -23,10 +23,40 @@ import { api } from '@web/trpc/react'
 import { ChevronDown, Loader } from 'lucide-react'
 import React from 'react'
 import { FormProvider, useForm, useFormContext } from 'react-hook-form'
-import {
-  type ProfessionalDetails,
-  professionalDetailsSchema,
-} from '../../../onboarding/professional-details/_components/professional-details-form'
+import { z } from 'zod'
+
+const baseProfessionalDetailsSchema = z.object({
+  specialty: z.string(),
+  subSpecialty: z.array(z.string()),
+  experience: z.string().transform(Number),
+  registrationNumber: z.string(),
+  medicalLicense: z.string().url(),
+  facility: z.string().optional(),
+  officeLocation: z.string().optional(),
+  county: z.string(),
+  town: z.string(),
+})
+
+const professionalDetailsSchema = baseProfessionalDetailsSchema.refine(
+  (data) => data.facility || data.officeLocation,
+  {
+    message: 'Either facility or office location must be provided',
+    path: ['facility'],
+  }
+)
+
+const updateProfessionalDetailsSchema = baseProfessionalDetailsSchema.omit({
+  county: true,
+  town: true,
+}).refine(
+  (data) => data.facility || data.officeLocation,
+  {
+    message: 'Either facility or office location must be provided',
+    path: ['facility'],
+  }
+)
+
+type ProfessionalDetails = z.infer<typeof updateProfessionalDetailsSchema>
 
 function SubSpecialtySelect({ specialty }: { specialty: string }) {
   const [open, setOpen] = React.useState(false)
@@ -90,11 +120,6 @@ function SubSpecialtySelect({ specialty }: { specialty: string }) {
     </Popover>
   )
 }
-
-const updateProfessionalDetailsSchema = professionalDetailsSchema.omit({
-  county: true,
-  town: true,
-})
 
 function ProfessionalInfoForm() {
   const [doctor] = api.doctors.currentDoctor.useSuspenseQuery()
