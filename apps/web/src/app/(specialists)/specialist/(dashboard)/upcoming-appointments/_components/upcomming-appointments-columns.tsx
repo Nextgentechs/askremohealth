@@ -41,7 +41,7 @@ export const appointmentsColumns: ColumnDef<Appointment>[] = [
     accessorKey: 'patient.user.firstName',
     header: 'Patient Name',
     accessorFn: (row) => {
-      return `${row.patient.firstName} ${row.patient.lastName}`
+      return `${row.patient.user.firstName} ${row.patient.user.lastName}`
     },
   },
   {
