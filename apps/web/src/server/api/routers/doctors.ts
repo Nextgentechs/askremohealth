@@ -12,7 +12,7 @@ import {
 } from '@web/server/db/schema'
 import assert from 'assert'
 import { db } from '@web/server/db'
-import { eq, ilike, or, and, inArray } from 'drizzle-orm'
+import { eq, ilike, or, and, inArray, exists } from 'drizzle-orm'
 import { z } from 'zod'
 import { doctorProcedure, procedure, publicProcedure } from '../trpc'
 import {
@@ -250,22 +250,31 @@ export const searchByLocation = publicProcedure
         }
       }
 
-      // Create subqueries to find facilities and offices matching the location criteria
-      const facilitySubquery = db
-        .select({ placeId: facilitiesTable.placeId })
-        .from(facilitiesTable)
-        .where(facilityConditions.length > 0 ? and(...facilityConditions) : undefined)
-
-      const officeSubquery = db
-        .select({ placeId: officeLocationTable.placeId })
-        .from(officeLocationTable)
-        .where(officeConditions.length > 0 ? and(...officeConditions) : undefined)
-
-      // Add conditions to find doctors in those facilities or offices
+      // Add conditions for either facility or office location matching
       conditions.push(
         or(
-          inArray(doctorsTable.facility, facilitySubquery),
-          inArray(doctorsTable.officeId, officeSubquery)
+          exists(
+            db
+              .select()
+              .from(facilitiesTable)
+              .where(
+                and(
+                  ...facilityConditions,
+                  eq(facilitiesTable.placeId, doctorsTable.facility)
+                )
+              )
+          ),
+          exists(
+            db
+              .select()
+              .from(officeLocationTable)
+              .where(
+                and(
+                  ...officeConditions,
+                  eq(officeLocationTable.placeId, doctorsTable.officeId)
+                )
+              )
+          )
         )
       )
     }
@@ -275,28 +284,23 @@ export const searchByLocation = publicProcedure
     }
 
     if (query) {
-      // Create a subquery to find users matching the search criteria
-      const userSubquery = db
-        .select({ id: usersTable.id })
-        .from(usersTable)
-        .where(
-          or(
-            ilike(usersTable.firstName, `%${query}%`),
-            ilike(usersTable.lastName, `%${query}%`),
-          ),
-        )
-
-      // Create a subquery to find facilities matching the search criteria
-      const facilitySubquery = db
-        .select({ placeId: facilitiesTable.placeId })
-        .from(facilitiesTable)
-        .where(ilike(facilitiesTable.name, `%${query}%`))
-
       conditions.push(
         or(
-          inArray(doctorsTable.userId, userSubquery),
-          inArray(doctorsTable.facility, facilitySubquery),
-        ),
+          exists(
+            db
+              .select()
+              .from(usersTable)
+              .where(
+                and(
+                  eq(usersTable.id, doctorsTable.userId),
+                  or(
+                    ilike(usersTable.firstName, `%${query}%`),
+                    ilike(usersTable.lastName, `%${query}%`)
+                  )
+                )
+              )
+          )
+        )
       )
     }
 
@@ -330,7 +334,6 @@ export const searchByLocation = publicProcedure
             firstName: true,
             lastName: true,
             email: true,
-            phone: true,
           },
         },
       },
@@ -383,7 +386,7 @@ export const searchByLocation = publicProcedure
         firstName: doctor.user?.firstName,
         lastName: doctor.user?.lastName,
         email: doctor.user?.email,
-        phone: doctor.user?.phone,
+        phone: doctor.phone,
         subSpecialties: subspecialties.filter((sub) =>
           (doctor.subSpecialties as Array<{ id: string }>).some(
             (ds) => ds.id === sub.id,
