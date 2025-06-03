@@ -38,7 +38,10 @@ function DoctorCard() {
             {doctorDetails.user?.lastName?.charAt(0)}
           </AvatarFallback>
         </Avatar>
-        <DoctorDetails doctor={doctorDetails} />
+        <DoctorDetails doctor={{
+          ...doctorDetails,
+          bookedSlots: []
+        }} />
       </div>
     </Card>
   )
