@@ -387,15 +387,6 @@ export class Doctors {
             phone: true,
           },
         },
-        office: {
-          columns: {
-            placeId: true,
-            name: true,
-            address: true,
-            town: true,
-            county: true,
-          },
-        },
         specialty: true,
         operatingHours: true,
         user: {
@@ -493,15 +484,6 @@ export class Doctors {
             town: true,
             county: true,
             phone: true,
-          },
-        },
-        office: {
-          columns: {
-            placeId: true,
-            name: true,
-            address: true,
-            town: true,
-            county: true,
           },
         },
         specialty: true,

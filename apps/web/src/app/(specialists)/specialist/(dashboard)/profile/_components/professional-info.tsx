@@ -38,7 +38,7 @@ const baseProfessionalDetailsSchema = z.object({
 })
 
 const professionalDetailsSchema = baseProfessionalDetailsSchema.refine(
-  (data) => data.facility || data.officeLocation,
+  (data) => data.facility ?? data.officeLocation,
   {
     message: 'Either facility or office location must be provided',
     path: ['facility'],
@@ -49,7 +49,7 @@ const updateProfessionalDetailsSchema = baseProfessionalDetailsSchema.omit({
   county: true,
   town: true,
 }).refine(
-  (data) => data.facility || data.officeLocation,
+  (data) => data.facility ?? data.officeLocation,
   {
     message: 'Either facility or office location must be provided',
     path: ['facility'],
@@ -61,7 +61,7 @@ type ProfessionalDetails = z.infer<typeof updateProfessionalDetailsSchema>
 function SubSpecialtySelect({ specialty }: { specialty: string }) {
   const [open, setOpen] = React.useState(false)
   const { setValue, watch } = useFormContext<ProfessionalDetails>()
-  const selectedSubSpecialties = React.useMemo(() => watch('subSpecialty') || [], [watch])
+  const selectedSubSpecialties = React.useMemo(() => watch('subSpecialty') ?? [], [watch])
 
   const { data: subspecialties } = api.specialties.listSubSpecialties.useQuery({
     specialityId: specialty,
@@ -96,7 +96,7 @@ function SubSpecialtySelect({ specialty }: { specialty: string }) {
           className="flex w-full items-center justify-between disabled:cursor-not-allowed"
           disabled={!specialty}
         >
-          <span className="truncate">{selected || 'Select'}</span>
+          <span className="truncate">{selected ?? 'Select'}</span>
           <ChevronDown />
         </Button>
       </PopoverTrigger>
@@ -264,7 +264,7 @@ function ProfessionalInfoForm() {
               <Button
                 size={'sm'}
                 type="submit"
-                disabled={isPending || !methods.formState.isDirty}
+                disabled={isPending ?? !methods.formState.isDirty}
               >
                 {isPending ? (
                   <Loader className="size-4 animate-spin" />
