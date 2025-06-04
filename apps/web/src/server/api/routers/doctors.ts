@@ -284,22 +284,25 @@ export const searchByLocation = publicProcedure
     }
 
     if (query) {
+      const userSubquery = db
+        .select({ id: usersTable.id })
+        .from(usersTable)
+        .where(
+          or(
+            ilike(usersTable.firstName, `%${query}%`),
+            ilike(usersTable.lastName, `%${query}%`)
+          )
+        )
+
+      const facilitySubquery = db
+        .select({ placeId: facilitiesTable.placeId })
+        .from(facilitiesTable)
+        .where(ilike(facilitiesTable.name, `%${query}%`))
+
       conditions.push(
         or(
-          exists(
-            db
-              .select()
-              .from(usersTable)
-              .where(
-                and(
-                  eq(usersTable.id, doctorsTable.userId),
-                  or(
-                    ilike(usersTable.firstName, `%${query}%`),
-                    ilike(usersTable.lastName, `%${query}%`)
-                  )
-                )
-              )
-          )
+          inArray(doctorsTable.userId, userSubquery),
+          inArray(doctorsTable.facility, facilitySubquery)
         )
       )
     }
