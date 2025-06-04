@@ -2,7 +2,7 @@ import NotFound from "../not-found"
 import Footer from "@web/components/footer"
 
 
-const Hospitals = () => {
+const Pharmacies = () => {
     return (
       <div>
         <NotFound/>
@@ -11,5 +11,5 @@ const Hospitals = () => {
     )
   }
   
-  export default Hospitals
+  export default Pharmacies
   
