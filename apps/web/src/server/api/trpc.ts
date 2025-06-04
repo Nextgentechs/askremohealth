@@ -9,6 +9,7 @@ import { ZodError } from 'zod'
 import { db } from '../db'
 import { users } from '../db/schema'
 import { sessionSchema } from '../lib/session'
+import { auth } from '@web/auth'
 
 type CookieOptions = {
   secure?: boolean
@@ -18,29 +19,36 @@ type CookieOptions = {
 }
 
 export async function createTRPCContext({ req }: FetchCreateContextFnOptions) {
-  // Await cookies() before using it!
-
   const cookieStore = await cookies()
-  const sessionToken = cookieStore.get('session-id')?.value
-
   let user = null
-  if (sessionToken) {
-    const rawSession = await redisClient.get(`session:${sessionToken}`)
-    // console.log('Raw Session:', rawSession)
-    if (rawSession) {
-      const parsed = sessionSchema.safeParse(
-        typeof rawSession === 'string' ? JSON.parse(rawSession) : rawSession,
-      )
-      if (parsed.success) {
-        // Fetch the full user from the database
-        user = await db.query.users.findFirst({
-          where: eq(users.id, parsed.data.id),
-        })
+
+  // First try Next-auth session
+  const session = await auth()
+  if (session?.user?.email) {
+    // Fetch user from database using email from Next-auth session
+    user = await db.query.users.findFirst({
+      where: eq(users.email, session.user.email),
+    })
+  }
+
+  // If no Next-auth session, try Redis session
+  if (!user) {
+    const sessionToken = cookieStore.get('session-id')?.value
+    if (sessionToken) {
+      const rawSession = await redisClient.get(`session:${sessionToken}`)
+      if (rawSession) {
+        const parsed = sessionSchema.safeParse(
+          typeof rawSession === 'string' ? JSON.parse(rawSession) : rawSession,
+        )
+        if (parsed.success) {
+          // Fetch the full user from the database
+          user = await db.query.users.findFirst({
+            where: eq(users.id, parsed.data.id),
+          })
+        }
       }
     }
   }
-
-  // console.log('tRPC context user:', user)
 
   return {
     req,
