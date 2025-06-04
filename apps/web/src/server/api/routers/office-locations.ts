@@ -46,7 +46,7 @@ export const searchOfficeLocationsByName = publicProcedure
       const suggestions = response.data.predictions.map((prediction) => ({
         placeId: prediction.place_id,
         name: prediction.structured_formatting.main_text,
-        address: prediction.structured_formatting.secondary_text || undefined,
+        address: prediction.structured_formatting.secondary_text ?? undefined,
       }));
 
       return suggestions;
