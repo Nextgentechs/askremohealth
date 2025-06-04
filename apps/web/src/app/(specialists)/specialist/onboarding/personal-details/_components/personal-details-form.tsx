@@ -19,6 +19,7 @@ import { Loader } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
+import { redirect } from 'next/navigation'
 
 export const personalDetailsSchema = z.object({
   title: z.string().optional(),
@@ -70,15 +71,27 @@ export const personalDetailsSchema = z.object({
 export type PersonalDetails = z.infer<typeof personalDetailsSchema>
 
 export default function PersonalDetails() {
-  const [_user] = api.users.currentUser.useSuspenseQuery()
-  //console.log('Current user:', user)
+  const [user] = api.users.currentUser.useSuspenseQuery()
+  
+  // if (!user) {
+  //   redirect('/')
+  // }
+
+  if (user!.role !== 'doctor') {
+    redirect('/')
+  }
+
+  if (user!.onboardingComplete === true) {
+    redirect('/specialist/upcoming-appointments')
+  }
+
   const form = useForm<PersonalDetails>({
     resolver: zodResolver(personalDetailsSchema),
     defaultValues: {
       title: '',
-      firstName: _user?.firstName ?? '',
-      lastName: _user?.lastName ?? '',
-      email: _user?.email ?? '',
+      firstName: user?.firstName ?? '',
+      lastName: user?.lastName ?? '',
+      email: user?.email ?? '',
       phone: '',
       bio: '',
     },
