@@ -7,7 +7,12 @@ import { users } from './server/db/schema' // adjust path as needed
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [Google],
   callbacks: {
-    async signIn({ user }) {
+    async signIn({ user, account }) {
+      // Extract role from the callbackUrl if present
+      const role = typeof account?.callback_url === 'string' && account.callback_url.includes('role=patient') 
+        ? 'patient' 
+        : 'doctor'
+
       const existingUser = await db.query.users.findFirst({
         where: eq(users.email, user.email ?? ''),
       })
@@ -18,9 +23,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           email: user.email ?? '',
           firstName: user.name?.split(' ')[0] ?? '',
           lastName: user.name?.split(' ').slice(1).join(' ') ?? '',
-          role: 'doctor', // or another default role as appropriate
-          password: '', // or a placeholder, since OAuth users may not have a password
-          // Add other required fields with defaults if needed
+          role,
+          password: '',
         })
       }
 
