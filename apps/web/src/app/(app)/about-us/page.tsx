@@ -1,4 +1,5 @@
 import AboutSection from '@web/components/about-section'
+import { FeaturesSection} from '@web/components/features-section'
 import { ChatBot } from '@web/components/chat-bot'
 import Footer from '@web/components/footer'
 import { PatientServices } from '@web/components/patient-services'
@@ -14,6 +15,7 @@ const AboutUs = () => {
   return (
     <div>
       <AboutSection />
+      <FeaturesSection />
 
       <section className="mx-auto px-4 py-12">
             <h1 className="section-title text-center mb-4">
