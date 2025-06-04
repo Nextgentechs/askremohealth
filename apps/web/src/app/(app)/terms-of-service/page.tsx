@@ -58,7 +58,7 @@ export default function TermsOfServicePage() {
                     <div>
                       <h3 className="text-xl font-semibold text-gray-800 mb-3">2. Privacy Policy Compliance</h3>
                       <p className="text-gray-600 leading-relaxed mb-4">
-                        We comply with The World's Data Protection Act, HIPAA, and GDPR, ensuring that all patient
+                        We comply with The World&apos;s Data Protection Act, HIPAA, and GDPR, ensuring that all patient
                         information remains private and secure. Our compliance includes:
                       </p>
 
