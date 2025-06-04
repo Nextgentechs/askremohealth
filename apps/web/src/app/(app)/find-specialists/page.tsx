@@ -25,7 +25,7 @@ export default async function Page({
     page?: string
   }>
 }) {
-  const { specialty, county, town, query, page } = await searchParams
+  const { specialty, county, town, query } = await searchParams
 
   const data = await api.doctors.searchByLocation({
     specialtyId: specialty,

@@ -69,13 +69,17 @@ export const professionalDetailsSchema = z.object({
         message: 'Medical license must be less than 5MB',
       },
     ),
-  facility: z.string().optional(), // place_id, now optional
-  officeLocation: z.string().optional(), // place_id, optional
+  facility: z.string().optional(),
+  officeLocation: z.string().optional(),
 }).refine(
-  (data) => data.facility ?? data.officeLocation,
+  (data) => {
+    const hasFacility = (data.facility ?? '').trim() !== '';
+    const hasOfficeLocation = (data.officeLocation ?? '').trim() !== '';
+    return hasFacility || hasOfficeLocation;
+  },
   {
     message: "Either facility or office location must be provided",
-    path: ["facility"], // This will show the error on the facility field
+    path: ["facility"],
   }
 );
 export type ProfessionalDetails = z.infer<typeof professionalDetailsSchema>;
@@ -212,49 +216,51 @@ export default function ProfessionalDetailsForm() {
     );
   const { mutateAsync: updateProfessionalDetails } =
     api.doctors.updateProfessionalDetails.useMutation();
-  const { mutateAsync: registerFacility } =
-    api.facilities.registerFacility.useMutation();
-  const { mutateAsync: registerOfficeLocation } =
-    api.officeLocations.registerOfficeLocation.useMutation();
 
   const onSubmit = form.handleSubmit(async (data) => {
     try {
-      console.log('Initial form data:', data);
-      console.log('Selected facility:', selectedFacility);
-      console.log('Selected office location:', selectedOfficeLocation);
+      console.log("Initial form data:", data);
+      console.log("Selected facility:", selectedFacility);
+      console.log("Selected office location:", selectedOfficeLocation);
 
-      if (selectedFacility) {
-        console.log('Registering facility:', selectedFacility.placeId);
-        await registerFacility({ placeId: selectedFacility.placeId });
-        data.facility = selectedFacility.placeId;
+      // Ensure at least one location is selected
+      if (!selectedFacility && !selectedOfficeLocation) {
+        form.setError("facility", {
+          type: "manual",
+          message: "Either facility or office location must be provided",
+        });
+        form.setError("officeLocation", {
+          type: "manual",
+          message: "Either facility or office location must be provided",
+        });
+        return;
       }
-      if (selectedOfficeLocation) {
-        console.log('Registering office location:', selectedOfficeLocation.placeId);
-        await registerOfficeLocation({ placeId: selectedOfficeLocation.placeId });
-        data.officeLocation = selectedOfficeLocation.placeId;
-      }
-      // Ensure facility is always a string for the API
+
+      // Set the values based on selections
+      data.facility = selectedFacility?.placeId ?? "";
+      data.officeLocation = selectedOfficeLocation?.placeId ?? "";
+
+      // Prepare data for API
       const apiData = {
-        specialty: data.specialty,
-        subSpecialty: data.subSpecialty,
-        experience: data.experience,
-        registrationNumber: data.registrationNumber,
-        medicalLicense: data.medicalLicense,
-        facility: data.facility ?? '', // Convert undefined to empty string
-        officeLocation: data.officeLocation,
+        ...data,
+        facility: data.facility ?? "",
+        officeLocation: data.officeLocation ?? "",
       };
-      console.log('Final API data being sent:', apiData);
-      const res = await updateProfessionalDetails(apiData);
-      console.log('API response:', res);
-      if (res.success) {
-        router.push('/specialist/onboarding/availability-details');
-      }
-    } catch (error) {
-      console.error(error);
+
+      console.log("Submitting data:", apiData);
+
+      await updateProfessionalDetails(apiData);
       toast({
-        title: 'An error occurred',
-        description: 'Please try again',
-        variant: 'destructive',
+        title: "Success",
+        description: "Professional details updated successfully",
+      });
+      router.push("/specialist/onboarding/availability-details");
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update professional details",
+        variant: "destructive",
       });
     }
   });
