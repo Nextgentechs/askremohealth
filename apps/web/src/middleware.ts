@@ -6,10 +6,10 @@ export function middleware(req: NextRequest) {
 
   const pathname = req.nextUrl.pathname
 
-  const isDoctorRoute = pathname.startsWith('/appointments')
+  // const isDoctorRoute = pathname.startsWith('/appointments')
   const isAdminRoute = pathname.startsWith('/admin')
 
-  if (!sessionId && (isDoctorRoute || isAdminRoute)) {
+  if (!sessionId && ( isAdminRoute)) {
     return NextResponse.redirect(new URL('/auth', req.url))
   }
 
