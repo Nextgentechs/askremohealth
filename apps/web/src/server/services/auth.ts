@@ -66,6 +66,14 @@ export class AuthService {
       return { success: true }
     } catch (error) {
       console.error('Error in signUp:', error)
+    
+      if (error instanceof Error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: error.message,
+        })
+      }
+    
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Failed to create user',
@@ -101,7 +109,7 @@ export class AuthService {
       // Only create the session and return the sessionId
       const sessionId = await createUserSession(sessionUser);
 
-      return { success: true, userId: user.id, sessionId };
+      return { success: true, userId: user.id, sessionId,role:user.role };
     } catch (error) {
       if (error instanceof TRPCError) {
         throw error;

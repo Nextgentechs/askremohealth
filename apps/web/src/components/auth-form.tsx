@@ -103,14 +103,14 @@ function Login({
         body: JSON.stringify(data),
       })
       const result = await res.json()
+      console.log(result)
       if (result.success) {
         toast({
           title: 'Success',
           description: 'Logged in successfully!',
           duration: 3000,
         })
-        // Optionally reload or redirect
-        window.location.href = '/specialist/onboarding/personal-details'
+        setCurrentStep('otp')
       } else {
         toast({
           title: 'Error',
@@ -220,13 +220,19 @@ function Login({
 }
 
 
-const signUpSchema = z.object({
+const signUpSchema = z
+  .object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
   email: z.string().email('Invalid email address'),
   password: passwordSchema,
+  confirmPassword: passwordSchema,
   role:z.string()
-})
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword']
+  });
 
 type SignUpFormData = z.infer<typeof signUpSchema>
 
@@ -247,6 +253,7 @@ function SignUp({
       lastName: '',
       email: '',
       password: '',
+      confirmPassword:'',
       role : role ?? ''
     }
     
@@ -262,13 +269,14 @@ function SignUp({
         body: JSON.stringify(data),
       })
       const result = await res.json()
+      console.log(result)
       if (result.success) {
         toast({ title: 'Success', description: 'Sign up was successful!' })
         router.push('/auth') // Redirect to your desired page
       } else {
         toast({
           title: 'Error',
-          description: result.message ?? 'Sign up failed',
+          description: result.error ?? 'Sign up failed',
           variant: 'destructive',
         })
       }
@@ -358,6 +366,19 @@ function SignUp({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="********" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirm Password</FormLabel>
                     <FormControl>
                       <Input type="password" placeholder="********" {...field} />
                     </FormControl>
