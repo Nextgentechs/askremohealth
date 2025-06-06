@@ -30,6 +30,7 @@
     "emailjs": "^3.8.1",
     "next-auth": "^5.0.0-beta.27",
     "postgres": "^3.4.5",
+    "resend": "^4.5.2",
     "sanity": "^3.90.0",
     "styled-components": "^6.1.18",
     "use-debounce": "^10.0.4"

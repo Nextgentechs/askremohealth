@@ -32,6 +32,8 @@ export default function AuthForm() {
   const [currentStep, setCurrentStep] = useState<'login' | 'signup' | 'otp'>(
     'login',
   )
+  const [loggedInEmail, setLoggedInEmail] = useState<string>('')
+  
 
 
   return (
@@ -44,7 +46,7 @@ export default function AuthForm() {
           exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.2 }}
         >
-          <InputOTPForm />
+          <InputOTPForm loggedInEmail={loggedInEmail} />
         </motion.div>
       )}
       {currentStep === 'signup' && (
@@ -66,7 +68,7 @@ export default function AuthForm() {
           exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.2 }}
         >
-          <Login setCurrentStep={setCurrentStep} />
+          <Login setLoggedInEmail={setLoggedInEmail} setCurrentStep={setCurrentStep} />
         </motion.div>
       )}
     </AnimatePresence>
@@ -80,9 +82,11 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>
 
 function Login({
+  setLoggedInEmail,
   setCurrentStep,
 }: {
-  setCurrentStep: (step: 'login' | 'signup' | 'otp') => void
+    setLoggedInEmail: React.Dispatch<React.SetStateAction<string>>,
+    setCurrentStep: (step: 'login' | 'signup' | 'otp') => void
 }) {
   const [isLoading, setIsLoading] = useState(false)
   const form = useForm<LoginFormData>({
@@ -105,6 +109,26 @@ function Login({
       const result = await res.json()
       console.log(result)
       if (result.success) {
+        setLoggedInEmail(data.email)
+        const otpRes = await fetch('/api/auth/sendotp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: data.email,
+            otp: result.otp
+          }),
+        })
+
+        const otpResult = await otpRes.json()
+        console.log('otpResult',otpResult)
+        if (otpResult.error || otpResult.error.message) {
+          toast({
+            title: 'OTP Error',
+            description: otpResult.error.message ?? 'Failed to send OTP',
+            variant: 'destructive',
+          })
+          // return
+        }
         toast({
           title: 'Success',
           description: 'Logged in successfully!',
@@ -411,7 +435,7 @@ const FormSchema = z.object({
   pin: z.string().min(6, { message: 'Invalid OTP' }),
 })
 
-function InputOTPForm() {
+function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
   const [isLoading, setIsLoading] = useState(false)
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -422,6 +446,28 @@ function InputOTPForm() {
     setIsLoading(true)
     try {
       console.log('OTP submitted:', data.pin)
+      const res = await fetch('/api/auth/verifyotp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ otp: data.pin, email: loggedInEmail }),
+      })
+
+      const result = await res.json()
+      if (result.success) {
+        toast({
+          title: 'Success',
+          description: 'OTP verified successfully!',
+          duration: 3000,
+        })
+      }
+      else {
+        toast({
+          title: 'Error',
+          description: result.message,
+          variant: 'destructive',
+        })
+      }
+      console.log('result',result)
     } finally {
       setIsLoading(false)
     }
