@@ -27,6 +27,7 @@ import {
 } from './ui/form'
 import { InputOTP, InputOTPGroup, InputOTPSlot } from './ui/input-otp'
 import { passwordSchema } from '@web/server/api/validators'
+import { useCurrentUser } from '@web/hooks/use-current-user'
 
 export default function AuthForm() {
   const [currentStep, setCurrentStep] = useState<'login' | 'signup' | 'otp'>(
@@ -108,6 +109,7 @@ function Login({
       })
       const result = await res.json()
       console.log(result)
+
       if (result.success) {
         setLoggedInEmail(data.email)
         const otpRes = await fetch('/api/auth/sendotp', {
@@ -120,8 +122,9 @@ function Login({
         })
 
         const otpResult = await otpRes.json()
-        console.log('otpResult',otpResult)
-        if (otpResult.error || otpResult.error.message) {
+        console.log('otpResult', otpResult)
+        
+        if (otpResult?.error?.message) {
           toast({
             title: 'OTP Error',
             description: otpResult.error.message ?? 'Failed to send OTP',
@@ -129,6 +132,7 @@ function Login({
           })
           // return
         }
+
         toast({
           title: 'Success',
           description: 'Logged in successfully!',
@@ -437,6 +441,20 @@ const FormSchema = z.object({
 
 function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
   const [isLoading, setIsLoading] = useState(false)
+
+  const router = useRouter()
+  type UserRole = 'patient' | 'doctor'
+
+  type User = {
+    id: string
+    email: string
+    role: UserRole
+    onboardingComplete: boolean
+  }
+
+  const { user } = useCurrentUser() as { user: User | null }
+
+  console.log(user)
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: { pin: '' },
@@ -459,6 +477,15 @@ function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
           description: 'OTP verified successfully!',
           duration: 3000,
         })
+        if (user?.role === 'patient') {
+          router.push('/')
+        }
+        else if (user?.role === 'doctor' && user?.onboardingComplete) {
+          router.push('/specialist/upcoming-appointments')
+        }
+        else {
+          router.push('/specialist/onboarding/personal-details')
+        }
       }
       else {
         toast({
