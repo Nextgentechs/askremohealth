@@ -4,6 +4,8 @@ import { eq } from 'drizzle-orm'
 import { db } from '../db'
 import { users } from '../db/schema'
 import { createUserSession } from '../lib/session'
+import { sendOtpEmail } from '../lib/email'
+import { redisClient } from '@web/redis/redis'
 
 // type CookieOptions = {
 //   secure?: boolean
@@ -35,6 +37,11 @@ type SignUpInput = {
 type SignInInput = {
   email: string
   password: string
+}
+export function generateOtp(length = 6): string {
+  const min = Math.pow(10, length - 1);
+  const max = Math.pow(10, length) - 1;
+  return Math.floor(Math.random() * (max - min + 1) + min).toString();
 }
 
 export class AuthService {
@@ -108,9 +115,16 @@ export class AuthService {
       const sessionUser = { id: user.id, email: user.email ?? '' };
       // Only create the session and return the sessionId
       const sessionId = await createUserSession(sessionUser);
+      // send the otp via email
 
-      return { success: true, userId: user.id, sessionId,role:user.role };
+      const otp = generateOtp()
+      await redisClient.set(`otp:${user.email}`, otp, {
+        ex: 300,
+      })
+
+      return { success: true, userId: user.id, sessionId, role: user.role, otp:otp };
     } catch (error) {
+      console.log(error)
       if (error instanceof TRPCError) {
         throw error;
       }
@@ -120,4 +134,32 @@ export class AuthService {
       });
     }
   }
+  static async verifyOtp(email: string, otp: string) {
+    try {
+      const storedOtp = await redisClient.get(`otp:${email}`);
+
+      console.log('storedOtp', storedOtp)
+      console.log('otp',otp)
+  
+      if (!storedOtp || Number(storedOtp) !== Number(otp)) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'Invalid or expired OTP',
+        });
+      }
+  
+      await redisClient.del(`otp:${email}`);
+
+      return {
+        success: true,
+        message:'otp verified successfully'
+      };
+    } catch (error) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: error instanceof Error ? error.message : 'OTP verification failed',
+      });
+    }
+  }
+  
 }
