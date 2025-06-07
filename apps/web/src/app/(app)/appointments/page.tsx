@@ -76,14 +76,14 @@ function AppointmentCard({
             <Avatar className="size-16">
               <AvatarImage src={appointment.doctor.profilePicture.url} />
               <AvatarFallback>
-                {appointment.doctor.firstName.charAt(0)}
-                {appointment.doctor.lastName.charAt(0)}
+                {appointment.doctor.user.firstName.charAt(0)}
+                {appointment.doctor.user.lastName.charAt(0)}
               </AvatarFallback>
             </Avatar>
             <div className="flex flex-col gap-0.5">
               <h3 className="font-medium text-primary">
-                {appointment.doctor.title}. {appointment.doctor.firstName}{' '}
-                {appointment.doctor.lastName}
+                {appointment.doctor.title}. {appointment.doctor.user.firstName}{' '}
+                {appointment.doctor.user.lastName}
               </h3>
               <span className="text-sm text-muted-foreground">
                 {appointment.doctor.specialty?.name}

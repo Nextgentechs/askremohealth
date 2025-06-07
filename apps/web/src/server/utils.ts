@@ -1,3 +1,6 @@
+import { redisClient } from "@web/redis/redis"
+import type { User } from "./db/schema"
+
 export enum AppointmentStatus {
   SCHEDULED = 'scheduled',
   PENDING = 'pending',
@@ -24,4 +27,19 @@ export function convertTo24Hour(time: string) {
   }
 
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
+}
+
+
+export async function getUserFromToken(token: string): Promise<User | null> {
+  try {
+    const userData = await redisClient.get(`session:${token}`)
+
+    if (!userData || typeof userData !== 'string') return null
+
+    const user = JSON.parse(userData) as User
+    return user
+  } catch (err) {
+    console.error('Failed to get user from token:', err)
+    return null
+  }
 }

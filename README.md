@@ -1,4 +1,4 @@
-# AskVirtualHealthcare Platform
+# Askremohealth Platform
 
 ## Tech Stack and Philosophy 
 
