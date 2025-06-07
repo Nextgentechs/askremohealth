@@ -9,7 +9,6 @@ import {
   varchar,
   boolean,
   text,
-  text,
 } from 'drizzle-orm/pg-core'
 
 export const roleEnum = pgEnum('role', ['patient', 'doctor', 'admin'])

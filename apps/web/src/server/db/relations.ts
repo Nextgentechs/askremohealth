@@ -17,8 +17,6 @@ import {
   article_images,
   notifications,
   officeLocation
-  articles,
-  article_images,
 } from './schema'
 
 export const doctorRelations = relations(doctors, ({ one, many }) => ({
