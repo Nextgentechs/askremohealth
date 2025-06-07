@@ -15,6 +15,7 @@ export default function Logo({
           alt="askvirtualhealthcare logo"
           fill
           className="object-cover"
+          priority // ✅ Add this line
           {...props}
         />
       </div>

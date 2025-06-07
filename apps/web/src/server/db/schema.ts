@@ -1,4 +1,4 @@
-import { type InferSelectModel } from 'drizzle-orm'
+import { sql, type InferSelectModel } from 'drizzle-orm'
 import {
   integer,
   jsonb,
@@ -8,6 +8,7 @@ import {
   uuid,
   varchar,
   boolean,
+  text,
   text,
 } from 'drizzle-orm/pg-core'
 
@@ -63,13 +64,30 @@ export const subSpecialties = pgTable('sub_specialty', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
 })
 
-export const patients = pgTable('patient', {
-  id: varchar('id').primaryKey().notNull(),
+export const users = pgTable('user', {
+  id: varchar('id').primaryKey().notNull().default(sql`gen_random_uuid()`),
   firstName: varchar('first_name').notNull(),
   lastName: varchar('last_name').notNull(),
   email: varchar('email'),
   phone: varchar('phone').unique(),
+  password: varchar('password').notNull(),
+  role: roleEnum('role').notNull(),
+  onboardingComplete: boolean('onboarding_complete').notNull().default(false),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .notNull()
+    .$onUpdate(() => new Date()),
+})
+export type User = InferSelectModel<typeof users>
+
+export const patients = pgTable('patient', {
+  id: varchar('id').primaryKey().notNull(),
+  userId: varchar('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  
   emergencyContact: varchar('emergency_contact'),
+  phone: varchar('phone').unique(),
   lastAppointment: timestamp('last_appointment'),
   dob: timestamp('dob'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -81,10 +99,9 @@ export type Patient = InferSelectModel<typeof patients>
 
 export const doctors = pgTable('doctor', {
   id: varchar('id').primaryKey().notNull(),
-  firstName: varchar('first_name').notNull(),
-  lastName: varchar('last_name').notNull(),
-  email: varchar('email'),
-  phone: varchar('phone').unique(),
+  userId: varchar('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
   specialty: uuid('specialty_id').references(() => specialties.id, {
     onDelete: 'set null',
   }),
@@ -96,9 +113,13 @@ export const doctors = pgTable('doctor', {
   facility: varchar('hospital_id').references(() => facilities.placeId, {
     onDelete: 'set null',
   }),
+  officeId: varchar('office_id').references(() => officeLocation.placeId, {
+    onDelete: 'set null',
+  }),
   bio: varchar('bio'),
   gender: genderEnum('gender'),
   title: varchar('title'),
+  phone: varchar('phone').unique(),
   consultationFee: integer('consultation_fee'),
   status: doctorStatusEnum('status').default('pending'),
   dob: timestamp('dob'),
@@ -133,6 +154,20 @@ export const certificates = pgTable('certificate', {
 })
 
 export const facilities = pgTable('facility', {
+  placeId: varchar('place_id').primaryKey(),
+  name: varchar('name').notNull(),
+  location: jsonb('location').$type<{ lat: number; lng: number }>(),
+  address: varchar('address').notNull(),
+  county: varchar('county').notNull(),
+  town: varchar('town').notNull(),
+  phone: varchar('phone'),
+  website: varchar('website'),
+  verified: boolean('verified').default(false),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  type: varchar('type'),
+})
+
+export const officeLocation = pgTable('office_location', {
   placeId: varchar('place_id').primaryKey(),
   name: varchar('name').notNull(),
   location: jsonb('location').$type<{ lat: number; lng: number }>(),
@@ -225,7 +260,7 @@ export const reviews = pgTable('review', {
 
 export const notifications = pgTable('notification', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: varchar('user_id').notNull(),
+  userId: varchar('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   title: varchar('title').notNull(),
   message: varchar('message').notNull(),
   isRead: boolean('is_read').default(false),

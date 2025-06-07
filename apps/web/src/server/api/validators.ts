@@ -25,6 +25,18 @@ export const operatingHoursSchema = z.object({
   isOpen: z.boolean(),
 })
 
+export const passwordSchema = z
+  .string()
+  .min(8, { message: 'Password must be at least 8 characters long' })
+  .regex(/[a-z]/, { message: 'Password must include a lowercase letter' })
+  .regex(/[A-Z]/, { message: 'Password must include an uppercase letter' })
+  .regex(/[^a-zA-Z0-9]/, { message: 'Password must include a special character' })
+  .refine((val) => !/\s/.test(val), {
+    message: 'Password must not contain spaces',
+  })
+
+export type PasswordSchema = z.infer<typeof passwordSchema>
+
 export const doctorSignupSchema = z.object({
   title: z.string().optional(),
   firstName: z.string(),
@@ -127,9 +139,9 @@ export type AppointmentListSchema = z.infer<typeof appointmentListSchema>
 
 export const personalDetailsSchema = z.object({
   title: z.string().optional(),
-  firstName: z.string(),
-  lastName: z.string(),
-  email: z.string().email().optional(),
+  // firstName: z.string(),
+  // lastName: z.string(),
+  // email: z.string().email().optional(),
   phone: z.string(),
   dob: z.string(),
   gender: z.enum(['male', 'female']).optional(),
@@ -141,11 +153,18 @@ export type PersonalDetailsSchema = z.infer<typeof personalDetailsSchema>
 export const professionalDetailsSchema = z.object({
   specialty: z.string(),
   subSpecialty: z.array(z.string()),
-  facility: z.string(),
+  facility: z.string().optional(),
+  officeLocation: z.string().optional(),
   experience: z.number(),
   registrationNumber: z.string(),
   medicalLicense: z.string().optional(),
-})
+}).refine(
+  (data) => data.facility ?? data.officeLocation,
+  {
+    message: "Either facility or office location must be provided",
+    path: ["facility"],
+  }
+);
 export type ProfessionalDetailsSchema = z.infer<
   typeof professionalDetailsSchema
 >

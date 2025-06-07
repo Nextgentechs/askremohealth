@@ -1,3 +1,4 @@
+import { ChatBot } from '@web/components/chat-bot'
 'use client'
 
 import { useUser } from '@clerk/nextjs'

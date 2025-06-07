@@ -11,7 +11,11 @@ interface Stat {
   icon: JSX.Element
 }
 
-const useIncrement = (target: number, duration: number, startIncrement: boolean) => {
+const useIncrement = (
+  target: number,
+  duration: number,
+  startIncrement: boolean,
+) => {
   const [currentValue, setCurrentValue] = useState(0)
 
   useEffect(() => {
@@ -19,7 +23,7 @@ const useIncrement = (target: number, duration: number, startIncrement: boolean)
 
     let start: number | undefined
     const step = (timestamp: number) => {
-      if (start === undefined) start = timestamp
+      start ??= timestamp // <-- use nullish assignment here
       const progress = timestamp - start
       const increment = (progress / duration) * target
       setCurrentValue(Math.min(Math.floor(increment), target))
@@ -91,7 +95,6 @@ const StatsSection: React.FC = () => {
       ),
     },
   ]
-  
 
   return (
     <div className="container flex flex-col mx-auto text-center items-center py-16">
@@ -115,7 +118,9 @@ const StatsSection: React.FC = () => {
               </CardHeader>
               <CardContent className="text-3xl font-bold text-center ">
                 {stat.value}
-                {(stat.label === 'Consultations' || stat.label === 'Patients') && '+'}
+                {(stat.label === 'Consultations' ||
+                  stat.label === 'Patients') &&
+                  '+'}
               </CardContent>
             </Card>
           </motion.div>

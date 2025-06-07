@@ -1,4 +1,3 @@
-import { clerkClient } from '@clerk/nextjs/server'
 import { TRPCError } from '@trpc/server'
 import { del, put } from '@vercel/blob'
 import { db } from '@web/server/db'
@@ -12,6 +11,9 @@ import {
   operatingHours,
   patients as patientsTable,
   profilePictures,
+  users as usersTable,
+  officeLocation as officeLocationTable,
+  reviews as reviewsTable,
 } from '@web/server/db/schema'
 import {
   and,
@@ -34,6 +36,7 @@ import {
 import { KENYA_COUNTIES } from '../data/kenya-counties'
 import { AppointmentStatus } from '../utils'
 import { Facility } from './facilities'
+import { OfficeLocation } from './office-locations'
 
 type FilterInput = {
   specialty?: string
@@ -56,23 +59,17 @@ export class Doctors {
         .insert(doctorsTable)
         .values({
           id: userId,
-          firstName: input.firstName,
-          lastName: input.lastName,
-          email: input.email,
-          phone: input.phone,
+          userId: userId,
           bio: input.bio,
           gender: input.gender,
           title: input.title,
           dob: new Date(input.dob),
+          phone: input.phone,
           status: 'pending',
         })
         .onConflictDoUpdate({
           target: doctorsTable.id,
           set: {
-            firstName: input.firstName,
-            lastName: input.lastName,
-            email: input.email,
-            phone: input.phone,
             bio: input.bio,
             gender: input.gender,
             title: input.title,
@@ -183,7 +180,10 @@ export class Doctors {
         })
       }
 
-      const facility = await Facility.register(input.facility)
+      // Only register facility if one is provided
+      const facility = input.facility ? await Facility.register(input.facility) : null;
+      // Register office location if provided
+      const officeLocation = input.officeLocation ? await OfficeLocation.register(input.officeLocation) : null;
 
       await trx
         .update(doctorsTable)
@@ -192,6 +192,7 @@ export class Doctors {
           subSpecialties: input.subSpecialty.map((id) => ({ id })),
           experience: input.experience,
           facility: facility?.placeId,
+          officeId: officeLocation?.placeId,
           licenseNumber: input.registrationNumber,
         })
         .where(eq(doctorsTable.id, userId))
@@ -226,8 +227,6 @@ export class Doctors {
     input: AvailabilityDetailsSchema,
     userId: string,
   ) {
-    const client = await clerkClient()
-
     await db.transaction(async (trx) => {
       await trx
         .update(doctorsTable)
@@ -235,18 +234,18 @@ export class Doctors {
           consultationFee: input.consultationFee,
         })
         .where(eq(doctorsTable.id, userId))
+
       await trx.insert(operatingHours).values({
         schedule: input.operatingHours,
         consultationDuration: input.appointmentDuration,
         doctorId: userId,
       })
 
-      await client.users.updateUser(userId, {
-        publicMetadata: {
-          onboardingComplete: true,
-          role: 'specialist',
-        },
-      })
+      // Update profileComplete to true in users table
+      await trx
+        .update(usersTable)
+        .set({ onboardingComplete: true })
+        .where(eq(usersTable.id, userId))
     })
 
     return { success: true }
@@ -336,12 +335,17 @@ export class Doctors {
       conditions.push(exists(query))
     }
     if (input.query) {
-      conditions.push(
-        or(
-          ilike(doctorsTable.firstName, `%${input.query}%`),
-          ilike(doctorsTable.lastName, `%${input.query}%`),
-        ),
-      )
+      // Join with users table for name search
+      const userSubquery = db
+        .select({ id: usersTable.id })
+        .from(usersTable)
+        .where(
+          or(
+            ilike(usersTable.firstName, `%${input.query}%`),
+            ilike(usersTable.lastName, `%${input.query}%`),
+          ),
+        )
+      conditions.push(inArray(doctorsTable.userId, userSubquery))
     }
 
     return conditions.length ? and(...conditions) : undefined
@@ -370,10 +374,28 @@ export class Doctors {
             address: true,
             town: true,
             county: true,
+            phone: true,
+          },
+        },
+        office: {
+          columns: {
+            placeId: true,
+            name: true,
+            address: true,
+            town: true,
+            county: true,
+            phone: true,
           },
         },
         specialty: true,
         operatingHours: true,
+        user: {
+          columns: {
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
       },
     })
 
@@ -410,12 +432,16 @@ export class Doctors {
 
       const doctorReviews = reviews.filter((r) => r.doctorId === doctor.id)
       const averageRating = doctorReviews.length
-        ? doctorReviews.reduce((acc, r) => acc + r.rating, 0) /
+        ? doctorReviews.reduce((acc: number, r) => acc + r.rating, 0) /
           doctorReviews.length
         : 0
 
       return {
         ...doctor,
+        firstName: doctor.user?.firstName,
+        lastName: doctor.user?.lastName,
+        email: doctor.user?.email,
+        phone: doctor?.phone,
         subSpecialties: subspecialties.filter((sub) =>
           (doctor.subSpecialties as Array<{ id: string }>).some(
             (ds) => ds.id === sub.id,
@@ -447,36 +473,70 @@ export class Doctors {
             address: true,
             town: true,
             county: true,
+            phone: true,
+          },
+        },
+        office: {
+          columns: {
+            placeId: true,
+            name: true,
+            address: true,
+            town: true,
+            county: true,
+            phone: true,
           },
         },
         specialty: true,
         operatingHours: true,
-        reviews: true,
+        reviews: {
+          columns: {
+            rating: true,
+          },
+        },
+        user: {
+          columns: {
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
       },
     })
+
+    if (!doctor) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Doctor not found',
+      })
+    }
 
     const subSpecialties = await db.query.subSpecialties.findMany({
       where: (subSpecialty, { inArray }) =>
         inArray(
           subSpecialty.id,
-          (doctor?.subSpecialties as Array<{ id: string }>)?.map((s) => s.id),
+          (doctor.subSpecialties as Array<{ id: string }>)?.map((s) => s.id),
         ),
     })
 
-    const reviews = doctor?.reviews
+    const doctorReviews = doctor.reviews as Array<{ rating: number }>
+    const reviews = doctorReviews
       .map((r) => r.rating)
-      .filter((r) => r !== null)
+      .filter((r): r is number => r !== null)
 
-    const averageRating = reviews?.length
-      ? reviews.reduce((acc, rating) => acc + rating, 0) / reviews.length
+    const averageRating = reviews.length
+      ? reviews.reduce((acc: number, rating: number) => acc + rating, 0) / reviews.length
       : 0
 
     return {
       ...doctor,
+      firstName: doctor?.user?.firstName,
+      lastName: doctor?.user?.lastName,
+      email: doctor?.user?.email,
+      phone: doctor?.phone,
       subSpecialties,
       reviewStats: {
         averageRating,
-        totalReviews: reviews?.length ?? 0,
+        totalReviews: reviews.length,
       },
     }
   }
@@ -499,16 +559,32 @@ export class Doctors {
         doctor: {
           columns: {
             id: true,
+            phone: true,
           },
           with: {
             profilePicture: true,
+            user: {
+              columns: {
+                firstName: true,
+                lastName: true,
+                email: true,
+              },
+            },
           },
         },
         patient: {
           columns: {
             id: true,
-            firstName: true,
-            lastName: true,
+            phone: true,
+          },
+          with: {
+            user: {
+              columns: {
+                firstName: true,
+                lastName: true,
+                email: true,
+              },
+            },
           },
         },
       },
@@ -664,16 +740,19 @@ export class Doctors {
   }) {
     const offset = (filter.page - 1) * filter.limit
 
+    // Join patients with users for name search and selection
     const countQuery = db
       .select({ count: count() })
       .from(appointments)
+      .innerJoin(patientsTable, eq(appointments.patientId, patientsTable.id))
+      .innerJoin(usersTable, eq(patientsTable.userId, usersTable.id))
       .where(
         and(
           eq(appointments.doctorId, filter.doctorId),
           filter.query
             ? or(
-                ilike(patientsTable.firstName, `%${filter.query}%`),
-                ilike(patientsTable.lastName, `%${filter.query}%`),
+                ilike(usersTable.firstName, `%${filter.query}%`),
+                ilike(usersTable.lastName, `%${filter.query}%`),
               )
             : undefined,
         ),
@@ -682,22 +761,23 @@ export class Doctors {
     const patientsQuery = db
       .select({
         patientId: appointments.patientId,
-        firstName: patientsTable.firstName,
-        lastName: patientsTable.lastName,
         lastAppointment: patientsTable.lastAppointment,
-        phone: patientsTable.phone,
-        email: patientsTable.email,
         dob: patientsTable.dob,
+        firstName: usersTable.firstName,
+        lastName: usersTable.lastName,
+        phone: patientsTable.phone,
+        email: usersTable.email,
       })
       .from(appointments)
       .innerJoin(patientsTable, eq(appointments.patientId, patientsTable.id))
+      .innerJoin(usersTable, eq(patientsTable.userId, usersTable.id))
       .where(
         and(
           eq(appointments.doctorId, filter.doctorId),
           filter.query
             ? or(
-                ilike(patientsTable.firstName, `%${filter.query}%`),
-                ilike(patientsTable.lastName, `%${filter.query}%`),
+                ilike(usersTable.firstName, `%${filter.query}%`),
+                ilike(usersTable.lastName, `%${filter.query}%`),
               )
             : undefined,
         ),

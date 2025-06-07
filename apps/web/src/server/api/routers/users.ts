@@ -1,6 +1,5 @@
-import { currentUser as clerkCurrentUser } from '@clerk/nextjs/server'
 import { db } from '@web/server/db'
-import { appointmentLogs, appointments, patients } from '@web/server/db/schema'
+import { appointmentLogs, appointments, patients, doctors } from '@web/server/db/schema'
 import { User } from '@web/server/services/users'
 import { AppointmentStatus } from '@web/server/utils'
 import { z } from 'zod'
@@ -9,8 +8,27 @@ import { appointmentListSchema, newAppointmentSchema } from '../validators'
 
 export const currentUser = publicProcedure.query(async ({ ctx }) => {
   if (!ctx.user) return null
-  const clerkUser = await clerkCurrentUser()
-  return clerkUser ?? null
+
+  // Get additional details based on role
+  if (ctx.user.role === 'doctor') {
+    const doctorDetails = await db.query.doctors.findFirst({
+      where: (doctor, { eq }) => eq(doctor.userId, ctx.user?.id ?? ''),
+      columns: {
+        phone: true
+      }
+    })
+    return { ...ctx.user, phone: doctorDetails?.phone }
+  } else if (ctx.user.role === 'patient') {
+    const patientDetails = await db.query.patients.findFirst({
+      where: (patient, { eq }) => eq(patient.userId, ctx.user?.id ?? ''),
+      columns: {
+        phone: true
+      }
+    })
+    return { ...ctx.user, phone: patientDetails?.phone }
+  }
+
+  return ctx.user
 })
 
 export const createAppointment = procedure
@@ -20,12 +38,9 @@ export const createAppointment = procedure
       where: (patient, { eq }) => eq(patient.id, ctx.user?.id ?? ''),
     })
     if (!patient) {
-      const currentUser = await clerkCurrentUser()
       await ctx.db.insert(patients).values({
         id: ctx.user?.id ?? '',
-        firstName: currentUser?.firstName ?? '',
-        lastName: currentUser?.lastName ?? '',
-        email: input.email ?? currentUser?.emailAddresses[0]?.emailAddress,
+        userId: ctx.user?.id ?? '',
         phone: input.phone,
         dob: input.dob,
         lastAppointment: input.date,

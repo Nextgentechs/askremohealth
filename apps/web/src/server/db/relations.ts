@@ -12,11 +12,20 @@ import {
   subSpecialties,
   reviews,
   appointmentAttachments,
+  users,
+  articles,
+  article_images,
+  notifications,
+  officeLocation
   articles,
   article_images,
 } from './schema'
 
 export const doctorRelations = relations(doctors, ({ one, many }) => ({
+  user: one(users, {
+    fields: [doctors.userId],
+    references: [users.id],
+  }),
   specialty: one(specialties, {
     fields: [doctors.specialty],
     references: [specialties.id],
@@ -24,6 +33,10 @@ export const doctorRelations = relations(doctors, ({ one, many }) => ({
   facility: one(facilities, {
     fields: [doctors.facility],
     references: [facilities.placeId],
+  }),
+  office: one(officeLocation, {
+    fields: [doctors.officeId],
+    references: [officeLocation.placeId],
   }),
   profilePicture: one(profilePictures, {
     fields: [doctors.id],
@@ -35,9 +48,28 @@ export const doctorRelations = relations(doctors, ({ one, many }) => ({
   reviews: many(reviews),
 }))
 
-export const patientRelations = relations(patients, ({ many }) => ({
+export const patientRelations = relations(patients, ({ many,one }) => ({
   appointments: many(appointments),
+  user: one(users, {
+    fields: [patients.userId],
+    references: [users.id],
+  }),
+
 }))
+
+export const userRelations = relations(users, ({ one,many }) => ({
+  doctor: one(doctors, {
+    fields: [users.id],
+    references: [doctors.userId],
+  }),
+  patient: one(patients, {
+    fields: [users.id],
+    references: [patients.userId],
+  }),
+  notifications: many(notifications),
+  articles: many(articles),
+}));
+
 
 export const facilityRelations = relations(facilities, ({ many }) => ({
   doctors: many(doctors),

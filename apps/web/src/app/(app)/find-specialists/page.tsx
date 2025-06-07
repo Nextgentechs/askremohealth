@@ -12,31 +12,26 @@ import { api } from '@web/trpc/server'
 import { Loader2 } from 'lucide-react'
 import { Suspense } from 'react'
 import SearchForm from './_components/search-form'
+import { ChatBot } from '@web/components/chat-bot'
 
 export default async function Page({
   searchParams,
 }: {
   searchParams: Promise<{
     specialty?: string
-    subSpecialties?: string
-    genders?: string
-    query?: string
+    county?: string
     town?: string
+    query?: string
     page?: string
   }>
 }) {
-  const { specialty, subSpecialties, genders, query, town, page } =
-    await searchParams
-  const data = await api.doctors.list({
-    specialty: specialty ?? undefined,
-    subSpecialties: subSpecialties ? subSpecialties.split(',') : undefined,
-    genders: genders
-      ? genders.split(',').map((g) => g as 'male' | 'female')
-      : undefined,
-    query: query ?? undefined,
-    town: town ?? undefined,
-    page: page ? Number(page) : undefined,
-    limit: 10,
+  const { specialty, county, town, query, page } = await searchParams
+
+  const data = await api.doctors.searchByLocation({
+    specialtyId: specialty,
+    countyCode: county,
+    townId: town,
+    query: query,
   })
 
   return (
@@ -52,11 +47,11 @@ export default async function Page({
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <div className="hidden lg:block">
+      <div className="block">
         <SearchForm />
       </div>
 
-      <div className="mb-10 flex flex-row gap-10 2xl:px-2">
+      <div className="mb-10 w-full flex flex-col lg:flex-row gap-10 2xl:px-2">
         <DoctorFilters />
         <Suspense
           fallback={
@@ -68,6 +63,7 @@ export default async function Page({
           <DoctorList data={data} />
         </Suspense>
       </div>
+      <ChatBot/>
     </main>
   )
 }

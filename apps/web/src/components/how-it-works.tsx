@@ -53,10 +53,10 @@ const HowItWorksCard = ({ item }: { item: (typeof howItWorks)[number] }) => (
 
 export default function HowItWorks() {
   return (
-    <div className="w-full bg-secondary">
+    
     <section
       id="how-it-works"
-      className="container mx-auto flex flex-col items-center gap-6 py-16"
+      className="container mx-auto mt-20 sm:mt-0 flex flex-col items-center gap-6 py-16"
     >
       <h2 className="section-title">How It works</h2>
 
@@ -66,6 +66,6 @@ export default function HowItWorks() {
         ))}
       </div>
     </section>
-    </div>
+    
   )
 }

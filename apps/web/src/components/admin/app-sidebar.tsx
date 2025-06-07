@@ -64,8 +64,23 @@ const data = {
 
   navMain: [
     {
+      title: 'Overview',
+      url:'/admin-template/',
+      icon:Users
+    },
+    {
       title: 'Doctors',
       url: '/admin/doctors',
+      icon: Users,
+    },
+    {
+      title: 'Patients',
+      url: '/admin-template/patients',
+      icon: Users, 
+    },
+    {
+      title: 'Appointments',
+      url: '/admin-template/appointments',
       icon: Users,
     },
   ],

@@ -96,7 +96,7 @@ export const DoctorsColumns: ColumnDef<Doctor>[] = [
     accessorKey: 'user.firstName',
     header: 'Name',
     accessorFn: (row) => {
-      return `${row.firstName} ${row.lastName}`
+      return `${row.user.firstName} ${row.user.lastName}`
     },
     cell: ({ row }) => {
       const doctor = row.original
@@ -105,7 +105,7 @@ export const DoctorsColumns: ColumnDef<Doctor>[] = [
           className="underline-offset-4 hover:text-primary hover:underline"
           href={`/admin/doctors/${doctor.id}`}
         >
-          {doctor.firstName} {doctor.lastName}
+          {doctor.user.firstName} {doctor.user.lastName}
         </Link>
       )
     },
