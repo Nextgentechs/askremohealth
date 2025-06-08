@@ -112,7 +112,9 @@ export function ChatBot() {
         aria-label="Open chat"
       >
         <MessageSquare className="h-5 w-5" />
-        <span className="text-sm md:text-md font-medium">Ask RemoHealth Assistant</span>
+        <span className="text-sm md:text-md font-medium">
+          Ask RemoHealth Assistant
+        </span>
       </Button>
     )
   }
@@ -183,7 +185,40 @@ export function ChatBot() {
                         : 'bg-gray-100 text-gray-800 rounded-bl-none',
                     )}
                   >
-                    {message.content}
+                    {(() => {
+                      const urlRegex = /(https?:\/\/[^\s]+)/g
+                      if (
+                        message.sender === 'bot' &&
+                        urlRegex.test(message.content)
+                      ) {
+                        const match = message.content.match(urlRegex)
+                        const url = match ? match[0] : null
+                        const text = message.content
+                          .replace(urlRegex, '')
+                          .trim()
+
+                        return (
+                          <div className="space-y-2">
+                            {text && <p>{text}</p>}
+                            {url && (
+                              <Button
+                                asChild
+                                className="bg-[#402E7D] text-white px-3 py-2 text-sm rounded"
+                              >
+                                <a
+                                  href={url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  Book Appointment
+                                </a>
+                              </Button>
+                            )}
+                          </div>
+                        )
+                      }
+                      return message.content
+                    })()}
                   </div>
                 </div>
               ))}

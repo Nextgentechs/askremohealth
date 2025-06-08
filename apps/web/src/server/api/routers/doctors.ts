@@ -213,28 +213,8 @@ export const searchByLocation = publicProcedure
     const conditions = []
     
     if (countyCode || townId) {
-      const facilityConditions = []
-      const officeConditions = []
-      
-      if (countyCode) {
-        const county = KENYA_COUNTIES.find((c) => c.code === countyCode)
-        if (county) {
-          // Clean the county name to match our database format
-          const cleanCountyName = county.name
-            .replace(' County', '')
-            .replace('Wilaya ya ', '')
-            .replace('Kaunti ya ', '')
-            .trim()
-
-          console.log('Searching for county:', cleanCountyName) // Debug log
-          
-          facilityConditions.push(eq(facilitiesTable.county, cleanCountyName))
-          officeConditions.push(eq(officeLocationTable.county, cleanCountyName))
-        }
-      }
-
+      let townName: string | undefined
       if (townId) {
-        // Get the town name from the Google Places API
         const placeDetails = await googleMapsClient.placeDetails({
           params: {
             place_id: townId,
@@ -242,39 +222,59 @@ export const searchByLocation = publicProcedure
             key: env.GOOGLE_MAPS_API_KEY,
           },
         })
-        const townName = placeDetails.data.result.name
-        if (townName) {
-          console.log('Searching for town:', townName) // Debug log
-          facilityConditions.push(eq(facilitiesTable.town, townName))
-          officeConditions.push(eq(officeLocationTable.town, townName))
-        }
+        townName = placeDetails.data.result.name
       }
 
-      // Add conditions for either facility or office location matching
+      const facilitySubquery = db
+        .select({ placeId: facilitiesTable.placeId })
+        .from(facilitiesTable)
+        .where(
+          and(
+            ...(countyCode
+              ? [
+                  eq(
+                    facilitiesTable.county,
+                    KENYA_COUNTIES.find((c) => c.code === countyCode)?.name
+                      ?.replace(' County', '')
+                      .replace('Wilaya ya ', '')
+                      .replace('Kaunti ya ', '')
+                      .trim() ?? ''
+                  ),
+                ]
+              : []),
+            ...(townName
+              ? [eq(facilitiesTable.town, townName)]
+              : [])
+          )
+        )
+
+      const officeSubquery = db
+        .select({ placeId: officeLocationTable.placeId })
+        .from(officeLocationTable)
+        .where(
+          and(
+            ...(countyCode
+              ? [
+                  eq(
+                    officeLocationTable.county,
+                    KENYA_COUNTIES.find((c) => c.code === countyCode)?.name
+                      ?.replace(' County', '')
+                      .replace('Wilaya ya ', '')
+                      .replace('Kaunti ya ', '')
+                      .trim() ?? ''
+                  ),
+                ]
+              : []),
+            ...(townName
+              ? [eq(officeLocationTable.town, townName)]
+              : [])
+          )
+        )
+
       conditions.push(
         or(
-          exists(
-            db
-              .select()
-              .from(facilitiesTable)
-              .where(
-                and(
-                  ...facilityConditions,
-                  eq(facilitiesTable.placeId, doctorsTable.facility)
-                )
-              )
-          ),
-          exists(
-            db
-              .select()
-              .from(officeLocationTable)
-              .where(
-                and(
-                  ...officeConditions,
-                  eq(officeLocationTable.placeId, doctorsTable.officeId)
-                )
-              )
-          )
+          inArray(doctorsTable.facility, facilitySubquery),
+          inArray(doctorsTable.officeId, officeSubquery)
         )
       )
     }
@@ -284,22 +284,25 @@ export const searchByLocation = publicProcedure
     }
 
     if (query) {
+      const userSubquery = db
+        .select({ id: usersTable.id })
+        .from(usersTable)
+        .where(
+          or(
+            ilike(usersTable.firstName, `%${query}%`),
+            ilike(usersTable.lastName, `%${query}%`)
+          )
+        )
+
+      const facilitySubquery = db
+        .select({ placeId: facilitiesTable.placeId })
+        .from(facilitiesTable)
+        .where(ilike(facilitiesTable.name, `%${query}%`))
+
       conditions.push(
         or(
-          exists(
-            db
-              .select()
-              .from(usersTable)
-              .where(
-                and(
-                  eq(usersTable.id, doctorsTable.userId),
-                  or(
-                    ilike(usersTable.firstName, `%${query}%`),
-                    ilike(usersTable.lastName, `%${query}%`)
-                  )
-                )
-              )
-          )
+          inArray(doctorsTable.userId, userSubquery),
+          inArray(doctorsTable.facility, facilitySubquery)
         )
       )
     }
