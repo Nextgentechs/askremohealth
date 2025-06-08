@@ -19,7 +19,7 @@ export default async function page({
     type: 'online',
     page: page ? parseInt(page) : 1,
     pageSize: 10,
-    patientId: patientId || undefined,
+    patientId: patientId ?? undefined,
     status: status as AppointmentStatus,
   })
   return (
