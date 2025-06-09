@@ -8,7 +8,6 @@ const transporter = nodemailer.createTransport({
   secure: true,
   auth: {
     user: "Virtualhealthcarenetwork@gmail.com",
-    pass: env.GOOGLE_APP_PASSWORD,
   },
 });
 
