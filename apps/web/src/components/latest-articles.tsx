@@ -5,7 +5,7 @@ import { Button } from './ui/button'
 import { Card, CardContent } from './ui/card'
 import { api } from '@web/trpc/server'
 
-interface Article {
+export interface Article {
   id: string
   title: string
   content: string
