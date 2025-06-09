@@ -14,7 +14,7 @@ export default function Article({ post }: { post: Article }) {
         <CardContent className="h-full flex flex-col sm:flex-row gap-6 sm:gap-10 py-4 sm:py-6">
           <div className="relative h-[200px] sm:h-[250px] md:h-[300px] lg:h-[350px] w-full sm:w-[350px] md:w-[450px] flex-shrink-0 overflow-hidden">
             <Image
-              src={post.image?.url || '/placeholder-image.jpg'}
+              src={post.image?.url ?? '/placeholder-image.jpg'}
               alt={post.title}
               width={450}
               height={350}

@@ -13,7 +13,7 @@ import DOMPurify from 'dompurify'
 import { Button } from '@web/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@web/components/ui/select'
 import { Bold as BoldIcon, Italic as ItalicIcon, List, ListOrdered, Link as LinkIcon } from 'lucide-react'
-import { Command, CommandProps, RawCommands } from '@tiptap/core'
+import type { Command, CommandProps, RawCommands } from '@tiptap/core'
 
 interface WysiwygProps {
   content: string
@@ -226,7 +226,8 @@ export default function Wysiwyg({ content, onChange }: WysiwygProps) {
       console.warn('No URL provided for link')
       return
     }
-    const isValidUrl = url.match(/^(https?:\/\/[^\s$.?#].[^\s]*)$/)
+    const urlRegex = /^(https?:\/\/[^\s$.?#].[^\s]*)$/
+    const isValidUrl = urlRegex.exec(url)
     if (!isValidUrl) {
       console.warn('Invalid URL provided', { url })
       alert('Please enter a valid URL starting with http:// or https://')
@@ -235,7 +236,7 @@ export default function Wysiwyg({ content, onChange }: WysiwygProps) {
     console.log('Setting link', { url, currentLinkActive: true, state: editor.state })
     editor.chain().focus().setLink({ href: url, target: '_blank' }).run()
     setCurrentLinkActive(true)
-  }, [editor])
+  }, [editor, currentLinkActive])
 
   const setFontFamily = useCallback(
     (font: string) => {
