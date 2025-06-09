@@ -159,7 +159,11 @@ export const professionalDetailsSchema = z.object({
   registrationNumber: z.string(),
   medicalLicense: z.string().optional(),
 }).refine(
-  (data) => data.facility ?? data.officeLocation,
+  (data) => {
+    const hasFacility = (data.facility ?? '').trim() !== '';
+    const hasOfficeLocation = (data.officeLocation ?? '').trim() !== '';
+    return hasFacility || hasOfficeLocation;
+  },
   {
     message: "Either facility or office location must be provided",
     path: ["facility"],
@@ -176,4 +180,17 @@ export const availabilityDetailsSchema = z.object({
 })
 export type AvailabilityDetailsSchema = z.infer<
   typeof availabilityDetailsSchema
->
+  >
+
+export const articleListSchema = z.object({
+  page: z.number().default(1),
+  limit: z.number().default(10)
+})
+export type ArticleListSchema = z.infer<typeof articleListSchema>
+
+export const articleSchema = z.object({
+  title: z.string().min(1, { message: 'Title is required.' }).max(100, { message: "Title must be at most 100 characters long" }),
+  content: z.string().min(150, { message: "Content must be at least 150 characters long" }),
+})
+
+export type ArticleSchema = z.infer<typeof articleSchema>

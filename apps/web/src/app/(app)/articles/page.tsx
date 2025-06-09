@@ -1,119 +1,110 @@
-import { ChatBot } from '@web/components/chat-bot'
-import Footer from '@web/components/footer'
-import { type Post } from '@web/components/latest-articles'
-import Article from '@web/components/ui/article'
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from '@web/components/ui/pagination'
-import { client } from '@web/sanity/client'
-import { FileSearch } from 'lucide-react'
+'use client'
 
-const LIMIT = 10
+import { useUser } from '@clerk/nextjs'
+import { Button } from '@web/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@web/components/ui/card'
+import { api } from '@web/trpc/react'
+import Link from 'next/link'
+import { useState } from 'react'
+import Image from 'next/image'
 
-async function getPosts(page: number, limit: number) {
-  const start = (page - 1) * limit
-  const end = start + limit
-
-  const totalQuery = `count(*[_type == "post"])`
-  const postsQuery = `*[_type == "post"] | order(publishedAt desc)[${start}...${end}] {
-    title,
-    slug,
-    publishedAt,
-    image,
-    snippet
-  }`
-
-  const [totalPosts, posts] = await Promise.all([
-    client.fetch<number>(totalQuery),
-    client.fetch<Post[]>(postsQuery),
-  ])
-
-  return {
-    posts,
-    totalPages: Math.ceil(totalPosts / limit),
-  }
+interface Article {
+    id: string
+    title: string
+    content: string
+    createdAt: Date
+    publishedAt: Date | null
+    updatedAt: Date | null
+    image?: {
+        url: string
+        path: string
+    } | null
 }
 
-export default async function Articles({
-  searchParams,
-}: {
-  searchParams: Promise<{ page?: string | number }>
-}) {
-  const params = await searchParams
+interface ArticleListResponse {
+    totalCount: number
+    articlesList: Article[]
+}
 
-  const page = Number(params.page) || 1
-
-  const { posts, totalPages } = await getPosts(page, LIMIT)
-
-  if (posts.length === 0) {
-    return (
-      <div className="flex h-full px-6 py-20 sm:px-10 md:px-20 lg:px-40 flex-col items-center justify-center text-center">
-        <div className="bg-background">
-          <FileSearch size={48} color="#0F172A" />
-        </div>
-        <p className="text-3xl sm:text-4xl lg:text-5xl text-primary">
-          Nothing to see here!
-        </p>
-        <p className="text-lg sm:text-xl text-muted-foreground opacity-75">
-          Check back later!
-        </p>
-      </div>
+export default function ArticlesPage() {
+    const [page, setPage] = useState(1)
+    const { user } = useUser()
+    const { data, isLoading, error } = api.articles.listArticles.useQuery(
+        { page, limit: 10 },
+        { staleTime: 1000 * 60 }
     )
-  }
 
-  return (
-    <div className="pt-6">
-      <h2 className="text-center font-bold text-4xl sm:text-3xl md:text-6xl py-6 sm:py-11 text-primary font-sans">
-        Blogs &amp; Resources
-      </h2>
-      <div className="flex flex-col gap-8 sm:gap-12 lg:gap-14 px-4 sm:px-10 md:px-20 lg:px-36">
-        {posts.map((post) => (
-          <Article key={post.slug.current} post={post} />
-        ))}
-      </div>
+    return (
+        <main className="min-h-screen bg-white">
+            <div className="container mx-auto px-4 py-8">
+                <div className="flex justify-between items-center mb-8">
+                    <h1 className="text-3xl font-bold text-gray-900">Articles</h1>
+                    {user && (
+                        <div className="flex items-center">
+                            <Button 
+                                asChild 
+                                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                            >
+                                <Link href="/articles/post" className="flex items-center">
+                                    Submit a New Article
+                                </Link>
+                            </Button>
+                        </div>
+                    )}
+                </div>
 
-      {totalPages > 1 && (
-        <Pagination className="my-10 flex justify-center">
-          <PaginationContent className="flex flex-wrap gap-2 justify-center">
-            {page > 1 && (
-              <PaginationItem>
-                <PaginationPrevious
-                  className="hover:cursor-pointer text-primary"
-                  href={`?page=${page - 1}`}
-                />
-              </PaginationItem>
-            )}
+                {isLoading && <div className="text-center py-8">Loading articles...</div>}
+                {error && <div className="text-center py-8 text-red-500">Error: {error.message}</div>}
+                {!isLoading && !error && (!data?.articlesList || data.articlesList.length === 0) && (
+                    <div className="text-center py-8 text-gray-500">No articles found.</div>
+                )}
 
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-              <PaginationItem key={p}>
-                <PaginationLink
-                  href={`?page=${p}`}
-                  isActive={p === page}
-                  className="hover:cursor-pointer px-3 py-2 sm:px-4 sm:py-3 text-primary text-sm sm:text-base"
-                >
-                  {p}
-                </PaginationLink>
-              </PaginationItem>
-            ))}
-
-            {page < totalPages && (
-              <PaginationItem>
-                <PaginationNext
-                  className="hover:cursor-pointer text-primary"
-                  href={`?page=${page + 1}`}
-                />
-              </PaginationItem>
-            )}
-          </PaginationContent>
-        </Pagination>
-      )}
-      <ChatBot/>
-      <Footer />
-    </div>
-  )
+                {data?.articlesList && data.articlesList.length > 0 && (
+                    <>
+                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                            {data.articlesList.map((article) => (
+                                <Card key={article.id} className="shadow-md">
+                                    <CardHeader>
+                                        <CardTitle>{article.title}</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="relative h-48 w-full overflow-hidden rounded-md mb-4">
+                                            {article.image?.url ? (
+                                                <Image
+                                                    src={article.image.url}
+                                                    alt={article.title}
+                                                    width={450}
+                                                    height={350}
+                                                    className="h-full w-full object-cover rounded-sm"
+                                                />
+                                            ) : (
+                                                <div className="h-full w-full bg-gray-200 flex items-center justify-center rounded-sm">
+                                                    <span className="text-gray-500">No image</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <p className="text-sm text-gray-600">
+                                            Published: {article.publishedAt ? new Date(article.publishedAt).toLocaleDateString() : 'Not published'}
+                                        </p>
+                                        <Button asChild className="mt-4">
+                                            <Link href={`/articles/${article.id}`}>Read More</Link>
+                                        </Button>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                        {data.totalCount > data.articlesList.length && (
+                            <Button
+                                onClick={() => setPage(page + 1)}
+                                className="mt-6"
+                                disabled={isLoading}
+                            >
+                                Load More
+                            </Button>
+                        )}
+                    </>
+                )}
+            </div>
+        </main>
+    )
 }
