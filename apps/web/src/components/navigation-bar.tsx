@@ -97,8 +97,8 @@ const navOptions = [
     ],
   },
   {
-    label: 'Register as Provider',
-    href: '/register-provider',
+    label: 'Register Facility',
+    href: '/register-facility',
     icon: Stethoscope,
   },
   {

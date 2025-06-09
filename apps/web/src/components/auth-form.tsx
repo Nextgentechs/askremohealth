@@ -27,11 +27,14 @@ import {
 } from './ui/form'
 import { InputOTP, InputOTPGroup, InputOTPSlot } from './ui/input-otp'
 import { passwordSchema } from '@web/server/api/validators'
+import { useCurrentUser } from '@web/hooks/use-current-user'
 
 export default function AuthForm() {
   const [currentStep, setCurrentStep] = useState<'login' | 'signup' | 'otp'>(
     'login',
   )
+  const [loggedInEmail, setLoggedInEmail] = useState<string>('')
+  
 
 
   return (
@@ -44,7 +47,7 @@ export default function AuthForm() {
           exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.2 }}
         >
-          <InputOTPForm />
+          <InputOTPForm loggedInEmail={loggedInEmail} />
         </motion.div>
       )}
       {currentStep === 'signup' && (
@@ -66,7 +69,7 @@ export default function AuthForm() {
           exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.2 }}
         >
-          <Login setCurrentStep={setCurrentStep} />
+          <Login setLoggedInEmail={setLoggedInEmail} setCurrentStep={setCurrentStep} />
         </motion.div>
       )}
     </AnimatePresence>
@@ -80,9 +83,11 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>
 
 function Login({
+  setLoggedInEmail,
   setCurrentStep,
 }: {
-  setCurrentStep: (step: 'login' | 'signup' | 'otp') => void
+    setLoggedInEmail: React.Dispatch<React.SetStateAction<string>>,
+    setCurrentStep: (step: 'login' | 'signup' | 'otp') => void
 }) {
   const [isLoading, setIsLoading] = useState(false)
   const form = useForm<LoginFormData>({
@@ -103,14 +108,40 @@ function Login({
         body: JSON.stringify(data),
       })
       const result = await res.json()
+
       if (result.success) {
+        setLoggedInEmail(data.email)
+        const otpRes = await fetch('/api/auth/sendotp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: data.email,
+            otp: result.otp
+          }),
+        })
+
+        const otpResult = await otpRes.json()
+        
+        if (otpResult?.error?.message) {
+          toast({
+            title: 'OTP Error',
+            description: otpResult.error.message ?? 'Failed to send OTP',
+            variant: 'destructive',
+          })
+          return
+        }
+
         toast({
           title: 'Success',
           description: 'Logged in successfully!',
           duration: 3000,
         })
-        // Optionally reload or redirect
-        window.location.href = '/specialist/onboarding/personal-details'
+        toast({
+          title: 'Success',
+          description: 'OTP has been sent to your email!',
+          duration: 3000,
+        })
+        setCurrentStep('otp')
       } else {
         toast({
           title: 'Error',
@@ -220,13 +251,19 @@ function Login({
 }
 
 
-const signUpSchema = z.object({
+const signUpSchema = z
+  .object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
   email: z.string().email('Invalid email address'),
   password: passwordSchema,
+  confirmPassword: passwordSchema,
   role:z.string()
-})
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword']
+  });
 
 type SignUpFormData = z.infer<typeof signUpSchema>
 
@@ -247,6 +284,7 @@ function SignUp({
       lastName: '',
       email: '',
       password: '',
+      confirmPassword:'',
       role : role ?? ''
     }
     
@@ -268,7 +306,7 @@ function SignUp({
       } else {
         toast({
           title: 'Error',
-          description: result.message ?? 'Sign up failed',
+          description: result.error ?? 'Sign up failed',
           variant: 'destructive',
         })
       }
@@ -365,6 +403,19 @@ function SignUp({
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirm Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="********" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? <Loader className="animate-spin" /> : 'Sign Up'}
               </Button>
@@ -390,8 +441,23 @@ const FormSchema = z.object({
   pin: z.string().min(6, { message: 'Invalid OTP' }),
 })
 
-function InputOTPForm() {
+function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
   const [isLoading, setIsLoading] = useState(false)
+  const [resendIsLoading, setResendIsLoading] = useState(false)
+
+
+  const router = useRouter()
+  type UserRole = 'patient' | 'doctor'
+
+  type User = {
+    id: string
+    email: string
+    role: UserRole
+    onboardingComplete: boolean
+  }
+
+  const { user } = useCurrentUser() as { user: User | null }
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: { pin: '' },
@@ -400,9 +466,72 @@ function InputOTPForm() {
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     setIsLoading(true)
     try {
-      console.log('OTP submitted:', data.pin)
+      const res = await fetch('/api/auth/verifyotp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ otp: data.pin, email: loggedInEmail }),
+      })
+
+      const result = await res.json()
+      if (result.success) {
+        toast({
+          title: 'Success',
+          description: 'OTP verified successfully!',
+          duration: 3000,
+        })
+        if (user?.role === 'patient') {
+          router.push('/')
+        }
+        else if (user?.role === 'doctor' && user?.onboardingComplete) {
+          router.push('/specialist/upcoming-appointments')
+        }
+        else {
+          router.push('/specialist/onboarding/personal-details')
+        }
+      }
+      else {
+        toast({
+          title: 'Error',
+          description: result.message,
+          variant: 'destructive',
+        })
+      }
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  async function handleResend() {
+    setResendIsLoading(true)
+    try {
+      const response = await fetch('api/auth/resendotp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:JSON.stringify({email:loggedInEmail})
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error ?? 'Something went wrong');
+      }
+
+      toast({
+        title: 'Success',
+        description: 'OTP sent successfully!',
+        duration: 3000,
+      });
+  
+    }
+    catch {
+      toast({
+        title: 'Error',
+        description: 'Failed to resend OTP',
+        variant: 'destructive',
+        duration: 4000,
+      });
+    } finally {
+      setResendIsLoading(false)
     }
   }
 
@@ -439,9 +568,14 @@ function InputOTPForm() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? <Loader className="animate-spin" /> : 'Submit'}
-              </Button>
+              <div className='flex justify-between w-full'>
+                <Button type="submit" disabled={isLoading ?? resendIsLoading}>
+                  {isLoading ? <Loader className="animate-spin" /> : 'Submit'}
+                </Button>
+                <Button onClick={handleResend} variant="outline" disabled={isLoading ?? resendIsLoading}>
+                  {resendIsLoading ? <Loader className="animate-spin" /> : 'Resend'}
+                </Button>
+              </div>
             </form>
           </Form>
         </CardContent>
