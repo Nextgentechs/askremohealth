@@ -19,25 +19,19 @@ export default async function Page({
 }: {
   searchParams: Promise<{
     specialty?: string
-    subSpecialties?: string
-    genders?: string
-    query?: string
+    county?: string
     town?: string
+    query?: string
     page?: string
   }>
 }) {
-  const { specialty, subSpecialties, genders, query, town, page } =
-    await searchParams
-  const data = await api.doctors.list({
-    specialty: specialty ?? undefined,
-    subSpecialties: subSpecialties ? subSpecialties.split(',') : undefined,
-    genders: genders
-      ? genders.split(',').map((g) => g as 'male' | 'female')
-      : undefined,
-    query: query ?? undefined,
-    town: town ?? undefined,
-    page: page ? Number(page) : undefined,
-    limit: 10,
+  const { specialty, county, town, query } = await searchParams
+
+  const data = await api.doctors.searchByLocation({
+    specialtyId: specialty,
+    countyCode: county,
+    townId: town,
+    query: query,
   })
 
   return (

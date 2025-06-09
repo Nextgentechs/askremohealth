@@ -49,6 +49,16 @@ export default function SearchForm() {
     { countyCode: selectedCounty?.code },
     { enabled: !!selectedCounty },
   )
+
+  const handleSearch = () => {
+    const params = new URLSearchParams()
+    if (selectedSpecialty) params.set('specialty', selectedSpecialty.id)
+    if (selectedCounty) params.set('county', selectedCounty.code)
+    if (selectedTown?.id) params.set('town', selectedTown.id)
+    if (query) params.set('query', query)
+    router.push(`/find-specialists?${params.toString()}`)
+  }
+
   return (
     <Card className="p-6 mx-auto mt-20 sm:mt-8 xl:mt-0 xl:grid xl:grid-cols-5 gap-3 transition-all duration-300 w-90 xl:h-32 items-center 2xl:w-[1184px] xl:w-[1088px] sm:w-[500px] lg:w-[888px] md:w-[600px]">
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 xl:col-span-4">
@@ -121,18 +131,20 @@ export default function SearchForm() {
                     {counties?.map((county) => (
                       <CommandItem
                         value={county.name}
-                        key={county.name}
+                        key={county.code}
                         onSelect={() => {
-                          if (county.name === selectedCounty?.name) {
+                          if (county.code === selectedCounty?.code) {
                             setSelectedCounty(undefined)
+                            setSelectedTown(undefined)
                           } else {
                             setSelectedCounty(county)
+                            setSelectedTown(undefined)
                           }
                         }}
                       >
                         {county.name}
                         <Check
-                          data-selected={county.name === selectedCounty?.name}
+                          data-selected={county.code === selectedCounty?.code}
                           className="ml-auto data-[selected=true]:opacity-100 data-[selected=false]:opacity-0"
                         />
                       </CommandItem>
@@ -153,6 +165,7 @@ export default function SearchForm() {
                 role="combobox"
                 data-state={selectedTown ? 'true' : 'false'}
                 className="w-full justify-between data-[state=false]:text-muted-foreground"
+                disabled={!selectedCounty}
               >
                 {selectedTown?.name ?? 'Select a town'}
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -176,7 +189,7 @@ export default function SearchForm() {
                           value={town.name}
                           key={town.id}
                           onSelect={() => {
-                            if (town.name === selectedTown?.name) {
+                            if (town.id === selectedTown?.id) {
                               setSelectedTown(undefined)
                             } else {
                               setSelectedTown(town)
@@ -185,7 +198,7 @@ export default function SearchForm() {
                         >
                           {town.name}
                           <Check
-                            data-selected={town.name === selectedTown?.name}
+                            data-selected={town.id === selectedTown?.id}
                             className="ml-auto data-[selected=true]:opacity-100 data-[selected=false]:opacity-0"
                           />
                         </CommandItem>
@@ -215,14 +228,7 @@ export default function SearchForm() {
       <div className="flex w-full justify-end">
         <Button
           className="w-full lg:w-[216px] mt-6"
-          onClick={() => {
-            const params = new URLSearchParams()
-            if (selectedSpecialty) params.set('specialty', selectedSpecialty.id)
-            if (selectedCounty) params.set('county', selectedCounty.code)
-            if (selectedTown) params.set('town', selectedTown.id ?? '')
-            if (query) params.set('query', query)
-            router.push(`/find-specialists?${params.toString()}`)
-          }}
+          onClick={handleSearch}
         >
           <Search />
           Search

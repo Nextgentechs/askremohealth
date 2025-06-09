@@ -12,7 +12,6 @@ import {
 } from 'lucide-react'
 import * as React from 'react'
 
-import { useClerk } from '@clerk/nextjs'
 import Logo from '@web/components/logo'
 import { Avatar, AvatarFallback, AvatarImage } from '@web/components/ui/avatar'
 import {
@@ -41,7 +40,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 function NavUser() {
-  const { signOut } = useClerk()
+  // const { signOut } = useClerk()
   const { isMobile } = useSidebar()
   const { data: doctor } = api.doctors.currentDoctor.useQuery()
 
@@ -57,13 +56,13 @@ function NavUser() {
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage
                   src={doctor?.profilePicture?.url ?? ''}
-                  alt={doctor?.firstName ?? ''}
+                  alt={doctor?.user?.firstName ?? ''}
                 />
                 <AvatarFallback className="rounded-lg">CN</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">
-                  {`${(doctor?.firstName ?? '').charAt(0).toUpperCase() + (doctor?.firstName ?? '').slice(1)} ${(doctor?.lastName ?? '').charAt(0).toUpperCase() + (doctor?.lastName ?? '').slice(1)}`}
+                  {`${(doctor?.user?.firstName ?? '').charAt(0).toUpperCase() + (doctor?.user?.firstName ?? '').slice(1)} ${(doctor?.user?.lastName ?? '').charAt(0).toUpperCase() + (doctor?.user?.lastName ?? '').slice(1)}`}
                 </span>
                 <span className="truncate text-xs">
                   {doctor?.specialty?.name ?? ''}
@@ -83,12 +82,12 @@ function NavUser() {
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage
                     src={doctor?.profilePicture.url}
-                    alt={doctor?.firstName}
+                    alt={doctor?.user?.firstName}
                   />
                   <AvatarFallback className="rounded-lg">CN</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">{`${doctor?.firstName} ${doctor?.lastName}`}</span>
+                  <span className="truncate font-semibold">{`${doctor?.user?.firstName} ${doctor?.user?.lastName}`}</span>
                   <span className="truncate text-xs">
                     {doctor?.specialty?.name}
                   </span>
@@ -103,7 +102,12 @@ function NavUser() {
                   My Profile
                 </DropdownMenuItem>
               </Link>
-              <DropdownMenuItem onClick={() => signOut({ redirectUrl: '/' })}>
+              <DropdownMenuItem
+                onClick={async () => {
+                  await fetch('/api/auth/signout', { method: 'POST' })
+                  window.location.href = '/'
+                }}
+              >
                 <LogOut />
                 Log out
               </DropdownMenuItem>

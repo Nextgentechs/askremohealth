@@ -7,7 +7,9 @@ import * as locations from './routers/location'
 import * as doctors from './routers/doctors'
 import * as video from './routers/video'
 import * as admin from './routers/admin'
-
+import * as articles from './routers/articles'
+// import * as auth from './routers/auth'
+import * as officeLocations from './routers/office-locations'
 /**
  * This is the primary router for your server.
  *
@@ -21,6 +23,9 @@ export const appRouter = createTRPCRouter({
   doctors: createTRPCRouter(doctors),
   video: createTRPCRouter(video),
   admin: createTRPCRouter(admin),
+  // auth: createTRPCRouter(auth),
+  officeLocations: createTRPCRouter(officeLocations),
+  articles: createTRPCRouter(articles),
 })
 
 // export type definition of API

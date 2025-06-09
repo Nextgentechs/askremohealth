@@ -10,8 +10,8 @@ const footerNavOptions = {
     {
       header: 'For Patients',
       links: [
-        { title: 'Account Signup', href: '/signup' },
-        { title: 'Login', href: '/login' },
+        { title: 'Account Signup', href: '/auth?role=patient' },
+        { title: 'Login', href: '/auth?role=patient' },
         { title: 'Doctors', href: '/find-specialists' },
         { title: 'Hospitals', href: '/hospitals' },
         { title: 'Laboratories', href: '/laboratories' },
@@ -25,9 +25,7 @@ const footerNavOptions = {
     {
       header: 'For Specialists',
       links: [
-        { title: 'Login', href: '/specialist' },
-        { title: 'How to register', href: '/specialists/onboarding/' },
-        { title: 'Promote your practice', href: '/specialists/onboarding/' },
+        { title: 'Register your practice', href: '/register-facility' },
         { title: 'FAQ', href: '/faq' },
       ],
     },
@@ -37,9 +35,7 @@ const footerNavOptions = {
     {
       header: 'For Healthcare Facilities',
       links: [
-        { title: 'Login', href: '/hospitals' },
-        { title: 'How to register', href: '/how-to-register' },
-        { title: 'Promote your facility', href: '/#providers-cta' },
+        { title: 'Register your facility', href: '/register-facility' },
         { title: 'FAQ', href: '/faq' },
       ],
     },

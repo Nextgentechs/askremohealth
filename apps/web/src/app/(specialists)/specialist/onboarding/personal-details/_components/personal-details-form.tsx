@@ -17,9 +17,9 @@ import { fileToBase64 } from '@web/lib/utils'
 import { api } from '@web/trpc/react'
 import { Loader } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import React from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
+import { redirect } from 'next/navigation'
 
 export const personalDetailsSchema = z.object({
   title: z.string().optional(),
@@ -72,15 +72,27 @@ export type PersonalDetails = z.infer<typeof personalDetailsSchema>
 
 export default function PersonalDetails() {
   const [user] = api.users.currentUser.useSuspenseQuery()
+  
+  // if (!user) {
+  //   redirect('/')
+  // }
+
+  if (user!.role !== 'doctor') {
+    redirect('/')
+  }
+
+  if (user!.onboardingComplete === true) {
+    redirect('/specialist/upcoming-appointments')
+  }
+
   const form = useForm<PersonalDetails>({
     resolver: zodResolver(personalDetailsSchema),
     defaultValues: {
       title: '',
       firstName: user?.firstName ?? '',
       lastName: user?.lastName ?? '',
-
-      email: user?.emailAddresses[0]?.emailAddress ?? '',
-      phone: user?.phoneNumbers[0]?.phoneNumber ?? '',
+      email: user?.email ?? '',
+      phone: '',
       bio: '',
     },
   })
@@ -109,6 +121,18 @@ export default function PersonalDetails() {
     <form className="space-y-8">
       <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2 sm:gap-x-4 sm:gap-y-3">
         <div className="flex flex-col gap-2">
+          <Label htmlFor="title">Title</Label>
+          <Input
+            {...form.register('title')}
+            id="title"
+            type="text"
+            placeholder="e.g. Dr, Prof, etc."
+          />
+          <p className="text-[0.8rem] font-medium text-destructive">
+            {form.formState.errors.title?.message}
+          </p>
+        </div>
+        <div className="flex flex-col gap-2">
           <Label htmlFor="firstName">First Name</Label>
           <Input {...form.register('firstName')} id="firstName" type="text" />
           <p className="text-[0.8rem] font-medium text-destructive">
@@ -120,18 +144,6 @@ export default function PersonalDetails() {
           <Input {...form.register('lastName')} id="lastName" type="text" />
           <p className="text-[0.8rem] font-medium text-destructive">
             {form.formState.errors.lastName?.message}
-          </p>
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="title">Title</Label>
-          <Input
-            {...form.register('title')}
-            id="title"
-            type="text"
-            placeholder="e.g. Dr, Prof, etc."
-          />
-          <p className="text-[0.8rem] font-medium text-destructive">
-            {form.formState.errors.title?.message}
           </p>
         </div>
         <div className="flex flex-col gap-2">

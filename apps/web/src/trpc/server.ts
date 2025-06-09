@@ -13,18 +13,33 @@ import { createQueryClient } from './query-client'
  * handling a tRPC call from a React Server Component.
  */
 const createContext = cache(async () => {
-  const heads = new Headers(await headers())
-  heads.set('x-trpc-source', 'rsc')
+  const heads = await headers()
+
+  const cookieHeader = heads.get('cookie') ?? ''
+  const userAgent = heads.get('user-agent') ?? ''
 
   const req = new Request('http://localhost', {
-    headers: heads,
-    credentials: 'include',
+    headers: {
+      cookie: cookieHeader,
+      'user-agent': userAgent,
+    },
   })
 
   return createTRPCContext({
     req,
+    resHeaders: new Headers(),
+    info: {
+      accept: null,
+      type: 'query',
+      isBatchCall: false,
+      calls: [],
+      connectionParams: null,
+      signal: new AbortController().signal,
+      url: null
+    },
   })
 })
+
 
 const getQueryClient = cache(createQueryClient)
 const caller = createCaller(createContext)

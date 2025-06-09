@@ -2,6 +2,7 @@ import { Client, AddressType } from '@googlemaps/google-maps-services-js'
 import { env } from '@web/env'
 import { facilities } from '@web/server/db/schema'
 import { db } from '@web/server/db'
+import { KENYA_COUNTIES } from '../data/kenya-counties'
 
 const googleMapsClient = new Client({})
 
@@ -32,24 +33,65 @@ export class Facility {
     })
 
     const place = details.data.result
-
     const type = place.types?.[0] ?? null
-
     const addressComponents = place.address_components ?? []
 
-    const county =
-      addressComponents.find(
-        (component) =>
-          component.types.includes(AddressType.administrative_area_level_1) ||
-          component.types.includes(AddressType.administrative_area_level_2),
-      )?.long_name ?? ''
+    // Extract county information
+    let county = ''
+    const countyComponent = addressComponents.find(
+      (component) =>
+        component.types.includes(AddressType.administrative_area_level_1) ||
+        component.types.includes(AddressType.administrative_area_level_2),
+    )
+    
+    if (countyComponent) {
+      // Try to match with our known counties
+      const countyName = countyComponent.long_name
+        .replace(' County', '')
+        .replace('Wilaya ya ', '')
+        .replace('Kaunti ya ', '')
+        .trim()
+      
+      const matchedCounty = KENYA_COUNTIES.find(
+        (c) => c.name.toLowerCase() === countyName.toLowerCase()
+      )
+      county = matchedCounty ? matchedCounty.name : countyName
+    }
 
-    const town =
-      addressComponents.find(
-        (component) =>
-          component.types.includes(AddressType.locality) ||
-          component.types.includes(AddressType.sublocality),
-      )?.long_name ?? ''
+    // Extract town information
+    let town = ''
+    const townComponent = addressComponents.find(
+      (component) =>
+        component.types.includes(AddressType.locality) ||
+        component.types.includes(AddressType.sublocality),
+    )
+    
+    if (townComponent) {
+      town = townComponent.long_name
+    } else {
+      // If no town is found, try to extract from formatted address
+      const addressParts = place.formatted_address?.split(',') ?? []
+      if (addressParts.length >= 2) {
+        // Usually the second-to-last part contains the town
+        town = addressParts[addressParts.length - 2]?.trim() ?? ''
+      }
+    }
+
+    // If we still don't have a county, try to determine it from coordinates
+    if (!county && place.geometry?.location) {
+      const { lat, lng } = place.geometry.location
+      // Find the county that contains these coordinates
+      // This is a simple implementation - you might want to use a more sophisticated
+      // geospatial query in a production environment
+      const matchedCounty = KENYA_COUNTIES.find(
+        (c) =>
+          Math.abs(c.coordinates.lat - lat) < 1 && 
+          Math.abs(c.coordinates.lng - lng) < 1
+      )
+      if (matchedCounty) {
+        county = matchedCounty.name
+      }
+    }
 
     const [facility] = await db
       .insert(facilities)
@@ -63,6 +105,8 @@ export class Facility {
         town,
         phone: place.formatted_phone_number,
         website: place.website,
+        verified: false,
+        createdAt: new Date(),
       })
       .returning()
 
