@@ -4,8 +4,10 @@ import { generateOtp } from "@web/server/lib/generateOtp"
 import { NextResponse } from "next/server"
 import { Resend } from "resend";
 import { z } from "zod"
+import { env } from 'src/env'
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+
+const resend = new Resend(env.RESEND_API_KEY);
 
 const bodySchema = z.object({
   email:z.string().email()

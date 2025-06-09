@@ -1,8 +1,9 @@
 import { Resend } from 'resend';
 import { NextResponse } from 'next/server';
 import { EmailTemplate } from '@web/components/email-template';
+import { env } from 'src/env'
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(env.RESEND_API_KEY);
 
 export async function POST(req: Request) {
   const body = await req.json();
