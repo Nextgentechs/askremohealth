@@ -16,7 +16,8 @@ export async function POST(req: Request) {
       react: EmailTemplate({otp}),
     });
 
-    return NextResponse.json(data);
+    return NextResponse.json({ success: true, data });
+    
   } catch (error) {
     return NextResponse.json({ error }, { status: 500 });
   }

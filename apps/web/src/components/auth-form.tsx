@@ -108,7 +108,6 @@ function Login({
         body: JSON.stringify(data),
       })
       const result = await res.json()
-      console.log(result)
 
       if (result.success) {
         setLoggedInEmail(data.email)
@@ -122,7 +121,6 @@ function Login({
         })
 
         const otpResult = await otpRes.json()
-        console.log('otpResult', otpResult)
         
         if (otpResult?.error?.message) {
           toast({
@@ -130,12 +128,17 @@ function Login({
             description: otpResult.error.message ?? 'Failed to send OTP',
             variant: 'destructive',
           })
-          // return
+          return
         }
 
         toast({
           title: 'Success',
           description: 'Logged in successfully!',
+          duration: 3000,
+        })
+        toast({
+          title: 'Success',
+          description: 'OTP has been sent to your email!',
           duration: 3000,
         })
         setCurrentStep('otp')
@@ -297,7 +300,6 @@ function SignUp({
         body: JSON.stringify(data),
       })
       const result = await res.json()
-      console.log(result)
       if (result.success) {
         toast({ title: 'Success', description: 'Sign up was successful!' })
         router.push('/auth') // Redirect to your desired page
@@ -441,6 +443,8 @@ const FormSchema = z.object({
 
 function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
   const [isLoading, setIsLoading] = useState(false)
+  const [resendIsLoading, setResendIsLoading] = useState(false)
+
 
   const router = useRouter()
   type UserRole = 'patient' | 'doctor'
@@ -454,7 +458,6 @@ function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
 
   const { user } = useCurrentUser() as { user: User | null }
 
-  console.log(user)
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: { pin: '' },
@@ -463,7 +466,6 @@ function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     setIsLoading(true)
     try {
-      console.log('OTP submitted:', data.pin)
       const res = await fetch('/api/auth/verifyotp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -494,9 +496,42 @@ function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
           variant: 'destructive',
         })
       }
-      console.log('result',result)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  async function handleResend() {
+    setResendIsLoading(true)
+    try {
+      const response = await fetch('api/auth/resendotp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:JSON.stringify({email:loggedInEmail})
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error ?? 'Something went wrong');
+      }
+
+      toast({
+        title: 'Success',
+        description: 'OTP sent successfully!',
+        duration: 3000,
+      });
+  
+    }
+    catch {
+      toast({
+        title: 'Error',
+        description: 'Failed to resend OTP',
+        variant: 'destructive',
+        duration: 4000,
+      });
+    } finally {
+      setResendIsLoading(false)
     }
   }
 
@@ -533,9 +568,14 @@ function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
                   </FormItem>
                 )}
               />
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? <Loader className="animate-spin" /> : 'Submit'}
-              </Button>
+              <div className='flex justify-between w-full'>
+                <Button type="submit" disabled={isLoading ?? resendIsLoading}>
+                  {isLoading ? <Loader className="animate-spin" /> : 'Submit'}
+                </Button>
+                <Button onClick={handleResend} variant="outline" disabled={isLoading ?? resendIsLoading}>
+                  {resendIsLoading ? <Loader className="animate-spin" /> : 'Resend'}
+                </Button>
+              </div>
             </form>
           </Form>
         </CardContent>
