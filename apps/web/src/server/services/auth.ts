@@ -4,27 +4,9 @@ import { eq } from 'drizzle-orm'
 import { db } from '../db'
 import { users } from '../db/schema'
 import { createUserSession } from '../lib/session'
-import { sendOtpEmail } from '../lib/email'
 import { redisClient } from '@web/redis/redis'
+import { generateOtp } from '../lib/generateOtp'
 
-// type CookieOptions = {
-//   secure?: boolean
-//   httpOnly?: boolean
-//   sameSite?: 'lax' | 'strict' | 'none'
-//   maxAge?: number
-//   path?: string
-// }
-
-// If Context is not used, remove it entirely to fix the lint warning
-// type Context = {
-//   req: Request
-//   cookies: {
-//     get: (key: string) => { name: string; value: string } | undefined
-//     set: (key: string, value: string, options: Partial<CookieOptions>) => void
-//     delete: (key: string) => void
-//   }
-//   user: unknown
-// }
 
 type SignUpInput = {
   email: string
@@ -38,11 +20,7 @@ type SignInInput = {
   email: string
   password: string
 }
-export function generateOtp(length = 6): string {
-  const min = Math.pow(10, length - 1);
-  const max = Math.pow(10, length) - 1;
-  return Math.floor(Math.random() * (max - min + 1) + min).toString();
-}
+
 
 export class AuthService {
   static async signUp({ email, password, firstName, lastName, role }: SignUpInput) {
