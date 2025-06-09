@@ -37,7 +37,7 @@ export async function POST(req:Request) {
 
     return NextResponse.json({ success: true, emailResult });
     
-  } catch (error) {
+  } catch{
     return NextResponse.json({error:'failed to send otp, try again'},{status:500})
   }
 }
