@@ -30,7 +30,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
       return true
     },
-    async redirect({ url, baseUrl }) {
+    async redirect({ baseUrl }) {
       // Always redirect to a specific page after sign-in
       return `${baseUrl}/specialist/onboarding/personal-details` // or any URL you want
     },

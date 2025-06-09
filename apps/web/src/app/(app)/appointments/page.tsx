@@ -42,7 +42,7 @@ export default async function Page({
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink href="/">
+            <BreadcrumbLink href="/profile">
               {user?.firstName} {user?.lastName}
             </BreadcrumbLink>
           </BreadcrumbItem>
