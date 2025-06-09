@@ -34,11 +34,14 @@ function DoctorCard() {
         <Avatar className="hidden md:block md:size-28">
           <AvatarImage src={doctorDetails.profilePicture?.url} />
           <AvatarFallback>
-            {doctorDetails.firstName?.charAt(0)}
-            {doctorDetails.lastName?.charAt(0)}
+            {doctorDetails.user?.firstName?.charAt(0)}
+            {doctorDetails.user?.lastName?.charAt(0)}
           </AvatarFallback>
         </Avatar>
-        <DoctorDetails doctor={doctorDetails} />
+        <DoctorDetails doctor={{
+          ...doctorDetails,
+          bookedSlots: []
+        }} />
       </div>
     </Card>
   )
@@ -309,8 +312,8 @@ function BookingForm() {
       appointmentType: 'online',
       firstName: currentUser?.firstName ?? '',
       lastName: currentUser?.lastName ?? '',
-      phone: currentUser?.phoneNumbers?.[0]?.phoneNumber ?? '',
-      email: currentUser?.emailAddresses?.[0]?.emailAddress ?? '',
+      phone: '',
+      email: currentUser?.email ?? '',
     },
   })
 

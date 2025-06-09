@@ -34,7 +34,7 @@ export default function PostMeetingForm() {
   >({
     resolver: zodResolver(postAppointmentSchema),
     defaultValues: {
-      patientName: `${appointment?.patient?.firstName} ${appointment?.patient?.lastName}`,
+      patientName: `${appointment?.patient?.user?.firstName} ${appointment?.patient?.user?.lastName}`,
       appointmentDate: appointment?.appointmentDate
         ? new Date(appointment.appointmentDate)
             .toLocaleString('en-US', {

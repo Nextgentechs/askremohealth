@@ -32,11 +32,26 @@ function DoctorCard({
         <Avatar className="hidden md:block md:size-28">
           <AvatarImage src={doctor.profilePicture?.url} />
           <AvatarFallback>
-            {doctor.firstName?.charAt(0)}
-            {doctor.lastName?.charAt(0)}
+            {doctor.user?.firstName?.charAt(0)}
+            {doctor.user?.lastName?.charAt(0)}
           </AvatarFallback>
         </Avatar>
-        <DoctorDetails doctor={doctor} />
+        <DoctorDetails 
+          doctor={{
+            ...doctor,
+            firstName: doctor.user?.firstName,
+            lastName: doctor.user?.lastName,
+            email: doctor.user?.email,
+            bookedSlots: [],
+            reviewStats: {
+              averageRating: doctor.reviews?.length ? 
+                doctor.reviews.reduce((acc, r) => acc + r.rating, 0) / doctor.reviews.length : 
+                0,
+              totalReviews: doctor.reviews?.length ?? 0
+            }
+          }} 
+          showAllLocations={true} 
+        />
       </div>
     </Card>
   )
@@ -126,12 +141,14 @@ function PatientsReviews() {
   )
 }
 
-export default async function Page({
-  params,
-}: {
-  params: Promise<{ id: string }>
+export default async function Page({ 
+  params 
+}: { 
+  params: Promise<{ id: string }> 
 }) {
-  const doctor = await api.doctors.details((await params).id)
+  const { id } = await params
+  const doctor = await api.doctors.details(id)
+
   return (
     <main className="container mx-auto mb-48 mt-12 flex min-h-screen w-full flex-col gap-12">
       <Breadcrumb className="lg:ps-3">
@@ -141,16 +158,17 @@ export default async function Page({
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink href={`/doctors`}>Doctors</BreadcrumbLink>
+            <BreadcrumbLink href="/find-specialists">Doctors</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
             <BreadcrumbPage>
-              {doctor.firstName} {doctor.lastName}
+              {doctor.user?.firstName} {doctor.user?.lastName}
             </BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
+
       <div className="flex flex-col gap-8 lg:flex-row">
         <DoctorCard doctor={doctor} />
         <div className="flex flex-1 flex-col gap-8">

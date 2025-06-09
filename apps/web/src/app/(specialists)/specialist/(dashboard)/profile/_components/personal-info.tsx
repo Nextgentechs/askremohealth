@@ -36,9 +36,9 @@ function PersonalInfoForm({
   } = useForm<PersonalDetails>({
     resolver: zodResolver(updatePersonalDetailsSchema),
     defaultValues: {
-      firstName: doctor?.firstName,
-      lastName: doctor?.lastName,
-      email: doctor?.email ?? '',
+      firstName: doctor?.user?.firstName,
+      lastName: doctor?.user?.lastName,
+      email: doctor?.user?.email ?? '',
       phone: doctor?.phone ?? '',
       dob: doctor?.dob ? doctor.dob.toISOString().split('T')[0] : '',
       bio: doctor?.bio ?? '',
@@ -162,7 +162,7 @@ export default function PersonalInfo() {
         <div className="relative aspect-square overflow-hidden rounded-t-xl">
           <Image
             src={selectedImage ?? ''}
-            alt={doctor?.firstName ?? ''}
+            alt={doctor?.user?.firstName ?? ''}
             className="object-cover"
             fill
           />

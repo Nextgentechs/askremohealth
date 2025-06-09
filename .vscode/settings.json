@@ -7,7 +7,7 @@
                 }
             },
             "previewLimit": 50,
-            "server": "ep-tight-art-a1z186jf-pooler.ap-southeast-1.aws.neon.tech",
+            "server": "ep-sweet-union-a1d8wfei-pooler.ap-southeast-1.aws.neon.tech",
             "port": 5432,
             "driver": "PostgreSQL",
             "name": "Askremohealth",

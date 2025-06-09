@@ -1,41 +1,78 @@
-/**
- * YOU PROBABLY DON'T NEED TO EDIT THIS FILE, UNLESS:
- * 1. You want to modify request context (see Part 1).
- * 2. You want to create a new middleware or type of procedure (see Part 3).
- *
- * TL;DR - This is where all the tRPC server stuff is created and plugged in. The pieces you will
- * need to use are documented accordingly near the end.
- */
-import { getAuth } from '@clerk/nextjs/server'
+// server/api/trpc.ts
 import { initTRPC, TRPCError } from '@trpc/server'
-import { db } from '@web/server/db'
-import { NextRequest } from 'next/server'
+import type { FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch'
+import { redisClient } from '@web/redis/redis'
+import { eq } from 'drizzle-orm'
+import { cookies } from 'next/headers'
 import superjson from 'superjson'
 import { ZodError } from 'zod'
+import { db } from '../db'
+import { users } from '../db/schema'
+import { sessionSchema } from '../lib/session'
+import { auth } from '@web/auth'
 
-/**
- * 1. CONTEXT
- * This section defines the "contexts" that are available in the backend API.
- * These allow you to access things when processing a request, like the database, the session, etc.
- * @see https://trpc.io/docs/server/context
- */
+type CookieOptions = {
+  secure?: boolean
+  httpOnly?: boolean
+  sameSite?: 'lax' | 'strict' | 'none'
+  maxAge?: number
+}
 
-export const createTRPCContext = async (opts: { req: Request }) => {
-  // Clone the request before creating NextRequest to avoid body stream issues
-  const reqClone = opts.req.clone()
-  const nextReq = new NextRequest(reqClone)
-  const auth = getAuth(nextReq)
-  const source = opts.req.headers.get('user-agent')
+export async function createTRPCContext({ req }: FetchCreateContextFnOptions) {
+  const cookieStore = await cookies()
+  let user = null
 
-  console.log('>>> tRPC Request from', source, 'by', auth.userId ?? 'unknown')
+  // First try Next-auth session
+  const session = await auth()
+  if (session?.user?.email) {
+    // Fetch user from database using email from Next-auth session
+    user = await db.query.users.findFirst({
+      where: eq(users.email, session.user.email),
+    })
+  }
+
+  // If no Next-auth session, try Redis session
+  if (!user) {
+    const sessionToken = cookieStore.get('session-id')?.value
+    if (sessionToken) {
+      const rawSession = await redisClient.get(`session:${sessionToken}`)
+      if (rawSession) {
+        const parsed = sessionSchema.safeParse(
+          typeof rawSession === 'string' ? JSON.parse(rawSession) : rawSession,
+        )
+        if (parsed.success) {
+          // Fetch the full user from the database
+          user = await db.query.users.findFirst({
+            where: eq(users.id, parsed.data.id),
+          })
+        }
+      }
+    }
+  }
 
   return {
-    user: {
-      id: auth.userId,
-      role: auth.sessionClaims?.metadata?.role,
-    },
-    session: auth.sessionId,
+    req,
     db,
+    cookies: {
+      get: (key: string) => {
+        const cookie = cookieStore.get(key)
+        return cookie ? { name: cookie.name, value: cookie.value } : undefined
+      },
+      set: (
+        key: string,
+        value: string,
+        options: Partial<CookieOptions> = {},
+      ) => {
+        cookieStore.set(key, value, {
+          secure: options.secure ?? true,
+          httpOnly: options.httpOnly ?? false,
+          sameSite: options.sameSite ?? 'lax',
+          maxAge: options.maxAge,
+        })
+      },
+      delete: (key: string) => cookieStore.delete(key),
+    },
+    user,
   }
 }
 
@@ -98,7 +135,7 @@ export const publicProcedure = t.procedure
  */
 const authMiddleware = t.middleware(({ ctx, next }) => {
   if (!ctx.user) throw new TRPCError({ code: 'UNAUTHORIZED' })
-  return next({ ctx: { session: ctx.session, user: ctx.user } })
+  return next({ ctx: { user: ctx.user } })
 })
 
 /**
@@ -106,8 +143,7 @@ const authMiddleware = t.middleware(({ ctx, next }) => {
  */
 
 const doctorMiddleware = t.middleware(({ ctx, next }) => {
-  
-  return next({ ctx: { session: ctx.session, user: ctx.user } })
+  return next({ ctx: { user: ctx.user } })
 })
 
 /**
@@ -116,8 +152,8 @@ const doctorMiddleware = t.middleware(({ ctx, next }) => {
 
 const adminMiddleware = t.middleware(({ ctx, next }) => {
   if (!ctx.user) throw new TRPCError({ code: 'UNAUTHORIZED' })
-  
-  return next({ ctx: { session: ctx.session, user: ctx.user } })
+
+  return next({ ctx: { user: ctx.user } })
 })
 /**
  * Authenticated procedure

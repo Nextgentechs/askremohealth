@@ -25,6 +25,18 @@ export const operatingHoursSchema = z.object({
   isOpen: z.boolean(),
 })
 
+export const passwordSchema = z
+  .string()
+  .min(8, { message: 'Password must be at least 8 characters long' })
+  .regex(/[a-z]/, { message: 'Password must include a lowercase letter' })
+  .regex(/[A-Z]/, { message: 'Password must include an uppercase letter' })
+  .regex(/[^a-zA-Z0-9]/, { message: 'Password must include a special character' })
+  .refine((val) => !/\s/.test(val), {
+    message: 'Password must not contain spaces',
+  })
+
+export type PasswordSchema = z.infer<typeof passwordSchema>
+
 export const doctorSignupSchema = z.object({
   title: z.string().optional(),
   firstName: z.string(),
@@ -127,9 +139,9 @@ export type AppointmentListSchema = z.infer<typeof appointmentListSchema>
 
 export const personalDetailsSchema = z.object({
   title: z.string().optional(),
-  firstName: z.string(),
-  lastName: z.string(),
-  email: z.string().email().optional(),
+  // firstName: z.string(),
+  // lastName: z.string(),
+  // email: z.string().email().optional(),
   phone: z.string(),
   dob: z.string(),
   gender: z.enum(['male', 'female']).optional(),
@@ -141,11 +153,22 @@ export type PersonalDetailsSchema = z.infer<typeof personalDetailsSchema>
 export const professionalDetailsSchema = z.object({
   specialty: z.string(),
   subSpecialty: z.array(z.string()),
-  facility: z.string(),
+  facility: z.string().optional(),
+  officeLocation: z.string().optional(),
   experience: z.number(),
   registrationNumber: z.string(),
   medicalLicense: z.string().optional(),
-})
+}).refine(
+  (data) => {
+    const hasFacility = (data.facility ?? '').trim() !== '';
+    const hasOfficeLocation = (data.officeLocation ?? '').trim() !== '';
+    return hasFacility || hasOfficeLocation;
+  },
+  {
+    message: "Either facility or office location must be provided",
+    path: ["facility"],
+  }
+);
 export type ProfessionalDetailsSchema = z.infer<
   typeof professionalDetailsSchema
 >
@@ -157,4 +180,17 @@ export const availabilityDetailsSchema = z.object({
 })
 export type AvailabilityDetailsSchema = z.infer<
   typeof availabilityDetailsSchema
->
+  >
+
+export const articleListSchema = z.object({
+  page: z.number().default(1),
+  limit: z.number().default(10)
+})
+export type ArticleListSchema = z.infer<typeof articleListSchema>
+
+export const articleSchema = z.object({
+  title: z.string().min(1, { message: 'Title is required.' }).max(100, { message: "Title must be at most 100 characters long" }),
+  content: z.string().min(150, { message: "Content must be at least 150 characters long" }),
+})
+
+export type ArticleSchema = z.infer<typeof articleSchema>
