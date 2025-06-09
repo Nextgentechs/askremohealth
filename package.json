@@ -7,7 +7,7 @@
     "node": "20.x"
   },
   "scripts": {
-    "build": "turbo run build",
+    "build": "cd apps/web && npm run build",
     "dev": "cd apps/web && npm run dev",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",

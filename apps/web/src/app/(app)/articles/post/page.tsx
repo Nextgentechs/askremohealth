@@ -8,8 +8,6 @@ import { api } from '@web/trpc/react'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import Wysiwyg from '@web/components/wysiwyg'
-import DOMPurify from 'dompurify'
-import { TRPCClientErrorLike } from '@trpc/react-query'
 
 export default function PostArticle() {
   const { user } = useUser()
@@ -35,11 +33,11 @@ export default function PostArticle() {
       }
       router.push(`/articles/${article.id}`)
     },
-    onError: (error: TRPCClientErrorLike<any>) => setError(error.message),
+    onError: (error) => setError(error.message),
   })
 
   const updateImage = api.articles.updateArticleImage.useMutation({
-    onError: (error: TRPCClientErrorLike<any>) => setError(error.message),
+    onError: (error) => setError(error.message),
   })
 
   const convertToBase64 = (file: File): Promise<string> => {
@@ -103,7 +101,7 @@ export default function PostArticle() {
             id="image"
             type="file"
             accept="image/*"
-            onChange={(e) => setImage(e.target.files?.[0] || null)}
+            onChange={(e) => setImage(e.target.files?.[0] ?? null)}
             disabled={createArticle.isPending}
           />
         </div>
