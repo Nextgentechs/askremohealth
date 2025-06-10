@@ -3,9 +3,10 @@ import { NextResponse } from 'next/server';
 import { EmailTemplate } from '@web/components/email-template';
 import { env } from 'src/env'
 
-const resend = new Resend(env.RESEND_API_KEY);
 
 export async function POST(req: Request) {
+  const resend = new Resend(env.NEXT_PUBLIC_RESEND_API_KEY);
+
   const body = await req.json();
   const { email, otp } = body;
 
