@@ -7,12 +7,13 @@ import { z } from "zod"
 import { env } from 'src/env'
 
 
-const resend = new Resend(env.RESEND_API_KEY);
+
 
 const bodySchema = z.object({
   email:z.string().email()
 })
-export async function POST(req:Request) {
+export async function POST(req: Request) {
+  const resend = new Resend(env.NEXT_PUBLIC_RESEND_API_KEY);
   const body = await req.json()
   const parsed = bodySchema.safeParse(body)
 
