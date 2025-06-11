@@ -1,196 +1,125 @@
-# Askremohealth Platform
+# Ask Virtual Healthcare
 
-## Tech Stack and Philosophy
+A modern healthcare platform built with Next.js, TypeScript, and Tailwind CSS.
 
-This project implements a modern virtual healthcare platform using TypeScript in a monorepo structure. Our technical choices prioritize type safety, performance, scalability, and developer experience.
+## Features
 
-### Core Technologies
+- Modern UI with Tailwind CSS
+- Type-safe API with tRPC
+- Authentication with Clerk
+- Database with Drizzle ORM
+- Real-time video consultations with Twilio
+- Email notifications with Nodemailer
+- Form handling with React Hook Form
+- State management with Zustand
+- UI components with Radix UI
+- Animations with Framer Motion
+- Carousel with Embla Carousel
+- Date handling with date-fns
+- Validation with Zod
+- Environment variables with t3-env
+- TypeScript for type safety
+- ESLint for code linting
+- Prettier for code formatting
+- Husky for git hooks
+- Commitlint for commit message linting
 
-- [Next.js](https://nextjs.org): React framework for server-rendered applications
-- [TypeScript](https://www.typescriptlang.org/): Strongly typed programming language
-- [Drizzle ORM](https://orm.drizzle.team): TypeScript ORM for SQL databases
-- [PostgreSQL](https://www.postgresql.org/): Robust, open-source relational database
-- [tRPC](https://trpc.io): End-to-end typesafe APIs
+## Tech Stack
+
+- [Next.js](https://nextjs.org/): React framework for production
+- [TypeScript](https://www.typescriptlang.org/): Type-safe JavaScript
+- [Tailwind CSS](https://tailwindcss.com/): Utility-first CSS framework
+- [tRPC](https://trpc.io/): End-to-end typesafe APIs
 - [Clerk](https://clerk.com/): Authentication and user management
-- [Tailwind CSS](https://tailwindcss.com): Utility-first CSS framework
-- [shadcn/ui](https://ui.shadcn.com): Accessible and customizable component library
-- [Sanity.io](https://www.sanity.io/): Headless CMS for content management
-- [Turborepo](https://turbo.build/repo): High-performance build system for JavaScript/TypeScript monorepos
-
-### Development Philosophy
-
-We embrace a modern, component-based architecture with a focus on:
-
-1. **Type-Safe Data Layer**
-
-   - End-to-end type safety from database to UI with Drizzle ORM and TypeScript
-   - tRPC for secure, type-safe API communication
-   - Structured data validation
-
-2. **Modern Frontend Architecture**
-
-   - Component-based UI development with React and Next.js
-   - Server-side rendering for improved performance and SEO
-   - Responsive design for all device sizes
-
-3. **Scalable Backend**
-
-   - Modular service-based architecture
-   - Clean separation of concerns
-   - PostgreSQL database with efficient query patterns
-
-4. **Content Management**
-   - Headless CMS architecture with Sanity.io
-   - Structured content models
-   - Flexible content delivery
-
-## Applications
-
-### Web Platform (`apps/web`)
-
-- Next.js application for patients and doctors
-- Patient features:
-  - Doctor discovery and appointment booking
-  - Manage healthcare appointments
-  - View medical information
-  - Both physical and virtual consultation options
-- Doctor features:
-  - Appointment management dashboard
-  - Patient interaction
-  - Schedule management
-  - Online and in-person appointment handling
-
-### CMS (`apps/cms`)
-
-- Sanity.io-based content management system
-- Manage platform content including:
-  - Medical articles
-  - Doctor information
-  - Healthcare facility details
-  - Platform documentation
-
-## Prerequisites
-
-- [Node.js](https://nodejs.org/) (v18 or later)
-- [npm](https://www.npmjs.com/) (v9 or later)
-- PostgreSQL database
+- [Drizzle ORM](https://orm.drizzle.team/): TypeScript ORM
+- [Twilio](https://www.twilio.com/): Video consultations
+- [Nodemailer](https://nodemailer.com/): Email notifications
+- [React Hook Form](https://react-hook-form.com/): Form handling
+- [Zustand](https://zustand-demo.pmnd.rs/): State management
+- [Radix UI](https://www.radix-ui.com/): UI components
+- [Framer Motion](https://www.framer.com/motion/): Animations
+- [Embla Carousel](https://embla-carousel.github.io/): Carousel
+- [date-fns](https://date-fns.org/): Date utilities
+- [Zod](https://zod.dev/): Schema validation
+- [t3-env](https://env.t3.gg/): Environment variables
+- [ESLint](https://eslint.org/): Code linting
+- [Prettier](https://prettier.io/): Code formatting
+- [Husky](https://typicode.github.io/husky/): Git hooks
+- [Commitlint](https://commitlint.js.org/): Commit message linting
 
 ## Getting Started
 
-1. Clone the repository:
-
-```bash
-git clone git@github.com:Nextgentechs/askvirtualhealthcare.git
-cd askvirtualhealthcare
-```
-
+1. Clone the repository
 2. Install dependencies:
-
-```bash
-npm install
-```
-
+   ```bash
+   npm install
+   ```
 3. Set up environment variables:
-
-```bash
-# Copy example env files
-cp apps/web/.env.example apps/web/.env
-```
-
-Required environment variables for the web app:
-
-- `DATABASE_URL`: PostgreSQL connection string
-- `CLERK_SECRET_KEY`: Clerk authentication secret key
-- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`: Clerk publishable key
-- Additional variables as specified in `.env.example` files
-
-4. Start development servers:
-
-```bash
-# From root directory
-npm run dev
-```
-
-The web app will be available at `http://localhost:3000` and the CMS at `http://localhost:3333`
-
-## Available Scripts
-
-```bash
-# Development (root)
-npm run dev           # Start all development servers
-npm run lint          # Lint all packages
-npm run format        # Format all code
-npm run clean         # Clean all builds
-
-# Production (root)
-npm run build         # Build all applications
-npm run start         # Start all production servers
-```
+   ```bash
+   cp .env.example .env
+   ```
+4. Start the development server:
+   ```bash
+   npm run dev
+   ```
 
 ## Project Structure
 
 ```
-askvirtualhealthcare/
-├── apps/
-│   ├── web/            # Web application (Next.js)
-│   │   ├── src/
-│   │   │   ├── app/    # Next.js app router
-│   │   │   ├── components/ # Reusable UI components
-│   │   │   ├── server/ # Server-side code
-│   │   │   │   ├── api/      # API endpoints
-│   │   │   │   ├── db/       # Database schema and config
-│   │   │   │   └── services/ # Business logic services
-│   │   │   ├── trpc/   # tRPC configuration
-│   │   │   └── styles/ # Global styles
-│   │   └── public/     # Static assets
-│   └── cms/            # Content Management System (Sanity)
-│       ├── schemaTypes/ # Content models
-│       └── static/      # Static assets
-├── packages/
-│   └── eslint-config/  # Shared ESLint configurations
-└── package.json        # Root package.json
+apps/
+├── web/           # Next.js web application
+│   ├── src/
+│   │   ├── app/   # App router pages
+│   │   ├── components/  # React components
+│   │   ├── server/  # Server-side code
+│   │   └── utils/  # Utility functions
+│   └── public/    # Static assets
+└── api/           # API server
+    └── src/
+        ├── routers/  # API routes
+        └── services/ # Business logic
 ```
 
-## Key Features
+## Contributing
 
-1. **Healthcare Appointment Management**
+1. Fork the repository
+2. Create your feature branch:
+   ```bash
+   git checkout -b feature/amazing-feature
+   ```
+3. Commit your changes:
+   ```bash
+   git commit -m 'Add some amazing feature'
+   ```
+4. Push to the branch:
+   ```bash
+   git push origin feature/amazing-feature
+   ```
+5. Open a Pull Request
 
-   - Book and manage appointments
-   - Support for both physical and virtual consultations
-   - Comprehensive appointment status tracking
-   - Appointment filtering and searching
+## License
 
-2. **Doctor Discovery**
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-   - Browse and search for healthcare specialists
-   - Doctor profiles with detailed information
-   - Specialization and availability filtering
-   - Patient reviews and ratings
-
-3. **User Authentication**
-
-   - Secure authentication with Clerk
-   - Role-based access control
-   - Profile management
-
-4. **Content Management**
-   - Medical articles and information
-   - Doctor and facility data management
-   - Platform documentation
-
-## Learning Resources
+## Acknowledgments
 
 - [Next.js Documentation](https://nextjs.org/docs)
-- [tRPC Documentation](https://trpc.io/docs)
-- [Drizzle Documentation](https://orm.drizzle.team/docs/overview)
+- [TypeScript Documentation](https://www.typescriptlang.org/docs/)
 - [Tailwind CSS Documentation](https://tailwindcss.com/docs)
+- [tRPC Documentation](https://trpc.io/docs)
 - [Clerk Documentation](https://clerk.com/docs)
-- [Sanity.io Documentation](https://www.sanity.io/docs)
-
-## Deployment
-
-The applications are optimized for deployment on [Vercel](https://vercel.com).
-
-## Questions?
-
-If you have questions about implementation details or need assistance with setup, please reach out to the development team.
+- [Drizzle ORM Documentation](https://orm.drizzle.team/docs/overview)
+- [Twilio Documentation](https://www.twilio.com/docs)
+- [Nodemailer Documentation](https://nodemailer.com/about/)
+- [React Hook Form Documentation](https://react-hook-form.com/get-started)
+- [Zustand Documentation](https://docs.pmnd.rs/zustand/getting-started/introduction)
+- [Radix UI Documentation](https://www.radix-ui.com/docs/primitives/overview/introduction)
+- [Framer Motion Documentation](https://www.framer.com/motion/)
+- [Embla Carousel Documentation](https://embla-carousel.github.io/embla-carousel/docs/)
+- [date-fns Documentation](https://date-fns.org/docs/Getting-Started)
+- [Zod Documentation](https://zod.dev/docs/getting-started)
+- [t3-env Documentation](https://env.t3.gg/docs/introduction)
+- [ESLint Documentation](https://eslint.org/docs/latest/)
+- [Prettier Documentation](https://prettier.io/docs/en/)
+- [Husky Documentation](https://typicode.github.io/husky/getting-started.html)
+- [Commitlint Documentation](https://commitlint.js.org/#/)

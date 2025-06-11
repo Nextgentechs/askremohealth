@@ -268,7 +268,7 @@ export const notifications = pgTable('notification', {
 
 export const articles = pgTable('articles', {
   id: uuid('id').primaryKey().defaultRandom(),
-  authorId: varchar('author_id').notNull().references(() => users.id),
+  authorId: varchar('author_id').notNull(),
   title: varchar('title').notNull(),
   content: text('content').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),

@@ -158,10 +158,6 @@ export const articleRelations = relations(articles, ({ one }) => ({
     fields: [articles.id],
     references: [article_images.articleId],
   }),
-   author: one(users, {
-    fields: [articles.authorId],
-    references: [users.id],
-  }),
 }))
 
 export const articleImageRelations = relations(article_images, ({ one }) => ({
