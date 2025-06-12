@@ -553,11 +553,11 @@ function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
                 control={form.control}
                 name="pin"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="text-center items-center">
                     <FormLabel>One-Time Password</FormLabel>
                     <FormControl>
                       <InputOTP maxLength={6} {...field}>
-                        <InputOTPGroup>
+                        <InputOTPGroup className="mx-auto">
                           {[...Array(6)].map((_, i) => (
                             <InputOTPSlot key={i} index={i} />
                           ))}
