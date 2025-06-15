@@ -276,7 +276,6 @@ function SignUp({
   const searchParams = useSearchParams()
   const role = searchParams.get("role")
 
-
   const form = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
@@ -289,7 +288,6 @@ function SignUp({
     }
     
   })
-  const router = useRouter()
 
   async function onSubmit(data:SignUpFormData) {
     setIsLoading(true)
@@ -302,7 +300,8 @@ function SignUp({
       const result = await res.json()
       if (result.success) {
         toast({ title: 'Success', description: 'Sign up was successful!' })
-        router.push('/auth') // Redirect to your desired page
+        setCurrentStep('login')
+
       } else {
         toast({
           title: 'Error',
@@ -447,7 +446,7 @@ function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
 
 
   const router = useRouter()
-  type UserRole = 'patient' | 'doctor'
+  type UserRole = 'patient' | 'doctor' | 'admin'
 
   type User = {
     id: string
@@ -485,6 +484,9 @@ function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
         else if (user?.role === 'doctor' && user?.onboardingComplete) {
           router.push('/specialist/upcoming-appointments')
         }
+        else if (user?.role === 'admin') {
+          router.push('/admin')
+          }
         else {
           router.push('/specialist/onboarding/personal-details')
         }
