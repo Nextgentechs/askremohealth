@@ -18,7 +18,9 @@ export function middleware(req: NextRequest) {
 
   // If we're on the specialist path but not on the doctors subdomain
   if (pathname.startsWith('/specialist') && !isDoctorsSubdomain) {
-    const newUrl = new URL(pathname, `https://doctors.${hostname}`)
+    // Extract the base domain without www if present
+    const baseDomain = hostname.replace(/^www\./, '')
+    const newUrl = new URL(pathname, `https://doctors.${baseDomain}`)
     return NextResponse.redirect(newUrl)
   }
 

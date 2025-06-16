@@ -4,5 +4,8 @@
       "path": "/api/cron/update-appointments",
       "schedule": "0 0 * * *"
     }
+  ],
+  "rewrites": [
+    { "source": "doctors.askremohealth.com/(.*)", "destination": "/specialist/$1" }
   ]
 }
