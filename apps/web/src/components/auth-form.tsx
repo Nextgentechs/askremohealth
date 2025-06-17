@@ -299,13 +299,41 @@ function SignUp({
       })
       const result = await res.json()
       if (result.success) {
-        toast({ title: 'Success', description: 'Sign up was successful!' })
-        setCurrentStep('login')
+        const otpRes = await fetch('/api/auth/sendotp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: data.email,
+            otp: result.otp
+          }),
+        })
 
+        const otpResult = await otpRes.json()
+
+        if (otpResult?.error?.message) {
+          toast({
+            title: 'OTP Error',
+            description: otpResult.error.message ?? 'Failed to send OTP',
+            variant: 'destructive',
+          })
+          return
+        }
+
+        toast({
+          title: 'Success',
+          description: 'Sign Up was successfully!',
+          duration: 3000,
+        })
+        toast({
+          title: 'Success',
+          description: 'OTP has been sent to your email!',
+          duration: 3000,
+        })
+        setCurrentStep('otp')
       } else {
         toast({
           title: 'Error',
-          description: result.error ?? 'Sign up failed',
+          description: result.error ?? 'Sign Up failed',
           variant: 'destructive',
         })
       }
@@ -443,8 +471,6 @@ const FormSchema = z.object({
 function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
   const [isLoading, setIsLoading] = useState(false)
   const [resendIsLoading, setResendIsLoading] = useState(false)
-
-
   const router = useRouter()
   type UserRole = 'patient' | 'doctor' | 'admin'
 
@@ -461,6 +487,7 @@ function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
     resolver: zodResolver(FormSchema),
     defaultValues: { pin: '' },
   })
+
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     setIsLoading(true)
@@ -571,12 +598,13 @@ function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
                 )}
               />
               <div className='flex justify-between w-full'>
-                <Button type="submit" disabled={isLoading ?? resendIsLoading}>
-                  {isLoading ? <Loader className="animate-spin" /> : 'Submit'}
-                </Button>
                 <Button onClick={handleResend} variant="outline" disabled={isLoading ?? resendIsLoading}>
                   {resendIsLoading ? <Loader className="animate-spin" /> : 'Resend'}
                 </Button>
+                <Button type="submit" disabled={isLoading ?? resendIsLoading}>
+                  {isLoading ? <Loader className="animate-spin" /> : 'Submit'}
+                </Button>
+
               </div>
             </form>
           </Form>

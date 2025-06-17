@@ -47,8 +47,11 @@ export class AuthService {
           lastName,
           role
         })
-
-      return { success: true }
+        const otp = generateOtp()
+        await redisClient.set(`otp:${email}`, otp, {
+          ex: 300,
+        })
+      return { success: true,otp:otp }
     } catch (error) {
       console.error('Error in signUp:', error)
     
