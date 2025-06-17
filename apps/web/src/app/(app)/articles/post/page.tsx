@@ -1,6 +1,5 @@
 'use client'
 
-import { useUser } from '@clerk/nextjs'
 import { Button } from '@web/components/ui/button'
 import { Input } from '@web/components/ui/input'
 import { Label } from '@web/components/ui/label'
@@ -10,8 +9,8 @@ import { useState, useEffect } from 'react'
 import Wysiwyg from '@web/components/wysiwyg'
 
 export default function PostArticle() {
-  const { user } = useUser()
   const router = useRouter()
+  const { data: user } = api.users.currentUser.useQuery()
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -110,9 +109,6 @@ export default function PostArticle() {
           disabled={createArticle.isPending}
         >
           {createArticle.isPending ? 'Submitting...' : 'Submit Article'}
-        </Button>
-        <Button variant="outline" >
-          Cancel
         </Button>
       </form>
     </div>
