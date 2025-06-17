@@ -111,6 +111,9 @@ export default function PostArticle() {
         >
           {createArticle.isPending ? 'Submitting...' : 'Submit Article'}
         </Button>
+        <Button variant="outline" >
+          Cancel
+        </Button>
       </form>
     </div>
   )

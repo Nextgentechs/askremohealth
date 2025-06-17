@@ -1,11 +1,10 @@
 'use client'
 
-import { useUser } from '@clerk/nextjs'
 import { Button } from '@web/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@web/components/ui/card'
 import { api } from '@web/trpc/react'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 
 interface Article {
@@ -28,18 +27,25 @@ interface ArticleListResponse {
 
 export default function ArticlesPage() {
     const [page, setPage] = useState(1)
-    const { user } = useUser()
+    const { data: user } = api.users.currentUser.useQuery()
+    
+    useEffect(() => {
+        console.log('Current user data:', user)
+    }, [user])
+
     const { data, isLoading, error } = api.articles.listArticles.useQuery(
         { page, limit: 10 },
         { staleTime: 1000 * 60 }
     )
+
+    const isDoctor = user?.role === 'doctor'
 
     return (
         <main className="min-h-screen bg-white">
             <div className="container mx-auto px-4 py-8">
                 <div className="flex justify-between items-center mb-8">
                     <h1 className="text-3xl font-bold text-gray-900">Articles</h1>
-                    {user && (
+                    {isDoctor && (
                         <div className="flex items-center">
                             <Button 
                                 asChild 
