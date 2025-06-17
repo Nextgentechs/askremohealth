@@ -152,7 +152,7 @@ export type PersonalDetailsSchema = z.infer<typeof personalDetailsSchema>
 
 export const professionalDetailsSchema = z.object({
   specialty: z.string(),
-  subSpecialty: z.array(z.string()),
+  subSpecialty: z.array(z.string()).optional().default([]),
   facility: z.string().optional(),
   officeLocation: z.string().optional(),
   experience: z.number(),
