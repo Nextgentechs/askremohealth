@@ -44,9 +44,7 @@ type LocationSuggestion = {
 
 export const professionalDetailsSchema = z.object({
   specialty: z.string().min(1, { message: 'Specialty is required' }),
-  subSpecialty: z
-    .array(z.string())
-    .min(1, { message: 'Sub Specialty is required' }),
+  subSpecialty: z.array(z.string()).optional().default([]),
   experience: z
     .string()
     .refine((value) => parseInt(value) > 0, {
@@ -303,7 +301,7 @@ export default function ProfessionalDetailsForm() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="subSpecialty">Sub Specialty</Label>
+          <Label htmlFor="subSpecialty">Sub Specialty (Optional)</Label>
           <FormProvider {...form}>
             <SubSpecialtySelect specialty={selectedSpecialty} />
           </FormProvider>
