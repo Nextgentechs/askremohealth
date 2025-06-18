@@ -3,15 +3,27 @@ import NextAuth from 'next-auth'
 import Google from 'next-auth/providers/google'
 import { db } from './server/db' // adjust path as needed
 import { users } from './server/db/schema' // adjust path as needed
+import { cookies } from 'next/headers'
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [Google],
   callbacks: {
     async signIn({ user, account }) {
-      // Extract role from the callbackUrl if present
-      const role = typeof account?.callback_url === 'string' && account.callback_url.includes('role=patient') 
-        ? 'patient' 
-        : 'doctor'
+      // Get role from cookie or default to 'doctor'
+      let role = 'doctor'
+      
+      try {
+        const cookieStore = await cookies()
+        const roleCookie = cookieStore.get('signup-role')
+        if (roleCookie?.value && ['doctor', 'patient', 'admin'].includes(roleCookie.value)) {
+          role = roleCookie.value
+          console.log("role", role)
+          // Clear the cookie after using it
+          cookieStore.set('signup-role', '', { maxAge: 0 })
+        }
+      } catch (error) {
+        console.log('Error reading role cookie:', error)
+      }
 
       const existingUser = await db.query.users.findFirst({
         where: eq(users.email, user.email ?? ''),
@@ -23,7 +35,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           email: user.email ?? '',
           firstName: user.name?.split(' ')[0] ?? '',
           lastName: user.name?.split(' ').slice(1).join(' ') ?? '',
-          role,
+          role: role as 'doctor' | 'patient' | 'admin',
           password: '',
         })
       }

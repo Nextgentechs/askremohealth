@@ -203,7 +203,7 @@ function MobileMenu() {
 function CurrentUser({
   user,
 }: {
-  user: { firstName?: string; lastName?: string }
+  user: { firstName?: string; lastName?: string; role?: string }
 }) {
   return (
     <DropdownMenu>
@@ -218,12 +218,21 @@ function CurrentUser({
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width] min-w-44 rounded-lg">
         <DropdownMenuGroup>
-          <Link href="/specialist/upcoming-appointments">
-            <DropdownMenuItem className="cursor-pointer">
-              <Calendar />
-              Dashboard
-            </DropdownMenuItem>
-          </Link>
+          {user?.role === 'doctor' ? (
+            <Link href="/specialist/upcoming-appointments">
+              <DropdownMenuItem className="cursor-pointer">
+                <Calendar />
+                Dashboard
+              </DropdownMenuItem>
+            </Link>
+          ) : user?.role === 'patient' ? (
+            <Link href="/appointments">
+              <DropdownMenuItem className="cursor-pointer">
+                <Calendar />
+                Appointments
+              </DropdownMenuItem>
+            </Link>
+          ) : null}
           <Link href="/profile">
             <DropdownMenuItem className="cursor-pointer">
               <User />
