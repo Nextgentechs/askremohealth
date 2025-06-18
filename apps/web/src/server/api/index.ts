@@ -8,6 +8,7 @@ import * as doctors from './routers/doctors'
 import * as video from './routers/video'
 import * as admin from './routers/admin'
 import * as articles from './routers/articles'
+import * as patients from './routers/patients'
 // import * as auth from './routers/auth'
 import * as officeLocations from './routers/office-locations'
 /**
@@ -26,6 +27,7 @@ export const appRouter = createTRPCRouter({
   // auth: createTRPCRouter(auth),
   officeLocations: createTRPCRouter(officeLocations),
   articles: createTRPCRouter(articles),
+  patients: createTRPCRouter(patients),
 })
 
 // export type definition of API
