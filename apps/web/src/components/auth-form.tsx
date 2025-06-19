@@ -90,6 +90,7 @@ function Login({
     setCurrentStep: (step: 'login' | 'signup' | 'otp') => void
 }) {
   const [isLoading, setIsLoading] = useState(false)
+  const searchParams = useSearchParams()
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -163,6 +164,10 @@ function Login({
   async function handleGoogleSignIn() {
     setIsLoading(true)
     try {
+      // Set role in cookie before Google sign-in
+      const role = searchParams.get("role") ?? 'doctor'
+      document.cookie = `signup-role=${role}; path=/; max-age=300` // 5 minutes expiry
+      
       await signIn('google', { callbackUrl: '/' })
     } catch {
       toast({
@@ -320,8 +325,15 @@ function SignUp({
     }
   }
 
+  async function handleGoogleSignUp() {
+    // Set role in cookie before Google sign-in
+    const role = searchParams.get("role") ?? 'doctor'
+    document.cookie = `signup-role=${role}; path=/; max-age=300` // 5 minutes expiry
+    signIn('google', { callbackUrl: '/specialist/upcoming-appointments' })
+  }
+
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 mt-16">
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Create an account</CardTitle>
@@ -334,7 +346,7 @@ function SignUp({
             type="button"
             variant="outline"
             className="w-full gap-2"
-            onClick={() => signIn('google', { callbackUrl: '/specialist/upcoming-appointments' })}
+            onClick={handleGoogleSignUp}
             disabled={isLoading}
           >
             <Google className="h-5 w-5" />
