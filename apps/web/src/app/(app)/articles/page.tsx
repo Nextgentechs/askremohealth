@@ -1,7 +1,16 @@
 'use client'
 
 import { Button } from '@web/components/ui/button'
+import Footer from '@web/components/footer'
 import { Card, CardContent, CardHeader, CardTitle } from '@web/components/ui/card'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@web/components/ui/breadcrumb'
 import { api } from '@web/trpc/react'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
@@ -44,14 +53,24 @@ export default function ArticlesPage() {
         <main className="min-h-screen bg-white">
             <div className="container mx-auto px-4 py-8">
                 <div className="flex justify-between items-center mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900">Articles</h1>
+                    <Breadcrumb>
+                        <BreadcrumbList>
+                            <BreadcrumbItem>
+                                <BreadcrumbLink href="/">Home</BreadcrumbLink>
+                            </BreadcrumbItem>
+                            <BreadcrumbSeparator />
+                            <BreadcrumbItem>
+                                <BreadcrumbLink href="/articles">Articles</BreadcrumbLink>
+                            </BreadcrumbItem>
+                        </BreadcrumbList>
+                    </Breadcrumb>
                     {isDoctor && (
                         <div className="flex items-center">
                             <Button 
                                 asChild 
                                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                             >
-                                <Link href="/articles/post" className="flex items-center">
+                                <Link href="/articles/post" className="flex items-center bg-primary text-white">
                                     Submit a New Article
                                 </Link>
                             </Button>
@@ -111,6 +130,7 @@ export default function ArticlesPage() {
                     </>
                 )}
             </div>
+            <Footer />
         </main>
     )
 }

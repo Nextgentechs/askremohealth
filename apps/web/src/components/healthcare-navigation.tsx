@@ -21,7 +21,7 @@ export default function HealthcareNavigation({ className }: HealthcareNavigation
             title="Doctors"
             description="Manage patient appointments"
             icon={<Stethoscope className="h-8 w-8" />}
-            href="/specialist"
+            href="/specialist/upcoming-appointments"
           />
 
           <NavigationCard
