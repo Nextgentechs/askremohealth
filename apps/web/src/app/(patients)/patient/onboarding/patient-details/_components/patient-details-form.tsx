@@ -16,15 +16,6 @@ import type { PatientDetails } from '@web/server/api/validators'
 
 export default function PatientDetailsForm() {
   const [user] = api.users.currentUser.useSuspenseQuery()
-
-//   if (user?.role !== 'patient') {
-//     redirect('/')
-//   }
-
-//   if (user?.onboardingComplete) {
-//     redirect('/')
-//   }
-
   const form = useForm<PatientDetails>({
     resolver: zodResolver(patientDetailsSchema),
     defaultValues: {
@@ -36,7 +27,6 @@ export default function PatientDetailsForm() {
       emergencyContact: '',
     },
   })
-
   const router = useRouter()
   const { toast } = useToast()
   const { mutateAsync } = api.patients.updatePatientDetails.useMutation()

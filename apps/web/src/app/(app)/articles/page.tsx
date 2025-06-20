@@ -8,7 +8,6 @@ import {
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
-  BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@web/components/ui/breadcrumb'
 import { api } from '@web/trpc/react'
@@ -27,11 +26,6 @@ interface Article {
         url: string
         path: string
     } | null
-}
-
-interface ArticleListResponse {
-    totalCount: number
-    articlesList: Article[]
 }
 
 export default function ArticlesPage() {
