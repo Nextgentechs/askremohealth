@@ -491,7 +491,11 @@ function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
           duration: 3000,
         })
         if (user?.role === 'patient') {
-          router.push('/')
+          if (!user?.onboardingComplete) {
+            router.push('/patient/onboarding/patient-details')
+          } else {
+            router.push('/patient/online-appointments')
+          }
         }
         else if (user?.role === 'doctor' && user?.onboardingComplete) {
           router.push('/specialist/upcoming-appointments')
