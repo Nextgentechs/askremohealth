@@ -1,7 +1,8 @@
 import { DataTable } from '@web/components/data-table'
 import { api } from '@web/trpc/server'
-import { appointmentsColumns } from './_components/upcoming-appointments-columns'
+import { appointmentsColumns } from '../upcoming-appointments/_components/upcoming-appointments-columns'
 import { AppointmentStatus } from '@web/server/api/validators'
+import AppointmentFilters from './_components/appointment-filters'
 
 export default async function Page({
   searchParams,
@@ -26,6 +27,7 @@ export default async function Page({
         </p>
       </div>
       <div className="flex flex-col gap-8">
+        <AppointmentFilters />
         <DataTable columns={appointmentsColumns} data={data.appointments} />
       </div>
     </div>
