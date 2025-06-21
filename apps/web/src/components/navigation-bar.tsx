@@ -233,12 +233,24 @@ function CurrentUser({
               </DropdownMenuItem>
             </Link>
           ) : null}
-          <Link href="/profile">
-            <DropdownMenuItem className="cursor-pointer">
-              <User />
-              My Profile
-            </DropdownMenuItem>
-          </Link>
+          <>
+            {user?.role === 'doctor' ? (
+              <Link href="/specialist/profile">
+                <DropdownMenuItem className="cursor-pointer">
+                  <User />
+                  My Profile
+                </DropdownMenuItem>
+              </Link>
+            ) : null}
+            {user?.role === 'patient' ? (
+              <Link href="/profile">
+                <DropdownMenuItem className="cursor-pointer">
+                  <User />
+                  My Profile
+                </DropdownMenuItem>
+              </Link>
+            ) : null}
+          </>
         </DropdownMenuGroup>
         <DropdownMenuSeparator className="bg-border" />
         <DropdownMenuGroup>

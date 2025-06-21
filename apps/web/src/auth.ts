@@ -17,7 +17,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const roleCookie = cookieStore.get('signup-role')
         if (roleCookie?.value && ['doctor', 'patient', 'admin'].includes(roleCookie.value)) {
           role = roleCookie.value
-          console.log("role", role)
+          // console.log("role", role)
           // Clear the cookie after using it
           cookieStore.set('signup-role', '', { maxAge: 0 })
         }

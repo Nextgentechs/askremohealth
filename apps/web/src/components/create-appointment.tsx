@@ -5,9 +5,8 @@ import { useToast } from '@web/hooks/use-toast'
 import { combineDateTime, formatMoney, getTimeRange } from '@web/lib/utils'
 import { api } from '@web/trpc/react'
 import { CalendarIcon, Check, ClockIcon, Loader } from 'lucide-react'
-import { useRouter } from 'next-nprogress-bar'
-import { useParams, useSearchParams } from 'next/navigation'
-import { useState } from 'react'
+import { useRouter, useSearchParams, redirect, useParams } from 'next/navigation'
+import { useState, useEffect } from 'react'
 import { FormProvider, useForm, useFormContext } from 'react-hook-form'
 import { z } from 'zod'
 import AppointmentConfirmation from './appointment-confirmation'
@@ -302,10 +301,8 @@ function BookingForm() {
   const searchParams = useSearchParams()
   const { toast } = useToast()
   const { id } = useParams<{ id: string }>()
-
   const [doctorDetails] = api.doctors.details.useSuspenseQuery(id)
   const [currentUser] = api.users.currentUser.useSuspenseQuery()
-
   const form = useForm<z.infer<typeof appointmentSchema>>({
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
@@ -316,10 +313,31 @@ function BookingForm() {
       email: currentUser?.email ?? '',
     },
   })
-
   const { mutateAsync, isPending } = api.users.createAppointment.useMutation()
   const router = useRouter()
   const utils = api.useUtils()
+
+  useEffect(() => {
+    if (!currentUser) {
+      redirect('/auth?role=patient')
+    }
+  }, [currentUser])
+
+  if (currentUser?.role === 'doctor') {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <div className="rounded-lg border bg-background p-8 shadow-sm">
+          <h2 className="text-xl font-semibold mb-2 text-destructive">
+            Register as a Patient to book appointment
+          </h2>
+          <p className="text-muted-foreground">
+            Please log out and register as a patient to book an appointment.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   const onSubmit = async (data: z.infer<typeof appointmentSchema>) => {
     try {
       const finalData = {
