@@ -8,7 +8,7 @@ type Props = React.HTMLAttributes<HTMLDivElement>
 const BookAppointmentButton = ({ className, ...props }: Props) => {
   return (
     <div className={className} {...props}>
-      <Link href="/auth?role=patient">
+      <Link href="/find-specialists">
         <Button variant="default" className="md:py-6 md:text-lg">Book Appointment</Button>
       </Link>
     </div>
