@@ -35,7 +35,7 @@ export default function PatientDetailsForm() {
     try {
       const res = await mutateAsync(data)
       if (res.success) {
-        router.push('/patient/online-appointments')
+        router.push('/patient/upcoming-appointments')
       }
     } catch (error) {
       console.error(error)
