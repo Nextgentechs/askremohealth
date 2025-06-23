@@ -30,6 +30,33 @@ export const updatePatientDetails = procedure
     return { success: true }
   })
 
+export const getCurrentPatient = procedure.query(async ({ ctx }) => {
+  if (!ctx.user) return null;
+  const patient = await db.query.patients.findFirst({
+    where: (patient, { eq }) => eq(patient.userId, ctx.user.id),
+    with: {
+      user: {
+        columns: {
+          firstName: true,
+          lastName: true,
+          email: true,
+        },
+      },
+    },
+  });
+  if (!patient) return null;
+  const result = {
+    firstName: patient.user?.firstName ?? '',
+    lastName: patient.user?.lastName ?? '',
+    email: patient.user?.email ?? '',
+    phone: patient.phone ?? '',
+    dob: patient.dob ? new Date(patient.dob).toISOString().split('T')[0] : '',
+    emergencyContact: patient.emergencyContact ?? '',
+  };
+  return result;
+});
+
 export const patientsRouter = {
   updatePatientDetails,
+  getCurrentPatient,
 }
