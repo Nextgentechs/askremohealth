@@ -2,7 +2,7 @@ import { TRPCError } from '@trpc/server'
 import bcrypt from 'bcrypt'
 import { eq } from 'drizzle-orm'
 import { db } from '../db'
-import { users } from '../db/schema'
+import { users, patients } from '../db/schema'
 import { createUserSession } from '../lib/session'
 import { redisClient } from '@web/redis/redis'
 import { generateOtp } from '../lib/generateOtp'
@@ -38,7 +38,7 @@ export class AuthService {
 
       const hashedPassword = await bcrypt.hash(password, 10)
 
-      await db
+      const insertedUsers = await db
         .insert(users)
         .values({ 
           email, 
@@ -47,6 +47,17 @@ export class AuthService {
           lastName,
           role
         })
+        .returning({ id: users.id });
+
+      const userId = insertedUsers[0]?.id;
+
+      if (role === 'patient' && userId) {
+        await db.insert(patients).values({
+          id: userId,
+          userId: userId,
+          // phone, dob, emergencyContact can be set later during onboarding
+        });
+      }
 
       return { success: true }
     } catch (error) {
