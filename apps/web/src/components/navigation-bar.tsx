@@ -226,19 +226,36 @@ function CurrentUser({
               </DropdownMenuItem>
             </Link>
           ) : user?.role === 'patient' ? (
-            <Link href="/appointments">
+            <>
+              <Link href="/patient/upcoming-appointments">
+                <DropdownMenuItem className="cursor-pointer">
+                  <Calendar />
+                  Dashboard
+                </DropdownMenuItem>
+              </Link>
+              <Link href="/appointments">
+                <DropdownMenuItem className="cursor-pointer">
+                  <Calendar />
+                  Appointments
+                </DropdownMenuItem>
+              </Link>
+            </>
+          ) : null}
+          {user?.role === 'patient' ? (
+            <Link href="/patient/profile">
               <DropdownMenuItem className="cursor-pointer">
-                <Calendar />
-                Appointments
+                <User />
+                My Profile
               </DropdownMenuItem>
             </Link>
-          ) : null}
-          <Link href="/profile">
-            <DropdownMenuItem className="cursor-pointer">
-              <User />
-              My Profile
-            </DropdownMenuItem>
-          </Link>
+          ) : (
+            <Link href="/profile">
+              <DropdownMenuItem className="cursor-pointer">
+                <User />
+                My Profile
+              </DropdownMenuItem>
+            </Link>
+          )}
         </DropdownMenuGroup>
         <DropdownMenuSeparator className="bg-border" />
         <DropdownMenuGroup>
