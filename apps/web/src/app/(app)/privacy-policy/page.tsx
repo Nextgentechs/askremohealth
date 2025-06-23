@@ -1,4 +1,4 @@
-import { Shield, Lock, UserCog, Key, Brain, FileText } from "lucide-react"
+import { Shield, Lock, UserCog, Key, Brain } from "lucide-react"
 import { Card, CardContent } from "@web/components/ui/card"
 import Footer from "@web/components/footer"
 
