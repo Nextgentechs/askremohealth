@@ -29,43 +29,38 @@ export default function ArticlePage({ params }: { params: Promise<{ id: string }
     if (error || !article) return notFound()
 
     return (
-        <article className="container mx-auto mb-40 max-w-4xl px-6 py-8">
-            <div className="mb-8 space-y-4">
-                <Button variant="link" className="ps-0" size={'lg'} asChild>
-                    <Link href="/articles">
-                        <ArrowLeft className="h-8 w-8" />
-                        <span className="text-base">Back to all articles</span>
-                    </Link>
-                </Button>
-                <h1 className="text-4xl font-bold tracking-tight text-foreground/90">
-                    {article.title}
-                </h1>
-                <p className="text-muted-foreground">
-                    {article.publishedAt
-                        ? new Date(article.publishedAt).toLocaleDateString('en-US', {
-                              month: 'long',
-                              day: 'numeric',
-                              year: 'numeric',
-                          })
-                        : 'Not published'}
-                </p>
-            </div>
-            {article.image?.url && (
-                <div className="mb-8">
-                    <Image
-                        src={article.image.url}
-                        alt={article.title}
-                        width={800}
-                        height={400}
-                        className="object-cover w-full rounded-lg"
-                        priority
+        <section className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-6 px-1 flex justify-center items-start">
+            <article className="w-full max-w-7xl rounded-2xl p-3 md:p-8 mx-auto flex flex-col gap-8">
+                <div className="flex flex-col gap-4 mb-2">
+                    <Button variant="link" className="ps-0 w-fit text-blue-700 hover:text-blue-900 font-semibold flex items-center gap-2" size="lg" asChild>
+                        <Link href="/articles">
+                            <ArrowLeft className="h-7 w-7" />
+                            <span className="text-base">Back to all articles</span>
+                        </Link>
+                    </Button>
+                    <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground/90 leading-tight break-words">
+                        {article.title}
+                    </h1>
+                </div>
+                <div className="grid grid-cols-1 xl:grid-cols-7 gap-10 items-start">
+                    {article.image?.url && (
+                        <div className="w-full aspect-[2/1] rounded-xl overflow-hidden bg-gray-100 flex items-center justify-center xl:col-span-3">
+                            <Image
+                                src={article.image.url}
+                                alt={article.title}
+                                width={1000}
+                                height={500}
+                                className="object-cover w-full h-full"
+                                priority
+                            />
+                        </div>
+                    )}
+                    <div className={`prose prose-lg dark:prose-invert max-w-none w-full text-gray-800 xl:col-span-4 ${article.image?.url ? '' : 'xl:col-span-7'}`}
+                        style={{ wordBreak: 'break-word' }}
+                        dangerouslySetInnerHTML={{ __html: article.content }}
                     />
                 </div>
-            )}
-            <div
-                className="prose prose-lg dark:prose-invert"
-                dangerouslySetInnerHTML={{ __html: article.content }}
-            />
-        </article>
+            </article>
+        </section>
     )
 }
