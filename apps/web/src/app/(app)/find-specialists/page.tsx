@@ -22,14 +22,13 @@ export default async function Page({
     specialty?: string
     subSpecialties?: string
     county?: string
-    town?: string
     query?: string
     page?: string
     experience?: string
     gender?: string
   }>
 }) {
-  const { specialty, subSpecialties, county, town, query, page, experience, gender } = await searchParams
+  const { specialty, subSpecialties, county, query, page, experience, gender } = await searchParams
 
   // Parse experience ranges from URL parameter
   const experiences = experience
@@ -56,7 +55,7 @@ export default async function Page({
     specialtyId: specialty,
     subSpecialties: subSpecialtiesArray,
     countyCode: county,
-    townId: town,
+    townId: undefined, // Town filtering removed from frontend
     query: query,
     experiences: experiences,
     genders: genders,

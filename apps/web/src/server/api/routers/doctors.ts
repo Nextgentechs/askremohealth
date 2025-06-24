@@ -221,7 +221,7 @@ export const searchByLocation = publicProcedure
 
     // Build base conditions
     const conditions = []
-    
+
     if (countyCode || townId) {
       let townName: string | undefined
       if (townId) {

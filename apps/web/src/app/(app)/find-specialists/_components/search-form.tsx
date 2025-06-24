@@ -62,7 +62,6 @@ export default function SearchForm() {
   const searchParams = useSearchParams()
   const selectedSpecialty = searchParams.get('specialty')
   const selectedCounty = searchParams.get('county')
-  const selectedTown = searchParams.get('town')
   const query = searchParams.get('query')
 
   const router = useRouter()
@@ -71,10 +70,6 @@ export default function SearchForm() {
 
   const [specialties] = api.specialties.listSpecialties.useSuspenseQuery()
   const [counties] = api.locations.counties.useSuspenseQuery()
-  const { data: towns, isLoading: townsLoading } = api.locations.towns.useQuery(
-    { countyCode: selectedCounty ?? undefined },
-    { enabled: !!selectedCounty },
-  )
 
   const [searchInput, setSearchInput] = React.useState(query ?? '')
   const debouncedQuery = useDebounceValue(searchInput, 500)
@@ -85,7 +80,7 @@ export default function SearchForm() {
 
   return (
     <Card className="p-6 mx-auto grid grid-cols-4 gap-3 transition-all duration-300 w-90 items-center w-full">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 col-span-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 col-span-4">
         <div className="w-full">
           <Label>Doctor Specialty</Label>
           <div className="relative">
@@ -217,78 +212,6 @@ export default function SearchForm() {
                   router.push(
                     pathname + '?' + createQueryString('county', ''),
                   )
-                }}
-              />
-            )}
-          </div>
-        </div>
-        <div className="w-full">
-          <Label htmlFor="town">In this town</Label>
-          <div className="relative">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  data-state={selectedTown ? 'true' : 'false'}
-                  className="w-full justify-between data-[state=false]:text-muted-foreground pr-8"
-                >
-                  <span className="truncate">
-                    {towns?.find((town) => town.id === selectedTown)?.name ??
-                      'Select a town'}
-                  </span>
-                  <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="p-0">
-                <Command>
-                  <CommandInput placeholder="Search town..." />
-                  <CommandList>
-                    <CommandEmpty>
-                      {selectedCounty
-                        ? 'No town found.'
-                        : 'Please select a county'}
-                    </CommandEmpty>
-                    <CommandGroup>
-                      {townsLoading ? (
-                        <SelectSkeleton />
-                      ) : (
-                        towns?.map((town) => (
-                          <CommandItem
-                            value={town.name}
-                            key={town.id}
-                            onSelect={() => {
-                              if (town.id === selectedTown) {
-                                router.push(
-                                  pathname + '?' + createQueryString('town', ''),
-                                )
-                              } else {
-                                router.push(
-                                  pathname +
-                                    '?' +
-                                    createQueryString('town', town?.id ?? ''),
-                                )
-                              }
-                            }}
-                          >
-                            {town.name}
-                            <Check
-                              data-selected={town.id === selectedTown}
-                              className="ml-auto data-[selected=true]:opacity-100 data-[selected=false]:opacity-0"
-                            />
-                          </CommandItem>
-                        ))
-                      )}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-            {selectedTown && (
-              <X
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 cursor-pointer opacity-50 hover:opacity-100"
-                onClick={() => {
-                  router.push(pathname + '?' + createQueryString('town', ''))
                 }}
               />
             )}
