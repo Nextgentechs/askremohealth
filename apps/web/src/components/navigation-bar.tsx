@@ -248,25 +248,10 @@ function CurrentUser({
                 My Profile
               </DropdownMenuItem>
             </Link>
-          ) : (
-            <Link href="/profile">
-              <DropdownMenuItem className="cursor-pointer">
-                <User />
-                My Profile
-              </DropdownMenuItem>
-            </Link>
-          )}
+          ): null }
           <>
             {user?.role === 'doctor' ? (
               <Link href="/specialist/profile">
-                <DropdownMenuItem className="cursor-pointer">
-                  <User />
-                  My Profile
-                </DropdownMenuItem>
-              </Link>
-            ) : null}
-            {user?.role === 'patient' ? (
-              <Link href="/profile">
                 <DropdownMenuItem className="cursor-pointer">
                   <User />
                   My Profile
