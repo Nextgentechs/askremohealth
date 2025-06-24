@@ -20,19 +20,46 @@ export default async function Page({
 }: {
   searchParams: Promise<{
     specialty?: string
+    subSpecialties?: string
     county?: string
     town?: string
     query?: string
     page?: string
+    experience?: string
+    gender?: string
   }>
 }) {
-  const { specialty, county, town, query } = await searchParams
+  const { specialty, subSpecialties, county, town, query, page, experience, gender } = await searchParams
+
+  // Parse experience ranges from URL parameter
+  const experiences = experience
+    ? experience.split(',').map((exp) => {
+        if (exp === '15+') {
+          return { min: 15 }
+        }
+        const [min, max] = exp.split('-').map(Number)
+        return { min, max }
+      })
+    : undefined
+
+  // Parse genders from URL parameter
+  const genders = gender
+    ? gender.split(',').filter((g): g is 'male' | 'female' =>
+        g === 'male' || g === 'female'
+      )
+    : undefined
+
+  // Parse subSpecialties from URL parameter
+  const subSpecialtiesArray = subSpecialties ? subSpecialties.split(',') : undefined
 
   const data = await api.doctors.searchByLocation({
     specialtyId: specialty,
+    subSpecialties: subSpecialtiesArray,
     countyCode: county,
     townId: town,
     query: query,
+    experiences: experiences,
+    genders: genders,
   })
 
   return (

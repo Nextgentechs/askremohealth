@@ -12,7 +12,7 @@ import {
 } from '@web/server/db/schema'
 import assert from 'assert'
 import { db } from '@web/server/db'
-import { eq, ilike, or, and, inArray, exists } from 'drizzle-orm'
+import { eq, ilike, or, and, inArray, exists, sql, between, gte } from 'drizzle-orm'
 import { z } from 'zod'
 import { doctorProcedure, procedure, publicProcedure } from '../trpc'
 import {
@@ -204,10 +204,20 @@ export const searchByLocation = publicProcedure
       townId: z.string().optional(),
       specialtyId: z.string().optional(),
       query: z.string().optional(),
+      subSpecialties: z.array(z.string()).optional(),
+      experiences: z
+        .array(
+          z.object({
+            min: z.number(),
+            max: z.number().optional(),
+          }),
+        )
+        .optional(),
+      genders: z.array(z.enum(['male', 'female'])).optional(),
     }),
   )
   .query(async ({ input }) => {
-    const { countyCode, townId, specialtyId, query } = input
+    const { countyCode, townId, specialtyId, query, subSpecialties, experiences, genders } = input
 
     // Build base conditions
     const conditions = []
@@ -305,6 +315,38 @@ export const searchByLocation = publicProcedure
           inArray(doctorsTable.facility, facilitySubquery)
         )
       )
+    }
+
+    // Add subspecialties filter
+    if (subSpecialties?.length) {
+      conditions.push(
+        sql`EXISTS (
+          SELECT 1 FROM jsonb_array_elements(${doctorsTable.subSpecialties}) elem
+          WHERE elem->>'id' IN (${subSpecialties
+            .map((id) => sql`${id}`)
+            .reduce((acc, curr, idx) =>
+              idx === 0 ? curr : sql`${acc}, ${curr}`,
+            )})
+        )`,
+      )
+    }
+
+    // Add experience filter
+    if (experiences?.length) {
+      conditions.push(
+        or(
+          ...experiences.map((range) =>
+            range.max
+              ? between(doctorsTable.experience, range.min, range.max)
+              : gte(doctorsTable.experience, range.min),
+          ),
+        ),
+      )
+    }
+
+    // Add gender filter
+    if (genders?.length) {
+      conditions.push(inArray(doctorsTable.gender, genders))
     }
 
     // Start building the query with conditions
