@@ -7,7 +7,6 @@ import {
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
-  BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@web/components/ui/breadcrumb'
 import { api } from '@web/trpc/server'
@@ -28,7 +27,7 @@ export default async function Page({
     gender?: string
   }>
 }) {
-  const { specialty, subSpecialties, county, query, page, experience, gender } = await searchParams
+  const { specialty, subSpecialties, county, query, experience, gender } = await searchParams
 
   // Parse experience ranges from URL parameter
   const experiences = experience
@@ -36,7 +35,9 @@ export default async function Page({
         if (exp === '15+') {
           return { min: 15 }
         }
-        const [min, max] = exp.split('-').map(Number)
+        const [minStr, maxStr] = exp.split('-')
+        const min = parseInt(minStr ?? '0', 10)
+        const max = maxStr ? parseInt(maxStr, 10) : undefined
         return { min, max }
       })
     : undefined

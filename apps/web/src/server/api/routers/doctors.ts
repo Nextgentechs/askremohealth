@@ -1,18 +1,15 @@
 import { patients as patientsTable } from '@web/server/db/schema'
 import Appointments from '@web/server/services/appointments'
 import { Doctors } from '@web/server/services/doctors'
-import { 
+import {
   users as usersTable,
   doctors as doctorsTable,
-  specialties as specialtiesTable,
   facilities as facilitiesTable,
-  profilePictures as profilePicturesTable,
-  reviews as reviewsTable,
   officeLocation as officeLocationTable
 } from '@web/server/db/schema'
 import assert from 'assert'
 import { db } from '@web/server/db'
-import { eq, ilike, or, and, inArray, exists, sql, between, gte } from 'drizzle-orm'
+import { eq, ilike, or, and, inArray, sql, between, gte } from 'drizzle-orm'
 import { z } from 'zod'
 import { doctorProcedure, procedure, publicProcedure } from '../trpc'
 import {
