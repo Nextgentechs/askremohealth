@@ -1,7 +1,11 @@
 'use client'
 
+import { useForm, Controller } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { api } from '@web/trpc/react'
+import { useToast } from '@web/hooks/use-toast'
+import { availabilityDetailsSchema } from '@web/server/api/validators'
 import { Input } from '@web/components/ui/input'
-
 import { Button } from '@web/components/ui/button'
 import {
   Card,
@@ -19,7 +23,9 @@ import {
   SelectValue,
 } from '@web/components/ui/select'
 import { Switch } from '@web/components/ui/switch'
-import React from 'react'
+import React, { useEffect } from 'react'
+import type { z } from 'zod'
+import type { AvailabilityDetailsSchema } from '@web/server/api/validators'
 
 function OnlineStatus() {
   return (
@@ -45,141 +51,164 @@ function PhysicalStatus() {
   )
 }
 
-const operatingHours = [
-  { day: 'Monday', opening: '09:00', closing: '17:00', isOpen: true },
-  { day: 'Tuesday', opening: '09:00', closing: '17:00', isOpen: true },
-  { day: 'Wednesday', opening: '09:00', closing: '17:00', isOpen: true },
-  { day: 'Thursday', opening: '09:00', closing: '17:00', isOpen: true },
-  { day: 'Friday', opening: '09:00', closing: '17:00', isOpen: true },
-  { day: 'Saturday', opening: '09:00', closing: '13:00', isOpen: true },
-  { day: 'Sunday', opening: '00:00', closing: '00:00', isOpen: false },
-]
+export default function ConsultationSettings() {
+  const { toast } = useToast()
+  const { data: doctor, isLoading } = api.doctors.currentDoctor.useQuery()
+  const utils = api.useUtils()
+  const updateMutation = api.doctors.updateAvailabilityDetails.useMutation()
 
-function OperatingHours() {
-  const [editingDay, setEditingDay] = React.useState<string | null>(null)
+  const form = useForm<{
+    consultationFee: string;
+    appointmentDuration: string;
+    operatingHours: { day: string; opening: string; closing: string; isOpen: boolean }[];
+  }>({
+    resolver: zodResolver(availabilityDetailsSchema),
+    defaultValues: {
+      consultationFee: '',
+      appointmentDuration: '',
+      operatingHours: [
+        { day: 'Monday', opening: '09:00', closing: '17:00', isOpen: true },
+        { day: 'Tuesday', opening: '09:00', closing: '17:00', isOpen: true },
+        { day: 'Wednesday', opening: '09:00', closing: '17:00', isOpen: true },
+        { day: 'Thursday', opening: '09:00', closing: '17:00', isOpen: true },
+        { day: 'Friday', opening: '09:00', closing: '17:00', isOpen: true },
+        { day: 'Saturday', opening: '09:00', closing: '13:00', isOpen: true },
+        { day: 'Sunday', opening: '00:00', closing: '00:00', isOpen: false },
+      ],
+    },
+  })
 
-  const handleEdit = (day: string) => {
-    setEditingDay(day === editingDay ? null : day)
-  }
+  // Populate form with fetched data
+  useEffect(() => {
+    if (doctor?.consultationFee && doctor?.operatingHours?.[0]) {
+      form.reset({
+        consultationFee: doctor.consultationFee != null ? String(doctor.consultationFee) : '',
+        appointmentDuration: doctor.operatingHours[0].consultationDuration != null ? String(doctor.operatingHours[0].consultationDuration) : '',
+        operatingHours: (doctor.operatingHours[0].schedule ?? []).map((d: { day: string; opening: string | null; closing: string | null; isOpen: boolean }) => ({
+          ...d,
+          opening: d.opening ?? '',
+          closing: d.closing ?? '',
+        })),
+      })
+    }
+  }, [doctor, form])
 
-  const handleChange = (
-    dayIndex: number,
-    field: 'opening' | 'closing' | 'isOpen',
-    value: string | boolean,
-  ) => {
-    const newHours = [...operatingHours]
-    const currentDay = newHours[dayIndex]
-    if (!currentDay) return
-
-    newHours[dayIndex] = {
-      day: currentDay.day,
-      opening: currentDay.opening,
-      closing: currentDay.closing,
-      isOpen: currentDay.isOpen,
-      [field]: value,
+  const onSubmit = async (values: { consultationFee: string; appointmentDuration: string; operatingHours: { day: string; opening: string; closing: string; isOpen: boolean }[] }) => {
+    try {
+      await updateMutation.mutateAsync({
+        ...values,
+        consultationFee: String(values.consultationFee),
+        appointmentDuration: String(values.appointmentDuration),
+        operatingHours: values.operatingHours.map((oh) => ({
+          ...oh,
+          day: oh.day as
+            | 'Monday'
+            | 'Tuesday'
+            | 'Wednesday'
+            | 'Thursday'
+            | 'Friday'
+            | 'Saturday'
+            | 'Sunday',
+        })),
+      })
+      toast({ description: 'Consultation settings updated!' })
+      utils.doctors.currentDoctor.invalidate()
+    } catch (e) {
+      toast({ description: 'Failed to update settings', variant: 'destructive' })
     }
   }
+
+  if (isLoading) return <div>Loading...</div>
+
   return (
-    <Card className="shadow-none">
-      <CardHeader>
-        <CardTitle>Consultation Availability</CardTitle>
-      </CardHeader>
-
-      <CardContent>
-        <div className="space-y-2">
-          {operatingHours.map((dayHours, index) => (
-            <div key={dayHours.day} className="flex items-center space-x-4">
-              <div className="w-24 text-sm">{dayHours.day}</div>
-              {editingDay === dayHours.day ? (
-                <div className="flex flex-1 flex-row gap-4">
-                  <Input
-                    type="time"
-                    value={dayHours.opening}
-                    onChange={(e) =>
-                      handleChange(index, 'opening', e.target.value)
-                    }
-                    className="w-24"
-                  />
-                  <Input
-                    type="time"
-                    value={dayHours.closing}
-                    onChange={(e) =>
-                      handleChange(index, 'closing', e.target.value)
-                    }
-                    className="w-24"
-                  />
-                </div>
-              ) : (
-                <div className="flex-1">
-                  {dayHours.isOpen
-                    ? `${dayHours.opening} - ${dayHours.closing}`
-                    : 'Closed'}
-                </div>
-              )}
-              <div className="flex items-center space-x-2">
-                <Switch
-                  checked={dayHours.isOpen}
-                  onCheckedChange={(checked) =>
-                    handleChange(index, 'isOpen', checked)
-                  }
-                />
-                <Label htmlFor={`${dayHours.day}-switch`} hidden>
-                  Open
-                </Label>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => handleEdit(dayHours.day)}
-              >
-                {editingDay === dayHours.day ? 'Save' : 'Edit'}
-              </Button>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-
-      <CardFooter className="justify-end">
-        <Button type="submit" disabled>
-          Save
-        </Button>
-      </CardFooter>
-    </Card>
-  )
-}
-
-export default function ConsultationSettings() {
-  return (
-    <div>
+    <form onSubmit={form.handleSubmit(onSubmit)}>
       <div className="grid grid-cols-2 gap-4 gap-y-6">
         <OnlineStatus />
         <PhysicalStatus />
         <div className="flex flex-col gap-2">
           <Label> Consultation Fee (Ksh)</Label>
-          <Input type="number" />
+          <Input type="number" {...form.register('consultationFee')} />
         </div>
-
         <div>
-          <Label htmlFor="appointmentDuration">
-            Average Appointment Duration
-          </Label>
-          <Select>
-            <SelectTrigger>
-              <SelectValue placeholder="Select" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="30">30 minutes</SelectItem>
-              <SelectItem value="45">45 minutes</SelectItem>
-              <SelectItem value="60">1 hour</SelectItem>
-              <SelectItem value="90">1.5 hours</SelectItem>
-              <SelectItem value="120">2 hours</SelectItem>
-            </SelectContent>
-          </Select>
+          <Label htmlFor="appointmentDuration">Average Appointment Duration</Label>
+          <Controller
+            control={form.control}
+            name="appointmentDuration"
+            render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="30">30 minutes</SelectItem>
+                  <SelectItem value="45">45 minutes</SelectItem>
+                  <SelectItem value="60">1 hour</SelectItem>
+                  <SelectItem value="90">1.5 hours</SelectItem>
+                  <SelectItem value="120">2 hours</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          />
         </div>
-
-        <OperatingHours />
+        <Controller
+          control={form.control}
+          name="operatingHours"
+          render={({ field }) => (
+            <Card className="shadow-none col-span-2">
+              <CardHeader>
+                <CardTitle>Consultation Availability</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {(field.value as { day: string; opening: string; closing: string; isOpen: boolean }[]).map((dayHours, index) => (
+                    <div key={dayHours.day} className="flex items-center space-x-4">
+                      <div className="w-24 text-sm">{dayHours.day}</div>
+                      <Input
+                        type="time"
+                        value={dayHours.opening}
+                        onChange={e => {
+                          const updated = [...field.value]
+                          if (updated[index]) updated[index].opening = e.target.value
+                          field.onChange(updated)
+                        }}
+                        className="w-24"
+                        disabled={!dayHours.isOpen}
+                      />
+                      <Input
+                        type="time"
+                        value={dayHours.closing}
+                        onChange={e => {
+                          const updated = [...field.value]
+                          if (updated[index]) updated[index].closing = e.target.value
+                          field.onChange(updated)
+                        }}
+                        className="w-24"
+                        disabled={!dayHours.isOpen}
+                      />
+                      <Switch
+                        checked={dayHours.isOpen}
+                        onCheckedChange={checked => {
+                          const updated = [...field.value]
+                          if (updated[index]) updated[index].isOpen = checked
+                          field.onChange(updated)
+                        }}
+                      />
+                      <Label htmlFor={`${dayHours.day}-switch`} hidden>
+                        Open
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        />
       </div>
-    </div>
+      <CardFooter className="justify-end mt-4">
+        <Button type="submit" disabled={updateMutation.isPending}>
+          {updateMutation.isPending ? 'Saving...' : 'Save'}
+        </Button>
+      </CardFooter>
+    </form>
   )
 }

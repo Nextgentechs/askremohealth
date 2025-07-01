@@ -90,6 +90,7 @@ function Login({
     setCurrentStep: (step: 'login' | 'signup' | 'otp') => void
 }) {
   const [isLoading, setIsLoading] = useState(false)
+  const searchParams = useSearchParams()
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -163,6 +164,10 @@ function Login({
   async function handleGoogleSignIn() {
     setIsLoading(true)
     try {
+      // Set role in cookie before Google sign-in
+      const role = searchParams.get("role") ?? 'doctor'
+      document.cookie = `signup-role=${role}; path=/; max-age=300` // 5 minutes expiry
+      
       await signIn('google', { callbackUrl: '/' })
     } catch {
       toast({
@@ -348,8 +353,15 @@ function SignUp({
     }
   }
 
+  async function handleGoogleSignUp() {
+    // Set role in cookie before Google sign-in
+    const role = searchParams.get("role") ?? 'doctor'
+    document.cookie = `signup-role=${role}; path=/; max-age=300` // 5 minutes expiry
+    signIn('google', { callbackUrl: '/specialist/upcoming-appointments' })
+  }
+
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 mt-16">
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Create an account</CardTitle>
@@ -362,7 +374,7 @@ function SignUp({
             type="button"
             variant="outline"
             className="w-full gap-2"
-            onClick={() => signIn('google', { callbackUrl: '/specialist/upcoming-appointments' })}
+            onClick={handleGoogleSignUp}
             disabled={isLoading}
           >
             <Google className="h-5 w-5" />
@@ -506,7 +518,11 @@ function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
           duration: 3000,
         })
         if (user?.role === 'patient') {
-          router.push('/')
+          if (!user?.onboardingComplete) {
+            router.push('/patient/onboarding/patient-details')
+          } else {
+            router.push('/patient/upcoming-appointments')
+          }
         }
         else if (user?.role === 'doctor' && user?.onboardingComplete) {
           router.push('/specialist/upcoming-appointments')
@@ -582,11 +598,11 @@ function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
                 control={form.control}
                 name="pin"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="text-center items-center">
                     <FormLabel>One-Time Password</FormLabel>
                     <FormControl>
                       <InputOTP maxLength={6} {...field}>
-                        <InputOTPGroup>
+                        <InputOTPGroup className="mx-auto">
                           {[...Array(6)].map((_, i) => (
                             <InputOTPSlot key={i} index={i} />
                           ))}

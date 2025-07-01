@@ -152,7 +152,7 @@ export type PersonalDetailsSchema = z.infer<typeof personalDetailsSchema>
 
 export const professionalDetailsSchema = z.object({
   specialty: z.string(),
-  subSpecialty: z.array(z.string()),
+  subSpecialty: z.array(z.string()).optional().default([]),
   facility: z.string().optional(),
   officeLocation: z.string().optional(),
   experience: z.number(),
@@ -194,3 +194,53 @@ export const articleSchema = z.object({
 })
 
 export type ArticleSchema = z.infer<typeof articleSchema>
+
+export const patientDetailsSchema = z.object({
+  firstName: z.string(),
+  lastName: z.string(),
+  email: z.string().email(),
+  phone: z
+    .string()
+    .refine((val) => /^\d{10}$/.test(val) || /^254\d{9}$/.test(val), {
+      message: 'Invalid phone number',
+    })
+    .refine(
+      (val) =>
+        val.startsWith('07') ||
+        val.startsWith('01') ||
+        val.startsWith('2547') ||
+        val.startsWith('2541'),
+      {
+        message: 'Invalid phone number',
+      },
+    )
+    .transform((val) => {
+      if (val.startsWith('0')) {
+        return `254${val.slice(1)}`
+      }
+      return val
+    }),
+  dob: z.string().min(1, 'Date of birth is required'),
+  emergencyContact: z
+    .string()
+    .refine((val) => /^\d{10}$/.test(val) || /^254\d{9}$/.test(val), {
+      message: 'Invalid emergency contact',
+    })
+    .refine(
+      (val) =>
+        val.startsWith('07') ||
+        val.startsWith('01') ||
+        val.startsWith('2547') ||
+        val.startsWith('2541'),
+      {
+        message: 'Invalid emergency contact',
+      },
+    )
+    .transform((val) => {
+      if (val.startsWith('0')) {
+        return `254${val.slice(1)}`
+      }
+      return val
+    }),
+})
+export type PatientDetails = z.infer<typeof patientDetailsSchema>

@@ -1,4 +1,5 @@
 import DoctorDetails from '@web/components/doctor-details'
+import CalendarComponent from '@web/components/calendar-component'
 import { StarRating } from '@web/components/star-rating'
 import { Avatar, AvatarFallback, AvatarImage } from '@web/components/ui/avatar'
 import {
@@ -173,6 +174,11 @@ export default async function Page({
         <DoctorCard doctor={doctor} />
         <div className="flex flex-1 flex-col gap-8">
           <AboutDoctor about={doctor.bio} />
+          <CalendarComponent 
+            doctorId={doctor.id}
+            operatingHours={doctor.operatingHours}
+            bookedSlots={(doctor.bookedSlots ?? []).map((d: string) => new Date(d))}
+          />
           <PatientsReviews />
         </div>
       </div>
