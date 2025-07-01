@@ -203,7 +203,7 @@ function MobileMenu() {
 function CurrentUser({
   user,
 }: {
-  user: { firstName?: string; lastName?: string }
+  user: { firstName?: string; lastName?: string; role?: string }
 }) {
   return (
     <DropdownMenu>
@@ -218,18 +218,47 @@ function CurrentUser({
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width] min-w-44 rounded-lg">
         <DropdownMenuGroup>
-          <Link href="/specialist/upcoming-appointments">
-            <DropdownMenuItem className="cursor-pointer">
-              <Calendar />
-              Dashboard
-            </DropdownMenuItem>
-          </Link>
-          <Link href="/profile">
-            <DropdownMenuItem className="cursor-pointer">
-              <User />
-              My Profile
-            </DropdownMenuItem>
-          </Link>
+          {user?.role === 'doctor' ? (
+            <Link href="/specialist/upcoming-appointments">
+              <DropdownMenuItem className="cursor-pointer">
+                <Calendar />
+                Dashboard
+              </DropdownMenuItem>
+            </Link>
+          ) : user?.role === 'patient' ? (
+            <>
+              <Link href="/patient/upcoming-appointments">
+                <DropdownMenuItem className="cursor-pointer">
+                  <Calendar />
+                  Dashboard
+                </DropdownMenuItem>
+              </Link>
+              <Link href="/appointments">
+                <DropdownMenuItem className="cursor-pointer">
+                  <Calendar />
+                  Appointments
+                </DropdownMenuItem>
+              </Link>
+            </>
+          ) : null}
+          {user?.role === 'patient' ? (
+            <Link href="/patient/profile">
+              <DropdownMenuItem className="cursor-pointer">
+                <User />
+                My Profile
+              </DropdownMenuItem>
+            </Link>
+          ): null }
+          <>
+            {user?.role === 'doctor' ? (
+              <Link href="/specialist/profile">
+                <DropdownMenuItem className="cursor-pointer">
+                  <User />
+                  My Profile
+                </DropdownMenuItem>
+              </Link>
+            ) : null}
+          </>
         </DropdownMenuGroup>
         <DropdownMenuSeparator className="bg-border" />
         <DropdownMenuGroup>

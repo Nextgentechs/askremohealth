@@ -7,7 +7,7 @@ export async function POST() {
   try {
     const session = await auth()
 
-    console.log(session)
+    // console.log(session)
     
     if (session) {
       const cookieStore = await cookies()

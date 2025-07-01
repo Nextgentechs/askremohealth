@@ -25,12 +25,7 @@ import {
   PaginationLink,
 } from './ui/pagination'
 
-type DoctorListData = {
-  doctors: Array<Omit<RouterOutputs['doctors']['searchByLocation']['doctors'][number], 'office'> & {
-    office?: RouterOutputs['doctors']['searchByLocation']['doctors'][number]['office']
-  }>
-  count: number
-}
+type DoctorListData = RouterOutputs['doctors']['searchByLocation']
 
 export type OperatingHours =
   RouterOutputs['doctors']['searchByLocation']['doctors'][number]['operatingHours'][number]

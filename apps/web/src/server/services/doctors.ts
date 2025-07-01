@@ -235,11 +235,25 @@ export class Doctors {
         })
         .where(eq(doctorsTable.id, userId))
 
-      await trx.insert(operatingHours).values({
-        schedule: input.operatingHours,
-        consultationDuration: input.appointmentDuration,
-        doctorId: userId,
+      // Upsert operating hours for the doctor
+      const existing = await trx.query.operatingHours.findFirst({
+        where: (oh) => eq(oh.doctorId, userId),
       })
+      if (existing) {
+        await trx
+          .update(operatingHours)
+          .set({
+            schedule: input.operatingHours,
+            consultationDuration: input.appointmentDuration,
+          })
+          .where(eq(operatingHours.doctorId, userId))
+      } else {
+        await trx.insert(operatingHours).values({
+          schedule: input.operatingHours,
+          consultationDuration: input.appointmentDuration,
+          doctorId: userId,
+        })
+      }
 
       // Update profileComplete to true in users table
       await trx
@@ -510,6 +524,24 @@ export class Doctors {
       })
     }
 
+    // Fetch booked slots (future, non-cancelled appointments)
+    const now = new Date();
+    const bookedAppointments = await db.query.appointments.findMany({
+      where: (appointment, { eq, gte, inArray }) =>
+        eq(appointment.doctorId, id) &&
+        gte(appointment.appointmentDate, now) &&
+        inArray(appointment.status, [
+          'scheduled',
+          'pending',
+          'in_progress',
+          'rescheduled',
+        ]),
+      columns: {
+        appointmentDate: true,
+      },
+    });
+    const bookedSlots = bookedAppointments.map((a) => a.appointmentDate.toISOString());
+
     const subSpecialties = await db.query.subSpecialties.findMany({
       where: (subSpecialty, { inArray }) =>
         inArray(
@@ -538,7 +570,8 @@ export class Doctors {
         averageRating,
         totalReviews: reviews.length,
       },
-    }
+      bookedSlots,
+    };
   }
 
   static async appointmentDetails(id: string) {

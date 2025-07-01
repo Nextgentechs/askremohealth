@@ -2,8 +2,8 @@
 
 import { api } from '@web/trpc/react'
 import { Filter, X } from 'lucide-react'
-import { useSearchParams } from 'next/navigation'
-import  React from 'react'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
+import React from 'react'
 import { useState } from 'react'
 import { Label } from './ui/label'
 import { Skeleton } from './ui/skeleton'
@@ -29,9 +29,25 @@ export function SubSpecialtiesFilterSkeleton() {
 }
 
 export function SubSpecialtiesFilter() {
-  const [subSpecialties, setSubSpecialties] = React.useState<string[]>([])
   const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
+  const createQueryString = React.useCallback(
+    (name: string, value: string) => {
+      const params = new URLSearchParams(searchParams.toString())
+      if (value === '') {
+        params.delete(name)
+      } else {
+        params.set(name, value)
+      }
+      return params.toString()
+    },
+    [searchParams],
+  )
   const specialty = searchParams.get('specialty')
+  const subSpecialtiesParam = searchParams.get('subSpecialties')
+  const selectedSubSpecialties = subSpecialtiesParam ? subSpecialtiesParam.split(',') : []
+
   const { data, isLoading } = api.specialties.listSubSpecialties.useQuery(
     { specialityId: specialty ?? '' },
     { enabled: !!specialty },
@@ -48,12 +64,19 @@ export function SubSpecialtiesFilter() {
           <div key={subSpecialty.id} className="flex items-center space-x-2">
             <Switch
               id={subSpecialty.id}
-              checked={subSpecialties?.includes(subSpecialty.id)}
+              checked={selectedSubSpecialties.includes(subSpecialty.id)}
               onCheckedChange={(checked) => {
-                setSubSpecialties(
-                  checked
-                    ? [...subSpecialties, subSpecialty.id]
-                    : subSpecialties.filter((id) => id !== subSpecialty.id),
+                const newSubSpecialties = checked
+                  ? [...selectedSubSpecialties, subSpecialty.id]
+                  : selectedSubSpecialties.filter((id) => id !== subSpecialty.id)
+
+                router.push(
+                  pathname +
+                    '?' +
+                    createQueryString(
+                      'subSpecialties',
+                      newSubSpecialties.join(','),
+                    ),
                 )
               }}
             />
@@ -74,8 +97,18 @@ const experienceOptions = [
   { label: '15+ years', value: '15+' },
 ]
 
-export function ExperienceFilter() {
-  const [experiences, setExperiences] = React.useState<string[]>([])
+export function ExperienceFilter({
+  createQueryString,
+  pathname,
+  router,
+}: {
+  createQueryString: (name: string, value: string) => string
+  pathname: string
+  router: ReturnType<typeof useRouter>
+}) {
+  const searchParams = useSearchParams()
+  const experienceParam = searchParams.get('experience')
+  const selectedExperiences = experienceParam ? experienceParam.split(',') : []
 
   return (
     <div className="flex flex-col gap-4 border-b py-6">
@@ -85,12 +118,19 @@ export function ExperienceFilter() {
           <div key={option.value} className="flex items-center space-x-2">
             <Switch
               id={option.value}
-              checked={experiences?.includes(option.value)}
+              checked={selectedExperiences.includes(option.value)}
               onCheckedChange={(checked) => {
-                setExperiences(
-                  checked
-                    ? [...experiences, option.value]
-                    : experiences.filter((id) => id !== option.value),
+                const newExperiences = checked
+                  ? [...selectedExperiences, option.value]
+                  : selectedExperiences.filter((val) => val !== option.value)
+
+                router.push(
+                  pathname +
+                    '?' +
+                    createQueryString(
+                      'experience',
+                      newExperiences.join(','),
+                    ),
                 )
               }}
             />
@@ -109,8 +149,18 @@ const genderOptions = [
   { label: 'Female', value: 'female' },
 ]
 
-export function GenderFilter() {
-  const [genders, setGenders] = React.useState<string[]>([])
+export function GenderFilter({
+  createQueryString,
+  pathname,
+  router,
+}: {
+  createQueryString: (name: string, value: string) => string
+  pathname: string
+  router: ReturnType<typeof useRouter>
+}) {
+  const searchParams = useSearchParams()
+  const genderParam = searchParams.get('gender')
+  const selectedGenders = genderParam ? genderParam.split(',') : []
 
   return (
     <div className="flex flex-col gap-4 border-b py-6">
@@ -120,47 +170,16 @@ export function GenderFilter() {
           <div key={option.value} className="flex items-center space-x-2">
             <Switch
               id={option.value}
-              checked={genders?.includes(option.value)}
+              checked={selectedGenders.includes(option.value)}
               onCheckedChange={(checked) => {
-                setGenders(
-                  checked
-                    ? [...genders, option.value]
-                    : genders.filter((id) => id !== option.value),
-                )
-              }}
-            />
-            <Label className="text-sm font-normal" htmlFor={option.value}>
-              {option.label}
-            </Label>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
+                const newGenders = checked
+                  ? [...selectedGenders, option.value]
+                  : selectedGenders.filter((val) => val !== option.value)
 
-const entityOptions = [
-  { label: 'Hospital', value: 'hospital' },
-  { label: 'Clinic', value: 'clinic' },
-]
-
-function EntityFilter() {
-  const [entities, setEntities] = React.useState<string[]>([])
-
-  return (
-    <div className="flex flex-col gap-4 border-b py-6">
-      <p className="text-start font-semibold text-primary">Entity</p>
-      <div className="flex flex-col gap-3">
-        {entityOptions.map((option) => (
-          <div key={option.value} className="flex items-center space-x-2">
-            <Switch
-              id={option.value}
-              checked={entities?.includes(option.value)}
-              onCheckedChange={(checked) => {
-                setEntities(
-                  checked
-                    ? [...entities, option.value]
-                    : entities.filter((id) => id !== option.value),
+                router.push(
+                  pathname +
+                    '?' +
+                    createQueryString('gender', newGenders.join(',')),
                 )
               }}
             />
@@ -176,6 +195,21 @@ function EntityFilter() {
 
 export default function DoctorFilters() {
   const [showFilters, setShowFilters] = useState(false)
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
+  const createQueryString = React.useCallback(
+    (name: string, value: string) => {
+      const params = new URLSearchParams(searchParams.toString())
+      if (value === '') {
+        params.delete(name)
+      } else {
+        params.set(name, value)
+      }
+      return params.toString()
+    },
+    [searchParams],
+  )
 
   return (
     <div className="mb-10 w-full lg:max-w-[200px] xl:max-w-xs rounded-xl p-0 shadow-sm">
@@ -200,9 +234,16 @@ export default function DoctorFilters() {
         } flex flex-col border-x border-b px-6 pb-6 rounded-b-xl lg:block`}
       >
         <SubSpecialtiesFilter />
-        <ExperienceFilter />
-        <GenderFilter />
-        <EntityFilter />
+        <ExperienceFilter
+          createQueryString={createQueryString}
+          pathname={pathname}
+          router={router}
+        />
+        <GenderFilter
+          createQueryString={createQueryString}
+          pathname={pathname}
+          router={router}
+        />
       </div>
     </div>
   )

@@ -59,7 +59,7 @@ export default function ProvidersSection() {
                   </ul>
                 </CardContent>
                 <CardFooter className="p-0 mt-6">
-                  <Link href="/register-provider">
+                  <Link href="/register-facility">
                   <Button
                     size="lg"
                     className="w-full md:w-auto bg-[#402E7D] text-white"

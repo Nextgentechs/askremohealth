@@ -19,7 +19,7 @@ export default function Page() {
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink href={`/doctors`}>Doctors</BreadcrumbLink>
+            <BreadcrumbLink href={`/find-specialists`}>Doctors</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
