@@ -16,7 +16,10 @@ import {
   articles,
   article_images,
   notifications,
-  officeLocation
+  officeLocation,
+  labs,
+  labTestsAvailable,
+  tests
 } from './schema'
 
 export const doctorRelations = relations(doctors, ({ one, many }) => ({
@@ -166,3 +169,39 @@ export const articleImageRelations = relations(article_images, ({ one }) => ({
     references: [articles.id],
   }),
 }))
+
+
+export const labRelations = relations(labs, ({ one, many }) => ({
+  user: one(users, {
+    fields: [labs.user_id],
+    references: [users.id],
+  }),
+  labTestsAvailable: many(labTestsAvailable),
+}));
+
+export const userLabRelations = relations(users, ({ one }) => ({
+  lab: one(labs, {
+    fields: [users.id],
+    references: [labs.user_id],
+  }),
+}));
+
+export const labTestsAvailableRelations = relations(
+  labTestsAvailable,
+  ({ one }) => ({
+    lab: one(labs, {
+      fields: [labTestsAvailable.labId],
+      references: [labs.id],
+    }),
+  })
+);
+
+export const labTestsAvailableRelationsExtended = relations(
+  labTestsAvailable,
+  ({ one }) => ({
+    test: one(tests, {
+      fields: [labTestsAvailable.testId],
+      references: [tests.id],
+    }),
+  })
+);
