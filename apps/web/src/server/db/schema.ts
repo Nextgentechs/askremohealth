@@ -46,6 +46,10 @@ export const doctorStatusEnum = pgEnum('doctor_status', [
   'rejected',
 ])
 
+export const collectionMethodEnum = pgEnum('collection', [
+  'onsite', 'home', 'both',
+])
+
 export const specialties = pgTable('specialty', {
   id: uuid('id').primaryKey().notNull().defaultRandom(),
   name: varchar('name').notNull(),
@@ -286,4 +290,42 @@ export const article_images = pgTable('article_images', {
   path: varchar('path').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
+})
+
+export const labs = pgTable('labs', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  user_id: uuid('user_id')
+    .notNull()
+    .unique()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  name: varchar('name').notNull(),
+  location: jsonb('location').$type<{ lat: number; lng: number }>(),
+  address: varchar('address').notNull(),
+  county: varchar('county').notNull(),
+  town: varchar('town').notNull(),
+  phone: varchar('phone'),
+  website: varchar('website'),
+})
+
+export const tests = pgTable('test', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  name: varchar('name').notNull(),
+  icon: varchar('icon'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
+})  
+
+
+export const labTestsAvailable = pgTable('lab_tests_available', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  labId: uuid('lab_id')
+    .notNull()
+    .references(() => labs.id, { onDelete: 'cascade' }),
+  testId: uuid('test_id')
+    .notNull()
+    .references(() => tests.id, { onDelete: 'cascade' }),
+    amount: integer('amount').notNull(),
+  collection: collectionMethodEnum('collection').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').$onUpdate(() => new Date()), 
 })
