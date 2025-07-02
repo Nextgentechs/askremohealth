@@ -1,4 +1,5 @@
-CREATE TYPE collection_method AS ENUM ('onsite', 'home');
+
+DROP TABLE IF EXISTS lab_tests_available;
 CREATE TABLE lab_tests_available (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     lab_id UUID NOT NULL REFERENCES labs(id) ON DELETE CASCADE,
@@ -6,7 +7,7 @@ CREATE TABLE lab_tests_available (
     amount NUMERIC(10, 2) NOT NULL,
     collection collection_method NOT NULL,
     created_at TIMESTAMP DEFAULT NOW() NOT NULL,
-    updated_at TIMESTAMP DEFAULT NOW() NOT NULL,
+    updated_at TIMESTAMP DEFAULT NOW() NOT NULL
 
-    UNIQUE (lab_id, test_id) -- optional, ensures no duplicate pair
+    
 );
