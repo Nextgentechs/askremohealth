@@ -1,13 +1,12 @@
 
-DROP TABLE IF EXISTS lab_tests_available;
-CREATE TABLE lab_tests_available (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    lab_id UUID NOT NULL REFERENCES labs(id) ON DELETE CASCADE,
-    test_id UUID NOT NULL REFERENCES test(id) ON DELETE CASCADE,
-    amount NUMERIC(10, 2) NOT NULL,
-    collection collection_method NOT NULL,
-    created_at TIMESTAMP DEFAULT NOW() NOT NULL,
-    updated_at TIMESTAMP DEFAULT NOW() NOT NULL
+-- 1. Remove the columns you don't need
+ALTER TABLE test
+DROP COLUMN icon,
+DROP COLUMN updated_at;
 
-    
-);
+-- 2. Add the new columns
+ALTER TABLE test
+ADD COLUMN loinc_test_id VARCHAR(20),
+ADD COLUMN general_category VARCHAR(30),
+ADD COLUMN specific_category VARCHAR(50),
+ADD COLUMN sample_type VARCHAR(50);

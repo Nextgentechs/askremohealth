@@ -309,11 +309,13 @@ export const labs = pgTable('labs', {
 
 export const tests = pgTable('test', {
   id: uuid('id').primaryKey().notNull().defaultRandom(),
+  loincTestId: varchar('loinc_test_id', { length: 100 }),
   name: varchar('name').notNull(),
-  icon: varchar('icon'),
+  generalCategory: varchar('general_category', { length: 100 }),
+  specificCategory: varchar('specific_category', { length: 100 }),
+  sampleType: varchar('sample_type', { length: 100 }),
   createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
-})  
+});
 
 
 export const labTestsAvailable = pgTable('lab_tests_available', {
