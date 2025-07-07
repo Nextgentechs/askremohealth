@@ -294,7 +294,7 @@ export const article_images = pgTable('article_images', {
 
 export const labs = pgTable('labs', {
   id: uuid('id').primaryKey().notNull().defaultRandom(),
-  user_id: uuid('user_id')
+  user_id: varchar('user_id')
     .notNull()
     .unique()
     .references(() => users.id, { onDelete: 'cascade' }),
@@ -311,9 +311,9 @@ export const tests = pgTable('test', {
   id: uuid('id').primaryKey().notNull().defaultRandom(),
   loincTestId: varchar('loinc_test_id', { length: 100 }),
   name: varchar('name').notNull(),
-  generalCategory: varchar('general_category', { length: 100 }),
-  specificCategory: varchar('specific_category', { length: 100 }),
-  sampleType: varchar('sample_type', { length: 100 }),
+  generalCategory: varchar('general_category', { length: 255 }),
+  specificCategory: varchar('specific_category', { length: 255 }),
+  sampleType: varchar('sample_type', { length: 255 }),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
