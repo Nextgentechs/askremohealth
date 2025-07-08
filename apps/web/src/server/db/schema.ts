@@ -311,10 +311,10 @@ export const labs = pgTable('labs', {
 export const tests = pgTable('test', {
   id: uuid('id').primaryKey().notNull().defaultRandom(),
   loincTestId: varchar('loinc_test_id', { length: 100 }),
-  name: varchar('name').notNull(),
-  generalCategory: varchar('general_category', { length: 255 }),
   specificCategory: varchar('specific_category', { length: 255 }),
   sampleType: varchar('sample_type', { length: 255 }),
+  name: varchar('name').notNull(),
+  generalCategory: varchar('general_category', { length: 255 }),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
@@ -339,6 +339,6 @@ export const labAvailability = pgTable('lab_availability', {
     .notNull()
     .references(() => labs.id, { onDelete: 'cascade' }),
   day_of_week: weekDayEnum('day_of_week').notNull(),
-  start_time: time('start_time').notNull(), // e.g., 08:00:00
-  end_time: time('end_time').notNull(), // e.g., 12:00:00
+  start_time: time('start_time').notNull(),
+  end_time: time('end_time').notNull(), 
 })
