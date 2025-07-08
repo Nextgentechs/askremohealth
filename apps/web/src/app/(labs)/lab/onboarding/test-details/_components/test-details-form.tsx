@@ -1,15 +1,40 @@
-"use client"
+'use client'
 
-import { useState, useMemo } from "react"
-import { Button } from "@web/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@web/components/ui/card"
-import { Input } from "@web/components/ui/input"
-import { Label } from "@web/components/ui/label"
-import { Badge } from "@web/components/ui/badge"
-import { Checkbox } from "@web/components/ui/checkbox"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@web/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@web/components/ui/tabs"
-import { Search, TestTube, DollarSign, Truck, Plus, Minus, Check } from "lucide-react"
+import { Badge } from '@web/components/ui/badge'
+import { Button } from '@web/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@web/components/ui/card'
+import { Checkbox } from '@web/components/ui/checkbox'
+import { Input } from '@web/components/ui/input'
+import { Label } from '@web/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@web/components/ui/select'
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@web/components/ui/tabs'
+import {
+  Check,
+  DollarSign,
+  Minus,
+  Plus,
+  Search,
+  TestTube,
+  Truck,
+} from 'lucide-react'
+import { useMemo, useState } from 'react'
+import Link from 'next/link'
 
 // Types
 export interface Test {
@@ -27,174 +52,180 @@ export interface LabTestAvailable {
   collection: CollectionMethod
 }
 
-export type CollectionMethod = "in-person" | "home-collection" | "mail-in" | "walk-in"
+export type CollectionMethod =
+  | 'in-person'
+  | 'home-collection'
+  | 'mail-in'
+  | 'walk-in'
 
 export const collectionMethodLabels: Record<CollectionMethod, string> = {
-  "in-person": "In-Person Visit",
-  "home-collection": "Home Collection",
-  "mail-in": "Mail-In Sample",
-  "walk-in": "Walk-In Service",
+  'in-person': 'In-Person Visit',
+  'home-collection': 'Home Collection',
+  'mail-in': 'Mail-In Sample',
+  'walk-in': 'Walk-In Service',
 }
 
 // Mock test data
 const mockTests: Test[] = [
   // Blood Chemistry
   {
-    id: "1",
-    loincTestId: "2093-3",
-    name: "Cholesterol, Total",
-    generalCategory: "Blood Chemistry",
-    specificCategory: "Lipid Panel",
-    sampleType: "Serum",
+    id: '1',
+    loincTestId: '2093-3',
+    name: 'Cholesterol, Total',
+    generalCategory: 'Blood Chemistry',
+    specificCategory: 'Lipid Panel',
+    sampleType: 'Serum',
   },
   {
-    id: "2",
-    loincTestId: "2085-9",
-    name: "HDL Cholesterol",
-    generalCategory: "Blood Chemistry",
-    specificCategory: "Lipid Panel",
-    sampleType: "Serum",
+    id: '2',
+    loincTestId: '2085-9',
+    name: 'HDL Cholesterol',
+    generalCategory: 'Blood Chemistry',
+    specificCategory: 'Lipid Panel',
+    sampleType: 'Serum',
   },
   {
-    id: "3",
-    loincTestId: "2089-1",
-    name: "LDL Cholesterol",
-    generalCategory: "Blood Chemistry",
-    specificCategory: "Lipid Panel",
-    sampleType: "Serum",
+    id: '3',
+    loincTestId: '2089-1',
+    name: 'LDL Cholesterol',
+    generalCategory: 'Blood Chemistry',
+    specificCategory: 'Lipid Panel',
+    sampleType: 'Serum',
   },
   {
-    id: "4",
-    loincTestId: "2571-8",
-    name: "Triglycerides",
-    generalCategory: "Blood Chemistry",
-    specificCategory: "Lipid Panel",
-    sampleType: "Serum",
+    id: '4',
+    loincTestId: '2571-8',
+    name: 'Triglycerides',
+    generalCategory: 'Blood Chemistry',
+    specificCategory: 'Lipid Panel',
+    sampleType: 'Serum',
   },
   {
-    id: "5",
-    loincTestId: "33747-0",
-    name: "Hemoglobin A1c",
-    generalCategory: "Blood Chemistry",
-    specificCategory: "Diabetes Monitoring",
-    sampleType: "Whole Blood",
+    id: '5',
+    loincTestId: '33747-0',
+    name: 'Hemoglobin A1c',
+    generalCategory: 'Blood Chemistry',
+    specificCategory: 'Diabetes Monitoring',
+    sampleType: 'Whole Blood',
   },
   {
-    id: "6",
-    loincTestId: "2345-7",
-    name: "Glucose, Fasting",
-    generalCategory: "Blood Chemistry",
-    specificCategory: "Diabetes Monitoring",
-    sampleType: "Serum",
+    id: '6',
+    loincTestId: '2345-7',
+    name: 'Glucose, Fasting',
+    generalCategory: 'Blood Chemistry',
+    specificCategory: 'Diabetes Monitoring',
+    sampleType: 'Serum',
   },
 
   // Hematology
   {
-    id: "7",
-    loincTestId: "6690-2",
-    name: "Complete Blood Count (CBC)",
-    generalCategory: "Hematology",
-    specificCategory: "Blood Count",
-    sampleType: "Whole Blood",
+    id: '7',
+    loincTestId: '6690-2',
+    name: 'Complete Blood Count (CBC)',
+    generalCategory: 'Hematology',
+    specificCategory: 'Blood Count',
+    sampleType: 'Whole Blood',
   },
   {
-    id: "8",
-    loincTestId: "718-7",
-    name: "Hemoglobin",
-    generalCategory: "Hematology",
-    specificCategory: "Blood Count",
-    sampleType: "Whole Blood",
+    id: '8',
+    loincTestId: '718-7',
+    name: 'Hemoglobin',
+    generalCategory: 'Hematology',
+    specificCategory: 'Blood Count',
+    sampleType: 'Whole Blood',
   },
   {
-    id: "9",
-    loincTestId: "4544-3",
-    name: "Hematocrit",
-    generalCategory: "Hematology",
-    specificCategory: "Blood Count",
-    sampleType: "Whole Blood",
+    id: '9',
+    loincTestId: '4544-3',
+    name: 'Hematocrit',
+    generalCategory: 'Hematology',
+    specificCategory: 'Blood Count',
+    sampleType: 'Whole Blood',
   },
 
   // Immunology
   {
-    id: "10",
-    loincTestId: "22314-9",
-    name: "Hepatitis B Surface Antigen",
-    generalCategory: "Immunology",
-    specificCategory: "Infectious Disease",
-    sampleType: "Serum",
+    id: '10',
+    loincTestId: '22314-9',
+    name: 'Hepatitis B Surface Antigen',
+    generalCategory: 'Immunology',
+    specificCategory: 'Infectious Disease',
+    sampleType: 'Serum',
   },
   {
-    id: "11",
-    loincTestId: "16128-1",
-    name: "Hepatitis C Antibody",
-    generalCategory: "Immunology",
-    specificCategory: "Infectious Disease",
-    sampleType: "Serum",
+    id: '11',
+    loincTestId: '16128-1',
+    name: 'Hepatitis C Antibody',
+    generalCategory: 'Immunology',
+    specificCategory: 'Infectious Disease',
+    sampleType: 'Serum',
   },
   {
-    id: "12",
-    loincTestId: "7905-3",
-    name: "HIV 1+2 Antibody",
-    generalCategory: "Immunology",
-    specificCategory: "Infectious Disease",
-    sampleType: "Serum",
+    id: '12',
+    loincTestId: '7905-3',
+    name: 'HIV 1+2 Antibody',
+    generalCategory: 'Immunology',
+    specificCategory: 'Infectious Disease',
+    sampleType: 'Serum',
   },
 
   // Microbiology
   {
-    id: "13",
-    loincTestId: "87449-6",
-    name: "Strep Throat Culture",
-    generalCategory: "Microbiology",
-    specificCategory: "Bacterial Culture",
-    sampleType: "Throat Swab",
+    id: '13',
+    loincTestId: '87449-6',
+    name: 'Strep Throat Culture',
+    generalCategory: 'Microbiology',
+    specificCategory: 'Bacterial Culture',
+    sampleType: 'Throat Swab',
   },
   {
-    id: "14",
-    loincTestId: "87086-8",
-    name: "Urine Culture",
-    generalCategory: "Microbiology",
-    specificCategory: "Bacterial Culture",
-    sampleType: "Urine",
+    id: '14',
+    loincTestId: '87086-8',
+    name: 'Urine Culture',
+    generalCategory: 'Microbiology',
+    specificCategory: 'Bacterial Culture',
+    sampleType: 'Urine',
   },
 
   // Endocrinology
   {
-    id: "15",
-    loincTestId: "3016-3",
-    name: "Thyroid Stimulating Hormone (TSH)",
-    generalCategory: "Endocrinology",
-    specificCategory: "Thyroid Function",
-    sampleType: "Serum",
+    id: '15',
+    loincTestId: '3016-3',
+    name: 'Thyroid Stimulating Hormone (TSH)',
+    generalCategory: 'Endocrinology',
+    specificCategory: 'Thyroid Function',
+    sampleType: 'Serum',
   },
   {
-    id: "16",
-    loincTestId: "3024-7",
-    name: "Free T4",
-    generalCategory: "Endocrinology",
-    specificCategory: "Thyroid Function",
-    sampleType: "Serum",
+    id: '16',
+    loincTestId: '3024-7',
+    name: 'Free T4',
+    generalCategory: 'Endocrinology',
+    specificCategory: 'Thyroid Function',
+    sampleType: 'Serum',
   },
   {
-    id: "17",
-    loincTestId: "2986-8",
-    name: "Testosterone, Total",
-    generalCategory: "Endocrinology",
-    specificCategory: "Hormone Panel",
-    sampleType: "Serum",
+    id: '17',
+    loincTestId: '2986-8',
+    name: 'Testosterone, Total',
+    generalCategory: 'Endocrinology',
+    specificCategory: 'Hormone Panel',
+    sampleType: 'Serum',
   },
 ]
 
 export default function TestDetailsForm() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("all")
-  const [selectedTests, setSelectedTests] = useState<Map<string, LabTestAvailable>>(new Map())
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('all')
+  const [selectedTests, setSelectedTests] = useState<
+    Map<string, LabTestAvailable>
+  >(new Map())
 
   // Group tests by category
   const testsByCategory = useMemo(() => {
     const grouped = mockTests.reduce(
       (acc, test) => {
-        const category = test.generalCategory || "Other"
+        const category = test.generalCategory || 'Other'
         if (!acc[category]) {
           acc[category] = []
         }
@@ -215,13 +246,17 @@ export default function TestDetailsForm() {
       tests = tests.filter(
         (test) =>
           test.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          test.generalCategory?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          test.specificCategory?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          test.generalCategory
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          test.specificCategory
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
           test.sampleType?.toLowerCase().includes(searchTerm.toLowerCase()),
       )
     }
 
-    if (selectedCategory !== "all") {
+    if (selectedCategory !== 'all') {
       tests = tests.filter((test) => test.generalCategory === selectedCategory)
     }
 
@@ -239,14 +274,18 @@ export default function TestDetailsForm() {
       newSelected.set(test.id, {
         testId: test.id,
         amount: 50, // Default price
-        collection: "in-person", // Default collection method
+        collection: 'in-person', // Default collection method
       })
     }
 
     setSelectedTests(newSelected)
   }
 
-  const handleTestConfigUpdate = (testId: string, field: keyof LabTestAvailable, value: any) => {
+  const handleTestConfigUpdate = (
+    testId: string,
+    field: keyof LabTestAvailable,
+    value: any,
+  ) => {
     const newSelected = new Map(selectedTests)
     const existing = newSelected.get(testId)
 
@@ -267,7 +306,7 @@ export default function TestDetailsForm() {
         newSelected.set(test.id, {
           testId: test.id,
           amount: 50,
-          collection: "in-person",
+          collection: 'in-person',
         })
       }
     })
@@ -277,7 +316,7 @@ export default function TestDetailsForm() {
 
   const handleSubmit = () => {
     const selectedTestsArray = Array.from(selectedTests.values())
-    console.log("Selected tests:", selectedTestsArray)
+    console.log('Selected tests:', selectedTestsArray)
     // Here you would typically send the data to your server
   }
 
@@ -291,11 +330,18 @@ export default function TestDetailsForm() {
           <div className="mx-auto w-16 h-16 bg-primary rounded-full flex items-center justify-center mb-4">
             <TestTube className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-4xl font-bold text-primary mb-2">Select Your Lab Tests</h1>
-          <p className="text-lg text-gray-600">Choose the tests your lab offers and configure pricing</p>
+          <h1 className="text-4xl font-bold text-primary mb-2">
+            Select Your Lab Tests
+          </h1>
+          <p className="text-lg text-gray-600">
+            Choose the tests your lab offers and configure pricing
+          </p>
           {selectedCount > 0 && (
-            <Badge variant="secondary" className="mt-2 text-primary bg-secondary">
-              {selectedCount} test{selectedCount !== 1 ? "s" : ""} selected
+            <Badge
+              variant="secondary"
+              className="mt-2 text-primary bg-secondary"
+            >
+              {selectedCount} test{selectedCount !== 1 ? 's' : ''} selected
             </Badge>
           )}
         </div>
@@ -325,7 +371,10 @@ export default function TestDetailsForm() {
 
                 <div className="space-y-2">
                   <Label>Category</Label>
-                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <Select
+                    value={selectedCategory}
+                    onValueChange={setSelectedCategory}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -344,8 +393,8 @@ export default function TestDetailsForm() {
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    setSearchTerm("")
-                    setSelectedCategory("all")
+                    setSearchTerm('')
+                    setSelectedCategory('all')
                   }}
                   className="w-full"
                 >
@@ -365,7 +414,9 @@ export default function TestDetailsForm() {
                     key={category}
                     variant="outline"
                     size="sm"
-                    onClick={() => handleBulkSelect(testsByCategory[category] ?? [])}
+                    onClick={() =>
+                      handleBulkSelect(testsByCategory[category] ?? [])
+                    }
                     className="w-full justify-start text-xs"
                   >
                     <Plus className="w-3 h-3 mr-2" />
@@ -380,23 +431,35 @@ export default function TestDetailsForm() {
           <div className="lg:col-span-3">
             <Tabs defaultValue="browse" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="browse">Browse Tests ({filteredTests.length})</TabsTrigger>
-                <TabsTrigger value="selected">Selected Tests ({selectedCount})</TabsTrigger>
+                <TabsTrigger value="browse">
+                  Browse Tests ({filteredTests.length})
+                </TabsTrigger>
+                <TabsTrigger value="selected">
+                  Selected Tests ({selectedCount})
+                </TabsTrigger>
               </TabsList>
 
               {/* Browse Tests Tab */}
               <TabsContent value="browse" className="space-y-4">
                 <div className="grid gap-4">
                   {categories.map((category) => {
-                    const categoryTests = filteredTests.filter((test) => test.generalCategory === category)
+                    const categoryTests = filteredTests.filter(
+                      (test) => test.generalCategory === category,
+                    )
                     if (categoryTests.length === 0) return null
 
                     return (
                       <Card key={category}>
                         <CardHeader className="pb-3">
                           <div className="flex items-center justify-between">
-                            <CardTitle className="text-xl text-primary">{category}</CardTitle>
-                            <Button variant="outline" size="sm" onClick={() => handleBulkSelect(categoryTests)}>
+                            <CardTitle className="text-xl text-primary">
+                              {category}
+                            </CardTitle>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleBulkSelect(categoryTests)}
+                            >
                               <Plus className="w-4 h-4 mr-2" />
                               Add All
                             </Button>
@@ -409,8 +472,8 @@ export default function TestDetailsForm() {
                                 key={test.id}
                                 className={`p-4 border-2 rounded-lg transition-all cursor-pointer ${
                                   selectedTests.has(test.id)
-                                    ? "border-primary bg-secondary/50"
-                                    : "border-gray-200 hover:border-primary/50"
+                                    ? 'border-primary bg-secondary/50'
+                                    : 'border-gray-200 hover:border-primary/50'
                                 }`}
                                 onClick={() => handleTestToggle(test)}
                               >
@@ -422,27 +485,40 @@ export default function TestDetailsForm() {
                                       className="mt-1"
                                     />
                                     <div className="flex-1">
-                                      <h4 className="font-semibold text-gray-900">{test.name}</h4>
+                                      <h4 className="font-semibold text-gray-900">
+                                        {test.name}
+                                      </h4>
                                       <div className="flex flex-wrap gap-2 mt-2">
                                         {test.specificCategory && (
-                                          <Badge variant="outline" className="text-xs">
+                                          <Badge
+                                            variant="outline"
+                                            className="text-xs"
+                                          >
                                             {test.specificCategory}
                                           </Badge>
                                         )}
                                         {test.sampleType && (
-                                          <Badge variant="secondary" className="text-xs">
+                                          <Badge
+                                            variant="secondary"
+                                            className="text-xs"
+                                          >
                                             {test.sampleType}
                                           </Badge>
                                         )}
                                         {test.loincTestId && (
-                                          <Badge variant="outline" className="text-xs">
+                                          <Badge
+                                            variant="outline"
+                                            className="text-xs"
+                                          >
                                             LOINC: {test.loincTestId}
                                           </Badge>
                                         )}
                                       </div>
                                     </div>
                                   </div>
-                                  {selectedTests.has(test.id) && <Check className="w-5 h-5 text-primary" />}
+                                  {selectedTests.has(test.id) && (
+                                    <Check className="w-5 h-5 text-primary" />
+                                  )}
                                 </div>
                               </div>
                             ))}
@@ -460,88 +536,113 @@ export default function TestDetailsForm() {
                   <Card>
                     <CardContent className="text-center py-12">
                       <TestTube className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold text-gray-600 mb-2">No tests selected</h3>
-                      <p className="text-gray-500">Browse tests and select the ones your lab offers</p>
+                      <h3 className="text-lg font-semibold text-gray-600 mb-2">
+                        No tests selected
+                      </h3>
+                      <p className="text-gray-500">
+                        Browse tests and select the ones your lab offers
+                      </p>
                     </CardContent>
                   </Card>
                 ) : (
                   <div className="space-y-4">
-                    {Array.from(selectedTests.entries()).map(([testId, config]) => {
-                      const test = mockTests.find((t) => t.id === testId)
-                      if (!test) return null
+                    {Array.from(selectedTests.entries()).map(
+                      ([testId, config]) => {
+                        const test = mockTests.find((t) => t.id === testId)
+                        if (!test) return null
 
-                      return (
-                        <Card key={testId}>
-                          <CardContent className="p-6">
-                            <div className="flex items-start justify-between mb-4">
-                              <div>
-                                <h4 className="font-semibold text-lg">{test.name}</h4>
-                                <p className="text-sm text-gray-600">
-                                  {test.generalCategory} • {test.sampleType}
-                                </p>
+                        return (
+                          <Card key={testId}>
+                            <CardContent className="p-6">
+                              <div className="flex items-start justify-between mb-4">
+                                <div>
+                                  <h4 className="font-semibold text-lg">
+                                    {test.name}
+                                  </h4>
+                                  <p className="text-sm text-gray-600">
+                                    {test.generalCategory} • {test.sampleType}
+                                  </p>
+                                </div>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleTestToggle(test)}
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  <Minus className="w-4 h-4" />
+                                </Button>
                               </div>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleTestToggle(test)}
-                                className="text-red-600 hover:text-red-700"
-                              >
-                                <Minus className="w-4 h-4" />
-                              </Button>
-                            </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label htmlFor={`amount-${testId}`}>Price ($)</Label>
-                                <div className="relative">
-                                  <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                                  <Input
-                                    id={`amount-${testId}`}
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    value={config.amount}
-                                    onChange={(e) =>
-                                      handleTestConfigUpdate(testId, "amount", Number.parseFloat(e.target.value) || 0)
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor={`amount-${testId}`}>
+                                    Price ($)
+                                  </Label>
+                                  <div className="relative">
+                                    <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                    <Input
+                                      id={`amount-${testId}`}
+                                      type="number"
+                                      min="0"
+                                      step="0.01"
+                                      value={config.amount}
+                                      onChange={(e) =>
+                                        handleTestConfigUpdate(
+                                          testId,
+                                          'amount',
+                                          Number.parseFloat(e.target.value) ||
+                                            0,
+                                        )
+                                      }
+                                      className="pl-10"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Label htmlFor={`collection-${testId}`}>
+                                    Collection Method
+                                  </Label>
+                                  <Select
+                                    value={config.collection}
+                                    onValueChange={(value: CollectionMethod) =>
+                                      handleTestConfigUpdate(
+                                        testId,
+                                        'collection',
+                                        value,
+                                      )
                                     }
-                                    className="pl-10"
-                                  />
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {Object.entries(
+                                        collectionMethodLabels,
+                                      ).map(([value, label]) => (
+                                        <SelectItem key={value} value={value}>
+                                          <div className="flex items-center">
+                                            <Truck className="w-4 h-4 mr-2" />
+                                            {label}
+                                          </div>
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
                                 </div>
                               </div>
-
-                              <div className="space-y-2">
-                                <Label htmlFor={`collection-${testId}`}>Collection Method</Label>
-                                <Select
-                                  value={config.collection}
-                                  onValueChange={(value: CollectionMethod) =>
-                                    handleTestConfigUpdate(testId, "collection", value)
-                                  }
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {Object.entries(collectionMethodLabels).map(([value, label]) => (
-                                      <SelectItem key={value} value={value}>
-                                        <div className="flex items-center">
-                                          <Truck className="w-4 h-4 mr-2" />
-                                          {label}
-                                        </div>
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      )
-                    })}
+                            </CardContent>
+                          </Card>
+                        )
+                      },
+                    )}
 
                     <div className="flex justify-end pt-6">
-                      <Button onClick={handleSubmit} className="px-8 py-3 bg-primary hover:bg-primary/90">
-                        Save Test Configuration ({selectedCount} tests)
-                      </Button>
+                      <Link href="/lab/onboarding/availability-details">
+                        <Button className="px-8 py-3 bg-primary hover:bg-primary/90">
+                          Save Test Configuration ({selectedCount} tests)
+                        </Button>
+                      </Link>
                     </div>
                   </div>
                 )}
