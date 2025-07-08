@@ -16,12 +16,9 @@ export default function Page() {
           </Button>
         </Link>
       </div>
-      <div className="mx-auto grid min-h-screen content-center px-6 py-24 sm:px-8 sm:py-28">
-        <div className="flex max-w-2xl flex-col gap-4 sm:gap-8">
+      <div className="mx-auto grid min-h-screen content-center px-6 py-16 sm:px-8 sm:py-16">
+        <div className="flex max-w-3xl flex-col gap-4 sm:gap-8">
           <div className="flex flex-col">
-            <p className="text-muted-foreground">
-              Please fill in your lab&apos;s basic details to continue.
-            </p>
           </div>
           <BasicDetailsForm />
         </div>
