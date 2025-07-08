@@ -458,7 +458,7 @@ function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
 
 
   const router = useRouter()
-  type UserRole = 'patient' | 'doctor' | 'admin'
+  type UserRole = 'patient' | 'doctor' | 'lab' | 'admin'
 
   type User = {
     id: string
@@ -499,6 +499,9 @@ function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
         }
         else if (user?.role === 'doctor' && user?.onboardingComplete) {
           router.push('/specialist/upcoming-appointments')
+        }
+        else if (user?.role === 'lab') {
+          router.push('/lab/onboarding/basic-details')
         }
         else if (user?.role === 'admin') {
           router.push('/admin')

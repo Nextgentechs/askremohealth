@@ -12,7 +12,7 @@ import {
   time,
 } from 'drizzle-orm/pg-core'
 
-export const roleEnum = pgEnum('role', ['patient', 'doctor', 'admin'])
+export const roleEnum = pgEnum('role', ['patient', 'doctor', 'lab', 'admin'])
 
 export const weekDayEnum = pgEnum('week_day', [
   'monday',

@@ -15,7 +15,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       try {
         const cookieStore = await cookies()
         const roleCookie = cookieStore.get('signup-role')
-        if (roleCookie?.value && ['doctor', 'patient', 'admin'].includes(roleCookie.value)) {
+        if (roleCookie?.value && ['doctor', 'patient', 'lab', 'admin'].includes(roleCookie.value)) {
           role = roleCookie.value
           // console.log("role", role)
           // Clear the cookie after using it
@@ -35,7 +35,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           email: user.email ?? '',
           firstName: user.name?.split(' ')[0] ?? '',
           lastName: user.name?.split(' ').slice(1).join(' ') ?? '',
-          role: role as 'doctor' | 'patient' | 'admin',
+          role: role as 'doctor' | 'patient' | 'lab' | 'admin',
           password: '',
         })
       }

@@ -129,10 +129,13 @@ function AuthButtons({
         </DropdownMenuTrigger>
         <DropdownMenuContent className="min-w-40">
           <Link href="/auth?role=doctor">
-            <DropdownMenuItem className="cursor-pointer">Login as Doctor</DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer">For Doctors</DropdownMenuItem>
           </Link>
           <Link href="/auth?role=patient">
-            <DropdownMenuItem className="cursor-pointer">Login as Patient</DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer">For Patients</DropdownMenuItem>
+          </Link>
+          <Link href="/auth?role=lab">
+            <DropdownMenuItem className="cursor-pointer">For Labs</DropdownMenuItem>
           </Link>
         </DropdownMenuContent>
       </DropdownMenu>
