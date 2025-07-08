@@ -9,6 +9,7 @@ import {
   varchar,
   boolean,
   text,
+  time,
 } from 'drizzle-orm/pg-core'
 
 export const roleEnum = pgEnum('role', ['patient', 'doctor', 'admin'])
@@ -330,4 +331,14 @@ export const labTestsAvailable = pgTable('lab_tests_available', {
   collection: collectionMethodEnum('collection').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').$onUpdate(() => new Date()), 
+})
+
+export const labAvailability = pgTable('lab_availability', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  lab_id: uuid('lab_id')
+    .notNull()
+    .references(() => labs.id, { onDelete: 'cascade' }),
+  day_of_week: weekDayEnum('day_of_week').notNull(),
+  start_time: time('start_time').notNull(), // e.g., 08:00:00
+  end_time: time('end_time').notNull(), // e.g., 12:00:00
 })
