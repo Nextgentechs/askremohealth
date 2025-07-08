@@ -77,6 +77,10 @@ export const facilityRelations = relations(facilities, ({ many }) => ({
   doctors: many(doctors),
 }))
 
+export const officeRelations = relations(officeLocation, ({many}) => ({
+  doctors: many(doctors),
+}) )
+
 export const appointmentRelations = relations(
   appointments,
   ({ one, many }) => ({
