@@ -7,6 +7,19 @@ import { cookies } from 'next/headers'
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [Google],
+  cookies: {
+    sessionToken: {
+      name: 'next-auth.session-token',
+      options: {
+        domain: process.env.NODE_ENV === 'production' ? '.askremohealth.com' : '.localhost',
+        path: '/',
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+    // Add other cookies as needed (callbackUrl, csrfToken, etc.)
+  },
   callbacks: {
     async signIn({ user, account }) {
       // Get role from cookie or default to 'doctor'

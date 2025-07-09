@@ -18,6 +18,7 @@ type CookieOptions = {
   sameSite?: 'lax' | 'strict' | 'none'
   maxAge?: number
   path?: string
+  domain?: string
 }
 
 export type Cookies = {
@@ -90,7 +91,8 @@ export function setCookie(sessionId: string, cookies: Pick<Cookies, "set">) {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: false,
     sameSite: "lax",
-    maxAge: SESSION_EXPIRATION_SECONDS
+    maxAge: SESSION_EXPIRATION_SECONDS,
+    domain: process.env.NODE_ENV === 'production' ? '.askremohealth.com' : '.localhost'
   })
 }
 
