@@ -16,6 +16,11 @@ export function middleware(req: NextRequest) {
 
   // Only protect doctors subdomain
   if (isDoctorsSubdomain) {
+    // Special case: root path should always go to the doctor's panel
+    if (pathname === '/') {
+      return NextResponse.redirect(new URL('/specialist/upcoming-appointments', req.url))
+    }
+
     if (!sessionId && !isPublic) {
       // Redirect to /auth?role=doctor
       const url = new URL(req.url)
