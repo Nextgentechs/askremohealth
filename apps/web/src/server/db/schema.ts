@@ -294,7 +294,7 @@ export const article_images = pgTable('article_images', {
 })
 
 export const labs = pgTable('labs', {
-  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  placeId: varchar('place_id').primaryKey(),
   user_id: varchar('user_id')
     .notNull()
     .unique()
@@ -321,9 +321,9 @@ export const tests = pgTable('test', {
 
 export const labTestsAvailable = pgTable('lab_tests_available', {
   id: uuid('id').primaryKey().notNull().defaultRandom(),
-  labId: uuid('lab_id')
+  labId: varchar('place_id')
     .notNull()
-    .references(() => labs.id, { onDelete: 'cascade' }),
+    .references(() => labs.placeId, { onDelete: 'cascade' }),
   testId: uuid('test_id')
     .notNull()
     .references(() => tests.id, { onDelete: 'cascade' }),
@@ -335,9 +335,9 @@ export const labTestsAvailable = pgTable('lab_tests_available', {
 
 export const labAvailability = pgTable('lab_availability', {
   id: uuid('id').primaryKey().notNull().defaultRandom(),
-  lab_id: uuid('lab_id')
+  lab_id: varchar('place_id')
     .notNull()
-    .references(() => labs.id, { onDelete: 'cascade' }),
+    .references(() => labs.placeId, { onDelete: 'cascade' }),
   day_of_week: weekDayEnum('day_of_week').notNull(),
   start_time: time('start_time').notNull(),
   end_time: time('end_time').notNull(), 
