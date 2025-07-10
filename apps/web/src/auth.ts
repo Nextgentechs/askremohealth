@@ -55,9 +55,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
       return true
     },
-    async redirect({ baseUrl }) {
-      // Always redirect to a specific page after sign-in
-      return `${baseUrl}/specialist/onboarding/personal-details` // or any URL you want
+    async redirect({ url, baseUrl }) {
+      // If the url is a relative path, resolve it to the baseUrl
+      if (url.startsWith('/')) return `${baseUrl}${url}`
+      // If the url is on the same origin, allow it
+      if (new URL(url).origin === baseUrl) return url
+      // Otherwise, fallback to baseUrl
+      return baseUrl
     },
   },
 })
