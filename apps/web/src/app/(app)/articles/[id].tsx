@@ -1,20 +1,9 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
 import { api } from '@web/trpc/react'
 import { Card, CardContent, CardHeader, CardTitle } from '@web/components/ui/card'
 
-interface Article {
-    id: string
-    title: string
-    content: string
-    createdAt: string
-    publishedAt: string | null
-    updatedAt: string
-}
-
 export default function ArticlePage({ params }: { params: { id: string } }) {
-    const router = useRouter()
     const { data: article, isLoading, error } = api.articles.getArticleById.useQuery(
         { id: params.id },
         { enabled: !!params.id }

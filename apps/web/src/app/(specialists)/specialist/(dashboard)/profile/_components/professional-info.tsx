@@ -12,7 +12,6 @@ type SubSpecialty = {
 
 export default function ProfessionalInfo() {
   const [doctor] = api.doctors.currentDoctor.useSuspenseQuery()
-  const { data: specialties } = api.specialties.listSpecialties.useQuery()
   const { data: subspecialties } = api.specialties.listSubSpecialties.useQuery({
     specialityId: doctor?.specialty?.id ?? '',
   })

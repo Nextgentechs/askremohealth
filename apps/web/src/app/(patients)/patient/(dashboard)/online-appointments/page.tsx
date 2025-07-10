@@ -1,7 +1,7 @@
 import { DataTable } from '@web/components/data-table'
 import { api } from '@web/trpc/server'
 import { appointmentsColumns } from '../upcoming-appointments/_components/upcoming-appointments-columns'
-import { AppointmentStatus } from '@web/server/api/validators'
+import type { AppointmentStatus } from '@web/server/api/validators'
 import AppointmentFilters from './_components/appointment-filters'
 
 export default async function Page({

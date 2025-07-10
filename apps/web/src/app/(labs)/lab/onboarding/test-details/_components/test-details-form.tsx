@@ -225,10 +225,8 @@ export default function TestDetailsForm() {
   const testsByCategory = useMemo(() => {
     const grouped = mockTests.reduce(
       (acc, test) => {
-        const category = test.generalCategory || 'Other'
-        if (!acc[category]) {
-          acc[category] = []
-        }
+        const category = test.generalCategory ?? 'Other'
+        acc[category] ??= []
         acc[category].push(test)
         return acc
       },
@@ -245,14 +243,10 @@ export default function TestDetailsForm() {
     if (searchTerm) {
       tests = tests.filter(
         (test) =>
-          test.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          test.generalCategory
-            ?.toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          test.specificCategory
-            ?.toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          test.sampleType?.toLowerCase().includes(searchTerm.toLowerCase()),
+          (test.name?.toLowerCase() ?? '').includes(searchTerm.toLowerCase()) ||
+          (test.generalCategory?.toLowerCase() ?? '').includes(searchTerm.toLowerCase()) ||
+          (test.specificCategory?.toLowerCase() ?? '').includes(searchTerm.toLowerCase()) ||
+          (test.sampleType?.toLowerCase() ?? '').includes(searchTerm.toLowerCase()),
       )
     }
 
@@ -284,7 +278,7 @@ export default function TestDetailsForm() {
   const handleTestConfigUpdate = (
     testId: string,
     field: keyof LabTestAvailable,
-    value: any,
+    value: string | number | boolean,
   ) => {
     const newSelected = new Map(selectedTests)
     const existing = newSelected.get(testId)
@@ -312,12 +306,6 @@ export default function TestDetailsForm() {
     })
 
     setSelectedTests(newSelected)
-  }
-
-  const handleSubmit = () => {
-    const selectedTestsArray = Array.from(selectedTests.values())
-    console.log('Selected tests:', selectedTestsArray)
-    // Here you would typically send the data to your server
   }
 
   const selectedCount = selectedTests.size
@@ -590,8 +578,7 @@ export default function TestDetailsForm() {
                                         handleTestConfigUpdate(
                                           testId,
                                           'amount',
-                                          Number.parseFloat(e.target.value) ||
-                                            0,
+                                          Number.parseFloat(e.target.value) ?? 0,
                                         )
                                       }
                                       className="pl-10"
