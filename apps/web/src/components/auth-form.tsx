@@ -164,11 +164,14 @@ function Login({
   async function handleGoogleSignIn() {
     setIsLoading(true)
     try {
-      // Set role in cookie before Google sign-in
       const role = searchParams.get("role") ?? 'doctor'
-      document.cookie = `signup-role=${role}; path=/; max-age=300` // 5 minutes expiry
-      
-      await signIn('google', { callbackUrl: '/' })
+      document.cookie = `signup-role=${role}; path=/; max-age=300`
+
+      let callbackPath = '/specialist/upcoming-appointments'
+      if (role === 'patient') {
+        callbackPath = '/patient/online-appointments'
+      }
+      await signIn('google', { callbackUrl: window.location.origin + callbackPath })
     } catch {
       toast({
         title: 'Error',
@@ -329,7 +332,12 @@ function SignUp({
     // Set role in cookie before Google sign-in
     const role = searchParams.get("role") ?? 'doctor'
     document.cookie = `signup-role=${role}; path=/; max-age=300` // 5 minutes expiry
-    signIn('google', { callbackUrl: '/specialist/upcoming-appointments' })
+
+    let callbackPath = '/specialist/upcoming-appointments'
+    if (role === 'patient') {
+      callbackPath = '/patient/online-appointments'
+    }
+    await signIn('google', { callbackUrl: window.location.origin + callbackPath })
   }
 
   return (
@@ -491,7 +499,11 @@ function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
           duration: 3000,
         })
         if (user?.role === 'patient') {
-          router.push('/')
+          if (!user?.onboardingComplete) {
+            router.push('/patient/onboarding/patient-details')
+          } else {
+            router.push('/patient/upcoming-appointments')
+          }
         }
         else if (user?.role === 'doctor' && user?.onboardingComplete) {
           router.push('/specialist/upcoming-appointments')

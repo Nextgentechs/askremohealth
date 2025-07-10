@@ -128,9 +128,9 @@ function AuthButtons({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="min-w-40">
-          <Link href="/auth?role=doctor">
+          {/* <Link href="/auth?role=doctor">
             <DropdownMenuItem className="cursor-pointer">Login as Doctor</DropdownMenuItem>
-          </Link>
+          </Link> */}
           <Link href="/auth?role=patient">
             <DropdownMenuItem className="cursor-pointer">Login as Patient</DropdownMenuItem>
           </Link>
@@ -226,24 +226,32 @@ function CurrentUser({
               </DropdownMenuItem>
             </Link>
           ) : user?.role === 'patient' ? (
-            <Link href="/appointments">
+            <>
+              <Link href="/patient/upcoming-appointments">
+                <DropdownMenuItem className="cursor-pointer">
+                  <Calendar />
+                  Dashboard
+                </DropdownMenuItem>
+              </Link>
+              <Link href="/appointments">
+                <DropdownMenuItem className="cursor-pointer">
+                  <Calendar />
+                  Appointments
+                </DropdownMenuItem>
+              </Link>
+            </>
+          ) : null}
+          {user?.role === 'patient' ? (
+            <Link href="/patient/profile">
               <DropdownMenuItem className="cursor-pointer">
-                <Calendar />
-                Appointments
+                <User />
+                My Profile
               </DropdownMenuItem>
             </Link>
-          ) : null}
+          ): null }
           <>
             {user?.role === 'doctor' ? (
               <Link href="/specialist/profile">
-                <DropdownMenuItem className="cursor-pointer">
-                  <User />
-                  My Profile
-                </DropdownMenuItem>
-              </Link>
-            ) : null}
-            {user?.role === 'patient' ? (
-              <Link href="/profile">
                 <DropdownMenuItem className="cursor-pointer">
                   <User />
                   My Profile

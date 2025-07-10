@@ -7,7 +7,6 @@ import {
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
-  BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@web/components/ui/breadcrumb'
 import { api } from '@web/trpc/server'
@@ -20,19 +19,47 @@ export default async function Page({
 }: {
   searchParams: Promise<{
     specialty?: string
+    subSpecialties?: string
     county?: string
-    town?: string
     query?: string
     page?: string
+    experience?: string
+    gender?: string
   }>
 }) {
-  const { specialty, county, town, query } = await searchParams
+  const { specialty, subSpecialties, county, query, experience, gender } = await searchParams
+
+  // Parse experience ranges from URL parameter
+  const experiences = experience
+    ? experience.split(',').map((exp) => {
+        if (exp === '15+') {
+          return { min: 15 }
+        }
+        const [minStr, maxStr] = exp.split('-')
+        const min = parseInt(minStr ?? '0', 10)
+        const max = maxStr ? parseInt(maxStr, 10) : undefined
+        return { min, max }
+      })
+    : undefined
+
+  // Parse genders from URL parameter
+  const genders = gender
+    ? gender.split(',').filter((g): g is 'male' | 'female' =>
+        g === 'male' || g === 'female'
+      )
+    : undefined
+
+  // Parse subSpecialties from URL parameter
+  const subSpecialtiesArray = subSpecialties ? subSpecialties.split(',') : undefined
 
   const data = await api.doctors.searchByLocation({
     specialtyId: specialty,
+    subSpecialties: subSpecialtiesArray,
     countyCode: county,
-    townId: town,
+    townId: undefined, // Town filtering removed from frontend
     query: query,
+    experiences: experiences,
+    genders: genders,
   })
 
   return (
