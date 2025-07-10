@@ -2,18 +2,16 @@
 
 import {
   ChevronsUpDown,
-  CircleUserRound,
   ClipboardList,
   ClipboardPlus,
   House,
   LogOut,
-  ShieldPlus,
+  CircleUserRound,
   User,
 } from 'lucide-react'
 import * as React from 'react'
 
 import Logo from '@web/components/logo'
-import { Avatar, AvatarFallback, AvatarImage } from '@web/components/ui/avatar'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,14 +33,20 @@ import {
   SidebarRail,
   useSidebar,
 } from '@web/components/ui/sidebar'
-import { api } from '@web/trpc/react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useCurrentUser } from '@web/hooks/use-current-user'
+
+// Define a User type for patient
+interface PatientUser {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+}
 
 function NavUser() {
-  // const { signOut } = useClerk()
   const { isMobile } = useSidebar()
-  const { data: doctor } = api.doctors.currentDoctor.useQuery()
+  const { user } = useCurrentUser() as { user: PatientUser | null }
 
   return (
     <SidebarMenu>
@@ -53,19 +57,15 @@ function NavUser() {
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage
-                  src={doctor?.profilePicture?.url ?? ''}
-                  alt={doctor?.user?.firstName ?? ''}
-                />
-                <AvatarFallback className="rounded-lg">CN</AvatarFallback>
-              </Avatar>
+              <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center">
+                <CircleUserRound className="h-6 w-6 text-muted-foreground" />
+              </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">
-                  {`${(doctor?.user?.firstName ?? '').charAt(0).toUpperCase() + (doctor?.user?.firstName ?? '').slice(1)} ${(doctor?.user?.lastName ?? '').charAt(0).toUpperCase() + (doctor?.user?.lastName ?? '').slice(1)}`}
+                  {user ? `${user.firstName ?? ''} ${user.lastName ?? ''}` : 'Patient'}
                 </span>
                 <span className="truncate text-xs">
-                  {doctor?.specialty?.name ?? ''}
+                  {user?.email ?? ''}
                 </span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
@@ -79,24 +79,18 @@ function NavUser() {
           >
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage
-                    src={doctor?.profilePicture.url}
-                    alt={doctor?.user?.firstName}
-                  />
-                  <AvatarFallback className="rounded-lg">CN</AvatarFallback>
-                </Avatar>
+                <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center">
+                  <CircleUserRound className="h-6 w-6 text-muted-foreground" />
+                </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">{`${doctor?.user?.firstName} ${doctor?.user?.lastName}`}</span>
-                  <span className="truncate text-xs">
-                    {doctor?.specialty?.name}
-                  </span>
+                  <span className="truncate font-semibold">{user ? `${user.firstName ?? ''} ${user.lastName ?? ''}` : 'Patient'}</span>
+                  <span className="truncate text-xs">{user?.email ?? ''}</span>
                 </div>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <Link href="/profile">
+              <Link href="/patient/profile">
                 <DropdownMenuItem>
                   <User />
                   My Profile
@@ -105,7 +99,7 @@ function NavUser() {
               <DropdownMenuItem
                 onClick={async () => {
                   await fetch('/api/auth/signout', { method: 'POST' })
-                  window.location.href = 'https://doctors.askremohealth.com/auth?role=doctor'
+                  window.location.href = '/'
                 }}
               >
                 <LogOut />
@@ -120,37 +114,25 @@ function NavUser() {
 }
 
 const data = {
-  user: {
-    name: 'Kennedy',
-    email: 'm@example.com',
-    avatar: '/avatars/shadcn.jpg',
-  },
-
   navMain: [
     {
       title: 'Upcoming Appointments',
-      url: '/specialist/upcoming-appointments',
+      url: '/patient/upcoming-appointments',
       icon: House,
     },
-
     {
       title: 'Online Appointments',
-      url: '/specialist/online-appointments',
+      url: '/patient/online-appointments',
       icon: ClipboardPlus,
     },
     {
       title: 'Physical Appointments',
-      url: '/specialist/physical-appointments',
+      url: '/patient/physical-appointments',
       icon: ClipboardList,
     },
     {
-      title: 'Patients',
-      url: '/specialist/patients',
-      icon: ShieldPlus,
-    },
-    {
       title: 'Profile',
-      url: '/specialist/profile',
+      url: '/patient/profile',
       icon: CircleUserRound,
     },
   ],
@@ -184,7 +166,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </Link>
             ))}
           </SidebarMenu>
-          <Link href="/upcomming-appointments" />
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
