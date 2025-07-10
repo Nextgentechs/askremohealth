@@ -15,24 +15,6 @@ import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 
-interface Article {
-    id: string
-    title: string
-    content: string
-    createdAt: Date
-    publishedAt: Date | null
-    updatedAt: Date | null
-    image?: {
-        url: string
-        path: string
-    } | null
-}
-
-interface ArticleListResponse {
-    totalCount: number
-    articlesList: Article[]
-}
-
 // Utility to strip HTML tags from a string
 function stripHtml(html: string): string {
   if (typeof window === 'undefined') {

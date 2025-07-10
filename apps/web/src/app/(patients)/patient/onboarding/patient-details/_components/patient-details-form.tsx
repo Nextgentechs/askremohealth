@@ -9,8 +9,6 @@ import { api } from '@web/trpc/react'
 import { Loader } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
-import { z } from 'zod'
-import { redirect } from 'next/navigation'
 import { patientDetailsSchema } from '@web/server/api/validators'
 import type { PatientDetails } from '@web/server/api/validators'
 

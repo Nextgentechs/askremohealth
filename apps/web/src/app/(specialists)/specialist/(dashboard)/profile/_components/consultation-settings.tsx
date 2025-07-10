@@ -24,7 +24,6 @@ import {
 } from '@web/components/ui/select'
 import { Switch } from '@web/components/ui/switch'
 import React, { useEffect } from 'react'
-import type { z } from 'zod'
 import type { AvailabilityDetailsSchema } from '@web/server/api/validators'
 
 function OnlineStatus() {

@@ -368,7 +368,7 @@ export default function AvailabilityDetailsForm() {
                         </div>
                         {dayData.enabled ? (
                           <div className="space-y-1">
-                            {dayData.timeSlots.map((slot, index) => (
+                            {dayData.timeSlots.map((slot, _index) => (
                               <div key={slot.id} className="text-xs text-primary pl-2">
                                 {slot.start_time} - {slot.end_time}
                               </div>
@@ -438,14 +438,14 @@ export default function AvailabilityDetailsForm() {
 
                       {dayData.enabled && (
                         <div className="ml-8 space-y-3">
-                          {dayData.timeSlots.map((slot, index) => {
+                          {dayData.timeSlots.map((slot, _index) => {
                             const isSlotValid = validateTimeSlot(slot)
 
                             return (
                               <div key={slot.id} className="flex items-center space-x-4">
                                 <div className="flex items-center space-x-2 flex-1">
                                   <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                                    <span className="text-xs font-medium text-primary">{index + 1}</span>
+                                    <span className="text-xs font-medium text-primary">{_index + 1}</span>
                                   </div>
 
                                   <div className="grid grid-cols-2 gap-3 flex-1">

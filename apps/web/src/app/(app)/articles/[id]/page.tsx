@@ -8,19 +8,6 @@ import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import React from 'react'
 
-interface Article {
-    id: string
-    title: string
-    content: string
-    createdAt: Date
-    publishedAt: Date | null
-    updatedAt: Date | null
-    image?: {
-        url: string
-        path: string
-    } | null
-}
-
 export default function ArticlePage({ params }: { params: Promise<{ id: string }> }) {
     const resolvedParams = React.use(params)
     const { data: article, isLoading, error } = api.articles.getArticleById.useQuery({ id: resolvedParams.id })
