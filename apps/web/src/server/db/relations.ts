@@ -197,7 +197,7 @@ export const labTestsAvailableRelations = relations(
   ({ one }) => ({
     lab: one(labs, {
       fields: [labTestsAvailable.labId],
-      references: [labs.id],
+      references: [labs.placeId],
     }),
   })
 );
@@ -215,6 +215,6 @@ export const labTestsAvailableRelationsExtended = relations(
 export const labAvailabilityRelations = relations(labAvailability, ({ one }) => ({
   lab: one(labs, {
     fields: [labAvailability.lab_id],
-    references: [labs.id],
+    references: [labs.placeId],
   }),
 }));
