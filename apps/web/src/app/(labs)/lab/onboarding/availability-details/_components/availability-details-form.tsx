@@ -1,16 +1,46 @@
 "use client"
 
-import { useState } from "react"
+import { api } from "@web/trpc/react"
 import { Button } from "@web/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@web/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@web/components/ui/card"
 import { Label } from "@web/components/ui/label"
 import { Switch } from "@web/components/ui/switch"
 import { Badge } from "@web/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@web/components/ui/select"
-import { Clock, Calendar, Copy, RotateCcw, Save, CheckCircle2, Plus, Trash2, AlertCircle } from "lucide-react"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@web/components/ui/select"
+import {
+  Clock,
+  Calendar,
+  Copy,
+  RotateCcw,
+  Save,
+  CheckCircle2,
+  Plus,
+  Trash2,
+  AlertCircle,
+} from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
 
 // Types based on the schema
-export type WeekDay = "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday"
+export type WeekDay =
+  | "monday"
+  | "tuesday"
+  | "wednesday"
+  | "thursday"
+  | "friday"
+  | "saturday"
+  | "sunday"
 
 export interface TimeSlot {
   id: string
@@ -80,7 +110,9 @@ const timeSlots = [
 const generateId = () => Math.random().toString(36).substr(2, 9)
 
 export default function AvailabilityDetailsForm() {
-  const [availability, setAvailability] = useState<Record<WeekDay, DayAvailability>>({
+  const [availability, setAvailability] = useState<
+    Record<WeekDay, DayAvailability>
+  >({
     monday: {
       enabled: true,
       timeSlots: [{ id: generateId(), start_time: "09:00", end_time: "17:00" }],
@@ -112,6 +144,18 @@ export default function AvailabilityDetailsForm() {
   })
 
   const [copyFromDay, setCopyFromDay] = useState<WeekDay>("monday")
+  const router = useRouter()
+
+  // Add mutation for saving lab availability
+  const saveLabAvailability = api.labs.saveLabAvailability.useMutation({
+    onSuccess: () => {
+      // Redirect to available tests page
+      router.push("/lab/available-tests")
+    },
+    onError: (err) => {
+      // Optionally show error
+    },
+  })
 
   const handleDayToggle = (day: WeekDay, enabled: boolean) => {
     setAvailability((prev) => ({
@@ -120,12 +164,19 @@ export default function AvailabilityDetailsForm() {
     }))
   }
 
-  const handleTimeSlotChange = (day: WeekDay, slotId: string, field: "start_time" | "end_time", value: string) => {
+  const handleTimeSlotChange = (
+    day: WeekDay,
+    slotId: string,
+    field: "start_time" | "end_time",
+    value: string
+  ) => {
     setAvailability((prev) => ({
       ...prev,
       [day]: {
         ...prev[day],
-        timeSlots: prev[day].timeSlots.map((slot) => (slot.id === slotId ? { ...slot, [field]: value } : slot)),
+        timeSlots: prev[day].timeSlots.map((slot) =>
+          slot.id === slotId ? { ...slot, [field]: value } : slot
+        ),
       },
     }))
   }
@@ -177,7 +228,13 @@ export default function AvailabilityDetailsForm() {
 
   const copyToWeekdays = () => {
     const sourceDay = availability[copyFromDay]
-    const weekdaysList: WeekDay[] = ["monday", "tuesday", "wednesday", "thursday", "friday"]
+    const weekdaysList: WeekDay[] = [
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+    ]
     const newAvailability = { ...availability }
 
     weekdaysList.forEach((day) => {
@@ -225,8 +282,8 @@ export default function AvailabilityDetailsForm() {
       }
     })
 
-    console.log("Lab availability entries:", labAvailabilityEntries)
-    // Here you would typically send the data to your server
+    // Call the mutation to save to the database
+    saveLabAvailability.mutate({ availability: labAvailabilityEntries })
   }
 
   const validateTimeSlot = (slot: TimeSlot) => {
@@ -237,7 +294,9 @@ export default function AvailabilityDetailsForm() {
     const dayData = availability[day]
     if (!dayData.enabled || dayData.timeSlots.length < 2) return false
 
-    const sortedSlots = [...dayData.timeSlots].sort((a, b) => a.start_time.localeCompare(b.start_time))
+    const sortedSlots = [...dayData.timeSlots].sort((a, b) =>
+      a.start_time.localeCompare(b.start_time)
+    )
 
     for (let i = 0; i < sortedSlots.length - 1; i++) {
       const currentSlot = sortedSlots[i]
@@ -263,7 +322,9 @@ export default function AvailabilityDetailsForm() {
     return allSlotsValid && noOverlaps
   }
 
-  const enabledDaysCount = weekDays.filter(({ value }) => availability[value].enabled).length
+  const enabledDaysCount = weekDays.filter(
+    ({ value }) => availability[value].enabled
+  ).length
   const totalHours = weekDays.reduce((total, { value: day }) => {
     const dayData = availability[day]
     if (!dayData.enabled) return total
@@ -292,18 +353,29 @@ export default function AvailabilityDetailsForm() {
           <div className="mx-auto w-16 h-16 bg-primary rounded-full flex items-center justify-center mb-4">
             <Calendar className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-4xl font-bold text-primary mb-2">Set Your Lab Hours</h1>
-          <p className="text-lg text-gray-600">Configure when your lab is available for appointments</p>
+          <h1 className="text-4xl font-bold text-primary mb-2">
+            Set Your Lab Hours
+          </h1>
+          <p className="text-lg text-gray-600">
+            Configure when your lab is available for appointments
+          </p>
           <div className="flex justify-center gap-4 mt-4">
-            <Badge variant="secondary" className="text-primary bg-secondary">
-              {enabledDaysCount} day{enabledDaysCount !== 1 ? "s" : ""} active
-            </Badge>
-            <Badge variant="outline" className="border-primary text-primary">
-              {totalTimeSlots} time slot{totalTimeSlots !== 1 ? "s" : ""}
-            </Badge>
-            <Badge variant="outline" className="border-primary text-primary">
-              {totalHours.toFixed(1)} hours/week
-            </Badge>
+            <Badge
+              variant="secondary"
+              className="text-primary bg-secondary"
+            >{`${enabledDaysCount} day${
+              enabledDaysCount !== 1 ? "s" : ""
+            } active`}</Badge>
+            <Badge
+              variant="outline"
+              className="border-primary text-primary"
+            >{`${totalTimeSlots} time slot${
+              totalTimeSlots !== 1 ? "s" : ""
+            }`}</Badge>
+            <Badge
+              variant="outline"
+              className="border-primary text-primary"
+            >{`${totalHours.toFixed(1)} hours/week`}</Badge>
           </div>
         </div>
 
@@ -320,7 +392,10 @@ export default function AvailabilityDetailsForm() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>Copy schedule from:</Label>
-                  <Select value={copyFromDay} onValueChange={(value: WeekDay) => setCopyFromDay(value)}>
+                  <Select
+                    value={copyFromDay}
+                    onValueChange={(value: WeekDay) => setCopyFromDay(value)}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -335,13 +410,28 @@ export default function AvailabilityDetailsForm() {
                 </div>
 
                 <div className="space-y-2">
-                  <Button variant="outline" size="sm" onClick={copyToWeekdays} className="w-full bg-transparent">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={copyToWeekdays}
+                    className="w-full bg-transparent"
+                  >
                     Copy to Weekdays
                   </Button>
-                  <Button variant="outline" size="sm" onClick={copyToAllDays} className="w-full bg-transparent">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={copyToAllDays}
+                    className="w-full bg-transparent"
+                  >
                     Copy to All Days
                   </Button>
-                  <Button variant="outline" size="sm" onClick={resetToDefaults} className="w-full bg-transparent">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={resetToDefaults}
+                    className="w-full bg-transparent"
+                  >
                     <RotateCcw className="w-4 h-4 mr-2" />
                     Reset to Defaults
                   </Button>
@@ -364,7 +454,9 @@ export default function AvailabilityDetailsForm() {
                       <div key={day} className="space-y-1">
                         <div className="flex items-center justify-between">
                           <span className="font-medium text-sm">{short}</span>
-                          {!isValid && dayData.enabled && <AlertCircle className="w-4 h-4 text-red-500" />}
+                          {!isValid && dayData.enabled && (
+                            <AlertCircle className="w-4 h-4 text-red-500" />
+                          )}
                         </div>
                         {dayData.enabled ? (
                           <div className="space-y-1">
@@ -412,7 +504,8 @@ export default function AvailabilityDetailsForm() {
                           <Label className="text-lg font-semibold">{label}</Label>
                           {dayData.enabled && (
                             <Badge variant="outline" className="text-xs">
-                              {dayData.timeSlots.length} slot{dayData.timeSlots.length !== 1 ? "s" : ""}
+                              {dayData.timeSlots.length} slot
+                              {dayData.timeSlots.length !== 1 ? "s" : ""}
                             </Badge>
                           )}
                           {!isValid && dayData.enabled && (
@@ -422,7 +515,9 @@ export default function AvailabilityDetailsForm() {
                           )}
                         </div>
                         <div className="flex items-center space-x-2">
-                          {dayData.enabled && isValid && <CheckCircle2 className="w-5 h-5 text-green-500" />}
+                          {dayData.enabled && isValid && (
+                            <CheckCircle2 className="w-5 h-5 text-green-500" />
+                          )}
                           {dayData.enabled && (
                             <Button
                               variant="outline"
@@ -445,7 +540,9 @@ export default function AvailabilityDetailsForm() {
                               <div key={slot.id} className="flex items-center space-x-4">
                                 <div className="flex items-center space-x-2 flex-1">
                                   <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                                    <span className="text-xs font-medium text-primary">{_index + 1}</span>
+                                    <span className="text-xs font-medium text-primary">
+                                      {_index + 1}
+                                    </span>
                                   </div>
 
                                   <div className="grid grid-cols-2 gap-3 flex-1">
@@ -516,9 +613,22 @@ export default function AvailabilityDetailsForm() {
                 })}
 
                 <div className="flex justify-end pt-6">
-                  <Button onClick={handleSubmit} className="px-8 py-3 bg-primary hover:bg-primary/90">
-                    <Save className="w-4 h-4 mr-2" />
-                    Save Availability Schedule
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={saveLabAvailability.isPending}
+                    className="px-8 py-3 bg-primary hover:bg-primary/90"
+                  >
+                    {saveLabAvailability.isPending ? (
+                      <>
+                        <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4 mr-2" />
+                        Save Availability Schedule
+                      </>
+                    )}
                   </Button>
                 </div>
               </CardContent>

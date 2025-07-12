@@ -21,6 +21,7 @@ import {
   X,
 } from 'lucide-react'
 import React, { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 // Types
 export interface Test {
@@ -38,23 +39,17 @@ export interface LabTestAvailable {
   collection: string
 }
 
+interface StoredLabTest {
+  id: string
+  labId: string
+  testId: string
+  amount: number
+  collection: 'onsite' | 'home' | 'both'
+  createdAt: Date
+  updatedAt: Date | null
+}
+
 export default function TestDetailsForm() {
-  // Fetch tests from backend
-  const { data: tests = [], isLoading } = api.tests.listTests.useQuery()
-
-  // Normalize tests: convert nulls to undefined for optional fields
-  const normalizedTests = useMemo(
-    () =>
-      tests.map((test) => ({
-        ...test,
-        loincTestId: test.loincTestId ?? undefined,
-        specificCategory: test.specificCategory ?? undefined,
-        sampleType: test.sampleType ?? undefined,
-        generalCategory: test.generalCategory ?? undefined,
-      })),
-    [tests],
-  )
-
   // State for filters, pagination, and selection
   const [searchTerm, setSearchTerm] = useState('')
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
@@ -69,6 +64,44 @@ export default function TestDetailsForm() {
     new Set(),
   )
   const [showFilters, setShowFilters] = useState(false) // <-- Toggle for filters
+  const router = useRouter();
+
+  // Fetch tests from backend
+  const { data: tests = [], isLoading } = api.tests.listTests.useQuery();
+
+  // Fetch already stored lab tests for this lab
+  const { data: storedLabTests = [] } = api.labs.getLabTestsForCurrentLab.useQuery();
+
+  // When storedLabTests loads, pre-populate selectedTests with them
+  useEffect(() => {
+    if (storedLabTests && storedLabTests.length > 0) {
+      setSelectedTests(
+        new Map(
+          storedLabTests.map((t: StoredLabTest) => [
+            t.testId,
+            {
+              testId: t.testId,
+              amount: t.amount,
+              collection: t.collection,
+            },
+          ])
+        )
+      );
+    }
+  }, [storedLabTests]);
+
+  // Normalize tests: convert nulls to undefined for optional fields
+  const normalizedTests = useMemo(
+    () =>
+      tests.map((test) => ({
+        ...test,
+        loincTestId: test.loincTestId ?? undefined,
+        specificCategory: test.specificCategory ?? undefined,
+        sampleType: test.sampleType ?? undefined,
+        generalCategory: test.generalCategory ?? undefined,
+      })),
+    [tests],
+  )
 
   // Debounce search term
   useEffect(() => {
@@ -133,35 +166,35 @@ export default function TestDetailsForm() {
 
   const handleSelectTest = (test: Test) => {
     setSelectedTests((prev) => {
-      const newSelection = new Map(prev)
+      const newSelection = new Map(prev);
       if (newSelection.has(test.id)) {
-        newSelection.delete(test.id)
+        newSelection.delete(test.id);
       } else {
-        // Mock values for amount and collection - replace with actual input if needed
+        // Set a valid default collection value
         newSelection.set(test.id, {
           testId: test.id,
           amount: 0,
-          collection: 'N/A',
-        })
+          collection: 'onsite', // <-- use a valid value
+        });
       }
-      return newSelection
+      return newSelection;
     })
   }
 
   const handleQuickAddCategory = (category: string) => {
     setSelectedTests((prev) => {
-      const newSelection = new Map(prev)
-      const testsInCat = testsByCategory[category] || []
+      const newSelection = new Map(prev);
+      const testsInCat = testsByCategory[category] ?? [];
       testsInCat.forEach((test) => {
         if (!newSelection.has(test.id)) {
           newSelection.set(test.id, {
             testId: test.id,
             amount: 0,
-            collection: 'N/A',
-          })
+            collection: 'onsite', // <-- use a valid value
+          });
         }
-      })
-      return newSelection
+      });
+      return newSelection;
     })
     setExpandedCategories((prev) => new Set(prev).add(category)) // Optionally expand category when quick-adding
   }
@@ -174,12 +207,15 @@ export default function TestDetailsForm() {
     })
   }
 
-  const handleSubmit = () => {
-    console.log(
-      'Submitting selected tests:',
-      Array.from(selectedTests.values()),
-    )
-    // TODO: Submit selectedTests to backend
+  const addLabTests = api.labs.addLabTests.useMutation({
+    onSuccess: () => {
+      router.push('/lab/onboarding/availability-details');
+    },
+  });
+
+  const handleSubmit = async () => {
+    const tests = Array.from(selectedTests.values());
+    await addLabTests.mutateAsync({ tests });
   }
 
   const toggleCategoryExpansion = (category: string) => {
@@ -733,9 +769,20 @@ export default function TestDetailsForm() {
           <Button
             size="lg"
             onClick={handleSubmit}
-            className="bg-green-600 hover:bg-green-700 text-white shadow-lg w-full sm:w-auto px-8 py-3 text-lg"
+            className="bg-green-600 hover:bg-green-700 text-white shadow-lg w-full sm:w-auto px-8 py-3 text-lg flex items-center justify-center"
+            disabled={addLabTests.status === 'pending'}
           >
-            Save Selected Tests ({selectedTests.size})
+            {addLabTests.status === 'pending' ? (
+              <>
+                <svg className="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                </svg>
+                Saving...
+              </>
+            ) : (
+              <>Save Selected Tests ({selectedTests.size})</>
+            )}
           </Button>
         </div>
       </main>
