@@ -12,6 +12,7 @@ import * as patients from './routers/patients'
 // import * as auth from './routers/auth'
 import * as officeLocations from './routers/office-locations'
 import * as labs from './routers/labs'
+import * as tests from './routers/tests';
 /**
  * This is the primary router for your server.
  *
@@ -30,6 +31,7 @@ export const appRouter = createTRPCRouter({
   articles: createTRPCRouter(articles),
   patients: createTRPCRouter(patients),
   labs: createTRPCRouter(labs),
+  tests: createTRPCRouter(tests),
 })
 
 // export type definition of API
