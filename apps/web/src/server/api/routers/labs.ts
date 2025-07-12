@@ -1,8 +1,11 @@
-import { publicProcedure } from '../trpc';
+import { procedure, publicProcedure } from '../trpc';
 import { z } from 'zod';
 import { LabsService } from '../../services/labs';
 import { Client } from '@googlemaps/google-maps-services-js';
 import { env } from '@web/env';
+import { db } from '@web/server/db';
+import { labs as labsTable, labTestsAvailable, labAvailability, users } from '@web/server/db/schema';
+import { eq } from 'drizzle-orm';
 
 const googleMapsClient = new Client({});
 
@@ -70,9 +73,109 @@ export const searchLabsByName = publicProcedure
     }
   });
 
-export const labs = {
+export const addLabTests = procedure
+  .input(
+    z.object({
+      tests: z.array(
+        z.object({
+          testId: z.string(),
+          amount: z.number(),
+          collection: z.string(),
+        })
+      ),
+    })
+  )
+  .mutation(async ({ ctx, input }) => {
+    const user = ctx.user;
+    if (!user) throw new Error('Not authenticated');
+
+    // Find the lab for the user
+    const lab = await db.query.labs.findFirst({
+      where: (l, { eq }) => eq(l.user_id, user.id),
+    });
+    if (!lab) throw new Error('Lab not found for user');
+
+    // Insert tests
+    const allowedCollections = ['onsite', 'home', 'both'] as const;
+    const values = input.tests.map((t) => {
+      if (!allowedCollections.includes(t.collection as 'onsite' | 'home' | 'both')) {
+        throw new Error(`Invalid collection value: ${t.collection}`);
+      }
+      return {
+        labId: lab.placeId,
+        testId: t.testId,
+        amount: t.amount,
+        collection: t.collection as 'onsite' | 'home' | 'both',
+      };
+    });
+
+    await db.insert(labTestsAvailable).values(values);
+
+    return { success: true };
+  });
+
+export const getLabTestsForCurrentLab = procedure.query(async ({ ctx }) => {
+  const user = ctx.user;
+  if (!user) throw new Error('Not authenticated');
+  // Find the lab for the user
+  const lab = await db.query.labs.findFirst({
+    where: (l, { eq }) => eq(l.user_id, user.id),
+  });
+  if (!lab) return [];
+  // Get all lab tests for this lab
+  return db.query.labTestsAvailable.findMany({
+    where: (lta, { eq }) => eq(lta.labId, lab.placeId),
+  });
+});
+
+export const saveLabAvailability = procedure
+  .input(
+    z.object({
+      availability: z.array(
+        z.object({
+          day_of_week: z.string(),
+          start_time: z.string(),
+          end_time: z.string(),
+        })
+      ),
+    })
+  )
+  .mutation(async ({ ctx, input }) => {
+    const user = ctx.user;
+    if (!user) throw new Error('Not authenticated');
+    // Find the lab for the user
+    const lab = await db.query.labs.findFirst({
+      where: (l, { eq }) => eq(l.user_id, user.id),
+    });
+    if (!lab) throw new Error('Lab not found for user');
+
+    // Optionally: delete previous availability for this lab
+    await db.delete(labAvailability).where(eq(labAvailability.lab_id, lab.placeId));
+
+    // Insert new availability
+    await db.insert(labAvailability).values(
+      input.availability.map((a) => ({
+        lab_id: lab.placeId,
+        day_of_week: a.day_of_week as "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday",
+        start_time: a.start_time,
+        end_time: a.end_time,
+      }))
+    );
+
+    // Update user onboarding status
+    await db.update(users)
+      .set({ onboardingComplete: true })
+      .where(eq(users.id, user.id));
+
+    return { success: true };
+  });
+
+export const labsRouter = {
   registerLab,
   findLabsByLocation,
   listLabs,
   searchLabsByName,
+  addLabTests,
+  getLabTestsForCurrentLab,
+  saveLabAvailability,
 };
