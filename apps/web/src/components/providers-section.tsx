@@ -17,10 +17,11 @@ export default function ProvidersSection() {
     <section id="providers-cta" className="bg-gray-50 container mx-auto flex w-full flex-col items-center justify-center gap-10 py-16">
       <div className="mx-auto flex w-full flex-col items-center justify-center gap-2">
         <h2 className="section-title text-center">
-          List your Laboratory, Hospital or Clinic!
+        Register as a Provider
         </h2>
         <p className="section-description text-center">
-          Distinguish your healthcare brand with our strategic approach
+          Distinguish your healthcare brand with our strategic approach. Doctors, Clinics, Hospitals & Labs - Join our network and
+          start serving patients today
         </p>
       </div>
       <div className="container mx-auto px-4">
@@ -31,13 +32,7 @@ export default function ProvidersSection() {
             <div className="md:flex">
               <div className="md:w-3/5 p-6 md:p-8">
                 <CardHeader className="p-0 mb-4">
-                  <CardTitle className="text-xl text-center sm:text-left md:text-xl font-bold text-[#402E7D]">
-                    Register as a Provider
-                  </CardTitle>
-                  <CardDescription className="text-base text-center sm:text-left mt-2">
-                    Doctors, Clinics, Hospitals & Labs - Join our network and
-                    start serving patients today
-                  </CardDescription>
+                  
                 </CardHeader>
                 <CardContent className="p-0 space-y-4">
                   <ul className="space-y-2">
@@ -79,12 +74,12 @@ export default function ProvidersSection() {
                 </h3>
                 <div className="flex justify-center items-center space-x-4 mb-4">
                   <div className="text-center">
-                    <p className="text-3xl font-bold">500+</p>
+                    <p className="text-3xl font-bold">50+</p>
                     <p className="text-xs uppercase">Providers</p>
                   </div>
                   <div className="h-10 w-px bg-teal-400"></div>
                   <div className="text-center">
-                    <p className="text-3xl font-bold">50k+</p>
+                    <p className="text-3xl font-bold">500+</p>
                     <p className="text-xs uppercase">Patients</p>
                   </div>
                 </div>
@@ -93,7 +88,7 @@ export default function ProvidersSection() {
                   30% increase in new patients.&quot;
                 </p>
                 <p className="text-xs text-center mt-2 text-teal-200">
-                  — Dr. Sarah Johnson, Family Medicine
+                  — Dr. Sarah Migare, Family Medicine
                 </p>
               </div>
             </div>

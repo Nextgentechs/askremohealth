@@ -23,9 +23,10 @@ const footerNavOptions = {
 
   doctors: [
     {
-      header: 'For Specialists',
+      header: 'For Doctors',
       links: [
         { title: 'Register your practice', href: '/register-facility' },
+        { title: 'Doctor Portal', href: 'https://doctors.askremohealth.com/' },
         { title: 'FAQ', href: '/faq' },
       ],
     },
