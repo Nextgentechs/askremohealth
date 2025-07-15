@@ -12,6 +12,7 @@ import {
   FlaskConical,
   Home,
   Hospital,
+  HospitalIcon,
   Info,
   LogOut,
   Menu,
@@ -56,7 +57,7 @@ const navOptions = [
     icon: Info,
   },
   {
-    label: 'Consult a Doctor',
+    label: 'Find a Doctor',
     href: '/find-specialists',
     icon: Stethoscope,
   },
@@ -66,7 +67,7 @@ const navOptions = [
     icon: FlaskConical,
   },
   {
-    label: 'Healthcare Facilities',
+    label: 'Medical Facilities',
     icon: Hospital,
     dropdownItems: [
       {
@@ -97,10 +98,37 @@ const navOptions = [
     ],
   },
   {
-    label: 'Register Facility',
-    href: '/register-facility',
+    label: 'Join as a Provider',
     icon: Stethoscope,
+    dropdownItems: [
+      {
+        label: 'Doctor Portal',
+        href: 'https://doctors.askremohealth.com/',
+        icon: BriefcaseMedical,
+      },
+      {
+        label: 'Clinic Portal',
+        href: '/hospitals',
+        icon: HospitalIcon,
+      },
+      {
+        label: 'Lab Portal',
+        href: '/labs',
+        icon: FlaskConical,
+      },
+      {
+        label: 'Hospital Portal',
+        href: '/hospitals',
+        icon: Ambulance,
+      },
+      {
+        label: 'Pharmacy Portal',
+        href: '/pharmacies',
+        icon: Pill,
+      },
+    ],
   },
+
   {
     label: 'Blogs',
     href: '/articles',
