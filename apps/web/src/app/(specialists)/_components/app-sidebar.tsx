@@ -105,7 +105,7 @@ function NavUser() {
               <DropdownMenuItem
                 onClick={async () => {
                   await fetch('/api/auth/signout', { method: 'POST' })
-                  window.location.href = '/'
+                  window.location.href = 'https://doctors.askremohealth.com/auth?role=doctor'
                 }}
               >
                 <LogOut />
