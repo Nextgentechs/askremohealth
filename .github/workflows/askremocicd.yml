@@ -33,4 +33,4 @@ jobs:
 
             # Rebuild and restart
             npm run build
-            pm2 restart askremohealth
+            pm2 restart askremohealth-web 
