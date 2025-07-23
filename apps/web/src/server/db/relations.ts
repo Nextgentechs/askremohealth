@@ -192,15 +192,12 @@ export const userLabRelations = relations(users, ({ one }) => ({
   }),
 }));
 
-export const labTestsAvailableRelations = relations(
-  labTestsAvailable,
-  ({ one }) => ({
-    lab: one(labs, {
-      fields: [labTestsAvailable.labId],
-      references: [labs.placeId],
-    }),
-  })
-);
+export const labTestsAvailableRelations = relations(labTestsAvailable, ({ one }) => ({
+  test: one(tests, {
+    fields: [labTestsAvailable.testId],
+    references: [tests.id],
+  }),
+}));
 
 export const labTestsAvailableRelationsExtended = relations(
   labTestsAvailable,

@@ -4,8 +4,10 @@ import { LabsService } from '../../services/labs';
 import { Client } from '@googlemaps/google-maps-services-js';
 import { env } from '@web/env';
 import { db } from '@web/server/db';
-import { labs as labsTable, labTestsAvailable, labAvailability, users } from '@web/server/db/schema';
+import { labs as labsTable, labTestsAvailable, labAvailability, users, labAppointments, patients, doctors } from '@web/server/db/schema';
 import { eq } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
+import { randomUUID } from 'crypto';
 
 const googleMapsClient = new Client({});
 
@@ -170,6 +172,102 @@ export const saveLabAvailability = procedure
     return { success: true };
   });
 
+export const filterLabs = publicProcedure
+  .input(z.object({
+    name: z.string().optional(),
+    county: z.string().optional(),
+  }))
+  .query(async ({ input }) => {
+    return LabsService.listFiltered({
+      name: input.name,
+      county: input.county,
+    });
+  });
+
+export const getLabById = publicProcedure
+  .input(z.object({ placeId: z.string() }))
+  .query(async ({ input }) => {
+    return LabsService.getById(input.placeId);
+  });
+
+export const getLabTestsByLabId = publicProcedure
+  .input(z.object({ labId: z.string() }))
+  .query(async ({ input }) => {
+    return LabsService.getTestsByLabId(input.labId);
+  });
+
+export const getLabAvailabilityByLabId = publicProcedure
+  .input(z.object({ labId: z.string() }))
+  .query(async ({ input }) => {
+    return LabsService.getAvailabilityByLabId(input.labId);
+  });
+
+export const bookLabAppointment = procedure
+  .input(z.object({
+    labId: z.string(),
+    testId: z.string(),
+    date: z.string(),
+    time: z.string(),
+    firstName: z.string(),
+    lastName: z.string(),
+    phone: z.string(),
+    email: z.string(),
+    dob: z.string(),
+    notes: z.string().optional(),
+  }))
+  .mutation(async ({ input, ctx }) => {
+    // Find or create patient
+    let patient = await db.query.patients.findFirst({
+      where: (p, { eq }) => eq(p.phone, input.phone),
+    });
+    if (!patient) {
+      // Create new patient user and patient record
+      const userId = randomUUID();
+      await db.insert(users).values({
+        id: userId,
+        firstName: input.firstName,
+        lastName: input.lastName,
+        email: input.email,
+        phone: input.phone,
+        password: randomUUID(), // Set a random password (not used for lab patients)
+        role: 'patient',
+        onboardingComplete: true,
+      });
+      await db.insert(patients).values({
+        id: userId,
+        userId: userId,
+        phone: input.phone,
+        dob: new Date(input.dob),
+      });
+      patient = await db.query.patients.findFirst({
+        where: (p, { eq }) => eq(p.id, userId),
+      });
+    }
+    if (!patient) throw new Error('Failed to create or find patient');
+    // DoctorId is set if user is doctor, else null
+    let doctorId: string | null = null;
+    if (ctx.user?.role === 'doctor') {
+      // Find doctor by user id
+      const doctor = await db.query.doctors.findFirst({
+        where: (d, { eq }) => eq(d.userId, ctx.user.id),
+      });
+      doctorId = doctor?.id ?? null;
+    }
+    // Combine date and time into a JS Date
+    const appointmentDate = new Date(`${input.date}T${input.time}`);
+    // Insert appointment
+    const [appointment] = await db.insert(labAppointments).values({
+      labId: input.labId,
+      patientId: patient.id,
+      doctorId,
+      appointmentDate,
+      patientNotes: input.notes,
+      createdAt: new Date(),
+    }).returning();
+    if (!appointment) throw new Error('Failed to create appointment');
+    return { success: true, appointmentId: appointment.id };
+  });
+
 export const labsRouter = {
   registerLab,
   findLabsByLocation,
@@ -178,4 +276,9 @@ export const labsRouter = {
   addLabTests,
   getLabTestsForCurrentLab,
   saveLabAvailability,
+  filterLabs,
+  getLabById,
+  getLabTestsByLabId,
+  getLabAvailabilityByLabId,
+  bookLabAppointment,
 };

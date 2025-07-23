@@ -4,6 +4,7 @@ import { Building2, Globe, MapPin, Phone } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
 import React from "react";
+import { useRouter } from "next/navigation";
 
 // Define the Lab type (adjust fields as needed)
 export type Lab = {
@@ -27,6 +28,7 @@ function EmptyLabs() {
 }
 
 export default function LabsList({ labs }: { labs: Lab[] }) {
+  const router = useRouter();
   if (!labs?.length) {
     return <EmptyLabs />;
   }
@@ -36,7 +38,8 @@ export default function LabsList({ labs }: { labs: Lab[] }) {
       {labs.map((lab) => (
         <Card
           key={lab.placeId}
-          className="hover:shadow-lg transition-shadow duration-200 border-l-4 border-l-primary"
+          className="hover:shadow-lg transition-shadow duration-200 border-l-4 border-l-primary cursor-pointer"
+          onClick={() => router.push(`/laboratories/${lab.placeId}`)}
         >
           <CardHeader className="pb-3">
             <CardTitle className="text-lg font-semibold text-primary flex items-start gap-2">
@@ -70,7 +73,7 @@ export default function LabsList({ labs }: { labs: Lab[] }) {
               {lab.phone && (
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <Phone className="h-4 w-4" />
-                  <a href={`tel:${lab.phone}`} className="hover:text-primary transition-colors">
+                  <a href={`tel:${lab.phone}`} className="hover:text-primary transition-colors" onClick={e => e.stopPropagation()}>
                     {lab.phone}
                   </a>
                 </div>
@@ -83,6 +86,7 @@ export default function LabsList({ labs }: { labs: Lab[] }) {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hover:text-primary transition-colors truncate"
+                    onClick={e => e.stopPropagation()}
                   >
                     Visit Website
                   </a>
