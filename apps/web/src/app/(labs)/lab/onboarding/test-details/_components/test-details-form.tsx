@@ -274,27 +274,23 @@ export default function TestDetailsForm() {
         <h1 className="text-3xl sm:text-4xl font-extrabold text-primary text-center mb-3 drop-shadow-sm">
           Select Lab Tests for Your Onboarding
         </h1>
-        <p className="flex flex-col text-base sm:text-lg text-gray-700 text-center max-w-2xl mx-auto mb-2">
-          <div>
+        <div className="flex flex-col text-base sm:text-lg text-gray-700 text-center max-w-2xl mx-auto mb-2">
+          <span>
             <span className="font-semibold text-primary">Step 1:</span> Use the{' '}
-            <span className="font-semibold">Filters</span> to search or browse
-            by category.
-          </div>
-          <br className="hidden sm:inline" />
-          <div>
-          <span className="font-semibold text-primary">Step 2:</span> Click{' '}
-          <span className="font-semibold">Select</span> to add a test, or use{' '}
-          <span className="font-semibold">Add all in [Category]</span> for quick
-          selection.
-          </div>
-          <br className="hidden sm:inline" />
-          <div>
-          <span className="font-semibold text-primary">Step 3:</span> Review
-          your selected tests in the sidebar, remove any if needed, and click{' '}
-          <span className="font-semibold">Save Selected Tests</span> to
-          continue.
-          </div>
-        </p>
+            <span className="font-semibold">Filters</span> to search or browse by category.
+          </span>
+          <span className="hidden sm:inline">&nbsp;</span>
+          <span>
+            <span className="font-semibold text-primary">Step 2:</span> Click{' '}
+            <span className="font-semibold">Select</span> to add a test, or use{' '}
+            <span className="font-semibold">Add all in [Category]</span> for quick selection.
+          </span>
+          <span className="hidden sm:inline">&nbsp;</span>
+          <span>
+            <span className="font-semibold text-primary">Step 3:</span> Review your selected tests in the sidebar, remove any if needed, and click{' '}
+            <span className="font-semibold">Save Selected Tests</span> to continue.
+          </span>
+        </div>
       </div>
 
       {/* Toggle Filters Button */}

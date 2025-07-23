@@ -104,4 +104,42 @@ export class LabsService {
   static async list() {
     return db.query.labs.findMany()
   }
+
+  // Add: listFiltered for server-side filtering
+  static async listFiltered({ name, county }: { name?: string; county?: string }) {
+    return db.query.labs.findMany({
+      where: (lab, { ilike, and, eq }) => {
+        const conditions = [];
+        if (name) {
+          conditions.push(ilike(lab.name, `%${name}%`));
+        }
+        if (county) {
+          conditions.push(eq(lab.county, county));
+        }
+        return conditions.length ? and(...conditions) : undefined;
+      },
+    });
+  }
+
+  static async getById(placeId: string) {
+    return db.query.labs.findFirst({
+      where: (l, { eq }) => eq(l.placeId, placeId),
+    });
+  }
+
+  static async getTestsByLabId(labId: string) {
+    // Join labTestsAvailable with tests to get test name and details
+    return db.query.labTestsAvailable.findMany({
+      where: (lta, { eq }) => eq(lta.labId, labId),
+      with: {
+        test: true, // assumes a relation is set up in drizzle schema
+      },
+    });
+  }
+
+  static async getAvailabilityByLabId(labId: string) {
+    return db.query.labAvailability.findMany({
+      where: (la, { eq }) => eq(la.lab_id, labId),
+    });
+  }
 }

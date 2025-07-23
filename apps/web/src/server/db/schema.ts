@@ -342,3 +342,20 @@ export const labAvailability = pgTable('lab_availability', {
   start_time: time('start_time').notNull(),
   end_time: time('end_time').notNull(), 
 })
+
+export const labAppointments = pgTable('lab_appointments', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  labId: varchar('place_id')
+    .notNull()
+    .references(() => labs.placeId, { onDelete: 'cascade' }),
+  patientId: varchar('patient_id')
+    .notNull()
+    .references(() => patients.id, { onDelete: 'cascade' }),
+  doctorId: varchar('doctor_id')
+    .references(() => doctors.id, { onDelete: 'set null' }),
+  appointmentDate: timestamp('appointment_date').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
+  patientNotes: varchar('patient_notes'),
+  doctorNotes: varchar('doctor_notes'),
+})
