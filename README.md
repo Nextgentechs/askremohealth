@@ -25,7 +25,7 @@ A modern healthcare platform built with Next.js, TypeScript, and Tailwind CSS.
 - Commitlint for commit message linting
 
 ## Tech Stack
-
+- Mchng
 - [Next.js](https://nextjs.org/): React framework for production
 - [TypeScript](https://www.typescriptlang.org/): Type-safe JavaScript
 - [Tailwind CSS](https://tailwindcss.com/): Utility-first CSS framework
