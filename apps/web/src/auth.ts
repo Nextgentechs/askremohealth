@@ -9,7 +9,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [Google],
   cookies: {
     sessionToken: {
-      name: 'next-auth.session-token',
+      name: 'authjs.session-token',
       options: {
         domain: process.env.NODE_ENV === 'production' ? '.askremohealth.com' : '.localhost',
         path: '/',

@@ -61,28 +61,21 @@ export function middleware(req: NextRequest) {
       })
     }
 
-    const nextAuthToken = req.cookies.get('authjs.session-token')?.value;
-    const nextAuthSecureToken = req.cookies.get('__Secure-authjs.session-token')?.value;
-
-    if (nextAuthToken) {
-      response.cookies.set('authjs.session-token', nextAuthToken, {
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
-        httpOnly: true,
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 7,
-        domain: process.env.NODE_ENV === 'production' ? '.askremohealth.com' : '.localhost'
-      });
-    }
-    if (nextAuthSecureToken) {
-      response.cookies.set('__Secure-authjs.session-token', nextAuthSecureToken, {
-        path: '/',
-        secure: true,
-        httpOnly: true,
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 7,
-        domain: process.env.NODE_ENV === 'production' ? '.askremohealth.com' : '.localhost'
-      });
+    // Forward all cookies starting with 'authjs.' and 'next-auth.'
+    for (const cookieName of req.cookies.getAll().map(c => c.name)) {
+      if (cookieName.startsWith('authjs.') ?? cookieName.startsWith('next-auth.')) {
+        const cookieValue = req.cookies.get(cookieName)?.value
+        if (cookieValue) {
+          response.cookies.set(cookieName, cookieValue, {
+            path: '/',
+            secure: process.env.NODE_ENV === 'production',
+            httpOnly: true,
+            sameSite: 'lax',
+            maxAge: 60 * 60 * 24 * 7,
+            domain: process.env.NODE_ENV === 'production' ? '.askremohealth.com' : '.localhost'
+          })
+        }
+      }
     }
 
     return response
