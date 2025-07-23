@@ -1,0 +1,36 @@
+name: 🚀 Deploy AskRemoHealth
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: 📦 Deploy to Production
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v3
+
+      - name: 🚀 Deploy to Production & Update Dev
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /root/askremohealth
+
+            # Pull latest main
+            git checkout main
+            git pull origin main
+
+            # Switch to dev and merge main
+            git checkout dev
+            git merge main --no-edit
+
+            # Rebuild and restart
+            npm run build
+            pm2 restart askremohealth
