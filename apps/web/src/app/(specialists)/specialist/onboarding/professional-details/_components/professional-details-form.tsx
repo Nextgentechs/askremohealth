@@ -186,6 +186,7 @@ export default function ProfessionalDetailsForm() {
   const router = useRouter();
   const form = useForm<ProfessionalDetails>({
     resolver: zodResolver(professionalDetailsSchema),
+    mode: 'onChange',
     defaultValues: {
       specialty: '',
       subSpecialty: [],
@@ -273,32 +274,32 @@ export default function ProfessionalDetailsForm() {
     <form onSubmit={onSubmit} className="space-y-8">
       <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2 sm:gap-4">
         <div className="flex flex-col gap-2">
-          <Label htmlFor="specialty">Specialty</Label>
-          <Select
-            onValueChange={(value) => {
-              setSelectedSpecialty(value);
-              form.setValue('specialty', value);
-            }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select" />
-            </SelectTrigger>
-            <SelectContent>
-              {isPendingSpecialties ? (
-                <SelectSkeleton />
-              ) : (
-                specialties?.map((specialty) => (
-                  <SelectItem key={specialty.id} value={specialty.id}>
-                    {specialty.name}
-                  </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
-          <p className="text-[0.8rem] font-medium text-destructive">
-            {form.formState.errors.specialty?.message}
-          </p>
-        </div>
+        <Label htmlFor="specialty">Specialty <span className="text-destructive">*</span></Label>
+        <Select
+          onValueChange={(value) => {
+            setSelectedSpecialty(value);
+            form.setValue('specialty', value);
+          }}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select" />
+          </SelectTrigger>
+          <SelectContent>
+            {isPendingSpecialties ? (
+              <SelectSkeleton />
+            ) : (
+              specialties?.map((specialty) => (
+                <SelectItem key={specialty.id} value={specialty.id}>
+                  {specialty.name}
+                </SelectItem>
+              ))
+            )}
+          </SelectContent>
+        </Select>
+        <p className="text-[0.8rem] font-medium text-destructive">
+          {form.formState.errors.specialty?.message}
+        </p>
+      </div>
 
         <div className="flex flex-col gap-2">
           <Label htmlFor="subSpecialty">Sub Specialty (Optional)</Label>
@@ -437,28 +438,28 @@ export default function ProfessionalDetailsForm() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="experience">Years of Experience</Label>
-          <Input
-            {...form.register('experience')}
-            id="experience"
-            type="number"
-          />
-          <p className="text-[0.8rem] font-medium text-destructive">
-            {form.formState.errors.experience?.message}
-          </p>
-        </div>
+        <Label htmlFor="experience">Years of Experience <span className="text-destructive">*</span></Label>
+        <Input
+          {...form.register('experience')}
+          id="experience"
+          type="number"
+        />
+        <p className="text-[0.8rem] font-medium text-destructive">
+          {form.formState.errors.experience?.message}
+        </p>
+      </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="registrationNumber">Medical Registration Number</Label>
-          <Input
-            {...form.register('registrationNumber')}
-            id="registrationNumber"
-            type="text"
-          />
-          <p className="text-[0.8rem] font-medium text-destructive">
-            {form.formState.errors.registrationNumber?.message}
-          </p>
-        </div>
+        <Label htmlFor="registrationNumber">Medical Registration Number <span className="text-destructive">*</span></Label>
+        <Input
+          {...form.register('registrationNumber')}
+          id="registrationNumber"
+          type="text"
+        />
+        <p className="text-[0.8rem] font-medium text-destructive">
+          {form.formState.errors.registrationNumber?.message}
+        </p>
+      </div>
 
         <div className="flex flex-col gap-2">
           <Label htmlFor="medicalLicense">Medical License</Label>

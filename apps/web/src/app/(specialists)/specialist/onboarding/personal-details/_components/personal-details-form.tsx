@@ -87,6 +87,7 @@ export default function PersonalDetails() {
 
   const form = useForm<PersonalDetails>({
     resolver: zodResolver(personalDetailsSchema),
+    mode: 'onChange',
     defaultValues: {
       title: '',
       firstName: user?.firstName ?? '',
@@ -133,21 +134,21 @@ export default function PersonalDetails() {
           </p>
         </div>
         <div className="flex flex-col gap-2">
-          <Label htmlFor="firstName">First Name</Label>
+          <Label htmlFor="firstName">First Name <span className="text-destructive">*</span></Label>
           <Input {...form.register('firstName')} id="firstName" type="text" />
           <p className="text-[0.8rem] font-medium text-destructive">
             {form.formState.errors.firstName?.message}
           </p>
         </div>
         <div className="flex flex-col gap-2">
-          <Label htmlFor="lastName">Last Name</Label>
+          <Label htmlFor="lastName">Last Name <span className="text-destructive">*</span></Label>
           <Input {...form.register('lastName')} id="lastName" type="text" />
           <p className="text-[0.8rem] font-medium text-destructive">
             {form.formState.errors.lastName?.message}
           </p>
         </div>
         <div className="flex flex-col gap-2">
-          <Label htmlFor="gender">Gender</Label>
+          <Label htmlFor="gender">Gender <span className="text-destructive">*</span></Label>
           <Select
             onValueChange={(value) => {
               form.setValue('gender', value as 'male' | 'female')
@@ -166,21 +167,21 @@ export default function PersonalDetails() {
           </p>
         </div>
         <div className="flex flex-col gap-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">Email <span className="text-destructive">*</span></Label>
           <Input {...form.register('email')} id="email" type="email" />
           <p className="text-[0.8rem] font-medium text-destructive">
             {form.formState.errors.email?.message}
           </p>
         </div>
         <div className="flex flex-col gap-2">
-          <Label htmlFor="phone">Phone Number</Label>
+          <Label htmlFor="phone">Phone Number <span className="text-destructive">*</span></Label>
           <Input {...form.register('phone')} id="phone" type="tel" />
           <p className="text-[0.8rem] font-medium text-destructive">
             {form.formState.errors.phone?.message}
           </p>
         </div>
         <div className="flex flex-col gap-2">
-          <Label htmlFor="email">Date of Birth</Label>
+          <Label htmlFor="email">Date of Birth <span className="text-destructive">*</span></Label>
           <Input
             {...form.register('dob')}
             id="dob"
@@ -231,7 +232,7 @@ export default function PersonalDetails() {
       <div className="fixed bottom-0 left-0 right-0 flex justify-end border-t border-t-border bg-background px-6 py-4 sm:px-12">
         <Button
           size="lg"
-          disabled={form.formState.isSubmitting}
+          disabled={form.formState.isSubmitting || !form.formState.isValid}
           onClick={(e) => {
             e.preventDefault()
             onSubmit()
