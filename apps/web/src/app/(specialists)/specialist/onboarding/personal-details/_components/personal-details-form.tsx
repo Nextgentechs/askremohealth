@@ -123,12 +123,29 @@ export default function PersonalDetails() {
       <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2 sm:gap-x-4 sm:gap-y-3">
         <div className="flex flex-col gap-2">
           <Label htmlFor="title">Title</Label>
-          <Input
-            {...form.register('title')}
-            id="title"
-            type="text"
-            placeholder="e.g. Dr, Prof, etc."
-          />
+          <Select
+            value={form.watch('title') ?? ''}
+            onValueChange={(value) => form.setValue('title', value)}
+          >
+            <SelectTrigger id="title" aria-label="Title">
+              <SelectValue placeholder="Select a title" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Dr">Dr</SelectItem>
+              <SelectItem value="Prof">Prof</SelectItem>
+              <SelectItem value="Mr">Mr</SelectItem>
+              <SelectItem value="Mrs">Mrs</SelectItem>
+              <SelectItem value="Ms">Ms</SelectItem>
+              <SelectItem value="Miss">Miss</SelectItem>
+              <SelectItem value="Mx">Mx</SelectItem>
+              <SelectItem value="Sir">Sir</SelectItem>
+              <SelectItem value="Madam">Madam</SelectItem>
+              <SelectItem value="Rev">Rev</SelectItem>
+              <SelectItem value="Fr">Fr</SelectItem>
+              <SelectItem value="Lady">Lady</SelectItem>
+              <SelectItem value="Lord">Lord</SelectItem>
+            </SelectContent>
+          </Select>
           <p className="text-[0.8rem] font-medium text-destructive">
             {form.formState.errors.title?.message}
           </p>
