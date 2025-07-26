@@ -37,7 +37,7 @@ export default function ContactSection() {
                     href="mailto:virtualhealthcarenetwork@gmail.com"
                     className="text-gray-600 hover:text-[#402D7C] transition-colors hover:underline"
                   >
-                    virtualhealthcarenetwork@gmail.com
+                    virtualhealthcarenetwork@gmail.com - test test
                   </Link>
                 </p>
               </div>
