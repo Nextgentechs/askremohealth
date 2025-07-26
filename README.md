@@ -23,6 +23,7 @@ A modern healthcare platform built with Next.js, TypeScript, and Tailwind CSS.
 - Prettier for code formatting
 - Husky for git hooks
 - Commitlint for commit message linting
+- Test CI/CD automation
 
 ## Tech Stack
 - Mchng
