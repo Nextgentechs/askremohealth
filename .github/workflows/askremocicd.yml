@@ -68,6 +68,9 @@ jobs:
             fi
 
             # 8. Final Health Check
+            echo "⏳ Waiting for app to start..."
+            sleep 10
+            
             echo "🔍 Checking if app is responding..."
             if curl -f http://localhost:3000; then
               echo "✅ Deployment successful! Site is live."
