@@ -88,11 +88,7 @@ export function middleware(req: NextRequest) {
     return response
   }
 
-  const isAdminRoute = pathname.startsWith('/admin')
 
-  if (!sessionId && isAdminRoute) {
-    return NextResponse.redirect(new URL('/auth', req.url))
-  }
 
   return NextResponse.next()
 }
