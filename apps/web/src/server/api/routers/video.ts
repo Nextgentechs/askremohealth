@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server'
-import { procedure } from '../trpc'
+import { protectedProcedure } from '../trpc'
 import { z } from 'zod'
 import twilio from 'twilio'
 import { env } from '@web/env'
@@ -12,7 +12,7 @@ const twilioClient = twilio(env.TWILIO_ACCOUNT_SID, env.TWILIO_AUTH_TOKEN)
 const AccessToken = twilio.jwt.AccessToken
 const VideoGrant = AccessToken.VideoGrant
 
-export const generateToken = procedure
+export const generateToken = protectedProcedure
   .input(
     z.object({
       appointmentId: z.string(),
@@ -73,7 +73,7 @@ export const generateToken = procedure
     }
   })
 
-export const createRoom = procedure
+export const createRoom = protectedProcedure
   .input(
     z.object({
       appointmentId: z.string(),
@@ -111,7 +111,7 @@ export const createRoom = procedure
     }
   })
 
-export const endSession = procedure
+export const endSession = protectedProcedure
   .input(
     z.object({
       appointmentId: z.string(),

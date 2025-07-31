@@ -3,7 +3,7 @@ import { appointmentLogs, appointments, patients, doctors } from '@web/server/db
 import { User } from '@web/server/services/users'
 import { AppointmentStatus } from '@web/server/utils'
 import { z } from 'zod'
-import { procedure, publicProcedure } from '../trpc'
+import { protectedProcedure, publicProcedure } from '../trpc'
 import { appointmentListSchema, newAppointmentSchema } from '../validators'
 
 export const currentUser = publicProcedure.query(async ({ ctx }) => {
@@ -31,14 +31,14 @@ export const currentUser = publicProcedure.query(async ({ ctx }) => {
   return ctx.user
 })
 
-export const createAppointment = procedure
+export const createAppointment = protectedProcedure
   .input(newAppointmentSchema)
   .mutation(async ({ ctx, input }) => {
-    const patient = await ctx.db.query.patients.findFirst({
+    const patient = await db.query.patients.findFirst({
       where: (patient, { eq }) => eq(patient.id, ctx.user?.id ?? ''),
     })
     if (!patient) {
-      await ctx.db.insert(patients).values({
+      await db.insert(patients).values({
         id: ctx.user?.id ?? '',
         userId: ctx.user?.id ?? '',
         phone: input.phone,
@@ -66,19 +66,19 @@ export const createAppointment = procedure
     return { success: true }
   })
 
-export const listAppointments = procedure
+export const listAppointments = protectedProcedure
   .input(appointmentListSchema)
   .query(async ({ ctx, input }) => {
     return await User.getUserAppointments(ctx.user.id ?? '', input)
   })
 
-export const cancelAppointment = procedure
+export const cancelAppointment = protectedProcedure
   .input(z.string())
   .mutation(async ({ ctx, input }) => {
     return User.cancelAppointment(input, ctx.user.id ?? '')
   })
 
-export const rescheduleAppointment = procedure
+export const rescheduleAppointment = protectedProcedure
   .input(
     z.object({
       appointmentId: z.string(),

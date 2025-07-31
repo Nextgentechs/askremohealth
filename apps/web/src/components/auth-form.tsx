@@ -13,7 +13,6 @@ import { Input } from '@web/components/ui/input'
 import { toast } from '@web/hooks/use-toast'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Loader } from 'lucide-react'
-import { signIn } from 'next-auth/react'
 import React, { useState, type SVGProps } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -165,20 +164,27 @@ function Login({
     setIsLoading(true)
     try {
       const role = searchParams.get("role") ?? 'doctor'
-      document.cookie = `signup-role=${role}; path=/; max-age=300`
-
-      let callbackPath = '/specialist/upcoming-appointments'
-      if (role === 'patient') {
-        callbackPath = '/patient/online-appointments'
+      
+      // Call our API to get the Google OAuth URL
+      const response = await fetch('/api/auth/google/url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role }),
+      })
+      
+      const result = await response.json()
+      
+      if (result.url) {
+        window.location.href = result.url
+      } else {
+        throw new Error('Failed to get Google OAuth URL')
       }
-      await signIn('google', { callbackUrl: window.location.origin + callbackPath })
     } catch {
       toast({
         title: 'Error',
         description: 'Google sign-in failed',
         variant: 'destructive',
       })
-    } finally {
       setIsLoading(false)
     }
   }
@@ -201,7 +207,7 @@ function Login({
             disabled={isLoading}
           >
             <Google className="h-5 w-5" />
-            Sign in with Google
+            {isLoading ? <Loader className="h-4 w-4 animate-spin" /> : 'Sign in with Google'}
           </Button>
           <div className="relative my-2 text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
             <span className="relative z-10 bg-background px-2 text-muted-foreground">
@@ -329,15 +335,32 @@ function SignUp({
   }
 
   async function handleGoogleSignUp() {
-    // Set role in cookie before Google sign-in
-    const role = searchParams.get("role") ?? 'doctor'
-    document.cookie = `signup-role=${role}; path=/; max-age=300` // 5 minutes expiry
-
-    let callbackPath = '/specialist/upcoming-appointments'
-    if (role === 'patient') {
-      callbackPath = '/patient/online-appointments'
+    setIsLoading(true)
+    try {
+      const role = searchParams.get("role") ?? 'doctor'
+      
+      // Call our API to get the Google OAuth URL
+      const response = await fetch('/api/auth/google/url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role }),
+      })
+      
+      const result = await response.json()
+      
+      if (result.url) {
+        window.location.href = result.url
+      } else {
+        throw new Error('Failed to get Google OAuth URL')
+      }
+    } catch {
+      toast({
+        title: 'Error',
+        description: 'Google sign-up failed',
+        variant: 'destructive',
+      })
+      setIsLoading(false)
     }
-    await signIn('google', { callbackUrl: window.location.origin + callbackPath })
   }
 
   return (
@@ -358,7 +381,7 @@ function SignUp({
             disabled={isLoading}
           >
             <Google className="h-5 w-5" />
-            Sign up with Google
+            {isLoading ? <Loader className="h-4 w-4 animate-spin" /> : 'Sign up with Google'}
           </Button>
           <div className="relative my-2 text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
             <span className="relative z-10 bg-background px-2 text-muted-foreground">

@@ -1,11 +1,11 @@
 import { z } from 'zod'
-import { procedure, publicProcedure } from '../trpc'
+import { protectedProcedure, publicProcedure } from '../trpc'
 import { db } from '@web/server/db'
 import { patients, users } from '@web/server/db/schema'
 import { patientDetailsSchema } from '@web/server/api/validators'
 import { eq } from 'drizzle-orm'
 
-export const updatePatientDetails = procedure
+export const updatePatientDetails = protectedProcedure
   .input(patientDetailsSchema)
   .mutation(async ({ input, ctx }) => {
     // Update the user table
@@ -30,7 +30,7 @@ export const updatePatientDetails = procedure
     return { success: true }
   })
 
-export const getCurrentPatient = procedure.query(async ({ ctx }) => {
+export const getCurrentPatient = protectedProcedure.query(async ({ ctx }) => {
   if (!ctx.user) return null;
   const patient = await db.query.patients.findFirst({
     where: (patient, { eq }) => eq(patient.userId, ctx.user.id),

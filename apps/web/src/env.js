@@ -20,6 +20,8 @@ export const env = createEnv({
     TWILIO_ACCOUNT_SID: z.string(),
     TWILIO_API_KEY_SID: z.string(),
     CLERK_SECRET_KEY: z.string(),
+    AUTH_GOOGLE_ID: z.string(),
+    AUTH_GOOGLE_SECRET: z.string(),
   },
 
   /**
@@ -58,6 +60,8 @@ export const env = createEnv({
     NEXT_PUBLIC_CLERK_SIGN_UP_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL,
     NEXT_PUBLIC_RESEND_API_KEY: process.env.NEXT_PUBLIC_RESEND_API_KEY,
     NEXT_PUBLIC_FROM_EMAIL: process.env.NEXT_PUBLIC_FROM_EMAIL,
+    AUTH_GOOGLE_ID: process.env.AUTH_GOOGLE_ID,
+    AUTH_GOOGLE_SECRET: process.env.AUTH_GOOGLE_SECRET,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**

@@ -11,7 +11,7 @@ import assert from 'assert'
 import { db } from '@web/server/db'
 import { eq, ilike, or, and, inArray, sql, between, gte } from 'drizzle-orm'
 import { z } from 'zod'
-import { doctorProcedure, procedure, publicProcedure } from '../trpc'
+import { doctorProcedure, protectedProcedure, publicProcedure } from '../trpc'
 import {
   availabilityDetailsSchema,
   doctorAppointmentListSchema,
@@ -25,7 +25,7 @@ import { env } from '@web/env'
 
 const googleMapsClient = new Client({})
 
-export const updatePersonalDetails = procedure
+export const updatePersonalDetails = protectedProcedure
   .input(personalDetailsSchema)
   .mutation(async ({ input, ctx }) => {
     return Doctors.updatePersonalDetails(input, ctx.user.id ?? '')
@@ -41,13 +41,13 @@ export const updateProfilePicture = doctorProcedure
     })
   })
 
-export const updateProfessionalDetails = procedure
+export const updateProfessionalDetails = protectedProcedure
   .input(professionalDetailsSchema)
   .mutation(async ({ input, ctx }) => {
     return Doctors.updateProfessionalDetails(input, ctx.user.id ?? '')
   })
 
-export const updateAvailabilityDetails = procedure
+export const updateAvailabilityDetails = protectedProcedure
   .input(availabilityDetailsSchema)
   .mutation(async ({ input, ctx }) => {
     return Doctors.updateAvailabilityDetails(input, ctx.user.id ?? '')
@@ -177,7 +177,7 @@ export const patients = doctorProcedure
 export const searchPatient = doctorProcedure
   .input(z.object({ query: z.string() }))
   .query(async ({ ctx, input }) => {
-    return ctx.db
+    return db
       .select({
         id: patientsTable.id,
         firstName: usersTable.firstName,

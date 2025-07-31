@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from 'next/server'
+import { getCurrentUser } from '@web/auth'
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const sessionId = req.cookies.get('session-id')?.value
   const pathname = req.nextUrl.pathname
   const hostname = req.headers.get('host') ?? ''
@@ -59,23 +60,6 @@ export function middleware(req: NextRequest) {
         maxAge: 60 * 60 * 24 * 7,
         domain: process.env.NODE_ENV === 'production' ? '.askremohealth.com' : '.localhost'
       })
-    }
-
-    // Forward all cookies starting with 'authjs.' and 'next-auth.'
-    for (const cookieName of req.cookies.getAll().map(c => c.name)) {
-      if (cookieName.startsWith('authjs.') ?? cookieName.startsWith('next-auth.')) {
-        const cookieValue = req.cookies.get(cookieName)?.value
-        if (cookieValue) {
-          response.cookies.set(cookieName, cookieValue, {
-            path: '/',
-            secure: process.env.NODE_ENV === 'production',
-            httpOnly: true,
-            sameSite: 'lax',
-            maxAge: 60 * 60 * 24 * 7,
-            domain: process.env.NODE_ENV === 'production' ? '.askremohealth.com' : '.localhost'
-          })
-        }
-      }
     }
 
     return response
