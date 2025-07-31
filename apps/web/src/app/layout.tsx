@@ -8,6 +8,9 @@ import { type Metadata } from 'next'
 export const metadata: Metadata = {
   title: 'Ask RemoHealth',
   description: 'Solutions that help you and your loved ones enjoy Good Health and Long Life',
+  other: {
+    "google-site-verification": "5wsLFd2dEya0OHetHbMQavV4kDqaYkDa4TM9sifwIiI",
+  },
 }
 
 export default async function RootLayout({
