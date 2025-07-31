@@ -14,7 +14,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         domain: process.env.NODE_ENV === 'production' ? '.askremohealth.com' : '.localhost',
         path: '/',
         httpOnly: true,
-        sameSite: 'none',
+        sameSite: 'lax',
         secure: process.env.NODE_ENV === 'production',
       },
     },
