@@ -1,23 +1,37 @@
-import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 
 export function useCurrentUser() {
-  const [user, setUser] = useState<unknown>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    async function fetchUser() {
-      try {
-        const res = await fetch('/api/auth/me')
-        const data = await res.json()
-        setUser(data.user)
-      } catch {
-        setUser(null)
-      } finally {
-        setLoading(false)
+  const { data: user, isLoading, error } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: async () => {
+      const response = await fetch('/api/auth/me')
+      if (!response.ok) {
+        throw new Error('Failed to fetch user')
       }
-    }
-    fetchUser()
-  }, [])
+      return response.json()
+    },
+    retry: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
 
-  return { user, loading }
+  return {
+    user: user?.user || null,
+    isLoading,
+    error,
+  }
+}
+
+export function useIsDoctor() {
+  const { user } = useCurrentUser()
+  return user?.role === 'doctor'
+}
+
+export function useIsAdmin() {
+  const { user } = useCurrentUser()
+  return user?.role === 'admin'
+}
+
+export function useIsPatient() {
+  const { user } = useCurrentUser()
+  return user?.role === 'patient'
 }

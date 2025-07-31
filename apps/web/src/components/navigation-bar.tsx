@@ -266,7 +266,12 @@ function CurrentUser({
             className="cursor-pointer"
             onClick={async () => {
               await fetch('/api/auth/signout', { method: 'POST' })
-              window.location.reload()
+              // Redirect to root domain homepage
+              if (process.env.NODE_ENV === 'production') {
+                window.location.href = 'https://askremohealth.com/'
+              } else {
+                window.location.href = 'http://localhost:3000/'
+              }
             }}
           >
             <LogOut />

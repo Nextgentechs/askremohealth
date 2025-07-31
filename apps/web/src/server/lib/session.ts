@@ -96,7 +96,8 @@ export function setCookie(sessionId: string, cookies: Pick<Cookies, "set">) {
   })
 }
 
-async function getUserSessionById(sessionId: string) {
+// Export this function so it can be used in auth.ts
+export async function getUserSessionById(sessionId: string) {
   const rawUser = await redisClient.get(`session:${sessionId}`)
   if (!rawUser || typeof rawUser !== 'string') return null
 

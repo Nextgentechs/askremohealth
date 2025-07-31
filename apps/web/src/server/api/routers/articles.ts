@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { procedure, publicProcedure } from '../trpc'
+import { protectedProcedure, publicProcedure } from '../trpc'
 import { articleSchema, articleListSchema } from '../validators'
 import { ArticleService } from '@web/server/services/articles'
 import { db } from '@web/server/db'
@@ -14,7 +14,7 @@ export const listArticles = publicProcedure
         return await ArticleService.getArticles(input)
     })
 
-export const createArticle = procedure
+export const createArticle = protectedProcedure
     .input(articleSchema)
     .mutation(async ({ ctx, input }) => {
         const userId = ctx.user?.id ?? ""
@@ -23,7 +23,7 @@ export const createArticle = procedure
         return article
     })
 
-export const updateArticleImage = procedure
+export const updateArticleImage = protectedProcedure
     .input(z.object({
         articleId: z.string().uuid(),
         image: z.string(),
