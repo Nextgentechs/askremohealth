@@ -1,6 +1,5 @@
 'use client'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@web/components/ui/button'
 import {
   Card,
@@ -10,10 +9,13 @@ import {
   CardTitle,
 } from '@web/components/ui/card'
 import { Input } from '@web/components/ui/input'
+import { useCurrentUser } from '@web/hooks/use-current-user'
 import { toast } from '@web/hooks/use-toast'
+import { passwordSchema } from '@web/server/api/validators'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Loader } from 'lucide-react'
 import { signIn } from 'next-auth/react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import React, { useState, type SVGProps } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -26,16 +28,12 @@ import {
   FormMessage,
 } from './ui/form'
 import { InputOTP, InputOTPGroup, InputOTPSlot } from './ui/input-otp'
-import { passwordSchema } from '@web/server/api/validators'
-import { useCurrentUser } from '@web/hooks/use-current-user'
 
 export default function AuthForm() {
   const [currentStep, setCurrentStep] = useState<'login' | 'signup' | 'otp'>(
     'login',
   )
   const [loggedInEmail, setLoggedInEmail] = useState<string>('')
-  
-
 
   return (
     <AnimatePresence mode="wait">
@@ -69,7 +67,10 @@ export default function AuthForm() {
           exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.2 }}
         >
-          <Login setLoggedInEmail={setLoggedInEmail} setCurrentStep={setCurrentStep} />
+          <Login
+            setLoggedInEmail={setLoggedInEmail}
+            setCurrentStep={setCurrentStep}
+          />
         </motion.div>
       )}
     </AnimatePresence>
@@ -77,7 +78,7 @@ export default function AuthForm() {
 }
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
-  password: passwordSchema
+  password: passwordSchema,
 })
 
 type LoginFormData = z.infer<typeof loginSchema>
@@ -86,8 +87,8 @@ function Login({
   setLoggedInEmail,
   setCurrentStep,
 }: {
-    setLoggedInEmail: React.Dispatch<React.SetStateAction<string>>,
-    setCurrentStep: (step: 'login' | 'signup' | 'otp') => void
+  setLoggedInEmail: React.Dispatch<React.SetStateAction<string>>
+  setCurrentStep: (step: 'login' | 'signup' | 'otp') => void
 }) {
   const [isLoading, setIsLoading] = useState(false)
   const searchParams = useSearchParams()
@@ -96,11 +97,10 @@ function Login({
     defaultValues: {
       email: '',
       password: '',
-    }
-
+    },
   })
 
-  async function onSubmit(data:LoginFormData) {
+  async function onSubmit(data: LoginFormData) {
     setIsLoading(true)
     try {
       const res = await fetch('/api/auth/signin', {
@@ -117,12 +117,12 @@ function Login({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             email: data.email,
-            otp: result.otp
+            otp: result.otp,
           }),
         })
 
         const otpResult = await otpRes.json()
-        
+
         if (otpResult?.error?.message) {
           toast({
             title: 'OTP Error',
@@ -164,14 +164,18 @@ function Login({
   async function handleGoogleSignIn() {
     setIsLoading(true)
     try {
-      const role = searchParams.get("role") ?? 'doctor'
+      const role = searchParams.get('role') ?? 'doctor'
       document.cookie = `signup-role=${role}; path=/; max-age=300`
 
+      let baseUrl = 'https://doctors.askremohealth.com'
       let callbackPath = '/specialist/upcoming-appointments'
       if (role === 'patient') {
         callbackPath = '/patient/online-appointments'
-      }
-      await signIn('google', { callbackUrl: window.location.origin + callbackPath })
+        baseUrl = 'https://askremohealth.com' 
+      } 
+      await signIn('google', {
+        callbackUrl: baseUrl + callbackPath,
+      })
     } catch {
       toast({
         title: 'Error',
@@ -217,7 +221,11 @@ function Login({
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="you@example.com" {...field} />
+                      <Input
+                        type="email"
+                        placeholder="you@example.com"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -231,7 +239,11 @@ function Login({
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="********" {...field} />
+                      <Input
+                        type="password"
+                        placeholder="********"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -258,20 +270,19 @@ function Login({
   )
 }
 
-
 const signUpSchema = z
   .object({
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
-  email: z.string().email('Invalid email address'),
-  password: passwordSchema,
-  confirmPassword: passwordSchema,
-  role:z.string()
+    firstName: z.string().min(1, 'First name is required'),
+    lastName: z.string().min(1, 'Last name is required'),
+    email: z.string().email('Invalid email address'),
+    password: passwordSchema,
+    confirmPassword: passwordSchema,
+    role: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
-    path: ['confirmPassword']
-  });
+    path: ['confirmPassword'],
+  })
 
 type SignUpFormData = z.infer<typeof signUpSchema>
 
@@ -282,7 +293,7 @@ function SignUp({
 }) {
   const [isLoading, setIsLoading] = useState(false)
   const searchParams = useSearchParams()
-  const role = searchParams.get("role")
+  const role = searchParams.get('role')
 
   const form = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
@@ -291,13 +302,12 @@ function SignUp({
       lastName: '',
       email: '',
       password: '',
-      confirmPassword:'',
-      role : role ?? ''
-    }
-    
+      confirmPassword: '',
+      role: role ?? '',
+    },
   })
 
-  async function onSubmit(data:SignUpFormData) {
+  async function onSubmit(data: SignUpFormData) {
     setIsLoading(true)
     try {
       const res = await fetch('/api/auth/signup', {
@@ -309,7 +319,6 @@ function SignUp({
       if (result.success) {
         toast({ title: 'Success', description: 'Sign up was successful!' })
         setCurrentStep('login')
-
       } else {
         toast({
           title: 'Error',
@@ -330,14 +339,16 @@ function SignUp({
 
   async function handleGoogleSignUp() {
     // Set role in cookie before Google sign-in
-    const role = searchParams.get("role") ?? 'doctor'
+    const role = searchParams.get('role') ?? 'doctor'
     document.cookie = `signup-role=${role}; path=/; max-age=300` // 5 minutes expiry
 
     let callbackPath = '/specialist/upcoming-appointments'
     if (role === 'patient') {
       callbackPath = '/patient/online-appointments'
     }
-    await signIn('google', { callbackUrl: window.location.origin + callbackPath })
+    await signIn('google', {
+      callbackUrl: window.location.origin + callbackPath,
+    })
   }
 
   return (
@@ -402,7 +413,11 @@ function SignUp({
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="you@example.com" {...field} />
+                      <Input
+                        type="email"
+                        placeholder="you@example.com"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -416,7 +431,11 @@ function SignUp({
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="********" {...field} />
+                      <Input
+                        type="password"
+                        placeholder="********"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -429,7 +448,11 @@ function SignUp({
                   <FormItem>
                     <FormLabel>Confirm Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="********" {...field} />
+                      <Input
+                        type="password"
+                        placeholder="********"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -460,10 +483,9 @@ const FormSchema = z.object({
   pin: z.string().min(6, { message: 'Invalid OTP' }),
 })
 
-function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
+function InputOTPForm({ loggedInEmail }: { loggedInEmail: string }) {
   const [isLoading, setIsLoading] = useState(false)
   const [resendIsLoading, setResendIsLoading] = useState(false)
-
 
   const router = useRouter()
   type UserRole = 'patient' | 'doctor' | 'admin'
@@ -504,18 +526,14 @@ function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
           } else {
             router.push('/patient/upcoming-appointments')
           }
-        }
-        else if (user?.role === 'doctor' && user?.onboardingComplete) {
+        } else if (user?.role === 'doctor' && user?.onboardingComplete) {
           router.push('/specialist/upcoming-appointments')
-        }
-        else if (user?.role === 'admin') {
+        } else if (user?.role === 'admin') {
           router.push('/admin')
-          }
-        else {
+        } else {
           router.push('/specialist/onboarding/personal-details')
         }
-      }
-      else {
+      } else {
         toast({
           title: 'Error',
           description: result.message,
@@ -533,29 +551,27 @@ function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
       const response = await fetch('api/auth/resendotp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:JSON.stringify({email:loggedInEmail})
+        body: JSON.stringify({ email: loggedInEmail }),
       })
 
       const result = await response.json()
 
       if (!response.ok || !result.success) {
-        throw new Error(result.error ?? 'Something went wrong');
+        throw new Error(result.error ?? 'Something went wrong')
       }
 
       toast({
         title: 'Success',
         description: 'OTP sent successfully!',
         duration: 3000,
-      });
-  
-    }
-    catch {
+      })
+    } catch {
       toast({
         title: 'Error',
         description: 'Failed to resend OTP',
         variant: 'destructive',
         duration: 4000,
-      });
+      })
     } finally {
       setResendIsLoading(false)
     }
@@ -594,12 +610,20 @@ function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
                   </FormItem>
                 )}
               />
-              <div className='flex justify-between w-full'>
+              <div className="flex justify-between w-full">
                 <Button type="submit" disabled={isLoading ?? resendIsLoading}>
                   {isLoading ? <Loader className="animate-spin" /> : 'Submit'}
                 </Button>
-                <Button onClick={handleResend} variant="outline" disabled={isLoading ?? resendIsLoading}>
-                  {resendIsLoading ? <Loader className="animate-spin" /> : 'Resend'}
+                <Button
+                  onClick={handleResend}
+                  variant="outline"
+                  disabled={isLoading ?? resendIsLoading}
+                >
+                  {resendIsLoading ? (
+                    <Loader className="animate-spin" />
+                  ) : (
+                    'Resend'
+                  )}
                 </Button>
               </div>
             </form>
