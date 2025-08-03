@@ -2,6 +2,7 @@ import 'server-only'
 
 import { createHydrationHelpers } from '@trpc/react-query/rsc'
 import { cache } from 'react'
+import { type CreateNextContextOptions } from '@trpc/server/adapters/next'
 
 import { createCaller, type APIRouter } from '@web/server/api'
 import { createTRPCContext } from '@web/server/api/trpc'
@@ -14,7 +15,7 @@ import { createQueryClient } from './query-client'
 const createContext = cache(async () => {
   // For server components, we can directly call createTRPCContext without a request object
   // since we're not in an HTTP request context
-  return createTRPCContext({} as any)
+  return createTRPCContext({} as unknown as CreateNextContextOptions)
 })
 
 const getQueryClient = cache(createQueryClient)
