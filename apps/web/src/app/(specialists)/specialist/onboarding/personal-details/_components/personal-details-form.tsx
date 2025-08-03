@@ -73,15 +73,15 @@ export type PersonalDetails = z.infer<typeof personalDetailsSchema>
 export default function PersonalDetails() {
   const [user] = api.users.currentUser.useSuspenseQuery()
   
-  // if (!user) {
-  //   redirect('/')
-  // }
-
-  if (user!.role !== 'doctor') {
+  if (!user) {
     redirect('/')
   }
 
-  if (user!.onboardingComplete === true) {
+  if (user.role !== 'doctor') {
+    redirect('/')
+  }
+
+  if (user.onboardingComplete === true) {
     redirect('/specialist/upcoming-appointments')
   }
 

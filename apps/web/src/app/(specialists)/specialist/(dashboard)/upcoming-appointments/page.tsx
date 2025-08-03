@@ -1,4 +1,5 @@
 import { api } from '@web/trpc/server'
+import { redirect } from 'next/navigation'
 import AppointmentTabs from './_components/appointment-tabs'
 
 export default async function Page({
@@ -6,6 +7,24 @@ export default async function Page({
 }: {
   searchParams: Promise<{ type: string; page: string; pageSize: string }>
 }) {
+  // Check if user is authenticated and has completed onboarding
+  const user = await api.users.currentUser()
+  
+  if (!user) {
+    // Redirect to login if not authenticated
+    redirect('/auth')
+  }
+  
+  if (user.role !== 'doctor') {
+    // Redirect to appropriate dashboard if not a doctor
+    redirect('/')
+  }
+  
+  if (!user.onboardingComplete) {
+    // Redirect to personal details form if onboarding not complete
+    redirect('/specialist/onboarding/personal-details')
+  }
+  
   const { type, page, pageSize } = await searchParams
   const data = await api.doctors.upcommingAppointments({
     type: (type as 'online' | 'physical') ?? 'online',

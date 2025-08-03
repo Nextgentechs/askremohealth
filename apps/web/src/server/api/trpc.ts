@@ -3,9 +3,13 @@ import { initTRPC, TRPCError } from '@trpc/server'
 import { type CreateNextContextOptions } from '@trpc/server/adapters/next'
 import superjson from 'superjson'
 import { ZodError } from 'zod'
+import { cookies } from 'next/headers'
+import { eq } from 'drizzle-orm'
 
-import { getCurrentUser } from '@web/auth'
 import { db } from '@web/server/db'
+import { users } from '@web/server/db/schema'
+import { redisClient } from '@web/redis/redis'
+import { sessionSchema } from '@web/server/lib/session'
 
 /**
  * 1. CONTEXT
@@ -44,10 +48,32 @@ const createInnerTRPCContext = (opts: CreateContextOptions) => {
  * @see https://trpc.io/docs/context
  */
 export const createTRPCContext = async (opts: CreateNextContextOptions) => {
-  const { req, res } = opts
+  const cookieStore = await cookies()
+  let user = null
 
-  // Get user from our custom authentication
-  const user = await getCurrentUser()
+  // First try to get user from Redis session (email/password login)
+  const sessionToken = cookieStore.get('session-id')?.value
+  if (sessionToken) {
+    const rawSession = await redisClient.get(`session:${sessionToken}`)
+    if (rawSession) {
+      const parsed = sessionSchema.safeParse(
+        typeof rawSession === 'string' ? JSON.parse(rawSession) : rawSession,
+      )
+      if (parsed.success) {
+        // Fetch the full user from the database
+        user = await db.query.users.findFirst({
+          where: eq(users.id, parsed.data.id),
+        })
+      }
+    }
+  }
+
+  // If no Redis session, try direct database lookup (Google OAuth)
+  if (!user && sessionToken) {
+    user = await db.query.users.findFirst({
+      where: eq(users.id, sessionToken),
+    })
+  }
 
   return createInnerTRPCContext({
     user,
