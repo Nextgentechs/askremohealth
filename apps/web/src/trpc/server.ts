@@ -1,7 +1,6 @@
 import 'server-only'
 
 import { createHydrationHelpers } from '@trpc/react-query/rsc'
-import { headers } from 'next/headers'
 import { cache } from 'react'
 
 import { createCaller, type APIRouter } from '@web/server/api'
@@ -13,33 +12,10 @@ import { createQueryClient } from './query-client'
  * handling a tRPC call from a React Server Component.
  */
 const createContext = cache(async () => {
-  const heads = await headers()
-
-  const cookieHeader = heads.get('cookie') ?? ''
-  const userAgent = heads.get('user-agent') ?? ''
-
-  const req = new Request('http://localhost', {
-    headers: {
-      cookie: cookieHeader,
-      'user-agent': userAgent,
-    },
-  })
-
-  return createTRPCContext({
-    req,
-    resHeaders: new Headers(),
-    info: {
-      accept: null,
-      type: 'query',
-      isBatchCall: false,
-      calls: [],
-      connectionParams: null,
-      signal: new AbortController().signal,
-      url: null
-    },
-  })
+  // For server components, we can directly call createTRPCContext without a request object
+  // since we're not in an HTTP request context
+  return createTRPCContext({} as any)
 })
-
 
 const getQueryClient = cache(createQueryClient)
 const caller = createCaller(createContext)

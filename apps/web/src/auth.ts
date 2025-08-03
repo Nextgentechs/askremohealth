@@ -115,8 +115,9 @@ export async function getCurrentUser() {
 
     // First, try to get user from Redis session (email/password login)
     const redisUser = await getUserSessionById(sessionId)
+    
     if (redisUser) {
-      // If we have a Redis session, get the full user from database
+      // If we have a Redis session, get the full user from database using the user ID from the session
       const user = await db.query.users.findFirst({
         where: eq(users.id, redisUser.id),
       })
