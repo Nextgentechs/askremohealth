@@ -7,7 +7,9 @@ import { protectedProcedure, publicProcedure } from '../trpc'
 import { appointmentListSchema, newAppointmentSchema } from '../validators'
 
 export const currentUser = publicProcedure.query(async ({ ctx }) => {
-  if (!ctx.user) return null
+  if (!ctx.user) {
+    return null
+  }
 
   // Get additional details based on role
   if (ctx.user.role === 'doctor') {

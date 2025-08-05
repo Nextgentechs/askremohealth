@@ -53,12 +53,15 @@ export const createTRPCContext = async () => {
 
   // First try to get user from Redis session (email/password login)
   const sessionToken = cookieStore.get('session-id')?.value
+  
   if (sessionToken) {
     const rawSession = await redisClient.get(`session:${sessionToken}`)
+    
     if (rawSession) {
       const parsed = sessionSchema.safeParse(
         typeof rawSession === 'string' ? JSON.parse(rawSession) : rawSession,
       )
+      
       if (parsed.success) {
         // Fetch the full user from the database
         user = await db.query.users.findFirst({
