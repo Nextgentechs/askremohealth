@@ -15,7 +15,7 @@ export function useCurrentUser() {
   })
 
   return {
-    user: user?.user || null,
+    user: user?.user ?? null,
     isLoading,
     error,
   }

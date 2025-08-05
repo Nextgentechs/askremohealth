@@ -5,7 +5,7 @@ import { Button } from './ui/button'
 import { Card, CardContent } from './ui/card'
 import { api } from '@web/trpc/server'
 import parse, { domToReact } from 'html-react-parser'
-import type { DOMNode, Element } from 'html-react-parser'
+import type { DOMNode } from 'html-react-parser'
 import truncateHtml from 'truncate-html'
 
 export interface Article {

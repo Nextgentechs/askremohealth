@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { handleGoogleCallback } from '@web/auth'
 
 export async function GET(request: NextRequest) {
@@ -22,9 +22,9 @@ export async function GET(request: NextRequest) {
   try {
     const result = await handleGoogleCallback(code, state)
     
-    if (!result.success) {
+    if (!result.success || !result.user) {
       return NextResponse.redirect(
-        new URL(`/auth?error=${encodeURIComponent(result.error)}`, request.url)
+        new URL(`/auth?error=${encodeURIComponent(result.error ?? 'An unknown error occurred')}`, request.url)
       )
     }
 
@@ -70,4 +70,4 @@ export async function GET(request: NextRequest) {
       new URL('/auth?error=Authentication failed', request.url)
     )
   }
-} 
+}
