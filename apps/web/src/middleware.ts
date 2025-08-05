@@ -1,5 +1,4 @@
 import { NextResponse, NextRequest } from 'next/server'
-import { getCurrentUser } from '@web/auth'
 
 export async function middleware(req: NextRequest) {
   const sessionId = req.cookies.get('session-id')?.value
@@ -8,6 +7,8 @@ export async function middleware(req: NextRequest) {
 
   // Check if the request is for the doctors subdomain
   const isDoctorsSubdomain = hostname.startsWith('doctors.')
+  const isSpecialistRoute = pathname.startsWith('/specialist')
+  const isAdminRoute = pathname.startsWith('/admin')
 
   // Define public paths for doctors subdomain (add more as needed)
   const publicPaths = ['/', '/auth', '/about', '/contact']
@@ -38,7 +39,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // If we're on the specialist path but not on the doctors subdomain
-  if (pathname.startsWith('/specialist') && !isDoctorsSubdomain) {
+  if (isSpecialistRoute && !isDoctorsSubdomain) {
     // Remove 'www.' if present
     let doctorsHost = ''
     if (process.env.NODE_ENV === 'production') {
@@ -58,17 +59,16 @@ export async function middleware(req: NextRequest) {
         httpOnly: false,
         sameSite: 'lax',
         maxAge: 60 * 60 * 24 * 7,
-        domain: process.env.NODE_ENV === 'production' ? '.askremohealth.com' : '.localhost'
+        domain: process.env.NODE_ENV === 'production' ? '.askremohealth.com' : undefined
       })
     }
 
     return response
   }
 
-  const isAdminRoute = pathname.startsWith('/admin')
-
-  if (!sessionId && isAdminRoute) {
-    return NextResponse.redirect(new URL('/auth', req.url))
+  // For specialist and admin routes, check if user has a session
+  if ((isSpecialistRoute || isAdminRoute) && !sessionId) {
+    return NextResponse.redirect(new URL('/auth', req.url));
   }
 
   return NextResponse.next()

@@ -74,11 +74,11 @@ export default function PersonalDetails() {
   const [user] = api.users.currentUser.useSuspenseQuery()
   
   if (!user) {
-    redirect('/')
+    return <div>Loading...</div>
   }
 
   if (user.role !== 'doctor') {
-    redirect('/')
+    redirect('https://askremohealth.com/')
   }
 
   if (user.onboardingComplete === true) {
