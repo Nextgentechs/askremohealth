@@ -72,19 +72,6 @@ export type PersonalDetails = z.infer<typeof personalDetailsSchema>
 
 export default function PersonalDetails() {
   const [user] = api.users.currentUser.useSuspenseQuery()
-  
-  if (!user) {
-    return <div>Loading...</div>
-  }
-
-  if (user.role !== 'doctor') {
-    redirect('https://askremohealth.com/')
-  }
-
-  if (user.onboardingComplete === true) {
-    redirect('/specialist/upcoming-appointments')
-  }
-
   const form = useForm<PersonalDetails>({
     resolver: zodResolver(personalDetailsSchema),
     mode: 'onChange',
@@ -117,6 +104,18 @@ export default function PersonalDetails() {
       })
     }
   })
+  
+  if (!user) {
+    return <div>Loading...</div>
+  }
+
+  if (user.role !== 'doctor') {
+    redirect('https://askremohealth.com/')
+  }
+
+  if (user.onboardingComplete === true) {
+    redirect('/specialist/upcoming-appointments')
+  }
 
   return (
     <form className="space-y-8">
