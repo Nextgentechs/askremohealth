@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { getGoogleAuthUrl } from '@web/auth'
 
 export async function POST(request: NextRequest) {
@@ -22,4 +22,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-} 
+}

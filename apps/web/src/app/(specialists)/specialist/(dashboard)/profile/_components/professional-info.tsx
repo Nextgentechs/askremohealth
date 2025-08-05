@@ -12,7 +12,6 @@ type SubSpecialty = {
 
 export default function ProfessionalInfo() {
   const [doctor] = api.doctors.currentDoctor.useSuspenseQuery()
-  const { data: specialties } = api.specialties.listSpecialties.useQuery()
   const { data: subspecialties } = api.specialties.listSubSpecialties.useQuery({
     specialityId: doctor?.specialty?.id ?? '',
   })
@@ -43,7 +42,7 @@ export default function ProfessionalInfo() {
             <div>
               <h3 className="font-medium">Sub-specialties</h3>
               <p className="text-muted-foreground">
-                {selectedSubSpecialties?.map((sub) => sub.name).join(', ') ??
+                {selectedSubSpecialties?.map((sub: SubSpecialty) => sub.name).join(', ') ??
                   'Not specified'}
               </p>
             </div>

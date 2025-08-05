@@ -20,8 +20,8 @@ import { sessionSchema } from '@web/server/lib/session'
  */
 
 interface CreateContextOptions {
-  user: any | null
-  db: any // Add this line
+  user: typeof users.$inferSelect | null
+  db: typeof db
 }
 
 /**
@@ -47,7 +47,7 @@ const createInnerTRPCContext = (opts: CreateContextOptions) => {
  *
  * @see https://trpc.io/docs/context
  */
-export const createTRPCContext = async (opts: CreateNextContextOptions) => {
+export const createTRPCContext = async () => {
   const cookieStore = await cookies()
   let user = null
 
@@ -73,6 +73,11 @@ export const createTRPCContext = async (opts: CreateNextContextOptions) => {
     user = await db.query.users.findFirst({
       where: eq(users.id, sessionToken),
     })
+  }
+
+  // Ensure user is null if it's undefined
+  if (user === undefined) {
+    user = null;
   }
 
   return createInnerTRPCContext({

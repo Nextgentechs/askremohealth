@@ -15,7 +15,7 @@ import { createQueryClient } from './query-client'
 const createContext = cache(async () => {
   // For server components, we can directly call createTRPCContext without a request object
   // since we're not in an HTTP request context
-  return createTRPCContext({} as unknown as CreateNextContextOptions)
+  return createTRPCContext()
 })
 
 const getQueryClient = cache(createQueryClient)

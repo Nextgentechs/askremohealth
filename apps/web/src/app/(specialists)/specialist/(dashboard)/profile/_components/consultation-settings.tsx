@@ -24,8 +24,6 @@ import {
 } from '@web/components/ui/select'
 import { Switch } from '@web/components/ui/switch'
 import React, { useEffect } from 'react'
-import type { z } from 'zod'
-import type { AvailabilityDetailsSchema } from '@web/server/api/validators'
 
 function OnlineStatus() {
   return (
@@ -166,9 +164,9 @@ export default function ConsultationSettings() {
                       <Input
                         type="time"
                         value={dayHours.opening}
-                        onChange={e => {
+                        onChange={event => {
                           const updated = [...field.value]
-                          if (updated[index]) updated[index].opening = e.target.value
+                          if (updated[index]) updated[index].opening = event.target.value
                           field.onChange(updated)
                         }}
                         className="w-24"
@@ -177,9 +175,9 @@ export default function ConsultationSettings() {
                       <Input
                         type="time"
                         value={dayHours.closing}
-                        onChange={e => {
+                        onChange={event => {
                           const updated = [...field.value]
-                          if (updated[index]) updated[index].closing = e.target.value
+                          if (updated[index]) updated[index].closing = event.target.value
                           field.onChange(updated)
                         }}
                         className="w-24"

@@ -13,7 +13,7 @@ const BASE_URL = process.env.NODE_ENV === 'production'
   : 'http://localhost:3000'
 
 // Generate Google OAuth URL
-export function getGoogleAuthUrl(role: string = 'doctor') {
+export function getGoogleAuthUrl(role = 'doctor') {
   const redirectUri = `${BASE_URL}/api/auth/google/callback`
   const scope = 'email profile'
   const state = btoa(JSON.stringify({ role })) // Encode role in state
@@ -68,7 +68,7 @@ async function getGoogleUserInfo(accessToken: string) {
 }
 
 // Create or update user in database
-async function createOrUpdateUser(googleUser: any, role: string) {
+async function createOrUpdateUser(googleUser: { email: string, given_name: string, family_name: string }, role: string) {
   const existingUser = await db.query.users.findFirst({
     where: eq(users.email, googleUser.email),
   })
@@ -77,8 +77,8 @@ async function createOrUpdateUser(googleUser: any, role: string) {
     // Insert new user
     const [newUser] = await db.insert(users).values({
       email: googleUser.email,
-      firstName: googleUser.given_name || '',
-      lastName: googleUser.family_name || '',
+      firstName: googleUser.given_name ?? '',
+      lastName: googleUser.family_name ?? '',
       role: role as 'doctor' | 'patient' | 'admin',
       password: '',
     }).returning()
@@ -89,8 +89,10 @@ async function createOrUpdateUser(googleUser: any, role: string) {
   return existingUser
 }
 
+import { type ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies'
+
 // Set session cookie
-function setSessionCookie(userId: string, cookies: any) {
+function setSessionCookie(userId: string, cookies: ReadonlyRequestCookies) {
   const domain = process.env.NODE_ENV === 'production' ? '.askremohealth.com' : '.localhost'
   
   cookies.set('session-id', userId, {
