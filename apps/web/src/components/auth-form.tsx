@@ -528,14 +528,19 @@ function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
             router.push('/patient/upcoming-appointments')
           }
         }
-        else if (user?.role === 'doctor' && user?.onboardingComplete) {
-          router.push('/specialist/upcoming-appointments')
+        else if (user?.role === 'doctor') {
+          if (!user?.onboardingComplete) {
+            router.push('/specialist/onboarding/personal-details')
+          } else {
+            router.push('/specialist/upcoming-appointments')
+          }
         }
         else if (user?.role === 'admin') {
           router.push('/admin')
-          }
+        }
         else {
-          router.push('/specialist/onboarding/personal-details')
+          // Fallback for any other roles or undefined roles, perhaps redirect to a generic home or login page
+          router.push('/')
         }
       }
       else {

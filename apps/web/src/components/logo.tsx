@@ -4,7 +4,7 @@ import Link from 'next/link'
 type LogoProps = Omit<ImageProps, 'src' | 'alt'>
 
 export default function Logo({
-  href = '/',
+  href = 'https://askremohealth.com/',
   ...props
 }: LogoProps & { href?: string }) {
   return (

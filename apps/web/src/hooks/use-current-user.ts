@@ -1,24 +1,16 @@
-import { useQuery } from '@tanstack/react-query'
+import { api } from '@web/trpc/react';
 
 export function useCurrentUser() {
-  const { data: user, isLoading, error } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: async () => {
-      const response = await fetch('/api/auth/me')
-      if (!response.ok) {
-        throw new Error('Failed to fetch user')
-      }
-      return response.json()
-    },
+  const { data: user, isLoading, error } = api.users.currentUser.useQuery(undefined, {
     retry: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
-  })
+  });
 
   return {
-    user: user?.user ?? null,
+    user: user ?? null,
     isLoading,
     error,
-  }
+  };
 }
 
 export function useIsDoctor() {
