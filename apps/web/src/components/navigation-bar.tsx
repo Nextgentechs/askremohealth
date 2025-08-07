@@ -132,7 +132,10 @@ function AuthButtons({
             <DropdownMenuItem className="cursor-pointer">Login as Doctor</DropdownMenuItem>
           </Link> */}
           <Link href="/auth?role=patient">
-            <DropdownMenuItem className="cursor-pointer">Login as Patient</DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer">Patient Login</DropdownMenuItem>
+          </Link>
+          <Link href="https://doctors.askremohealth.com/auth?role=doctor">
+            <DropdownMenuItem className="cursor-pointer">Doctor Login</DropdownMenuItem>
           </Link>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -285,6 +288,8 @@ function CurrentUser({
 
 export default function NavigationBar() {
   const { user } = useCurrentUser()
+
+  console.log(user)
 
   return (
     <div className="flex w-full flex-row items-center justify-between lg:px-5">

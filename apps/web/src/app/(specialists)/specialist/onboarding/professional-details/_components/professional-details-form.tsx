@@ -462,7 +462,7 @@ export default function ProfessionalDetailsForm() {
       </div>
 
         <div className="flex flex-col gap-2">
-          <Label htmlFor="medicalLicense">Medical License</Label>
+          <Label htmlFor="medicalLicense">Medical License (pdf) <span className="text-destructive">*</span></Label>
           <Input
             type="file"
             accept=".pdf"
