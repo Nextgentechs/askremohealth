@@ -320,13 +320,17 @@ function BookingForm() {
   useEffect(() => {
     if (!currentUser) {
       const callbackUrl = new URLSearchParams(searchParams)
+      const baseUrl = window.location.origin;
+      const currentUrl = new URL(baseUrl + window.location.pathname);
+      currentUrl.searchParams.set('date', searchParams.get('date') ?? '');
+      currentUrl.searchParams.set('time', searchParams.get('time') ?? '');
       callbackUrl.set(
         'callbackUrl',
-        `/find-specialists/${id}/book?${callbackUrl.toString()}`,
-      )
-      redirect(`/auth?role=patient&${callbackUrl.toString()}`)
+        currentUrl.pathname + currentUrl.search,
+      );
+      redirect(`/auth?role=patient&${callbackUrl.toString()}`);
     }
-  }, [currentUser, searchParams, id])
+  }, [currentUser, searchParams, id]);
 
   if (currentUser?.role === 'doctor') {
     return (

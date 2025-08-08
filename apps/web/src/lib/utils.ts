@@ -157,8 +157,8 @@ export function combineDateTime(dateString: string, timeString: string) {
     throw new Error('Invalid timeString format')
   }
 
-  // Create a new Date object
-  const combinedDate = new Date(year, month, day, hours24, minutes24, 0, 0)
+  // Create a new Date object in UTC
+  const combinedDate = new Date(Date.UTC(year, month, day, hours24, minutes24, 0, 0))
 
   return combinedDate
 }
