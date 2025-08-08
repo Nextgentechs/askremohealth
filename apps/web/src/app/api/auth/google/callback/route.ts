@@ -28,9 +28,12 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    if (result.callbackUrl) {
+      return NextResponse.redirect(new URL(result.callbackUrl, request.url))
+    }
     // Redirect based on user role and onboarding status
     let redirectPath = '/'
-    
+
     if (result.user.role === 'doctor') {
       if (result.user.onboardingComplete) {
         redirectPath = '/specialist/upcoming-appointments'

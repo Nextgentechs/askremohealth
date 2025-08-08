@@ -13,11 +13,11 @@ const BASE_URL = process.env.NODE_ENV === 'production'
   : 'http://localhost:3000'
 
 // Generate Google OAuth URL
-export function getGoogleAuthUrl(role = 'doctor') {
+export function getGoogleAuthUrl(role = 'doctor', callbackUrl?: string) {
   const redirectUri = `${BASE_URL}/api/auth/google/callback`
   const scope = 'email profile'
-  const state = btoa(JSON.stringify({ role })) // Encode role in state
-  
+  const state = btoa(JSON.stringify({ role, callbackUrl })) // Encode role in state
+
   const params = new URLSearchParams({
     client_id: GOOGLE_CLIENT_ID,
     redirect_uri: redirectUri,
@@ -165,8 +165,8 @@ export async function signOut() {
 export async function handleGoogleCallback(code: string, state: string) {
   try {
     // Decode state to get role
-    const { role } = JSON.parse(atob(state))
-    
+    const { role, callbackUrl } = JSON.parse(atob(state))
+
     // Exchange code for tokens
     const tokens = await exchangeCodeForTokens(code)
     
@@ -183,8 +183,8 @@ export async function handleGoogleCallback(code: string, state: string) {
     // Set session cookie
     const cookieStore = await cookies()
     setSessionCookie(user.id, cookieStore)
-    
-    return { success: true, user }
+
+    return { success: true, user, callbackUrl }
   } catch (error) {
     console.error('Google OAuth error:', error)
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
