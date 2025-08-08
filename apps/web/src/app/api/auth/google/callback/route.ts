@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
       if (result.user.role === 'doctor') {
         redirectUrl = `http://doctors.localhost:3000${redirectPath}`
       } else {
-        redirectUrl = `https://askremohealth.com${redirectPath}`
+        redirectUrl = `http://localhost:3000${redirectPath}`
       }
     }
 
