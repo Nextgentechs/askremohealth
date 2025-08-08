@@ -163,15 +163,15 @@ function Login({
   async function handleGoogleSignIn() {
     setIsLoading(true)
     try {
-      const role = searchParams.get("role") ?? 'doctor'
-      
+      const role = searchParams.get('role') ?? 'doctor'
+      const callbackUrl = searchParams.get('callbackUrl')
       // Call our API to get the Google OAuth URL
       const response = await fetch('/api/auth/google/url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role }),
+        body: JSON.stringify({ role, callbackUrl }),
       })
-      
+
       const result = await response.json()
       
       if (result.url) {
@@ -337,15 +337,16 @@ function SignUp({
   async function handleGoogleSignUp() {
     setIsLoading(true)
     try {
-      const role = searchParams.get("role") ?? 'doctor'
-      
+      const role = searchParams.get('role') ?? 'doctor'
+      const callbackUrl = searchParams.get('callbackUrl')
+
       // Call our API to get the Google OAuth URL
       const response = await fetch('/api/auth/google/url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role }),
+        body: JSON.stringify({ role, callbackUrl }),
       })
-      
+
       const result = await response.json()
       
       if (result.url) {

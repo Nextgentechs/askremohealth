@@ -319,9 +319,14 @@ function BookingForm() {
 
   useEffect(() => {
     if (!currentUser) {
-      redirect('/auth?role=patient')
+      const callbackUrl = new URLSearchParams(searchParams)
+      callbackUrl.set(
+        'callbackUrl',
+        `/find-specialists/${id}/book?${callbackUrl.toString()}`,
+      )
+      redirect(`/auth?role=patient&${callbackUrl.toString()}`)
     }
-  }, [currentUser])
+  }, [currentUser, searchParams, id])
 
   if (currentUser?.role === 'doctor') {
     return (

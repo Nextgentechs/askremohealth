@@ -3,17 +3,14 @@ import { getGoogleAuthUrl } from '@web/auth'
 
 export async function POST(request: NextRequest) {
   try {
-    const { role } = await request.json()
-    
+    const { role, callbackUrl } = await request.json()
+
     if (!role || !['doctor', 'patient', 'admin'].includes(role)) {
-      return NextResponse.json(
-        { error: 'Invalid role' }, 
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
     }
 
-    const authUrl = getGoogleAuthUrl(role)
-    
+    const authUrl = getGoogleAuthUrl(role, callbackUrl)
+
     return NextResponse.json({ url: authUrl })
   } catch (error) {
     console.error('Error generating Google OAuth URL:', error)
