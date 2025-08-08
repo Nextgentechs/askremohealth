@@ -158,7 +158,7 @@ export function combineDateTime(dateString: string, timeString: string) {
   }
 
   // Create a new Date object in UTC
-  const combinedDate = new Date(Date.UTC(year, month, day, hours24, minutes24, 0, 0))
+  const combinedDate = new Date(Date.UTC(year, month, day, hours24, minutes24));
 
   return combinedDate
 }
