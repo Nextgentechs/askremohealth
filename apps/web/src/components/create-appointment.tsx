@@ -320,7 +320,7 @@ function BookingForm() {
   useEffect(() => {
     if (!currentUser) {
       const callbackUrl = new URLSearchParams(searchParams)
-      const baseUrl = window.location.origin;
+      const baseUrl = 'https://askremohealth.com';
       const currentUrl = new URL(baseUrl + window.location.pathname);
       currentUrl.searchParams.set('date', searchParams.get('date') ?? '');
       currentUrl.searchParams.set('time', searchParams.get('time') ?? '');

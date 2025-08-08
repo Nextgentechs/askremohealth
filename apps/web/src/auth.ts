@@ -8,7 +8,9 @@ import { getUserSessionById } from './server/lib/session'
 // Google OAuth configuration
 const GOOGLE_CLIENT_ID = process.env.AUTH_GOOGLE_ID!
 const GOOGLE_CLIENT_SECRET = process.env.AUTH_GOOGLE_SECRET!
-const BASE_URL = 'https://askremohealth.com' 
+const BASE_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://askremohealth.com' 
+  : 'http://localhost:3000'
 
 // Generate Google OAuth URL
 export function getGoogleAuthUrl(role = 'doctor', callbackUrl?: string) {
