@@ -158,7 +158,9 @@ export function combineDateTime(dateString: string, timeString: string) {
   }
 
   // Create a new Date object in UTC
-  const combinedDate = new Date(year, month, day, hours24, minutes24, 0, 0 - new Date().getTimezoneOffset());
+  const combinedDate = new Date(year, month, day, hours24, minutes24);
+ combinedDate.setMinutes(combinedDate.getMinutes() - combinedDate.getTimezoneOffset());
+
 
   return combinedDate
 }
