@@ -143,18 +143,24 @@ export function convertTo24Hour(time: string) {
   return `${hour24.toString().padStart(2, '0')}:${minutes}`
 }
 
-export function combineDateTime(date: string, time: string) {
-  const baseDate = new Date(date)
+export function combineDateTime(dateString: string, timeString: string) {
+  const date = new Date(dateString)
+  const year = date.getFullYear()
+  const month = date.getMonth()
+  const day = date.getDate()
 
-  const [hours, minutes] = convertTo24Hour(time).split(':')
-  if (!hours || !minutes) throw new Error('Invalid time format')
+  // Convert time to 24-hour format
+  const [hours24, minutes24] = convertTo24Hour(timeString)
+    .split(':')
+    .map(Number)
+  if (hours24 === undefined || minutes24 === undefined) {
+    throw new Error('Invalid timeString format')
+  }
 
-  baseDate.setHours(parseInt(hours))
-  baseDate.setMinutes(parseInt(minutes))
-  baseDate.setSeconds(0)
-  baseDate.setMilliseconds(0)
+  // Create a new Date object
+  const combinedDate = new Date(year, month, day, hours24, minutes24, 0, 0)
 
-  return baseDate
+  return combinedDate
 }
 
 export function fileToBase64(file: File): Promise<string> {

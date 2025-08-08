@@ -340,13 +340,31 @@ function BookingForm() {
 
   const onSubmit = async (data: z.infer<typeof appointmentSchema>) => {
     try {
+      const selectedDate = searchParams.get('date')
+      const selectedTimeRaw = searchParams.get('time')
+
+      if (!selectedDate || !selectedTimeRaw) {
+        toast({
+          title: 'Error',
+          description: 'Please select a date and time for the appointment.',
+          variant: 'destructive',
+        })
+        return
+      }
+
+      if (!doctorDetails.id) {
+        toast({
+          title: 'Error',
+          description: 'Doctor details not found.',
+          variant: 'destructive',
+        })
+        return
+      }
+
       const finalData = {
         ...data,
-        doctorId: doctorDetails.id ?? '',
-        date: combineDateTime(
-          searchParams.get('date') ?? '',
-          searchParams.get('time') ?? '',
-        ),
+        doctorId: doctorDetails.id,
+        date: combineDateTime(selectedDate, selectedTimeRaw),
       }
       await mutateAsync(finalData)
       form.reset()
