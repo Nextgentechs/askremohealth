@@ -309,7 +309,7 @@ function BookingForm() {
       appointmentType: 'online',
       firstName: currentUser?.firstName ?? '',
       lastName: currentUser?.lastName ?? '',
-      phone: '',
+      phone: currentUser?.phone ?? '',
       email: currentUser?.email ?? '',
     },
   })
