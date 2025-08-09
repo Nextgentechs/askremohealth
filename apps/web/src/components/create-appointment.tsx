@@ -319,18 +319,11 @@ function BookingForm() {
 
   useEffect(() => {
     if (!currentUser) {
-      const callbackUrl = new URLSearchParams(searchParams)
-      const baseUrl = 'https://askremohealth.com';
-      const currentUrl = new URL(baseUrl + window.location.pathname);
-      currentUrl.searchParams.set('date', searchParams.get('date') ?? '');
-      currentUrl.searchParams.set('time', searchParams.get('time') ?? '');
-      callbackUrl.set(
-        'callbackUrl',
-        currentUrl.pathname + currentUrl.search,
-      );
-      redirect(`/auth?role=patient&${callbackUrl.toString()}`);
+      const callbackUrl = new URLSearchParams(searchParams.toString())
+      callbackUrl.set('callbackUrl', window.location.href)
+      redirect(`/auth?role=patient&${callbackUrl.toString()}`)
     }
-  }, [currentUser, searchParams, id]);
+  }, [currentUser, searchParams, id])
 
   if (currentUser?.role === 'doctor') {
     return (
