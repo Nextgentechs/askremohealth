@@ -1,8 +1,10 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@web/components/ui/card';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@web/components/ui/breadcrumb';
+import { Button } from '@web/components/ui/button';
 import { api } from '@web/trpc/server';
 import { notFound } from 'next/navigation';
+import Link from 'next/link';
 
 // Placeholder for a calendar component (replace with real one if available)
 function LabCalendar({ availability }: { availability: any[] }) {
@@ -91,6 +93,56 @@ function LabTests({ tests }: { tests: any[] }) {
   );
 }
 
+function BookingSection({ labId, tests, availability }: { labId: string; tests: any[]; availability: any[] }) {
+  if (!tests.length) {
+    return (
+      <Card className="flex w-full flex-col rounded-xl border px-0 shadow-sm">
+        <CardHeader className="flex w-full items-start border-b px-6 pb-6">
+          <CardTitle className="text-lg font-semibold md:text-xl">Book Appointment</CardTitle>
+        </CardHeader>
+        <CardContent className="flex w-full flex-col items-start gap-4 pt-6 text-foreground">
+          <p className="text-muted-foreground">No tests available for booking at this time.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="flex w-full flex-col rounded-xl border px-0 shadow-sm">
+      <CardHeader className="flex w-full items-start border-b px-6 pb-6">
+        <CardTitle className="text-lg font-semibold md:text-xl">Book Appointment</CardTitle>
+      </CardHeader>
+      <CardContent className="flex w-full flex-col items-start gap-4 pt-6 text-foreground">
+        <div className="flex flex-col gap-2">
+          <p className="text-sm text-muted-foreground">
+            Ready to book your lab test? Click below to schedule your appointment.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Link href={`/laboratories/${labId}/book`}>
+              <Button className="w-full sm:w-auto">
+                Book Lab Test
+              </Button>
+            </Link>
+            <Button variant="outline" className="w-full sm:w-auto">
+              View Available Times
+            </Button>
+          </div>
+        </div>
+        {availability.length > 0 && (
+          <div className="mt-4 p-4 bg-muted rounded-lg">
+            <h4 className="font-medium mb-2">Quick Info:</h4>
+            <ul className="text-sm text-muted-foreground space-y-1">
+              <li>• {tests.length} test{tests.length > 1 ? 's' : ''} available</li>
+              <li>• {availability.length} day{availability.length > 1 ? 's' : ''} per week available</li>
+              <li>• Online booking available 24/7</li>
+            </ul>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default async function Page({ params }: { params: { id: string } }) {
   const { id } = params;
   // Fetch lab details
@@ -135,7 +187,7 @@ export default async function Page({ params }: { params: { id: string } }) {
         <div className="flex flex-1 flex-col gap-8">
           <LabTests tests={tests} />
           <LabCalendar availability={availability} />
-          {/* TODO: Add booking UI for lab tests and available timeslots */}
+          <BookingSection labId={id} tests={tests} availability={availability} />
           {/* TODO: Add reviews section if needed */}
         </div>
       </div>
