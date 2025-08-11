@@ -214,34 +214,43 @@ export const bookLabAppointment = procedure
     email: z.string(),
     dob: z.string(),
     notes: z.string().optional(),
+    patientId: z.string().optional(),
   }))
   .mutation(async ({ input, ctx }) => {
-    // Find or create patient
-    let patient = await db.query.patients.findFirst({
-      where: (p, { eq }) => eq(p.phone, input.phone),
-    });
-    if (!patient) {
-      // Create new patient user and patient record
-      const userId = randomUUID();
-      await db.insert(users).values({
-        id: userId,
-        firstName: input.firstName,
-        lastName: input.lastName,
-        email: input.email,
-        phone: input.phone,
-        password: randomUUID(), // Set a random password (not used for lab patients)
-        role: 'patient',
-        onboardingComplete: true,
-      });
-      await db.insert(patients).values({
-        id: userId,
-        userId: userId,
-        phone: input.phone,
-        dob: new Date(input.dob),
-      });
+    // If patientId is provided (doctor booking), use it directly
+    let patient;
+    if (input.patientId) {
       patient = await db.query.patients.findFirst({
-        where: (p, { eq }) => eq(p.id, userId),
+        where: (p, { eq }) => eq(p.id, input.patientId!),
       });
+    } else {
+      // Find or create patient by phone
+      patient = await db.query.patients.findFirst({
+        where: (p, { eq }) => eq(p.phone, input.phone),
+      });
+      if (!patient) {
+        // Create new patient user and patient record
+        const userId = randomUUID();
+        await db.insert(users).values({
+          id: userId,
+          firstName: input.firstName,
+          lastName: input.lastName,
+          email: input.email,
+          phone: input.phone,
+          password: randomUUID(), // Set a random password (not used for lab patients)
+          role: 'patient',
+          onboardingComplete: true,
+        });
+        await db.insert(patients).values({
+          id: userId,
+          userId: userId,
+          phone: input.phone,
+          dob: new Date(input.dob),
+        });
+        patient = await db.query.patients.findFirst({
+          where: (p, { eq }) => eq(p.id, userId),
+        });
+      }
     }
     if (!patient) throw new Error('Failed to create or find patient');
     // DoctorId is set if user is doctor, else null
