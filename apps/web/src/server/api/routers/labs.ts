@@ -1,6 +1,7 @@
 import { procedure, publicProcedure } from '../trpc';
 import { z } from 'zod';
 import { LabsService } from '../../services/labs';
+import AppointmentsService from '../../services/appointments'; // Import AppointmentsService
 import { Client } from '@googlemaps/google-maps-services-js';
 import { env } from '@web/env';
 import { db } from '@web/server/db';
@@ -277,6 +278,20 @@ export const bookLabAppointment = procedure
     return { success: true, appointmentId: appointment.id };
   });
 
+export const currentLab = procedure.query(async ({ ctx }) => {
+  const user = ctx.user;
+  if (!user) throw new Error('Not authenticated');
+
+  const lab = await db.query.labs.findFirst({
+    where: (l, { eq }) => eq(l.user_id, user.id),
+    with: {
+      user: true,
+    },
+  });
+
+  return lab;
+});
+
 export const labsRouter = {
   registerLab,
   findLabsByLocation,
@@ -290,4 +305,10 @@ export const labsRouter = {
   getLabTestsByLabId,
   getLabAvailabilityByLabId,
   bookLabAppointment,
+  currentLab,
+  getLabAppointments: procedure
+    .input(z.object({ labId: z.string() }))
+    .query(async ({ input }) => {
+      return AppointmentsService.getLabAppointments(input.labId);
+    }),
 };

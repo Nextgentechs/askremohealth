@@ -11,7 +11,7 @@ import * as articles from './routers/articles'
 import * as patients from './routers/patients'
 // import * as auth from './routers/auth'
 import * as officeLocations from './routers/office-locations'
-import * as labs from './routers/labs'
+import { labsRouter } from './routers/labs'
 import * as tests from './routers/tests';
 /**
  * This is the primary router for your server.
@@ -30,7 +30,7 @@ export const appRouter = createTRPCRouter({
   officeLocations: createTRPCRouter(officeLocations),
   articles: createTRPCRouter(articles),
   patients: createTRPCRouter(patients),
-  labs: createTRPCRouter(labs),
+  labs: createTRPCRouter(labsRouter),
   tests: createTRPCRouter(tests),
 })
 
