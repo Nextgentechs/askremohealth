@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 
+import { type User } from '@web/server/db/schema'
+
 export function useCurrentUser() {
-  const [user, setUser] = useState<unknown>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {

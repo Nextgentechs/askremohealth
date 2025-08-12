@@ -5,10 +5,14 @@ import { Button } from '@web/components/ui/button';
 import { api } from '@web/trpc/server';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import { InferSelectModel } from 'drizzle-orm';
+import { labs, labTestsAvailable, labAvailability, tests } from '@web/server/db/schema';
 
-// Placeholder for a calendar component (replace with real one if available)
-function LabCalendar({ availability }: { availability: any[] }) {
-  // Try to render a simple table if availability is an array of slots
+type Lab = InferSelectModel<typeof labs>;
+type LabTestAvailable = InferSelectModel<typeof labTestsAvailable> & { test?: InferSelectModel<typeof tests> };
+type LabAvailability = InferSelectModel<typeof labAvailability>;
+
+function LabCalendar({ availability }: { availability: LabAvailability[] }) {
   if (!availability.length) {
     return (
       <Card className="w-full">
@@ -36,8 +40,8 @@ function LabCalendar({ availability }: { availability: any[] }) {
             </tr>
           </thead>
           <tbody>
-            {availability.map((slot: any, i: number) => (
-              <tr key={slot.id || i}>
+            {availability.map((slot, i) => (
+              <tr key={slot.id ?? i}>
                 <td className="pr-4 py-1 capitalize">{slot.day_of_week}</td>
                 <td className="pr-4 py-1">{slot.start_time}</td>
                 <td className="pr-4 py-1">{slot.end_time}</td>
@@ -50,7 +54,7 @@ function LabCalendar({ availability }: { availability: any[] }) {
   );
 }
 
-function LabsCard({ lab }: { lab: any }) {
+function LabsCard({ lab }: { lab: Lab }) {
   return (
     <Card className="h-fit w-full p-6 flex-col justify-between gap-8 rounded-xl border shadow-sm transition-all duration-300 sm:flex-row lg:flex lg:max-w-md lg:flex-row xl:max-w-lg 2xl:max-w-xl">
       <div className="flex flex-1 flex-row gap-5 md:gap-8 xl:gap-10">
@@ -67,7 +71,7 @@ function LabsCard({ lab }: { lab: any }) {
   );
 }
 
-function LabTests({ tests }: { tests: any[] }) {
+function LabTests({ tests }: { tests: LabTestAvailable[] }) {
   if (!tests.length) return null;
   return (
     <Card className="flex w-full flex-col rounded-xl border px-0 shadow-sm">
@@ -77,8 +81,8 @@ function LabTests({ tests }: { tests: any[] }) {
       <CardContent className="flex w-full flex-col items-start gap-2 pt-6 text-foreground">
         <ul className="list-disc pl-4">
           {tests.map((test) => (
-            <li key={test.test?.id || test.testId || test.id} className="mb-1">
-              <span className="font-medium">{test.test?.name || test.testId || test.id}</span>
+            <li key={test.test?.id ?? test.testId ?? test.id} className="mb-1">
+              <span className="font-medium">{test.test?.name ?? test.testId ?? test.id}</span>
               {typeof test.amount === 'number' && (
                 <span className="ml-2 text-xs text-muted-foreground">(KES {test.amount})</span>
               )}
@@ -93,7 +97,7 @@ function LabTests({ tests }: { tests: any[] }) {
   );
 }
 
-function BookingSection({ labId, tests, availability }: { labId: string; tests: any[]; availability: any[] }) {
+function BookingSection({ labId, tests, availability }: { labId: string; tests: LabTestAvailable[]; availability: LabAvailability[] }) {
   if (!tests.length) {
     return (
       <Card className="flex w-full flex-col rounded-xl border px-0 shadow-sm">
@@ -150,7 +154,7 @@ export default async function Page({ params }: { params: { id: string } }) {
   if (!lab) return notFound();
 
   // Fetch lab tests
-  let tests: any[] = [];
+  let tests: LabTestAvailable[] = [];
   try {
     tests = await api.labs.getLabTestsByLabId({ labId: id });
   } catch (e) {
@@ -158,7 +162,7 @@ export default async function Page({ params }: { params: { id: string } }) {
   }
 
   // Fetch lab availability
-  let availability: any[] = [];
+  let availability: LabAvailability[] = [];
   try {
     availability = await api.labs.getLabAvailabilityByLabId({ labId: id });
   } catch (e) {
