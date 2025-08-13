@@ -1,7 +1,10 @@
+import { type DefaultSession, type DefaultUser } from 'next-auth'
+import { type JWT } from 'next-auth/jwt'
+
 export {}
 
 // Create a type for the roles
-export type Roles = 'user' | 'specialist' | 'admin'
+export type Roles = 'doctor' | 'patient' | 'lab' | 'admin'
 
 // Lab test related types
 export interface Test {
@@ -35,11 +38,25 @@ export interface Lab {
   website?: string | null
 }
 
-declare global {
-  interface CustomJwtSessionClaims {
-    metadata: {
-      onboardingComplete?: boolean
+declare module 'next-auth' {
+  interface Session {
+    user?: {
+      id: string
       role?: Roles
-    }
+      lab?: Lab
+    } & DefaultSession['user']
+  }
+
+  interface User extends DefaultUser {
+    role?: Roles
+    lab?: Lab
+  }
+}
+
+declare module 'next-auth/jwt' {
+  interface JWT {
+    id?: string
+    role?: Roles
+    lab?: Lab
   }
 }

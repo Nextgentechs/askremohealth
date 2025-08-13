@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'
 import { sessionSchema } from '@web/server/lib/session'
 import { redisClient } from '@web/redis/redis'
 import { db } from '@web/server/db'
-import { users } from '@web/server/db/schema'
+import { users, labs } from '@web/server/db/schema' // Import labs schema
 import { eq } from 'drizzle-orm'
 import { auth } from '@web/auth'
 
@@ -18,6 +18,15 @@ export async function GET() {
       where: eq(users.email, session.user.email),
     })
     
+    if (user && user.role === 'lab') {
+      const lab = await db.query.labs.findFirst({
+        where: eq(labs.user_id, user.id),
+      })
+      if (lab) {
+        user = { ...user, lab }
+      }
+    }
+
     if (user) {
       return NextResponse.json({ user })
     }
@@ -53,6 +62,15 @@ export async function GET() {
   user = await db.query.users.findFirst({
     where: eq(users.id, parsedSession.data.id),
   })
+
+  if (user && user.role === 'lab') {
+    const lab = await db.query.labs.findFirst({
+      where: eq(labs.user_id, user.id),
+    })
+    if (lab) {
+      user = { ...user, lab }
+    }
+  }
 
   if (!user) {
     return NextResponse.json({ user: null }, { status: 401 })
