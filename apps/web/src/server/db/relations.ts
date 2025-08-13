@@ -20,7 +20,8 @@ import {
   labs,
   labTestsAvailable,
   tests,
-  labAvailability
+  labAvailability,
+  labAppointments
 } from './schema'
 
 export const doctorRelations = relations(doctors, ({ one, many }) => ({
@@ -215,3 +216,21 @@ export const labAvailabilityRelations = relations(labAvailability, ({ one }) => 
     references: [labs.placeId],
   }),
 }));
+
+export const labAppointmentRelations = relations(
+  labAppointments,
+  ({ one }) => ({
+    lab: one(labs, {
+      fields: [labAppointments.labId],
+      references: [labs.placeId],
+    }),
+    patient: one(patients, {
+      fields: [labAppointments.patientId],
+      references: [patients.id],
+    }),
+    doctor: one(doctors, {
+      fields: [labAppointments.doctorId],
+      references: [doctors.id],
+    }),
+  }),
+);

@@ -115,8 +115,8 @@ const data = {
       icon: House,
     },
     {
-      title: 'Test Appointments',
-      url: '/lab/test-appointments',
+      title: 'Appointments',
+      url: '/lab/appointments',
       icon: ClipboardList,
     },
     {
