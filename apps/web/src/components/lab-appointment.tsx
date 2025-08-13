@@ -13,7 +13,6 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Button } from './ui/button';
-import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { Textarea } from './ui/textarea';
 import { Command, CommandInput, CommandList, CommandItem, CommandEmpty } from './ui/command';
 import { Popover, PopoverTrigger, PopoverContent } from './ui/popover';
@@ -42,8 +41,8 @@ function LabCard({ lab }: { lab: Lab }) {
           <h2 className="text-xl font-bold text-primary mb-2">{lab.name}</h2>
           <div className="text-muted-foreground text-sm">
             {lab.address}
-            {lab.town ? `, ${lab.town}` : ''}
-            {lab.county ? `, ${lab.county}` : ''}
+            {lab.town ?? ''}
+            {lab.county ?? ''}
           </div>
         </div>
       </div>
@@ -177,12 +176,12 @@ function NotesForLab() {
 }
 
 function TestAndTimeSelection({ tests, availableTimes }: { tests: LabTestAvailable[]; availableTimes: string[] }) {
-  const { register, formState: { errors }, watch, setValue } = useFormContext<z.infer<typeof labAppointmentSchema>>();
+  const { register, formState: { errors }, watch } = useFormContext<z.infer<typeof labAppointmentSchema>>();
   const selectedTestId = watch('testId');
   const [testQuery, setTestQuery] = useState('');
   const normalizedQuery = testQuery.trim().toLowerCase();
   const filteredTests = normalizedQuery
-    ? tests.filter((t) => (t.test?.name || '').toLowerCase().includes(normalizedQuery))
+    ? tests.filter((t) => (t.test?.name ?? '').toLowerCase().includes(normalizedQuery))
     : tests;
 
   return (
@@ -204,13 +203,13 @@ function TestAndTimeSelection({ tests, availableTimes }: { tests: LabTestAvailab
           <select {...register('testId')} id="testId" className="ps-4 py-2 border rounded">
             <option value="">Select a test</option>
             {(filteredTests.length > 0 ? filteredTests : tests).map((test) => (
-              <option key={test.testId || test.id} value={test.testId || test.id}>
-                {test.test?.name || 'Unknown Test'} - {test.test?.generalCategory || 'Unknown Category'}
+              <option key={test.testId ?? test.id} value={test.testId ?? test.id}>
+                {test.test?.name ?? 'Unknown Test'} - {test.test?.generalCategory ?? 'Unknown Category'}
               </option>
             ))}
             {filteredTests.length === 0 && (
               <option value="" disabled>
-                No tests match "{testQuery}"
+                No tests match &quot;{testQuery}&quot;
               </option>
             )}
           </select>
@@ -224,34 +223,34 @@ function TestAndTimeSelection({ tests, availableTimes }: { tests: LabTestAvailab
           {selectedTestId && (
             <div className="mt-4 p-4 bg-muted/50 rounded-lg">
               {(() => {
-                const selectedTest = tests.find(t => (t.testId || t.id) === selectedTestId);
+                const selectedTest = tests.find(t => (t.testId ?? t.id) === selectedTestId);
                 if (!selectedTest) return null;
                 
                 return (
                   <div className="space-y-3">
                     <h4 className="font-semibold text-lg text-primary">
-                      {selectedTest.test?.name || 'Test Details'}
+                      {selectedTest.test?.name ?? 'Test Details'}
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                       <div>
                         <span className="font-medium text-muted-foreground">General Category:</span>
-                        <p className="text-foreground">{selectedTest.test?.generalCategory || 'N/A'}</p>
+                        <p className="text-foreground">{selectedTest.test?.generalCategory ?? 'N/A'}</p>
                       </div>
                       <div>
                         <span className="font-medium text-muted-foreground">Specific Category:</span>
-                        <p className="text-foreground">{selectedTest.test?.specificCategory || 'N/A'}</p>
+                        <p className="text-foreground">{selectedTest.test?.specificCategory ?? 'N/A'}</p>
                       </div>
                       <div>
                         <span className="font-medium text-muted-foreground">Sample Type:</span>
-                        <p className="text-foreground">{selectedTest.test?.sampleType || 'N/A'}</p>
+                        <p className="text-foreground">{selectedTest.test?.sampleType ?? 'N/A'}</p>
                       </div>
                       <div>
                         <span className="font-medium text-muted-foreground">Collection Method:</span>
-                        <p className="text-foreground capitalize">{selectedTest.collection || 'N/A'}</p>
+                        <p className="text-foreground capitalize">{selectedTest.collection ?? 'N/A'}</p>
                       </div>
                       <div>
                         <span className="font-medium text-muted-foreground">Price:</span>
-                        <p className="text-foreground font-semibold">KES {selectedTest.amount?.toLocaleString() || 'N/A'}</p>
+                        <p className="text-foreground font-semibold">KES {selectedTest.amount?.toLocaleString() ?? 'N/A'}</p>
                       </div>
                     </div>
                   </div>
@@ -288,10 +287,10 @@ function TestAndTimeSelection({ tests, availableTimes }: { tests: LabTestAvailab
   );
 }
 
-function PatientSearch({ onSelect }: { onSelect: (patient: any) => void }) {
+function PatientSearch({ onSelect }: { onSelect: (patient: unknown) => void }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
-  const [selected, setSelected] = useState<any>(null);
+  const [selected, setSelected] = useState<unknown>(null);
   const { data, isLoading } = api.patients.searchPatients.useQuery({ query }, { enabled: query.length > 0 });
 
   return (
@@ -305,7 +304,10 @@ function PatientSearch({ onSelect }: { onSelect: (patient: any) => void }) {
             aria-expanded={open}
             className="w-full justify-between"
           >
-            {selected ? `${selected.firstName} ${selected.lastName} (${selected.email})` : 'Select patient...'}
+            {selected ? (() => {
+              const patient = selected as { firstName: string, lastName: string, email: string | null };
+              return `${patient.firstName} ${patient.lastName} (${patient.email})`;
+            })() : 'Select patient...'}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
@@ -323,7 +325,7 @@ function PatientSearch({ onSelect }: { onSelect: (patient: any) => void }) {
               ) : (
                 <>
                   <CommandEmpty>No patient found.</CommandEmpty>
-                  {data?.map((patient: any) => (
+                  {data?.map((patient: { id: string, firstName: string, lastName: string, email: string | null }) => (
                     <CommandItem
                       key={patient.id}
                       value={`${patient.firstName} ${patient.lastName}`}
@@ -335,7 +337,7 @@ function PatientSearch({ onSelect }: { onSelect: (patient: any) => void }) {
                     >
                       {patient.firstName} {patient.lastName}{' '}
                       <span className="ml-2 text-xs text-muted-foreground">({patient.email})</span>
-                      {selected?.id === patient.id && <Check className="ml-auto h-4 w-4" />}
+                      {(selected as { id: string })?.id === patient.id && <Check className="ml-auto h-4 w-4" />}
                     </CommandItem>
                   ))}
                 </>
@@ -350,9 +352,9 @@ function PatientSearch({ onSelect }: { onSelect: (patient: any) => void }) {
 
 export default function LabAppointment() {
   const { id: labId } = useParams<{ id: string }>();
-  const { data: lab, isLoading: labLoading } = api.labs.getLabById.useQuery({ placeId: labId }) as { data: Lab | undefined, isLoading: boolean };
-  const { data: tests = [], isLoading: testsLoading } = api.labs.getLabTestsByLabId.useQuery({ labId }) as { data: LabTestAvailable[], isLoading: boolean };
-  const { data: availability = [], isLoading: availLoading } = api.labs.getLabAvailabilityByLabId.useQuery({ labId });
+  const { data: lab, isLoading: labLoading } = api.labs.getLabById.useQuery({ placeId: labId });
+  const { data: tests = [], isLoading: testsLoading } = api.labs.getLabTestsByLabId.useQuery({ labId });
+  const { isLoading: availLoading } = api.labs.getLabAvailabilityByLabId.useQuery({ labId });
   const { data: currentUser } = api.users.currentUser.useQuery();
   const { data: currentPatient } = api.patients.getCurrentPatient.useQuery();
   const { toast } = useToast();
@@ -362,31 +364,32 @@ export default function LabAppointment() {
 
   const availableTimes = ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"];
 
-  const [selectedPatient, setSelectedPatient] = useState<any>(null);
+  const [selectedPatient, setSelectedPatient] = useState<unknown>(null);
 
   const form = useForm<z.infer<typeof labAppointmentSchema>>({
     resolver: zodResolver(labAppointmentSchema),
     defaultValues: {
-      firstName: currentUser?.firstName || "",
-      lastName: currentUser?.lastName || "",
-      phone: currentUser?.phone || "",
-      email: currentUser?.email || "",
+      firstName: currentUser?.firstName ?? "",
+      lastName: currentUser?.lastName ?? "",
+      phone: currentUser?.phone ?? "",
+      email: currentUser?.email ?? "",
     },
   });
 
-  const [confirmation, setConfirmation] = useState<null | any>(null);
+  const [confirmation, setConfirmation] = useState<null | { testId: string, date: string, time: string, lab: Lab }>(null);
 
   const isDoctor = currentUser?.role === 'doctor';
   const isPatient = currentUser?.role === 'patient';
 
   useEffect(() => {
     if (isDoctor && selectedPatient) {
-      form.setValue('firstName', selectedPatient.firstName || '');
-      form.setValue('lastName', selectedPatient.lastName || '');
-      form.setValue('email', selectedPatient.email || '');
-      form.setValue('phone', selectedPatient.phone || '');
-      if (selectedPatient.dob) {
-        const dobDate = new Date(selectedPatient.dob as string);
+      const patient = selectedPatient as { firstName?: string, lastName?: string, email?: string, phone?: string, dob?: string };
+      form.setValue('firstName', patient.firstName ?? '');
+      form.setValue('lastName', patient.lastName ?? '');
+      form.setValue('email', patient.email ?? '');
+      form.setValue('phone', patient.phone ?? '');
+      if (patient.dob) {
+        const dobDate = new Date(patient.dob);
         const formattedDob = dobDate.toISOString().split('T')[0];
         if (formattedDob) {
           form.setValue('dob', formattedDob);
@@ -408,15 +411,15 @@ export default function LabAppointment() {
 
   const onSubmit = async (data: z.infer<typeof labAppointmentSchema>) => {
     try {
-      const patientId = isDoctor ? selectedPatient?.id : currentUser?.id;
+      const patientId = isDoctor ? (selectedPatient as { id: string })?.id : currentUser?.id;
       if (isDoctor && !selectedPatient) {
         toast({ title: 'Select a patient', description: 'Please select a patient before booking.', variant: 'destructive' });
         return;
       }
       await bookLabAppointment.mutateAsync({ ...data, labId, patientId });
-      setConfirmation({ ...data, lab });
+      setConfirmation({ ...data, lab: lab as Lab });
       toast({ title: 'Appointment booked!', description: 'Your lab appointment has been scheduled.' });
-    } catch (e) {
+    } catch (_error) {
       toast({ title: 'Booking failed', description: 'Could not book appointment. Please try again.', variant: 'destructive' });
     }
   };
@@ -433,7 +436,7 @@ export default function LabAppointment() {
         <Card className="p-8 text-center">
           <CardTitle>Appointment Confirmed!</CardTitle>
           <CardContent>
-            <p>Your appointment for {tests.find(t => (t.testId || t.id) === (confirmation as any).testId)?.test?.name || 'the selected test'} at {lab.name} is booked for {(confirmation as any).date} at {(confirmation as any).time}.</p>
+            <p>Your appointment for {tests.find(t => (t.testId ?? t.id) === confirmation.testId)?.test?.name ?? 'the selected test'} at {lab.name} is booked for {confirmation.date} at {confirmation.time}.</p>
             <Button className="mt-6" onClick={() => router.push("/laboratories")}>Back to Laboratories</Button>
           </CardContent>
         </Card>

@@ -110,7 +110,7 @@ export default function LabAppointmentsPage() {
   }
 
   // Map the fetched appointments to the Appointment type
-  const formattedAppointments: Appointment[] = appointments.map((appt: LabAppointmentOutput) => ({
+  const formattedAppointments: Appointment[] = (appointments as unknown as LabAppointmentOutput[]).map((appt) => ({
     id: appt.id,
     date: appt.appointmentDate,
     time: format(appt.appointmentDate, "HH:mm"), // Extract time from appointmentDate

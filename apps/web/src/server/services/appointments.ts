@@ -11,7 +11,6 @@ export default class Appointments {
         id: true,
         appointmentDate: true,
         patientNotes: true,
-        status: true,
       },
       with: {
         patient: {
