@@ -132,17 +132,6 @@ export default function PersonalDetails() {
             <SelectContent>
               <SelectItem value="Dr">Dr</SelectItem>
               <SelectItem value="Prof">Prof</SelectItem>
-              <SelectItem value="Mr">Mr</SelectItem>
-              <SelectItem value="Mrs">Mrs</SelectItem>
-              <SelectItem value="Ms">Ms</SelectItem>
-              <SelectItem value="Miss">Miss</SelectItem>
-              <SelectItem value="Mx">Mx</SelectItem>
-              <SelectItem value="Sir">Sir</SelectItem>
-              <SelectItem value="Madam">Madam</SelectItem>
-              <SelectItem value="Rev">Rev</SelectItem>
-              <SelectItem value="Fr">Fr</SelectItem>
-              <SelectItem value="Lady">Lady</SelectItem>
-              <SelectItem value="Lord">Lord</SelectItem>
             </SelectContent>
           </Select>
           <p className="text-[0.8rem] font-medium text-destructive">
@@ -213,7 +202,7 @@ export default function PersonalDetails() {
           </p>
         </div>
         <div>
-          <Label htmlFor="profilePicture">Profile Picture</Label>
+          <Label htmlFor="profilePicture">Profile Picture <span className="text-destructive">*</span></Label>
           <Input
             id="profilePicture"
             type="file"

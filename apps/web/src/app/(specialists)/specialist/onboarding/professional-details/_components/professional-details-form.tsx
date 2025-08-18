@@ -34,6 +34,7 @@ import React from 'react';
 import { FormProvider, useForm, useFormContext } from 'react-hook-form';
 import { z } from 'zod';
 import { useDebounce } from 'use-debounce';
+import axios from "axios";
 
 // Add type for location suggestions
 type LocationSuggestion = {
@@ -56,10 +57,10 @@ export const professionalDetailsSchema = z.object({
     .min(1, { message: 'Registration number is required' }),
   medicalLicense: z
     .string()
-    .optional()
+    .min(1, { message: 'Medical license is required' })
     .refine(
       (base64) => {
-        if (!base64) return true;
+        if (!base64) return false; // Should not happen with .min(1) but for safety
         const sizeInBytes = (base64.length * 3) / 4;
         return sizeInBytes <= 5 * 1024 * 1024;
       },
@@ -192,7 +193,7 @@ export default function ProfessionalDetailsForm() {
       subSpecialty: [],
       experience: 0,
       registrationNumber: '',
-      medicalLicense: '',
+      medicalLicense: '', // Keep as empty string for file upload
       facility: '',
       officeLocation: '',
     },
@@ -269,6 +270,39 @@ export default function ProfessionalDetailsForm() {
     console.log('Facility Suggestions:', facilitySuggestions);
     console.log('Selected Facility:', selectedFacility);
   }, [debouncedFacilityQuery, facilitySuggestions, selectedFacility]);
+
+  // File upload handler
+  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        // Upload to backend API route
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await axios.post("/api/upload-medical-license", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+
+        if (res.data?.url) {
+          form.setValue("medicalLicense", res.data.url);
+          toast({
+            title: "File uploaded",
+            description: "Medical license uploaded successfully.",
+          });
+        } else {
+          throw new Error("No URL returned from upload");
+        }
+      } catch (error) {
+        console.error("Error uploading file:", error);
+        toast({
+          title: "Upload failed",
+          description: "Could not upload medical license. Please try again.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
 
   return (
     <form onSubmit={onSubmit} className="space-y-8">
@@ -466,17 +500,7 @@ export default function ProfessionalDetailsForm() {
           <Input
             type="file"
             accept=".pdf"
-            onChange={async (e) => {
-              const file = e.target.files?.[0];
-              if (file) {
-                try {
-                  const base64String = await fileToBase64(file);
-                  form.setValue('medicalLicense', base64String);
-                } catch (error) {
-                  console.error('Error converting file to base64:', error);
-                }
-              }
-            }}
+            onChange={onFileChange}
           />
           <p className="text-[0.8rem] font-medium text-destructive">
             {form.formState.errors.medicalLicense?.message}
@@ -486,7 +510,7 @@ export default function ProfessionalDetailsForm() {
       <div className="fixed bottom-0 left-0 right-0 flex justify-end border-t border-t-border bg-background px-6 py-4 sm:px-12">
         <Button
           size="lg"
-          disabled={form.formState.isSubmitting ?? !form.formState.isValid}
+          disabled={form.formState.isSubmitting || !form.formState.isValid}
         >
           {form.formState.isSubmitting ? (
             <Loader className="h-4 w-4 animate-spin" />
