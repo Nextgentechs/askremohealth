@@ -29,6 +29,7 @@
     "payload:generate:types": "PAYLOAD_CONFIG_PATH=src/payload.config.ts payload generate:types"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.864.0",
     "@clerk/nextjs": "^6.11.2",
     "@googlemaps/google-maps-services-js": "^3.4.0",
     "@hookform/resolvers": "^3.10.0",
@@ -88,8 +89,10 @@
     "jose": "^5.9.6",
     "lucia": "^3.2.2",
     "lucide-react": "^0.460.0",
+    "multer": "^2.0.2",
     "next": "^15.0.1",
     "next-auth": "^5.0.0-beta.27",
+    "next-connect": "^1.0.0",
     "next-nprogress-bar": "^2.4.3",
     "next-themes": "^0.4.3",
     "nodemailer": "^6.10.1",
@@ -110,12 +113,15 @@
     "twilio": "^5.4.2",
     "twilio-video": "^2.29.0",
     "use-debounce": "^10.0.4",
+    "uuid": "^11.1.0",
     "zod": "^3.24.1",
     "zustand": "^5.0.3"
   },
   "devDependencies": {
+    "@tailwindcss/typography": "^0.5.10",
     "@types/bcrypt": "^5.0.2",
     "@types/eslint": "^8.56.10",
+    "@types/multer": "^2.0.0",
     "@types/node": "^20.14.10",
     "@types/nodemailer": "^6.4.17",
     "@types/react": "^18.3.3",
@@ -131,7 +137,6 @@
     "prettier-plugin-organize-imports": "^4.1.0",
     "prettier-plugin-tailwindcss": "^0.6.9",
     "tailwindcss": "^3.4.3",
-    "@tailwindcss/typography": "^0.5.10",
     "typescript": "^5.7.2"
   },
   "ct3aMetadata": {
