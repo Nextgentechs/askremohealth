@@ -1,52 +1,39 @@
 import React from 'react'
-// import { api } from '@web/trpc/server'
-// import { DataTable } from '@web/components/data-table'
-// import { DoctorsColumns, DoctorsPagination } from './doctors-table'
-// import {
-//   Breadcrumb,
-//   BreadcrumbItem,
-//   BreadcrumbLink,
-//   BreadcrumbList,
-//   BreadcrumbPage,
-//   BreadcrumbSeparator,
-// } from '@web/components/ui/breadcrumb'
+import { api } from '@web/trpc/server'
+import { DataTable } from '@web/components/data-table'
+import { DoctorsColumns, DoctorsPagination } from './doctors-table'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@web/components/ui/breadcrumb'
 
 export default async function Page() {
-//   const pageParam = Number(searchParams?.page)
-//   const page = !isNaN(pageParam) && pageParam > 0 ? pageParam : 1
-
-//   let data
-//   try {
-//     data = await api.admin.getDoctors({ page, limit: 15 })
-//   } catch (error) {
-//     console.error('Error in admin/doctors page:', error)
-//     throw error
-//   }
-//   const { userId } = auth()
-//   console.log('userId', userId) // should NOT be null
+  const { data: doctors, pagination } = await api.admin.getDoctors({ page: 1, limit: 10 });
 
   return (
     <div className="flex flex-col gap-8">
-      {/* <Breadcrumb>
+
+      <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="">Admin</BreadcrumbLink>
+            <BreadcrumbLink href="/admin">Admin</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
-
           <BreadcrumbItem>
             <BreadcrumbPage>Doctors</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
-      </Breadcrumb> */}
+      </Breadcrumb>
 
-      <div className="flex flex-col gap-2">
-        <h1 className="text-xl font-semibold tracking-wide text-foreground">
-          Doctors
-        </h1>
-        <p className="text-sm text-muted-foreground">Manage all doctors here</p>
-      </div>
-      
+
+      <DataTable columns={DoctorsColumns} data={doctors} />
+
+
+      <DoctorsPagination pagination={pagination} />
     </div>
   )
 }
