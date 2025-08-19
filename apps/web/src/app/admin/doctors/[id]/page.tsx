@@ -23,6 +23,7 @@ import { api } from '@web/trpc/server'
 import { ExternalLink } from 'lucide-react'
 import Image from 'next/image'
 import { DoctorActions } from './doctor-actions'
+import { env } from '@web/env.js'
 
 export default async function page({
   params,
@@ -254,7 +255,7 @@ function RegulatoryCertificates({
             >
               <h4 className="text-sm">{friendlyName}</h4>
               <a
-                href={certificate.url}
+                href={`${env.OBJECT_STORAGE_ENDPOINT}/${env.OBJECT_STORAGE_BUCKET}/${certificate.name}`}
                 target="_blank"
                 rel="noopener noreferrer"
               >
