@@ -22,6 +22,11 @@ export const env = createEnv({
     CLERK_SECRET_KEY: z.string(),
     AUTH_GOOGLE_ID: z.string(),
     AUTH_GOOGLE_SECRET: z.string(),
+    OBJECT_STORAGE_ENDPOINT: z.string().url(),
+    OBJECT_STORAGE_REGION: z.string(),
+    OBJECT_STORAGE_BUCKET: z.string(),
+    OBJECT_STORAGE_KEY: z.string(),
+    OBJECT_STORAGE_SECRET: z.string(),
   },
 
   /**
@@ -62,6 +67,11 @@ export const env = createEnv({
     NEXT_PUBLIC_FROM_EMAIL: process.env.NEXT_PUBLIC_FROM_EMAIL,
     AUTH_GOOGLE_ID: process.env.AUTH_GOOGLE_ID,
     AUTH_GOOGLE_SECRET: process.env.AUTH_GOOGLE_SECRET,
+    OBJECT_STORAGE_ENDPOINT: process.env.OBJECT_STORAGE_ENDPOINT,
+    OBJECT_STORAGE_REGION: process.env.OBJECT_STORAGE_REGION,
+    OBJECT_STORAGE_BUCKET: process.env.OBJECT_STORAGE_BUCKET,
+    OBJECT_STORAGE_KEY: process.env.OBJECT_STORAGE_KEY,
+    OBJECT_STORAGE_SECRET: process.env.OBJECT_STORAGE_SECRET,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**
