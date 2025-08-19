@@ -116,10 +116,10 @@ export default class Appointments {
             ? eq(appontment.patientId, input.patientId)
             : undefined,
           input.startDate
-            ? gte(appontment.appointmentDate, new Date(input.startDate + 'T00:00:00Z'))
+            ? gte(appontment.appointmentDate, new Date(input.startDate))
             : undefined,
           input.endDate
-            ? lte(appontment.appointmentDate, new Date(input.endDate + 'T23:59:59Z'))
+            ? lte(appontment.appointmentDate, new Date(input.endDate))
             : undefined,
         ),
       columns: {

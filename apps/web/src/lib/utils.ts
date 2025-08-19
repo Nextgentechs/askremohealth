@@ -157,10 +157,12 @@ export function combineDateTime(dateString: string, timeString: string) {
     throw new Error('Invalid timeString format')
   }
 
-  // Create a new Date object in UTC
+  // Create the datetime in Kenya local time (UTC+3)
+  const kenyaOffset = 3 * 60 // minutes
   const combinedDate = new Date(
-    Date.UTC(year, month, day, hours24, minutes24),
+    Date.UTC(year, month, day, hours24, minutes24) - kenyaOffset * 60 * 1000
   )
+  
 
   return combinedDate
 }
