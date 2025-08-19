@@ -66,10 +66,7 @@ export async function middleware(req: NextRequest) {
     return response
   }
 
-  // For specialist and admin routes, check if user has a session
-  if ((isSpecialistRoute || isAdminRoute) && !sessionId) {
-    return NextResponse.redirect(new URL('/auth', req.url));
-  }
+
 
   return NextResponse.next()
 }
