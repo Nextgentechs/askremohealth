@@ -20,10 +20,10 @@ import {
 import { Textarea } from '@web/components/ui/textarea'
 import { type RouterOutputs } from '@web/server/api'
 import { api } from '@web/trpc/server'
-import { ExternalLink } from 'lucide-react'
 import Image from 'next/image'
 import { DoctorActions } from './doctor-actions'
 import { env } from '@web/env.js'
+import { CertificateLink } from '@web/components/certificate-link'
 
 export default async function page({
   params,
@@ -249,22 +249,11 @@ function RegulatoryCertificates({
             .join(' ')
             .replace(/\b\w/g, (l) => l.toUpperCase())
           return (
-            <div
+            <CertificateLink
               key={certificate.id}
-              className="flex w-full flex-row justify-between"
-            >
-              <h4 className="text-sm">{friendlyName}</h4>
-              <a
-                href={`${env.OBJECT_STORAGE_ENDPOINT}/${env.OBJECT_STORAGE_BUCKET}/${certificate.name}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Button variant="outline" size="sm">
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  <span>View</span>
-                </Button>
-              </a>
-            </div>
+              certificateName={certificate.name}
+              friendlyName={friendlyName ?? ''}
+            />
           )
         })}
       </div>

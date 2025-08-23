@@ -2,7 +2,6 @@ import 'server-only'
 
 import { createHydrationHelpers } from '@trpc/react-query/rsc'
 import { cache } from 'react'
-import { type CreateNextContextOptions } from '@trpc/server/adapters/next'
 
 import { createCaller, type APIRouter } from '@web/server/api'
 import { createTRPCContext } from '@web/server/api/trpc'
