@@ -24,6 +24,7 @@
     "payload:generate:types": "PAYLOAD_CONFIG_PATH=src/payload.config.ts payload generate:types"
   },
   "dependencies": {
+    "@aws-sdk/s3-request-presigner": "^3.873.0",
     "@clerk/nextjs": "^6.11.2",
     "@googlemaps/google-maps-services-js": "^3.4.0",
     "@hookform/resolvers": "^3.10.0",
