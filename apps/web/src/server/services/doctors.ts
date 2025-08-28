@@ -1,6 +1,7 @@
 import { TRPCError } from '@trpc/server'
 import { del, put } from '@vercel/blob'
 import { db } from '@web/server/db'
+import { v4 as uuidv4 } from "uuid";
 import {
   appointmentAttachments,
   appointmentLogs,
@@ -203,8 +204,10 @@ export class Doctors {
           'base64',
         )
 
+        const fileName = `medical-licences/${uuidv4()}.pdf`;
+
         const { url, pathname } = await put(
-          `documents/${userId}/${'medical-license'}`,
+          fileName,
           buffer,
           {
             access: 'public',
