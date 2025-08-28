@@ -7,7 +7,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@web/components/ui/breadcrumb'
-import { Button } from '@web/components/ui/button'
 import { Card, CardHeader, CardTitle } from '@web/components/ui/card'
 import { Input } from '@web/components/ui/input'
 import { Label } from '@web/components/ui/label'
@@ -22,7 +21,6 @@ import { type RouterOutputs } from '@web/server/api'
 import { api } from '@web/trpc/server'
 import Image from 'next/image'
 import { DoctorActions } from './doctor-actions'
-import { env } from '@web/env.js'
 import { CertificateLink } from '@web/components/certificate-link'
 
 export default async function page({
@@ -251,6 +249,7 @@ function RegulatoryCertificates({
           return (
             <CertificateLink
               key={certificate.id}
+              certificateId={certificate.id}
               certificateName={certificate.name}
               friendlyName={friendlyName ?? ''}
             />
