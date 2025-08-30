@@ -42,7 +42,7 @@ export async function POST(req: Request) {
       })
     );
 
-    const url = `${process.env.OBJECT_STORAGE_ENDPOINT}/${process.env.OBJECT_STORAGE_BUCKET}/${key}`;
+    const url = `${process.env.OBJECT_STORAGE_ENDPOINT}/${key}`;
     return NextResponse.json({ url }, { status: 200 });
   } catch (error) {
     console.error("Upload error:", error);
