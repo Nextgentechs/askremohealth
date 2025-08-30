@@ -1,7 +1,6 @@
 import { TRPCError } from '@trpc/server'
 import { del, put } from '@vercel/blob'
 import { db } from '@web/server/db'
-import { v4 as uuidv4 } from "uuid";
 import {
   appointmentAttachments,
   appointmentLogs,
@@ -13,8 +12,6 @@ import {
   patients as patientsTable,
   profilePictures,
   users as usersTable,
-  officeLocation as officeLocationTable,
-  reviews as reviewsTable,
 } from '@web/server/db/schema'
 import {
   and,
@@ -199,27 +196,17 @@ export class Doctors {
         .where(eq(doctorsTable.id, userId))
 
       if (input.medicalLicense) {
-        const buffer = Buffer.from(
-          input.medicalLicense.replace(/^data:application\/pdf;base64,/, ''),
-          'base64',
-        )
-
-        const fileName = `medical-licences/${uuidv4()}.pdf`;
-
-        const { url, pathname } = await put(
-          fileName,
-          buffer,
-          {
-            access: 'public',
-            contentType: `application/pdf`,
-          },
-        )
+        // The medicalLicense field already contains the URL from the initial upload
+        const uploadedUrl = input.medicalLicense;
+        // Extract the pathname from the URL
+        const urlParts = uploadedUrl.split('/');
+        const pathname = urlParts.slice(3).join('/'); // Assuming URL format: endpoint/bucket/path/to/file
 
         await trx.insert(certificates).values({
           doctorId: userId,
-          name: pathname,
-          url,
-        })
+          name: pathname, // Store the path/filename
+          url: uploadedUrl, // Store the full URL
+        });
       }
     })
 
