@@ -137,6 +137,12 @@ function AuthButtons({
           <Link href="https://doctors.askremohealth.com/auth?role=doctor">
             <DropdownMenuItem className="cursor-pointer">Doctor Login</DropdownMenuItem>
           </Link>
+          <Link href="/auth?role=admin">
+            <DropdownMenuItem className="cursor-pointer">Admin Login</DropdownMenuItem>
+          </Link>
+          <Link href="/auth?role=lab">
+            <DropdownMenuItem className="cursor-pointer">Lab Login</DropdownMenuItem>
+          </Link>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
