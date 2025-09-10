@@ -58,7 +58,7 @@ export const getCurrentPatient = protectedProcedure.query(async ({ ctx }) => {
 });
 
 // Search patients by name (first or last, case-insensitive)
-export const searchPatients = procedure.input(z.object({ query: z.string().min(1) })).query(async ({ input, ctx }) => {
+export const searchPatients = protectedProcedure.input(z.object({ query: z.string().min(1) })).query(async ({ input, ctx }) => {
   const q = `%${input.query.toLowerCase()}%`;
   const results = await db
     .select({
