@@ -9,6 +9,7 @@ import {
   varchar,
   boolean,
   text,
+  time,
 } from 'drizzle-orm/pg-core'
 
 export const roleEnum = pgEnum('role', ['patient', 'doctor', 'admin', 'lab'])
@@ -44,6 +45,10 @@ export const doctorStatusEnum = pgEnum('doctor_status', [
   'pending',
   'verified',
   'rejected',
+])
+
+export const collectionMethodEnum = pgEnum('collection', [
+  'onsite', 'home', 'both',
 ])
 
 export const specialties = pgTable('specialty', {
@@ -286,4 +291,71 @@ export const article_images = pgTable('article_images', {
   path: varchar('path').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
+})
+
+export const labs = pgTable('labs', {
+  placeId: varchar('place_id').primaryKey(),
+  user_id: varchar('user_id')
+    .notNull()
+    .unique()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  name: varchar('name').notNull(),
+  location: jsonb('location').$type<{ lat: number; lng: number }>(),
+  address: varchar('address').notNull(),
+  county: varchar('county').notNull(),
+  town: varchar('town').notNull(),
+  phone: varchar('phone'),
+  website: varchar('website'),
+})
+
+export const tests = pgTable('test', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  loincTestId: varchar('loinc_test_id', { length: 100 }),
+  specificCategory: varchar('specific_category', { length: 255 }),
+  sampleType: varchar('sample_type', { length: 255 }),
+  name: varchar('name').notNull(),
+  generalCategory: varchar('general_category', { length: 255 }),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+
+export const labTestsAvailable = pgTable('lab_tests_available', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  labId: varchar('place_id')
+    .notNull()
+    .references(() => labs.placeId, { onDelete: 'cascade' }),
+  testId: uuid('test_id')
+    .notNull()
+    .references(() => tests.id, { onDelete: 'cascade' }),
+    amount: integer('amount').notNull(),
+  collection: collectionMethodEnum('collection').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').$onUpdate(() => new Date()), 
+})
+
+export const labAvailability = pgTable('lab_availability', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  lab_id: varchar('place_id')
+    .notNull()
+    .references(() => labs.placeId, { onDelete: 'cascade' }),
+  day_of_week: weekDayEnum('day_of_week').notNull(),
+  start_time: time('start_time').notNull(),
+  end_time: time('end_time').notNull(), 
+})
+
+export const labAppointments = pgTable('lab_appointments', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  labId: varchar('place_id')
+    .notNull()
+    .references(() => labs.placeId, { onDelete: 'cascade' }),
+  patientId: varchar('patient_id')
+    .notNull()
+    .references(() => patients.id, { onDelete: 'cascade' }),
+  doctorId: varchar('doctor_id')
+    .references(() => doctors.id, { onDelete: 'set null' }),
+  appointmentDate: timestamp('appointment_date').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
+  patientNotes: varchar('patient_notes'),
+  doctorNotes: varchar('doctor_notes'),
 })

@@ -1,9 +1,36 @@
 import { type DoctorAppointmentListSchema } from '../api/validators'
 import { db } from '../db'
-import { appointments } from '../db/schema'
+import { appointments, labAppointments, patients, users } from '../db/schema'
 
 import { and, count, eq, gte, lte } from 'drizzle-orm'
 export default class Appointments {
+  static async getLabAppointments(labId: string) {
+    return db.query.labAppointments.findMany({
+      where: (labAppointment, { eq }) => eq(labAppointment.labId, labId),
+      columns: {
+        id: true,
+        appointmentDate: true,
+        patientNotes: true,
+      },
+      with: {
+        patient: {
+          columns: {
+            id: true,
+          },
+          with: {
+            user: {
+              columns: {
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: (labAppointment, { desc }) => [desc(labAppointment.appointmentDate)],
+    });
+  }
+
   static async upcoming(
     doctorId: string,
     type: 'physical' | 'online',

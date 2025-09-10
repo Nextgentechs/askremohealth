@@ -13,7 +13,7 @@ type SignUpInput = {
   password: string
   firstName: string
   lastName: string
-  role: 'doctor' | 'admin' | 'patient'
+  role: 'doctor' | 'admin' | 'lab' | 'patient'
 }
 
 type SignInInput = {
