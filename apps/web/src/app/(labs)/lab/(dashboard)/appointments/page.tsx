@@ -7,6 +7,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 
 export type Appointment = {
   id: string;
@@ -77,7 +78,8 @@ const columns: ColumnDef<Appointment>[] = [
 ];
 
 export default function LabAppointmentsPage() {
-  const { user, loading: isUserLoading } = useCurrentUser();
+  const params = useParams();
+  const { user, isLoading: isUserLoading } = useCurrentUser();
   const labId = user?.id;
 
   const {

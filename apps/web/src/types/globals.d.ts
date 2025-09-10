@@ -14,7 +14,7 @@ export type LabTestAvailable = InferSelectModel<typeof labTestsAvailable> & {
 export type Roles = 'user' | 'doctor' | 'admin' | 'lab'
 
 // Define the Lab type based on your schema
-type Lab = InferSelectModel<typeof labs>;
+export type Lab = InferSelectModel<typeof labs>;
 
 declare global {
   interface CustomJwtSessionClaims {
