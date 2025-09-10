@@ -148,7 +148,7 @@ function BookingSection({ labId, tests, availability }: { labId: string; tests: 
 }
 
 export default async function Page({ params }: { params: { id: string } }) {
-  const { id } = params;
+  const { id } = params; // Added a comment to trigger type re-evaluation
   // Fetch lab details
   const lab = await api.labs.getLabById({ placeId: id });
   if (!lab) return notFound();

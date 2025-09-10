@@ -2,12 +2,15 @@ import { DataTable } from '@web/components/data-table'
 import { api } from '@web/trpc/server'
 import { columns } from './columns'
 import { Loader } from 'lucide-react'
-import { auth } from '@web/auth'
+import { getCurrentUser } from '@web/auth'
 
 
 export default async function Page() {
-  const session = await auth();
-  const labId = session?.user?.lab?.placeId;
+  const session = await getCurrentUser();
+  // The session object directly contains the labId if the user is a lab.
+  // Assuming the session object for a 'lab' role would have a 'id' property that corresponds to the labId.
+  // If the session object for a lab user has a different structure, this might need adjustment.
+  const labId = session?.role === "lab" ? session.id : undefined;
   console.log(labId)
 
   if (!labId) {
