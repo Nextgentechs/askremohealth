@@ -1,4 +1,4 @@
-import { procedure, publicProcedure } from '../trpc';
+import { protectedProcedure, publicProcedure } from '../trpc';
 import { z } from 'zod';
 import { LabsService } from '../../services/labs';
 import AppointmentsService from '../../services/appointments'; // Import AppointmentsService
@@ -76,7 +76,7 @@ export const searchLabsByName = publicProcedure
     }
   });
 
-export const addLabTests = procedure
+export const addLabTests = protectedProcedure
   .input(
     z.object({
       tests: z.array(
@@ -117,7 +117,7 @@ export const addLabTests = procedure
     return { success: true };
   });
 
-export const getLabTestsForCurrentLab = procedure.query(async ({ ctx }) => {
+export const getLabTestsForCurrentLab = protectedProcedure.query(async ({ ctx }) => {
   const user = ctx.user;
   if (!user) throw new Error('Not authenticated');
   // Find the lab for the user
@@ -131,7 +131,7 @@ export const getLabTestsForCurrentLab = procedure.query(async ({ ctx }) => {
   });
 });
 
-export const saveLabAvailability = procedure
+export const saveLabAvailability = protectedProcedure
   .input(
     z.object({
       availability: z.array(
@@ -203,7 +203,7 @@ export const getLabAvailabilityByLabId = publicProcedure
     return LabsService.getAvailabilityByLabId(input.labId);
   });
 
-export const bookLabAppointment = procedure
+export const bookLabAppointment = protectedProcedure
   .input(z.object({
     labId: z.string(),
     testId: z.string(),
@@ -278,7 +278,7 @@ export const bookLabAppointment = procedure
     return { success: true, appointmentId: appointment.id };
   });
 
-export const currentLab = procedure.query(async ({ ctx }) => {
+export const currentLab = protectedProcedure.query(async ({ ctx }) => {
   const user = ctx.user;
   if (!user) throw new Error('Not authenticated');
 
@@ -306,7 +306,7 @@ export const labsRouter = {
   getLabAvailabilityByLabId,
   bookLabAppointment,
   currentLab,
-  getLabAppointments: procedure
+  getLabAppointments: protectedProcedure
     .input(z.object({ labId: z.string() }))
     .query(async ({ input }) => {
       return AppointmentsService.getLabAppointments(input.labId);
