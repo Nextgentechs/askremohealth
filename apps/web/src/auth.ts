@@ -79,7 +79,7 @@ async function createOrUpdateUser(googleUser: { email: string, given_name: strin
       email: googleUser.email,
       firstName: googleUser.given_name ?? '',
       lastName: googleUser.family_name ?? '',
-      role: role as 'doctor' | 'patient' | 'admin',
+      role: role as 'doctor' | 'patient' | 'admin' | 'lab',
       password: '',
     }).returning()
     
@@ -201,10 +201,10 @@ export async function requireAuth() {
 }
 
 // Require specific role middleware
-export async function requireRole(role: 'doctor' | 'patient' | 'admin') {
+export async function requireRole(role: 'doctor' | 'patient' | 'admin' | 'lab') {
   const user = await requireAuth()
   if (user.role !== role) {
-    redirect('/auth')
+    redirect('/')
   }
   return user
 }
