@@ -516,7 +516,7 @@ function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
   const [isLoading, setIsLoading] = useState(false)
   const [resendIsLoading, setResendIsLoading] = useState(false)
   const router = useRouter()
-  type UserRole = 'patient' | 'doctor' | 'admin'
+  type UserRole = 'patient' | 'doctor' | 'admin' | 'lab'
 
   type User = {
     id: string
