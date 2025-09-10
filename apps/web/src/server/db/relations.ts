@@ -16,7 +16,12 @@ import {
   articles,
   article_images,
   notifications,
-  officeLocation
+  officeLocation,
+  labs,
+  labTestsAvailable,
+  tests,
+  labAvailability,
+  labAppointments
 } from './schema'
 
 export const doctorRelations = relations(doctors, ({ one, many }) => ({
@@ -72,6 +77,10 @@ export const userRelations = relations(users, ({ one,many }) => ({
 export const facilityRelations = relations(facilities, ({ many }) => ({
   doctors: many(doctors),
 }))
+
+export const officeRelations = relations(officeLocation, ({many}) => ({
+  doctors: many(doctors),
+}) )
 
 export const appointmentRelations = relations(
   appointments,
@@ -166,3 +175,62 @@ export const articleImageRelations = relations(article_images, ({ one }) => ({
     references: [articles.id],
   }),
 }))
+
+
+export const labRelations = relations(labs, ({ one, many }) => ({
+  user: one(users, {
+    fields: [labs.user_id],
+    references: [users.id],
+  }),
+  labTestsAvailable: many(labTestsAvailable),
+   availability: many(labAvailability),
+}));
+
+export const userLabRelations = relations(users, ({ one }) => ({
+  lab: one(labs, {
+    fields: [users.id],
+    references: [labs.user_id],
+  }),
+}));
+
+export const labTestsAvailableRelations = relations(labTestsAvailable, ({ one }) => ({
+  test: one(tests, {
+    fields: [labTestsAvailable.testId],
+    references: [tests.id],
+  }),
+}));
+
+export const labTestsAvailableRelationsExtended = relations(
+  labTestsAvailable,
+  ({ one }) => ({
+    test: one(tests, {
+      fields: [labTestsAvailable.testId],
+      references: [tests.id],
+    }),
+  })
+);
+
+export const labAvailabilityRelations = relations(labAvailability, ({ one }) => ({
+  lab: one(labs, {
+    fields: [labAvailability.lab_id],
+    references: [labs.placeId],
+  }),
+}));
+
+export const labAppointmentRelations = relations(
+  labAppointments,
+  ({ one }) => ({
+    lab: one(labs, {
+      fields: [labAppointments.labId],
+      references: [labs.placeId],
+    }),
+    patient: one(patients, {
+      fields: [labAppointments.patientId],
+      references: [patients.id],
+    }),
+    doctor: one(doctors, {
+      fields: [labAppointments.doctorId],
+      references: [doctors.id],
+    }),
+  }),
+);

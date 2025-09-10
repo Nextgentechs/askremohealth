@@ -8,7 +8,6 @@ import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import React from 'react'
 
-
 export default function ArticlePage({ params }: { params: Promise<{ id: string }> }) {
     const resolvedParams = React.use(params)
     const { data: article, isLoading, error } = api.articles.getArticleById.useQuery({ id: resolvedParams.id })

@@ -15,8 +15,6 @@ import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 
-
-
 // Utility to strip HTML tags from a string
 function stripHtml(html: string): string {
   if (typeof window === 'undefined') {

@@ -1,9 +1,20 @@
 import { eq } from 'drizzle-orm'
 import { db } from './server/db'
-import { users } from './server/db/schema'
+import { users, labs } from './server/db/schema'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getUserSessionById } from './server/lib/session'
+
+// Helper function to infer the type of a user with their lab relation
+async function getUserWithLabQuery() {
+  return await db.query.users.findFirst({
+    with: {
+      lab: true,
+    },
+  });
+}
+
+type UserWithLab = Awaited<ReturnType<typeof getUserWithLabQuery>>;
 
 // Google OAuth configuration
 const GOOGLE_CLIENT_ID = process.env.AUTH_GOOGLE_ID!
@@ -79,7 +90,7 @@ async function createOrUpdateUser(googleUser: { email: string, given_name: strin
       email: googleUser.email,
       firstName: googleUser.given_name ?? '',
       lastName: googleUser.family_name ?? '',
-      role: role as 'doctor' | 'patient' | 'admin',
+      role: role as 'doctor' | 'patient' | 'admin' | 'lab',
       password: '',
     }).returning()
     
@@ -106,7 +117,7 @@ function setSessionCookie(userId: string, cookies: ReadonlyRequestCookies) {
 }
 
 // Get current user from session - handles both Redis and direct database sessions
-export async function getCurrentUser() {
+export async function getCurrentUser(): Promise<UserWithLab | null> {
   try {
     const cookieStore = await cookies()
     const sessionId = cookieStore.get('session-id')?.value
@@ -122,6 +133,9 @@ export async function getCurrentUser() {
       // If we have a Redis session, get the full user from database using the user ID from the session
       const user = await db.query.users.findFirst({
         where: eq(users.id, redisUser.id),
+        with: {
+          lab: true,
+        },
       })
       return user
     }
@@ -129,6 +143,9 @@ export async function getCurrentUser() {
     // If no Redis session, try direct database lookup (Google OAuth)
     const user = await db.query.users.findFirst({
       where: eq(users.id, sessionId),
+      with: {
+        lab: true,
+      },
     })
 
     return user
@@ -201,10 +218,10 @@ export async function requireAuth() {
 }
 
 // Require specific role middleware
-export async function requireRole(role: 'doctor' | 'patient' | 'admin') {
-  const user = await requireAuth()
-  if (user.role !== role) {
-    redirect('/auth')
+export async function requireRole(role: 'doctor' | 'patient' | 'admin' | 'lab') {
+  const user = await getCurrentUser()
+  if (!user || user.role !== role) {
+    redirect('/')
   }
   return user
 }
