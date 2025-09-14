@@ -12,8 +12,8 @@ import { ImageIcon, Video } from "lucide-react";
 const AddPost = () => {
   const { user, isLoaded } = useUser();
   const [desc, setDesc] = useState("");
-  const [img, setImg] = useState<any>();
-  const [video, setVideo] = useState<any>();
+  const [img, setImg] = useState<{ secure_url: string } | null>(null);
+  const [video, setVideo] = useState<{ secure_url: string } | null>(null);
 
   if (!isLoaded) {
     return "Loading...";
@@ -23,7 +23,7 @@ const AddPost = () => {
     <div className="p-4 bg-white shadow-md rounded-lg flex gap-4 justify-between text-sm">
       {/* AVATAR */}
       <Image
-        src={user?.imageUrl || "/noAvatar.png"}
+        src={user?.imageUrl ?? "/noAvatar.png"}
         alt=""
         width={48}
         height={48}
@@ -32,7 +32,9 @@ const AddPost = () => {
       {/* POST */}
       <div className="flex-1">
         {/* TEXT INPUT */}
-        <form action={(formData)=>addPost(formData, img?.secure_url || "", video?.secure_url || "")} className="flex gap-4">
+        <form action={async (formData) => {
+            await addPost(formData, img?.secure_url ?? "", video?.secure_url ?? "");
+        }} className="flex gap-4">
           <textarea
             placeholder="Make a new post anonymously"
             className="flex-1 bg-slate-100 rounded-lg p-2"
@@ -48,9 +50,11 @@ const AddPost = () => {
           <CldUploadWidget
           signatureEndpoint="/api/community/signed-cloudinary"
           onSuccess={(result, { widget }) => {
-              setImg(result.info);
-              widget.close();
-          }}
+                if (result.info && typeof result.info === 'object' && 'secure_url' in result.info) {
+                    setImg(result.info as { secure_url: string });
+                }
+                widget.close();
+            }}
           >
             {({ open }) => {
               return (
@@ -70,7 +74,9 @@ const AddPost = () => {
                 resourceType: "video"
                 }}
                 onSuccess={(result, { widget }) => {
-                    setVideo(result.info);
+                    if (result.info && typeof result.info === 'object' && 'secure_url' in result.info) {
+                        setVideo(result.info as { secure_url: string });
+                    }
                     widget.close();
                 }}
           >
