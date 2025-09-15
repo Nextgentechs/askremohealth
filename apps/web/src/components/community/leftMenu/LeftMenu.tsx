@@ -1,12 +1,11 @@
 import Link from "next/link";
 import { Bookmark, BookOpenText, Calendar1, HomeIcon, ListCheck, MessageCircleMore, Newspaper, Settings, Store, User } from "lucide-react";
-import ProfileCard from "./ProfileCard";
 import Ad from "../Ad";
 
 const LeftMenu = ({ type }: { type: "home" | "profile" }) => {
   return (
     <div className="flex flex-col gap-6">
-      {type === "home" && <ProfileCard />}
+      {type === "home"}
       <div className="p-4 bg-white rounded-lg shadow-md text-sm text-gray-500 flex flex-col gap-2">
         <Link
           href="/"
