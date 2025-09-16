@@ -1,7 +1,7 @@
 "use client";
 
 import { switchLike } from "@web/server/services/community/actions";
-import { useAuth } from "@clerk/nextjs";
+import { api } from '@web/trpc/react'
 import { Heart, MessageCircleMore, Send } from "lucide-react";
 import { useOptimistic, useState, useEffect } from "react";
 
@@ -14,7 +14,9 @@ const PostInteraction = ({
   likes: string[];
   commentNumber: number;
 }) => {
-  const { isLoaded, userId } = useAuth();
+  const { data: user, isLoading } = api.users.currentUser.useQuery()
+  const userId = user?.id;
+  const isLoaded = !isLoading;
   const [likeState, setLikeState] = useState({
     likeCount: likes.length,
     isLiked: false,

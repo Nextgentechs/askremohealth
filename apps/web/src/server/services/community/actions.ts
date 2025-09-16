@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
+import { api } from '@web/trpc/server'
 import { db } from "@web/server/db";
 import { posts, likes, comments, users, chats, doctors, profilePictures } from "@web/server/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -11,7 +11,8 @@ import { redirect } from "next/navigation";
 
 export const addPost = async (formData: FormData, img?: string, video?: string) => {
   try {
-    const { userId } = await auth();
+    const user = await api.users.currentUser();
+    const userId = user?.id;
 
     if (!userId) {
       console.log("No userId found");
@@ -43,7 +44,8 @@ export const addPost = async (formData: FormData, img?: string, video?: string) 
 };
 
 export const deletePost = async (postId: string) => {
-  const { userId } = await auth();
+  const user = await api.users.currentUser();
+  const userId = user?.id;
 
   if (!userId) throw new Error("User is not authenticated!");
 
@@ -61,7 +63,8 @@ export const deletePost = async (postId: string) => {
 };
 
 export const switchLike = async (postId: string) => {
-  const { userId } = await auth();
+  const user = await api.users.currentUser();
+  const userId = user?.id;
 
   if (!userId) throw new Error("User is not authenticated!");
 
@@ -91,7 +94,8 @@ export const switchLike = async (postId: string) => {
 };
 
 export const addComment = async (postId: string, desc: string) => {
-  const { userId } = await auth();
+  const user = await api.users.currentUser();
+  const userId = user?.id;
 
   if (!userId) throw new Error("User is not authenticated!");
 

@@ -1,6 +1,6 @@
-import { auth } from "@clerk/nextjs/server";
-import { db } from "@/db";
-import { messages, chats, users } from "@/db/schema";
+import { api } from '@web/trpc/server'
+import { db } from "@web/server/db";
+import { messages, chats, users } from "@web/server/db/schema";
 import { eq, and, or } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { Server } from "socket.io";
@@ -10,7 +10,9 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ chatId: string }> }
 ) {
-  const { userId } = await auth();
+  const user = await api.users.currentUser();
+  const userId = user?.id;
+
   const { chatId } = await params;
   const { content } = await request.json();
 
@@ -40,15 +42,10 @@ export async function POST(
     .returning();
 
   // Get sender info
-  const [sender] = await db
-    .select({ username: users.username })
-    .from(users)
-    .where(eq(users.id, userId));
-
   const messageWithSender = {
     ...newMessage,
-    senderUsername: sender?.username,
-  };
+    senderUsername: `${user.firstName} ${user.lastName}`,
+    };
 
   // Emit to socket
   const io = (global as any).io;
