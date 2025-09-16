@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { api } from '@web/trpc/server'
 import { db } from "@web/server/db";
 import { chats, users, doctors, profilePictures } from "@web/server/db/schema";
 import { eq, or } from "drizzle-orm";
@@ -11,8 +11,9 @@ import { BadgeCheck } from "lucide-react";
 import Image from "next/image";
 
 const ChatsPage = async () => {
-  const { userId } = await auth();
-  if (!userId) redirect("/auth");
+  const user = await api.users.currentUser();
+  if (!user) redirect("/auth");
+  const userId = user.id;
 
   const userChats = await db
     .select({

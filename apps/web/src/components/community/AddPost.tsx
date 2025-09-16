@@ -1,6 +1,6 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
+import { api } from '@web/trpc/react'
 import { CldUploadWidget } from "next-cloudinary";
 import Image from "next/image";
 import { useState } from "react";
@@ -8,13 +8,17 @@ import AddPostButton from "@web/components/community/AddPostButton";
 import { addPost } from "@web/server/services/community/actions";
 import { ImageIcon, Video } from "lucide-react";
 
+
 const AddPost = () => {
-  const { user, isLoaded } = useUser();
+  
+  const { data: user, isLoading } = api.users.currentUser.useQuery()
   const [desc, setDesc] = useState("");
   const [img, setImg] = useState<{ secure_url: string } | null>(null);
   const [video, setVideo] = useState<{ secure_url: string } | null>(null);
 
-  if (!isLoaded) {
+  
+
+  if (isLoading) {
     return "Loading...";
   }
 
@@ -22,7 +26,7 @@ const AddPost = () => {
     <div className="p-4 bg-white shadow-md rounded-lg flex gap-4 justify-between text-sm">
       {/* AVATAR */}
       <Image
-        src={user?.imageUrl ?? "/noAvatar.png"}
+        src="/assets/community/noAvatar.png"
         alt=""
         width={48}
         height={48}

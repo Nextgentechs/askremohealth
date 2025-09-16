@@ -1,7 +1,7 @@
 "use client";
 
 import { addComment, initiateConsult } from "@web/server/services/community/actions";
-import { useUser } from "@clerk/nextjs";
+import { api } from '@web/trpc/react'
 import { comments } from "@web/server/db/schema";
 import Image from "next/image";
 import { useOptimistic, useState } from "react";
@@ -31,7 +31,8 @@ const CommentList = ({
   postId: string;
   postAuthorId: string;
 }) => {
-  const { user } = useUser();
+  const { data: user } = api.users.currentUser.useQuery()
+  const { data: doctor } = api.doctors.currentDoctor.useQuery()
   const [commentState, setCommentState] = useState(comments);
   const [desc, setDesc] = useState("");
 
@@ -49,9 +50,9 @@ const CommentList = ({
         id: user.id,
         firstName: "Sending",
         lastName: "Please Wait...",
-        role: (user.publicMetadata?.role as "patient" | "doctor") || "patient",
+        role: user.role ?? "patient",
       },
-      profilePicture: user.imageUrl || null,
+      profilePicture: doctor?.profilePicture?.url ?? null,
     });
     try {
       const createdComment = await addComment(postId, desc);
@@ -85,7 +86,7 @@ const CommentList = ({
       {user && (
         <div className="flex items-center gap-4">
           <Image
-            src={user.imageUrl || "noAvatar.png"}
+            src={doctor?.profilePicture?.url ?? "/assets/community/noAvatar.png"}
             alt=""
             width={32}
             height={32}
@@ -111,7 +112,7 @@ const CommentList = ({
             
             {/* AVATAR */}
             <Image
-              src={comment.profilePicture ?? "noAvatar.png"}
+              src={comment.profilePicture ?? "/assets/community/noAvatar.png"}
               alt=""
               width={40}
               height={40}

@@ -11,7 +11,7 @@ const PostInfo = ({ postId }: { postId: string }) => {
   return (
     <div className="relative">
       <Image
-        src="/more.png"
+        src="/assets/community/more.png"
         width={16}
         height={16}
         alt=""

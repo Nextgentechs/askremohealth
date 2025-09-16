@@ -4,7 +4,7 @@ import { posts } from "@web/server/db/schema";
 import PostInteraction from "@web/components/community/feed/PostInteraction";
 import { Suspense } from "react";
 import PostInfo from "@web/components/community/feed/PostInfo";
-import { auth } from "@clerk/nextjs/server";
+import { api } from '@web/trpc/server'
 import PostVideo from "./PostVideo";
 import { BadgeCheck } from "lucide-react";
 
@@ -27,14 +27,15 @@ type FeedPostType = PostType & {
 
 
 const Post = async ({ post }: { post: FeedPostType }) => {
-  const { userId } = await auth();
+  const user = await api.users.currentUser();
+  const userId = user?.id;
   return (
     <div className="flex flex-col gap-4">
       {/* USER */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Image
-            src={post.profilePicture ?? "/noAvatar.png"}
+            src={post.profilePicture ?? "/assets/community/noAvatar.png"}
             width={40}
             height={40}
             alt=""

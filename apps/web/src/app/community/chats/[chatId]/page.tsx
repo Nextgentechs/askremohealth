@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { api } from '@web/trpc/server'
 import { db } from "@web/server/db";
 import { chats, users, messages, doctors, profilePictures } from "@web/server/db/schema";
 import { eq, and, or } from "drizzle-orm";
@@ -9,12 +9,14 @@ import RightMenu from "@web/components/community/rightMenu/RightMenu";
 import { sql } from "drizzle-orm";
 
 const ChatPage = async ({ params }: { params: Promise<{ chatId: string[] }> }) => {
-  const { userId } = await auth();
+  const user = await api.users.currentUser();
+  const userId = user?.id;
+
   const { chatId } = await params;
   const chatIdString = Array.isArray(chatId) ? chatId[0] : chatId;
   if (!chatIdString) redirect("/community/chats");
 
-  if (!userId) redirect("/auth");
+  if (!user || !userId) redirect("/auth");
 
   const [chatData] = await db
     .select({
