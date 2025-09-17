@@ -34,7 +34,6 @@ const Navbar = async () => {
             <div className="cursor-pointer">
               <Image src="/assets/community/notifications.png" alt="" width={20} height={20} />
             </div>
-            {/* Replace UserButton with your own user menu */}
             <div className="cursor-pointer">
               <Image src="/assets/community/user.png" alt="" width={20} height={20} />
             </div>

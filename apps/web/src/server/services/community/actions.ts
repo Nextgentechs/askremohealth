@@ -15,8 +15,7 @@ export const addPost = async (formData: FormData, img?: string, video?: string) 
     const userId = user?.id;
 
     if (!userId) {
-      console.log("No userId found");
-      throw new Error("User is not authenticated!");
+      redirect(`/auth`);
     }
 
     const desc = formData.get("desc") as string;

@@ -13,13 +13,13 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "dev": "ts-node server.ts",
+    "dev": "tsx server.ts",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
     "format:write": "prettier --write \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "preview": "next build && next start",
-    "start": "ts-node server.ts",
+    "start": "tsx server.ts",
     "typecheck": "tsc --noEmit",
     "payload:generate:types": "PAYLOAD_CONFIG_PATH=src/payload.config.ts payload generate:types"
   },
@@ -133,6 +133,7 @@
     "prettier-plugin-organize-imports": "^4.1.0",
     "prettier-plugin-tailwindcss": "^0.6.9",
     "tailwindcss": "^3.4.3",
+    "tsx": "^4.20.5",
     "typescript": "^5.7.2"
   },
   "ct3aMetadata": {
