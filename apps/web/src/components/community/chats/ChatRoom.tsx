@@ -53,16 +53,22 @@ const ChatRoom = ({ chatId, currentUserId, messages: initialMessages, otherUserN
     e.preventDefault();
     if (!newMessage.trim() || !socket) return;
 
-    const response = await fetch(`/api/community/chats/${chatId}/messages`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content: newMessage }),
-    });
+    try {
+        const response = await fetch(`/api/community/chats/${chatId}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: newMessage }),
+        });
 
-    if (response.ok) {
-      setNewMessage("");
+        if (response.ok) {
+        setNewMessage("");
+        } else {
+        console.error("Failed to send message");
+        }
+    } catch (error) {
+        console.error("Error sending message:", error);
     }
-  };
+    };
 
   return (
     <div className="flex flex-col h-full border rounded-lg">
