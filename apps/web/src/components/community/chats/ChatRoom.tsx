@@ -74,16 +74,16 @@ const ChatRoom = ({ chatId, currentUserId, messages: initialMessages, otherUserN
     <div className="flex flex-col h-full border rounded-lg">
       <div className="p-3 border-b border-t bg-gray-50 flex-shrink-0">
         <div className="flex -ml-1 gap-2 items-center">
-            <Link href="/community/chats">
+            <Link href="/community/chats" className="flex items-center">
               <ChevronLeft />
-              <Image
+            </Link>
+            <Image
                 src={otherUserProfilePicture ?? "/assets/community/noAvatar.png"}
-                alt=""
+                alt={otherUserName}
                 width={32}
                 height={32}
                 className="w-8 h-8 rounded-full object-cover"
-              />
-            </Link>
+            />
             <div className="flex items-center gap-0.5" >
                 <h2 className="font-semibold">{otherUserName}</h2>
                 {isOtherUserDoctor && (

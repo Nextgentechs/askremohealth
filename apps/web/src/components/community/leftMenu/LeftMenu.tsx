@@ -8,7 +8,7 @@ const LeftMenu = ({ type }: { type: "home" | "profile" }) => {
       {type === "home"}
       <div className="p-4 bg-white rounded-lg shadow-md text-sm text-gray-500 flex flex-col gap-2">
         <Link
-          href="/"
+          href="/community"
           className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100"
         >
           <HomeIcon/>
@@ -16,7 +16,7 @@ const LeftMenu = ({ type }: { type: "home" | "profile" }) => {
         </Link>
         <hr className="border-t-1 border-gray-50 w-36 self-center" />
         <Link
-          href="/chats"
+          href="/community/chats"
           className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100"
         >
           <MessageCircleMore/>
@@ -24,7 +24,7 @@ const LeftMenu = ({ type }: { type: "home" | "profile" }) => {
         </Link>
         <hr className="border-t-1 border-gray-50 w-36 self-center" />
         <Link
-          href="/"
+          href="/community"
           className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100"
         >
           <User/>
@@ -32,7 +32,7 @@ const LeftMenu = ({ type }: { type: "home" | "profile" }) => {
         </Link>
         <hr className="border-t-1 border-gray-50 w-36 self-center" />
         <Link
-          href="/"
+          href="/community"
           className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100"
         >
           <Store/>
@@ -40,7 +40,7 @@ const LeftMenu = ({ type }: { type: "home" | "profile" }) => {
         </Link>
         <hr className="border-t-1 border-gray-50 w-36 self-center" />
         <Link
-          href="/"
+          href="/community"
           className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100"
         >
           <Calendar1/>
@@ -48,7 +48,7 @@ const LeftMenu = ({ type }: { type: "home" | "profile" }) => {
         </Link>
         <hr className="border-t-1 border-gray-50 w-36 self-center" />
         <Link
-          href="/"
+          href="/community"
           className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100"
         >
           <Bookmark/>
@@ -56,7 +56,7 @@ const LeftMenu = ({ type }: { type: "home" | "profile" }) => {
         </Link>
         <hr className="border-t-1 border-gray-50 w-36 self-center" />
         <Link
-          href="/"
+          href="/community"
           className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100"
         >
           <Newspaper/>
@@ -64,7 +64,7 @@ const LeftMenu = ({ type }: { type: "home" | "profile" }) => {
         </Link>
         <hr className="border-t-1 border-gray-50 w-36 self-center" />
         <Link
-          href="/"
+          href="/community"
           className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100"
         >
           <BookOpenText/>
@@ -72,7 +72,7 @@ const LeftMenu = ({ type }: { type: "home" | "profile" }) => {
         </Link>
         <hr className="border-t-1 border-gray-50 w-36 self-center" />
         <Link
-          href="/"
+          href="/community"
           className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100"
         >
           <ListCheck/>
@@ -80,7 +80,7 @@ const LeftMenu = ({ type }: { type: "home" | "profile" }) => {
         </Link>
         <hr className="border-t-1 border-gray-50 w-36 self-center" />
         <Link
-          href="/"
+          href="/community"
           className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100"
         >
           <Settings/>
