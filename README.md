@@ -31,7 +31,6 @@ A modern healthcare platform built with Next.js, TypeScript, and Tailwind CSS.
 - [TypeScript](https://www.typescriptlang.org/): Type-safe JavaScript
 - [Tailwind CSS](https://tailwindcss.com/): Utility-first CSS framework
 - [tRPC](https://trpc.io/): End-to-end typesafe APIs
-- [Clerk](https://clerk.com/): Authentication and user management
 - [Drizzle ORM](https://orm.drizzle.team/): TypeScript ORM
 - [Twilio](https://www.twilio.com/): Video consultations
 - [Nodemailer](https://nodemailer.com/): Email notifications
