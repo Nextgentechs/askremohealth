@@ -38,7 +38,7 @@ export const addPost = async (formData: FormData, img?: string, video?: string) 
     return { success: true };
   } catch (err) {
     console.log("Error in addPost:", err);
-    throw err;
+    return { error: "Failed to create post" };
   }
 };
 
