@@ -7,6 +7,7 @@ import { useState } from "react";
 import AddPostButton from "@web/components/community/AddPostButton";
 import { addPost } from "@web/server/services/community/actions";
 import { ImageIcon, Video } from "lucide-react";
+import toast from 'react-hot-toast'
 
 
 const AddPost = () => {
@@ -36,7 +37,15 @@ const AddPost = () => {
       <div className="flex-1">
         {/* TEXT INPUT */}
         <form action={async (formData) => {
-            await addPost(formData, img?.secure_url ?? "", video?.secure_url ?? "");
+            const result = await addPost(formData, img?.secure_url ?? "", video?.secure_url ?? "");
+            if (result?.success) {
+                toast.success('Your post was sent');
+                setDesc("");
+                setImg(null);
+                setVideo(null);
+            } else if (result?.error) {
+              toast.error(result.error);
+            }
         }} className="flex gap-4">
           <textarea
             placeholder="Make a new post anonymously"
