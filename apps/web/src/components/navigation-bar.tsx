@@ -128,21 +128,12 @@ function AuthButtons({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="min-w-40">
-          {/* <Link href="/auth?role=doctor">
-            <DropdownMenuItem className="cursor-pointer">Login as Doctor</DropdownMenuItem>
-          </Link> */}
           <Link href="/auth?role=patient">
             <DropdownMenuItem className="cursor-pointer">Patient Login</DropdownMenuItem>
           </Link>
-          <Link href="https://doctors.askremohealth.com/auth?role=doctor">
+          {/* <Link href="https://doctors.askremohealth.com/auth?role=doctor">
             <DropdownMenuItem className="cursor-pointer">Doctor Login</DropdownMenuItem>
-          </Link>
-          <Link href="/auth?role=admin">
-            <DropdownMenuItem className="cursor-pointer">Admin Login</DropdownMenuItem>
-          </Link>
-          <Link href="/auth?role=lab">
-            <DropdownMenuItem className="cursor-pointer">Lab Login</DropdownMenuItem>
-          </Link>
+          </Link> */}
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
