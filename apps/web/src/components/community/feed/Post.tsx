@@ -94,9 +94,6 @@ const Post = async ({ post }: { post: FeedPostType }) => {
           commentNumber={post._count.comments}
         />
       </Suspense>
-      <Suspense fallback="Loading...">
-        <Comments postId={post.id} postAuthorId={post.user.id}/>
-      </Suspense>
       <div className="h-px bg-gray-300 mt-3 w-full"></div>
     </div>
   );
