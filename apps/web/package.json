@@ -69,6 +69,7 @@
     "bcrypt": "^5.1.1",
     "class-variance-authority": "^0.7.1",
     "cloudinary": "^2.7.0",
+    "cloudinary-video-player": "^3.4.2",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
     "cookie": "^1.0.2",
