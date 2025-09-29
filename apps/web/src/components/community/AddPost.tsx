@@ -1,22 +1,94 @@
 "use client";
 
 import { api } from '@web/trpc/react'
-import { CldUploadWidget } from "next-cloudinary";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import AddPostButton from "@web/components/community/AddPostButton";
 import { addPost } from "@web/server/services/community/actions";
-import { ImageIcon, Video } from "lucide-react";
-
+import { ImageIcon, Video, X } from "lucide-react";
+import toast from 'react-hot-toast'
+import imageCompression from 'browser-image-compression';
 
 const AddPost = () => {
-  
   const { data: user, isLoading } = api.users.currentUser.useQuery()
   const [desc, setDesc] = useState("");
   const [img, setImg] = useState<{ secure_url: string } | null>(null);
   const [video, setVideo] = useState<{ secure_url: string } | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isUploadingVideo, setIsUploadingVideo] = useState(false);
 
+  const [imageFileName, setImageFileName] = useState<string>("");
+  const [videoFileName, setVideoFileName] = useState<string>("");
   
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
+
+  const compressImage = async (file: File) => {
+    const options = {
+      maxSizeMB: 2,
+      maxWidthOrHeight: 1920,
+      useWebWorker: true,
+    };
+    
+    try {
+      return await imageCompression(file, options);
+    } catch (error) {
+      console.error('Compression failed:', error);
+      return file;
+    }
+  };
+
+  const uploadToCloudinary = async (file: File, resourceType: 'image' | 'video') => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('resource_type', resourceType);
+
+    const response = await fetch('/api/community/upload', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error('Upload failed');
+    }
+
+    return response.json();
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingImage(true);
+    try {
+      const compressedFile = await compressImage(file);
+      const result = await uploadToCloudinary(compressedFile, 'image');
+      setImg({ secure_url: result.secure_url });
+      setImageFileName(file.name);
+    } catch (error) {
+      toast.error('Image upload failed');
+      console.error('Upload error:', error);
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingVideo(true);
+    try {
+      const result = await uploadToCloudinary(file, 'video');
+      setVideo({ secure_url: result.secure_url });
+      setVideoFileName(file.name);
+    } catch (error) {
+      toast.error('Video upload failed');
+      console.error('Upload error:', error);
+    } finally {
+      setIsUploadingVideo(false);
+    }
+  };
 
   if (isLoading) {
     return "Loading...";
@@ -36,7 +108,17 @@ const AddPost = () => {
       <div className="flex-1">
         {/* TEXT INPUT */}
         <form action={async (formData) => {
-            await addPost(formData, img?.secure_url ?? "", video?.secure_url ?? "");
+            const result = await addPost(formData, img?.secure_url ?? "", video?.secure_url ?? "");
+            if (result?.success) {
+                toast.success('Your post was sent');
+                setDesc("");
+                setImg(null);
+                setVideo(null);
+                setImageFileName("");
+                setVideoFileName("");
+            } else if (result?.error) {
+              toast.error(result.error);
+            }
         }} className="flex gap-4">
           <textarea
             placeholder="Make a new post anonymously"
@@ -48,53 +130,75 @@ const AddPost = () => {
             <AddPostButton />
           </div>
         </form>
+
+        {(imageFileName || videoFileName) && (
+          <div className="mt-2 text-sm flex flex-col gap-1 border-2 border-gray-300 rounded-lg p-1 w-fit shadow-[-2px_2px_0px_0px_rgba(76,29,149,0.3)]">
+            {imageFileName && (
+              <div className="flex items-center gap-2">
+                <span className="text-gray-500">Image:</span>
+                <span className="text-violet-900">{imageFileName}</span>
+                <X 
+                  className="w-4 h-4 text-gray-500 cursor-pointer hover:text-red-500" 
+                  onClick={() => {
+                    setImageFileName("");
+                    setImg(null);
+                    if (imageInputRef.current) imageInputRef.current.value = "";
+                  }}
+                />
+              </div>
+            )}
+            {videoFileName && (
+              <div className="flex items-center gap-2">
+                <span className="text-gray-500">Video:</span>
+                <span className="text-violet-900 underline">{videoFileName}</span>
+                <X 
+                  className="w-4 h-4 text-gray-500 cursor-pointer hover:text-red-500" 
+                  onClick={() => {
+                    setVideoFileName("");
+                    setVideo(null);
+                    if (videoInputRef.current) videoInputRef.current.value = "";
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        )}
+        
         {/* POST OPTIONS */}
-        <div className="flex items-center gap-4 mt-4 text-gray-400 flex-wrap">
-          <CldUploadWidget
-          signatureEndpoint="/api/community/signed-cloudinary"
-          onSuccess={(result, { widget }) => {
-                if (result.info && typeof result.info === 'object' && 'secure_url' in result.info) {
-                    setImg(result.info as { secure_url: string });
-                }
-                widget.close();
-            }}
+        <div className="flex items-center gap-4 mt-4 text-gray-500 flex-wrap">
+          {/* Hidden file inputs */}
+          <input
+            ref={imageInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="hidden"
+          />
+          <input
+            ref={videoInputRef}
+            type="file"
+            accept="video/*"
+            onChange={handleVideoUpload}
+            className="hidden"
+          />
+          
+          {/* Image upload button */}
+          <div
+            className="flex items-center gap-2 cursor-pointer"
+            onClick={() => imageInputRef.current?.click()}
           >
-            {({ open }) => {
-              return (
-                <div
-                  className="flex items-center gap-2 cursor-pointer"
-                  onClick={() => open()}
-                >
-                  <ImageIcon className="text-green-500"/>
-                  Photo
-                </div>
-              );
-            }}
-          </CldUploadWidget>
-          <CldUploadWidget
-                signatureEndpoint="/api/community/signed-cloudinary"
-                options={{
-                resourceType: "video"
-                }}
-                onSuccess={(result, { widget }) => {
-                    if (result.info && typeof result.info === 'object' && 'secure_url' in result.info) {
-                        setVideo(result.info as { secure_url: string });
-                    }
-                    widget.close();
-                }}
+            <ImageIcon className="text-green-500"/>
+            {isUploadingImage ? "Uploading..." : "Photo"}
+          </div>
+
+          {/* Video upload button */}
+          <div
+            className="flex items-center gap-2 cursor-pointer"
+            onClick={() => videoInputRef.current?.click()}
           >
-                {({ open }) => {
-                return (
-                    <div
-                    className="flex items-center gap-2 cursor-pointer"
-                    onClick={() => open()}
-                    >
-                    <Video className="text-red-500"/>
-                    Video
-                    </div>
-                );
-                }}
-          </CldUploadWidget>
+            <Video className="text-red-500"/>
+            {isUploadingVideo ? "Uploading..." : "Video"}
+          </div>
         </div>
       </div>
     </div>
