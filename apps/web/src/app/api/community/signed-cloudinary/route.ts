@@ -19,8 +19,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const paramsWithPreset = {
+      ...paramsToSign,
+      upload_preset: 'community_posts',
+    };
+
     const signature = cloudinary.utils.api_sign_request(
-      paramsToSign,
+      paramsWithPreset,
       process.env.CLOUDINARY_API_SECRET!
     );
 
