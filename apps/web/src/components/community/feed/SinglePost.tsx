@@ -123,6 +123,7 @@ const SinglePost = async ({ postId }: SinglePostProps) => {
           {post.video && (
               <PostVideo
                   id={`video-${post.id}`}
+                  key={post.id}
                   src={
                     post.video
                       ? (

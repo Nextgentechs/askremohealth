@@ -72,6 +72,7 @@ const Post = async ({ post }: { post: FeedPostType }) => {
           {post.video && (
               <PostVideo
                   id={`video-${post.id}`}
+                  key={post.id}
                   src={
                     post.video
                       ? (
