@@ -27,6 +27,7 @@ interface ChatRoomProps {
 const ChatRoom = ({ chatId, currentUserId, messages: initialMessages, otherUserName, otherUserProfilePicture, isOtherUserDoctor }: ChatRoomProps) => {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [newMessage, setNewMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const [socket, setSocket] = useState<ReturnType<typeof io> | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -53,6 +54,8 @@ const ChatRoom = ({ chatId, currentUserId, messages: initialMessages, otherUserN
     e.preventDefault();
     if (!newMessage.trim() || !socket) return;
 
+    setIsLoading(true);
+
     try {
         const response = await fetch(`/api/community/chats/${chatId}/messages`, {
         method: "POST",
@@ -67,6 +70,8 @@ const ChatRoom = ({ chatId, currentUserId, messages: initialMessages, otherUserN
         }
     } catch (error) {
         console.error("Error sending message:", error);
+    } finally {
+      setIsLoading(false);
     }
     };
 
@@ -127,9 +132,17 @@ const ChatRoom = ({ chatId, currentUserId, messages: initialMessages, otherUserN
           />
           <button
             type="submit"
-            className="px-4 py-2 bg-violet-900 text-white rounded-lg hover:bg-violet-700"
+            disabled={isLoading}
+            className="px-4 py-2 bg-violet-900 text-white rounded-lg hover:bg-violet-700 disabled:bg-violet-900/50 disabled:cursor-not-allowed"
           >
-            Send
+            {isLoading ? (
+              <div className="flex items-center gap-2">
+                <div className="inline-block h-[10px] w-[10px] animate-spin rounded-full border-2 border-white-300 border-solid border-current border-e-transparent align-[-0.125em] text-surface motion-reduce:animate-[spin_1.5s_linear_infinite]" />
+                Sending
+              </div>
+            ) : (
+              "Send"
+            )}
           </button>
         </div>
       </form>

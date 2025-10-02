@@ -41,9 +41,9 @@ const ChatsPage = async () => {
         <LeftMenu type="home" />
       </div>
       <div className="w-full lg:w-[70%] xl:w-[50%] overflow-y-auto">
-        <div className="flex flex-col gap-6">
-          <h1 className="text-2xl font-bold">My Chats</h1>
-          <div className="space-y-4">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-2xl font-bold ml-4">My Chats</h1>
+          <div className="space-y-2">
             {userChats.map((chat) => {
                 const isDoctor = chat.doctorId === userId;
                 const otherUserName = isDoctor 
