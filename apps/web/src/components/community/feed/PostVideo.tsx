@@ -6,7 +6,7 @@ export default function PostVideo({ id, src }: { id: string; src: string }) {
   return (
     <div className="w-full">
       <CldVideoPlayer
-        id={id}
+        id={`${id}-${Math.random().toString(36).substr(2, 9)}`}
         width="100%"
         height="auto"
         src={src}

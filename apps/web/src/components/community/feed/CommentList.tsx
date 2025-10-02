@@ -5,6 +5,7 @@ import { api } from '@web/trpc/react'
 import { comments } from "@web/server/db/schema";
 import Image from "next/image";
 import { useOptimistic, useState } from "react";
+import { useFormStatus } from "react-dom";
 import { BadgeCheck, Heart } from "lucide-react";
 
 
@@ -20,6 +21,25 @@ type User = {
 type CommentWithUser = Comment & { 
   user: User;
   profilePicture: string | null;
+};
+
+const ChatPrivatelyButton = () => {
+  const { pending } = useFormStatus();
+  return (
+    <button 
+      className="ml-2 px-1 py-0.5 sm:px-2 sm:py-1 bg-violet-900 hover:bg-violet-700 text-white text-xs rounded transition-colors disabled:bg-violet-900/50 disabled:cursor-not-allowed"
+      disabled={pending}
+    >
+      {pending ? (
+        <div className="flex items-center gap-1">
+          <div className="inline-block h-[8px] w-[8px] animate-spin rounded-full border-2 border-white-300 border-solid border-current border-e-transparent align-[-0.125em] text-surface motion-reduce:animate-[spin_1.5s_linear_infinite]" />
+          Initiating Chat
+        </div>
+      ) : (
+        "Chat Privately"
+      )}
+    </button>
+  );
 };
 
 const CommentList = ({
@@ -56,7 +76,7 @@ const CommentList = ({
     });
     try {
       const createdComment = await addComment(postId, desc);
-      // Ensure createdComment matches CommentWithUser type
+      
       const normalizedComment: CommentWithUser = {
         ...createdComment,
         id: createdComment.id ?? "",
@@ -131,9 +151,7 @@ const CommentList = ({
                 {comment.user.role === 'doctor' && 
                 user?.id === postAuthorId && (
                     <form action={() => initiateConsult(comment.user.id, user.id)}>
-                        <button className="ml-2 px-1 py-0.5 sm:px-2 sm:py-1 bg-violet-900 hover:bg-violet-700 text-white text-xs rounded transition-colors">
-                        Consult
-                        </button>
+                        <ChatPrivatelyButton />
                     </form>
                 )}
               </span>
@@ -149,7 +167,7 @@ const CommentList = ({
             </div>
             {/* ICON */}
             <Image
-              src="/more.png"
+              src="/assets/community/more.png"
               alt=""
               width={16}
               height={16}

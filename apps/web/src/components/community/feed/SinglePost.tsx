@@ -17,7 +17,6 @@ interface SinglePostProps {
 }
 
 const SinglePost = async ({ postId }: SinglePostProps) => {
-  // Fetch the specific post
   const rawPost = await db
     .select({
       id: posts.id,
@@ -48,7 +47,6 @@ const SinglePost = async ({ postId }: SinglePostProps) => {
 
   const postBase = rawPost[0]!;
 
-  // Get likes and comment count for the post
   const postLikes = await db
     .select({ userId: likes.userId })
     .from(likes)
@@ -72,14 +70,14 @@ const SinglePost = async ({ postId }: SinglePostProps) => {
 
   return (
     <div className="p-4 bg-white shadow-md rounded-lg">
-      {/* Back button */}
-      <Link 
-        href="/community" 
-        className="flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-4"
-      >
-        <ArrowLeft size={20} />
-        <span>Back to Feed</span>
-      </Link>
+      <div className="flex items-center gap-6 mb-6">
+        <Link 
+          href="/community" 
+        >
+          <ArrowLeft size={20} />
+        </Link>
+        <div className="text-xl font-semibold">Post</div>
+      </div>
 
       {/* Post content */}
       <div className="flex flex-col gap-4">
@@ -123,7 +121,6 @@ const SinglePost = async ({ postId }: SinglePostProps) => {
           {post.video && (
               <PostVideo
                   id={`video-${post.id}`}
-                  key={post.id}
                   src={
                     post.video
                       ? (
