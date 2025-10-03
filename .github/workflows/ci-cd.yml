@@ -3,11 +3,11 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - 'staging.env'  # Trigger on push to staging
-      - 'feature/*'    # Trigger on push to any feature branches
+      - 'staging.env'  # Trigger CI on push to staging
+      - 'feature/*'    # Trigger CI on push to any feature branches
   pull_request:
     branches:
-      - 'main'         # Trigger on PR to main branch
+      - 'main'         # Trigger CI on PR to main branch
 
 jobs:
   ci:
@@ -40,8 +40,10 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Install dependencies (allow updating lock file)
+        run: |
+          npm install
+          npm ci
 
       - name: Run checks
         run: npm run check --workspace=@askvirtualhealthcare/web
