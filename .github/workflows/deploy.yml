@@ -74,7 +74,7 @@ jobs:
           MAIN_SERVER: ${{ secrets.MAIN_SERVER }}
         run: |
           ssh -o StrictHostKeyChecking=no -i $SSH_PRIVATE_KEY root@$MAIN_SERVER << 'EOF'
-            cd /root/askremohealth-staging/apps/web
+            cd /root/askremohealth
             git pull origin main  # Pull the latest from the main branch
             npm install
             npm run build
