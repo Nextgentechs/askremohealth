@@ -1,0 +1,82 @@
+name: CI/CD Pipeline
+
+on:
+  # Trigger the workflow for pushes to any branch
+  push:
+    branches:
+      - '*'
+  # Trigger the workflow on pull request to the main branch (merge into main)
+  pull_request:
+    branches:
+      - 'main'
+
+jobs:
+  # Continuous Integration Job (Build, Test, Check)
+  ci:
+    name: Continuous Integration
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+      GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+      TWILIO_API_KEY_SECRET: ${{ secrets.TWILIO_API_KEY_SECRET }}
+      TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
+      TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
+      TWILIO_API_KEY_SID: ${{ secrets.TWILIO_API_KEY_SID }}
+      CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+      NEXT_PUBLIC_CLERK_SIGN_IN_URL: ${{ secrets.NEXT_PUBLIC_CLERK_SIGN_IN_URL }}
+      NEXT_PUBLIC_CLERK_SIGN_UP_URL: ${{ secrets.NEXT_PUBLIC_CLERK_SIGN_UP_URL }}
+      NEXT_PUBLIC_RESEND_API_KEY: ${{ secrets.NEXT_PUBLIC_RESEND_API_KEY }}
+      NEXT_PUBLIC_FROM_EMAIL: ${{ secrets.NEXT_PUBLIC_FROM_EMAIL }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run checks
+        run: npm run check --workspace=@askvirtualhealthcare/web
+
+      - name: Build
+        run: npm run build --workspace=@askvirtualhealthcare/web
+
+      # Deploy to Staging Subdomain (triggered on push to Staging.env)
+      - name: Deploy to Staging Subdomain
+        if: github.ref == 'refs/heads/Staging.env'   # Only deploy if pushing to Staging.env branch
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          STAGING_SERVER: ${{ secrets.STAGING_SERVER }}
+        run: |
+          ssh -o StrictHostKeyChecking=no -i $SSH_PRIVATE_KEY root@$STAGING_SERVER << 'EOF'
+            cd /root/askremohealth-staging/apps/web
+            git pull origin Staging.env  # Pull the latest from the Staging.env branch
+            npm install
+            npm run build
+            npm run start
+          EOF
+
+      # Deploy to Production (triggered on push to main branch)
+      - name: Deploy to Production
+        if: github.ref == 'refs/heads/main'  # Only deploy if pushing to main branch
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          MAIN_SERVER: ${{ secrets.MAIN_SERVER }}
+        run: |
+          ssh -o StrictHostKeyChecking=no -i $SSH_PRIVATE_KEY root@$MAIN_SERVER << 'EOF'
+            cd /root/askremohealth-staging/apps/web
+            git pull origin main  # Pull the latest from the main branch
+            npm install
+            npm run build
+            npm run start
+          EOF
