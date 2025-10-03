@@ -1,10 +1,10 @@
 name: CI/CD Pipeline
 
 on:
-  # Trigger the workflow for pushes to any branch
+  # Trigger the workflow for pushes to Staging.env branch
   push:
     branches:
-      - '*'
+      - 'Staging.env'
   # Trigger the workflow on pull request to the main branch (merge into main)
   pull_request:
     branches:
