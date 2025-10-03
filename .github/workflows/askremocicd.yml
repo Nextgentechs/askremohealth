@@ -15,7 +15,9 @@ jobs:
 
     steps:
       - name: 📥 Checkout Code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+        with:
+            fetch-depth: 0
 
       - name: 🚀 Deploy to Production via SSH
         uses: appleboy/ssh-action@master
