@@ -15,15 +15,15 @@ jobs:
 
     steps:
       - name: 📥 Checkout Code
-      - uses: actions/checkout@v3
+        uses: actions/checkout@v3
         with:
-            fetch-depth: 0
+          fetch-depth: 0
 
       - name: 🚀 Deploy to Production via SSH
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
+          username: ${{ secrets.SSH_USER }} # Ensure SSH_USER is set in repository secrets, or replace with the correct secret name
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             set -e
