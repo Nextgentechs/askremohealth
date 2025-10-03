@@ -1,82 +1,68 @@
-name: 🚀 Deploy AskRemoHealth
+name: 🚀 Deploy to Production & Merge to Main
 
 on:
   push:
     branches:
-      - main
+      - 'staging.env'  # Trigger on push to staging.env
+  pull_request:
+    branches:
+      - 'main'         # Trigger on pull request to main branch
 
 jobs:
   deploy:
-    name: 📦 Deploy to Production
+    name: Deploy to Production and Merge to Main
     runs-on: ubuntu-latest
 
     steps:
       - name: 📥 Checkout Code
         uses: actions/checkout@v3
 
-      - name: 🚀 Deploy via SSH
+      - name: 🚀 Deploy to Production via SSH
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # =============================================================================
-            # 🚀 Full Deployment Script for AskRemoHealth
-            # Purpose: Deploy latest code, rebuild, restart PM2, reload Nginx
-            # =============================================================================
-
             set -e
             echo "🔄 Starting deployment..."
-
-            # 1. Navigate to App Directory
             cd /root/askremohealth
-            echo "📁 Changed to /root/askremohealth"
 
-            # 2. Pull Latest Code from main
-            echo "📥 Pulling latest code from origin/main..."
-            git checkout main
-            git pull origin main
+            # Pull the latest code from the correct branch (staging.env or main)
+            echo "📥 Pulling latest code..."
+            git checkout ${GITHUB_REF#refs/heads/}  # Uses the correct branch (staging.env or main)
+            git pull origin ${GITHUB_REF#refs/heads/}
 
-            # 3. Merge into dev branch
-            echo "🔀 Merging main into dev..."
-            git checkout dev
-            git merge main --no-edit
-
-            # 4. Install Dependencies
-            echo "📦 Installing npm dependencies..."
+            # Install dependencies and build the app
+            echo "📦 Installing dependencies..."
             npm install
-
-            # 5. Build the Next.js App
             echo "🛠️ Building Next.js app..."
             rm -rf .next
             npm run build
 
-            # 6. Restart PM2 Process
-            echo "🔄 Restarting PM2 process: askremohealth-web"
+            # Restart PM2 process and reload Nginx
+            echo "🔄 Restarting PM2 process and reloading Nginx..."
             pm2 restart askremohealth-web
             pm2 save
-
-            # 7. Reload Nginx
-            echo "🔁 Reloading Nginx..."
             nginx -t && systemctl reload nginx
-            if [ $? -eq 0 ]; then
-              echo "✅ Nginx reloaded successfully"
-            else
-              echo "❌ Nginx config error! Check with: nginx -t"
-              exit 1
-            fi
 
-            # 8. Final Health Check
+            # Final Health Check
             echo "⏳ Waiting for app to start..."
             sleep 10
-            
-            echo "🔍 Checking if app is responding..."
             if curl -f http://localhost:3000; then
-              echo "✅ Deployment successful! Site is live."
+              echo "✅ Deployment successful!"
             else
-              echo "⚠️ Site not responding. Check logs with: pm2 logs askremohealth-web"
+              echo "⚠️ Site not responding."
               exit 1
             fi
 
             echo "🎉 Deployment completed."
+
+      - name: Merge Staging into Main (on successful Staging Deployment)
+        if: github.ref == 'refs/heads/staging.env'  # Only run on staging merge
+        run: |
+          echo "🔀 Merging changes from Staging to Main..."
+          git checkout main
+          git pull origin main
+          git merge staging.env --no-edit
+          git push origin main
