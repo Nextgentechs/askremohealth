@@ -2,7 +2,7 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: ['*']
+    branches: ['Staging-env']
   pull_request:
     branches: ['main']
 
