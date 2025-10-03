@@ -2,12 +2,12 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches:
-      - 'Staging.env'  # Trigger CI on push to staging
-      - 'feature/*'    # Trigger CI on push to any feature branches
+    branches: 
+      - 'Staging.env'
+      - 'feature/*'
   pull_request:
-    branches:
-      - 'main'         # Trigger CI on PR to main branch
+    branches: 
+      - 'main'
 
 jobs:
   ci:
@@ -29,7 +29,6 @@ jobs:
       NEXT_PUBLIC_CLERK_SIGN_UP_URL: ${{ secrets.NEXT_PUBLIC_CLERK_SIGN_UP_URL }}
       NEXT_PUBLIC_RESEND_API_KEY: ${{ secrets.NEXT_PUBLIC_RESEND_API_KEY }}
       NEXT_PUBLIC_FROM_EMAIL: ${{ secrets.NEXT_PUBLIC_FROM_EMAIL }}
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -40,13 +39,22 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install dependencies (allow updating lock file)
+      - name: Install dependencies
         run: |
-          npm install
           npm ci
+          npm install
 
       - name: Run checks
         run: npm run check --workspace=@askvirtualhealthcare/web
 
-      - name: Build the app
+      - name: Build
         run: npm run build --workspace=@askvirtualhealthcare/web
+
+      - name: Deploy to Vercel
+        if: github.ref == 'refs/heads/main'
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
