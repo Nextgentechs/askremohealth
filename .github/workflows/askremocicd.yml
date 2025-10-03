@@ -1,25 +1,25 @@
-name: 🚀 Deploy to Production & Merge to Main
+name: 🚀 Deploy to Staging & Merge to Main
 
 on:
   push:
     branches:
-      - 'Staging.env'  # Trigger on push to staging.env
+      - 'Staging.env'  # Trigger on push to Staging.env
   pull_request:
     branches:
       - 'main'         # Trigger on pull request to main branch
 
 jobs:
-  deploy:
-    name: Deploy to Production and Merge to Main
+  deploy-staging:
+    name: Deploy to Staging Subdomain and Merge to Main
     runs-on: ubuntu-latest
 
     steps:
       - name: 📥 Checkout Code
-      - uses: actions/checkout@v3
+        uses: actions/checkout@v3
         with:
-            fetch-depth: 0
+          fetch-depth: 0
 
-      - name: 🚀 Deploy to Production via SSH
+      - name: 🚀 Deploy to Staging via SSH (systemd)
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -27,43 +27,41 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             set -e
-            echo "🔄 Starting deployment..."
-            cd /root/askremohealth
+            echo "🔄 Starting STAGING deployment..."
+            cd /root/askremohealth-staging
 
-            # Pull the latest code from the correct branch (staging.env or main)
-            echo "📥 Pulling latest code..."
-            git checkout ${GITHUB_REF#refs/heads/}  # Uses the correct branch (staging.env or main)
-            git pull origin ${GITHUB_REF#refs/heads/}
+            # Pull the latest code from Staging.env
+            git checkout Staging.env
+            git pull origin Staging.env
 
             # Install dependencies and build the app
             echo "📦 Installing dependencies..."
             npm install
             echo "🛠️ Building Next.js app..."
-            rm -rf .next
-            npm run build
+            rm -rf apps/web/.next
+            npm run build --workspace=apps/web
 
-            # Restart PM2 process and reload Nginx
-            echo "🔄 Restarting PM2 process and reloading Nginx..."
-            pm2 restart askremohealth-web
-            pm2 save
-            nginx -t && systemctl reload nginx
+            # Restart systemd service
+            echo "🔄 Restarting systemd service for Staging..."
+            systemctl restart askremohealth-staging.service
+            systemctl status askremohealth-staging.service
 
-            # Final Health Check
+            # Health check on port 3001
             echo "⏳ Waiting for app to start..."
             sleep 10
-            if curl -f http://localhost:3000; then
-              echo "✅ Deployment successful!"
+            if curl -f http://localhost:3001; then
+              echo "✅ Staging deployment successful!"
             else
-              echo "⚠️ Site not responding."
+              echo "⚠️ Staging site not responding on port 3001."
               exit 1
             fi
 
-            echo "🎉 Deployment completed."
+            echo "🎉 Staging deployment completed."
 
-      - name: Merge Staging into Main (on successful Staging Deployment)
-        if: github.ref == 'refs/heads/Staging.env'  # Only run on staging merge
+      - name: Merge Staging.env into Main (on successful Staging Deployment)
+        if: github.ref == 'refs/heads/Staging.env'
         run: |
-          echo "🔀 Merging changes from Staging to Main..."
+          echo "🔀 Merging changes from Staging.env to Main..."
           git checkout main
           git pull origin main
           git merge Staging.env --no-edit
