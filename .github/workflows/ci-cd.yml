@@ -29,6 +29,8 @@ jobs:
       NEXT_PUBLIC_CLERK_SIGN_UP_URL: ${{ secrets.NEXT_PUBLIC_CLERK_SIGN_UP_URL }}
       NEXT_PUBLIC_RESEND_API_KEY: ${{ secrets.NEXT_PUBLIC_RESEND_API_KEY }}
       NEXT_PUBLIC_FROM_EMAIL: ${{ secrets.NEXT_PUBLIC_FROM_EMAIL }}
+      OBJECT_STORAGE_KEY: ${{ secrets.OBJECT_STORAGE_KEY }}
+      OBJECT_STORAGE_SECRET: ${{ secrets.OBJECT_STORAGE_SECRET }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
