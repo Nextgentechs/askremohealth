@@ -133,7 +133,7 @@ export const createTRPCRouter = t.router
 export const publicProcedure = t.procedure
 
 /**
- * Protected (authenticated) procedure
+ * Protected (authenticated) procedure.
  *
  * If you want a query or mutation to ONLY be accessible to logged in users, use this. It verifies
  * the session is valid and guarantees `ctx.user` is not null.
