@@ -3,7 +3,7 @@ name: 🚀 Deploy to Production & Merge to Main
 on:
   push:
     branches:
-      - 'staging.env'  # Trigger on push to staging.env
+      - 'Staging.env'  # Trigger on push to staging.env
   pull_request:
     branches:
       - 'main'         # Trigger on pull request to main branch
@@ -59,10 +59,10 @@ jobs:
             echo "🎉 Deployment completed."
 
       - name: Merge Staging into Main (on successful Staging Deployment)
-        if: github.ref == 'refs/heads/staging.env'  # Only run on staging merge
+        if: github.ref == 'refs/heads/Staging.env'  # Only run on staging merge
         run: |
           echo "🔀 Merging changes from Staging to Main..."
           git checkout main
           git pull origin main
-          git merge staging.env --no-edit
+          git merge Staging.env --no-edit
           git push origin main
