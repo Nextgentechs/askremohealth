@@ -3,7 +3,7 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - 'staging.env'  # Trigger CI on push to staging
+      - 'Staging.env'  # Trigger CI on push to staging
       - 'feature/*'    # Trigger CI on push to any feature branches
   pull_request:
     branches:
