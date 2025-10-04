@@ -1,123 +1,101 @@
-name: 🚀 Deploy to Staging (staging.askremohealth)
+name: 🚧 Deploy AskRemoHealth (Staging)
 
 on:
   push:
-    branches: ['staging-config']
-  workflow_dispatch:
+    branches:
+      - staging-config
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
 
 jobs:
-  deploy-staging:
-    name: 📦 Deploy to Staging Subdomain
+  deploy:
+    name: 📦 Deploy to Staging
     runs-on: ubuntu-latest
-
-    # Optional: tie to a "staging" Environment in GitHub for per-env secrets/approvals
-    environment:
-      name: staging
-      url: https://staging.askremohealth
-
-    env:
-      BRANCH: staging-config
-      REPO_DIR: /root/askremohealth-staging         # ⬅️ staging clone path on your Contabo VPS
-      SERVICE: askremohealth-staging.service        # ⬅️ systemd service for staging
-      HEALTH_URL: http://localhost:3001             # ⬅️ or use https://staging.askremohealth/health
-      GIT_URL: git@github.com:Nextgentechs/askremohealth.git
-      WEB_WORKSPACE: apps/web                       # ⬅️ if monorepo; leave as-is or set to ""
 
     steps:
       - name: 📥 Checkout (for metadata only)
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+        uses: actions/checkout@v3
 
-      - name: 🚀 Deploy via SSH (systemd)
-        uses: appleboy/ssh-action@v1.0.3
+      - name: 🚀 Deploy via SSH (staging)
+        uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script_stop: true
           script: |
-            # =============================================================================
-            # Staging Deployment — staging.askremohealth (systemd)
-            # =============================================================================
-            set -Eeuo pipefail
-            trap 'echo "❌ Failed at line $LINENO. Last cmd: $BASH_COMMAND"' ERR
-            set -x
+            set -euo pipefail
+            echo "🔄 Starting staging deployment..."
 
-            BRANCH="${BRANCH:-staging-config}"
-            REPO_DIR="${REPO_DIR:-/root/askremohealth-staging}"
-            SERVICE="${SERVICE:-askremohealth-staging.service}"
-            HEALTH_URL="${HEALTH_URL:-http://localhost:3001}"
-            GIT_URL="${GIT_URL:-git@github.com:Nextgentechs/askremohealth.git}"
-            WEB_WORKSPACE="${WEB_WORKSPACE:-apps/web}"
+            # --- Config ---
+            BRANCH="staging-config"
+            APP_DIR="/root/askremohealth-staging"
+            SERVICE="askremohealth-staging.service"
+            HEALTH_URL="http://localhost:3001"
 
-            echo "🔄 Starting STAGING deployment for branch '${BRANCH}'..."
+            echo "📁 Using APP_DIR=${APP_DIR}"
+            echo "🌿 Using BRANCH=${BRANCH}"
+            echo "🧩 Using SERVICE=${SERVICE}"
+            echo "🩺 Health check URL: ${HEALTH_URL}"
 
-            # Ensure repo exists; clone if first run
-            if [ ! -d "$REPO_DIR/.git" ]; then
-              mkdir -p "$REPO_DIR"
-              rm -rf "$REPO_DIR"
-              git clone --origin origin --branch "$BRANCH" "$GIT_URL" "$REPO_DIR"
-            fi
+            # --- Code update ---
+            cd "${APP_DIR}"
+            echo "📥 Fetching latest code..."
+            git fetch --all --prune
+            git checkout "${BRANCH}"
+            # Reset to remote to avoid drift
+            git reset --hard "origin/${BRANCH}"
+            git pull --ff-only origin "${BRANCH}"
 
-            cd "$REPO_DIR"
-            test "$(pwd)" = "$REPO_DIR"
+            # --- Dependencies & build ---
+            echo "📦 Installing dependencies..."
+            # Use install (not ci) to avoid lockfile mismatch issues
+            npm install
 
-            # Heal remote-tracking refs to avoid lock-ref errors
-            git remote set-url origin "$GIT_URL"
-            git remote prune origin || true
-            git update-ref -d "refs/remotes/origin/$BRANCH" || true
-            git fetch --prune origin "+refs/heads/*:refs/remotes/origin/*"
+            echo "🛠️ Building Next.js app..."
+            rm -rf .next
+            npm run build
 
-            # Ensure the remote branch exists
-            git rev-parse --verify "refs/remotes/origin/$BRANCH"
-
-            # Wrapper-safe local branch selection (no non-zero on condition)
-            local_sha="$(git show-ref --heads -s "$BRANCH" 2>/dev/null || true)"
-            case "$local_sha" in
-              "")
-                git checkout -B "$BRANCH" "refs/remotes/origin/$BRANCH"
-                ;;
-              *)
-                git checkout "$BRANCH"
-                ;;
-            esac
-
-            # Hard reset to remote tip for clean build
-            git reset --hard "refs/remotes/origin/$BRANCH"
-            echo "📥 Synced to origin/${BRANCH} at $(git rev-parse --short HEAD)"
-
-            echo "📦 Installing npm dependencies..."
-            if [ -f package-lock.json ]; then
-              npm ci || npm install
-            else
-              npm install
-            fi
-
-            echo "🛠️ Building app for STAGING..."
-            # Support monorepo (apps/web). If WEB_WORKSPACE exists, build it; else root build
-            if [ -n "$WEB_WORKSPACE" ] && [ -f "$WEB_WORKSPACE/package.json" ]; then
-              rm -rf "$WEB_WORKSPACE/.next" || true
-              npm run build --workspace="$WEB_WORKSPACE"
-            else
-              rm -rf .next || true
-              npm run build
-            fi
-
+            # --- Restart systemd service ---
             echo "🔄 Restarting systemd service: ${SERVICE}"
+            systemctl daemon-reload || true
             systemctl restart "${SERVICE}"
-            systemctl status "${SERVICE}" --no-pager || true
+            sleep 5
 
-            echo "⏳ Health check (retries)..."
-            for i in $(seq 1 12); do
-              if curl -fsS "$HEALTH_URL" >/dev/null; then
-                echo "✅ Staging healthy at ${HEALTH_URL}"
-                break
-              fi
-              echo "⏳ Attempt $i/12: not ready, retrying in 5s..."
-              sleep 5
-            done
-            # Final assert
-            curl -fsS "$HEALTH_URL" >/dev/null
+            echo "🧪 Checking service status..."
+            if systemctl is-active --quiet "${SERVICE}"; then
+              echo "✅ ${SERVICE} is active."
+            else
+              echo "❌ ${SERVICE} failed to start. Recent logs:"
+              journalctl -u "${SERVICE}" --no-pager -n 100
+              exit 1
+            fi
 
-            echo "🎉 Staging deployment completed successfully."
+            # --- Reload Nginx (for subdomain proxy) ---
+            echo "🔁 Reloading Nginx..."
+            if nginx -t; then
+              systemctl reload nginx
+              echo "✅ Nginx reloaded."
+            else
+              echo "❌ Nginx config test failed!"
+              exit 1
+            fi
+
+            # --- Health check ---
+            echo "⏳ Waiting for app to be ready..."
+            sleep 8
+            echo "🔍 Health check: ${HEALTH_URL}"
+            if curl -fsSL --max-time 10 "${HEALTH_URL}" >/dev/null; then
+              echo "🎉 Staging deployment successful and responding."
+            else
+              echo "⚠️ Health check failed at ${HEALTH_URL}"
+              echo "🔎 Showing last 100 logs from ${SERVICE}:"
+              journalctl -u "${SERVICE}" --no-pager -n 100
+              exit 1
+            fi
+
+            echo "✅ Staging deploy finished."
