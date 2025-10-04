@@ -3,66 +3,121 @@ name: 🚀 Deploy to Staging & Merge to Main
 on:
   push:
     branches:
-      - 'staging-config'  # Trigger on push to staging-config
+      - 'staging-config'   # Trigger on push to staging-config
   pull_request:
     branches:
-      - 'main'            # Trigger on pull request to main branch
+      - 'main'             # Optional: CI on PRs into main
+
+# Needed so we can push the merge back to GitHub
+permissions:
+  contents: write
 
 jobs:
   deploy-staging:
     name: Deploy to Staging Subdomain and Merge to Main
     runs-on: ubuntu-latest
 
+    env:
+      BRANCH: staging-config
+      REPO_DIR: /root/askremohealth-staging
+      SERVICE: askremohealth-staging.service
+      HEALTH_URL: http://localhost:3001
+
     steps:
       - name: 📥 Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: 🚀 Deploy to Staging via SSH (systemd)
-        uses: appleboy/ssh-action@master
+        # Pin action version (don't use @master)
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script_stop: true
           script: |
-            set -e
+            set -euo pipefail
             echo "🔄 Starting STAGING deployment..."
-            cd /root/askremohealth-staging
 
-            # Pull the latest code from staging-config
-            git fetch origin
-            git reset --mixed origin/staging-config
-            
-            # Install dependencies and build the app
+            BRANCH="${BRANCH:-staging-config}"
+            REPO_DIR="${REPO_DIR:-/root/askremohealth-staging}"
+            GIT_URL="git@github.com:Nextgentechs/askremohealth.git"
+
+            # Ensure repo exists
+            if [ ! -d "$REPO_DIR/.git" ]; then
+              sudo mkdir -p "$REPO_DIR"
+              cd "$(dirname "$REPO_DIR")"
+              sudo rm -rf "$REPO_DIR"
+              git clone --origin origin --branch "$BRANCH" "$GIT_URL" "$REPO_DIR"
+            fi
+
+            cd "$REPO_DIR"
+            git remote set-url origin "$GIT_URL"
+
+            # Heal broken remote-tracking refs (fixes: "cannot lock ref ... expected ...")
+            git remote prune origin || true
+            if git show-ref --quiet "refs/remotes/origin/$BRANCH"; then
+              git update-ref -d "refs/remotes/origin/$BRANCH" || true
+            fi
+            # Force fetch all heads and recreate remote-tracking refs
+            git fetch origin --prune
+            git fetch origin +refs/heads/*:refs/remotes/origin/*
+
+            # Ensure the local branch tracks the fresh remote and is clean
+            if git show-ref --verify --quiet "refs/heads/$BRANCH"; then
+              git checkout "$BRANCH"
+            else
+              git checkout -B "$BRANCH" "origin/$BRANCH"
+            fi
+            git reset --hard "origin/$BRANCH"
+
             echo "📦 Installing dependencies..."
-            npm install
+            if [ -f package-lock.json ]; then
+              npm ci || npm install
+            else
+              npm install
+            fi
+
             echo "🛠️ Building Next.js app..."
-            rm -rf apps/web/.next
+            rm -rf apps/web/.next || true
             npm run build --workspace=apps/web
 
-            # Restart systemd service
             echo "🔄 Restarting systemd service for Staging..."
-            systemctl restart askremohealth-staging.service
-            systemctl status askremohealth-staging.service
+            sudo systemctl restart "${SERVICE}"
+            sudo systemctl status "${SERVICE}" --no-pager || true
 
-            # Health check on port 3001
             echo "⏳ Waiting for app to start..."
             sleep 10
-            if curl -f http://localhost:3001; then
+            if curl -fsS "${HEALTH_URL}"; then
               echo "✅ Staging deployment successful!"
             else
-              echo "⚠️ Staging site not responding on port 3001."
+              echo "⚠️ Staging site not responding at ${HEALTH_URL}"
               exit 1
             fi
 
             echo "🎉 Staging deployment completed."
 
-      - name: Merge staging-config into main (on successful Staging Deployment)
+      - name: 🔀 Merge staging-config into main (only after successful deploy)
         if: github.ref == 'refs/heads/staging-config'
         run: |
+          set -euo pipefail
           echo "🔀 Merging changes from staging-config to main..."
+
+          # Configure git user (required to push)
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Make sure we have the latest remote refs
+          git fetch origin --prune
+
+          # Update local branches
           git checkout main
-          git pull origin main
-          git merge staging-config --no-edit
+          git reset --hard origin/main
+
+          # Fast-forward merge if possible; otherwise create a merge commit
+          git merge origin/staging-config --no-edit || true
+
+          # Push back to GitHub (uses GITHUB_TOKEN with contents: write)
           git push origin main
