@@ -31,9 +31,9 @@ jobs:
             cd /root/askremohealth-staging
 
             # Pull the latest code from staging-config
-            git checkout staging-config
-            git pull origin staging-config
-
+            git fetch origin
+            git reset --mixed origin/staging-config
+            
             # Install dependencies and build the app
             echo "📦 Installing dependencies..."
             npm install
