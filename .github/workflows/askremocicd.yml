@@ -2,13 +2,10 @@ name: 🚀 Deploy to Staging & Merge to Main
 
 on:
   push:
-    branches:
-      - 'staging-config'   # Trigger on push to staging-config
+    branches: ['staging-config']
   pull_request:
-    branches:
-      - 'main'             # Optional: CI on PRs into main
+    branches: ['main']
 
-# Needed so we can push the merge back to GitHub
 permissions:
   contents: write
 
@@ -30,7 +27,6 @@ jobs:
           fetch-depth: 0
 
       - name: 🚀 Deploy to Staging via SSH (systemd)
-        # Pin action version (don't use @master)
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -38,40 +34,43 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script_stop: true
           script: |
-            set -euo pipefail
-            echo "🔄 Starting STAGING deployment..."
+            set -Eeuo pipefail
+            trap 'echo "❌ Failed at line $LINENO. Last cmd: $BASH_COMMAND"' ERR
+            set -x
 
+            echo "🔄 Starting STAGING deployment..."
             BRANCH="${BRANCH:-staging-config}"
             REPO_DIR="${REPO_DIR:-/root/askremohealth-staging}"
             GIT_URL="git@github.com:Nextgentechs/askremohealth.git"
 
-            # Ensure repo exists
+            # Ensure repo exists and is a git repo
             if [ ! -d "$REPO_DIR/.git" ]; then
-              sudo mkdir -p "$REPO_DIR"
-              cd "$(dirname "$REPO_DIR")"
-              sudo rm -rf "$REPO_DIR"
+              mkdir -p "$REPO_DIR"
+              rm -rf "$REPO_DIR"
               git clone --origin origin --branch "$BRANCH" "$GIT_URL" "$REPO_DIR"
             fi
 
             cd "$REPO_DIR"
+            test "$(pwd)" = "$REPO_DIR"
+
             git remote set-url origin "$GIT_URL"
 
-            # Heal broken remote-tracking refs (fixes: "cannot lock ref ... expected ...")
+            # Heal remote-tracking refs, in one fetch (less moving parts)
             git remote prune origin || true
-            if git show-ref --quiet "refs/remotes/origin/$BRANCH"; then
-              git update-ref -d "refs/remotes/origin/$BRANCH" || true
-            fi
-            # Force fetch all heads and recreate remote-tracking refs
-            git fetch origin --prune
-            git fetch origin +refs/heads/*:refs/remotes/origin/*
+            # If a stale remote ref exists, delete it so fetch can recreate cleanly
+            git update-ref -d "refs/remotes/origin/$BRANCH" || true
+            git fetch --prune origin "+refs/heads/*:refs/remotes/origin/*"
 
-            # Ensure the local branch tracks the fresh remote and is clean
+            # Verify branch exists remotely before proceeding
+            git rev-parse --verify "refs/remotes/origin/$BRANCH"
+
+            # Checkout/reset local working branch to remote
             if git show-ref --verify --quiet "refs/heads/$BRANCH"; then
               git checkout "$BRANCH"
             else
-              git checkout -B "$BRANCH" "origin/$BRANCH"
+              git checkout -B "$BRANCH" "refs/remotes/origin/$BRANCH"
             fi
-            git reset --hard "origin/$BRANCH"
+            git reset --hard "refs/remotes/origin/$BRANCH"
 
             echo "📦 Installing dependencies..."
             if [ -f package-lock.json ]; then
@@ -85,39 +84,37 @@ jobs:
             npm run build --workspace=apps/web
 
             echo "🔄 Restarting systemd service for Staging..."
-            sudo systemctl restart "${SERVICE}"
-            sudo systemctl status "${SERVICE}" --no-pager || true
+            systemctl restart "${SERVICE}"
+            # status returns non-zero if last exit code of service wasn't 0; don't fail deploy on that alone
+            systemctl status "${SERVICE}" --no-pager || true
 
-            echo "⏳ Waiting for app to start..."
-            sleep 10
-            if curl -fsS "${HEALTH_URL}"; then
-              echo "✅ Staging deployment successful!"
-            else
-              echo "⚠️ Staging site not responding at ${HEALTH_URL}"
-              exit 1
-            fi
+            echo "⏳ Health check with retries..."
+            for i in $(seq 1 12); do
+              if curl -fsS "${HEALTH_URL}" >/dev/null; then
+                echo "✅ Staging deployment healthy at ${HEALTH_URL}"
+                break
+              fi
+              echo "⏳ Attempt $i/12: service not ready yet; retrying in 5s..."
+              sleep 5
+            done
+
+            # Final assert
+            curl -fsS "${HEALTH_URL}" >/dev/null
 
             echo "🎉 Staging deployment completed."
 
       - name: 🔀 Merge staging-config into main (only after successful deploy)
         if: github.ref == 'refs/heads/staging-config'
         run: |
-          set -euo pipefail
-          echo "🔀 Merging changes from staging-config to main..."
-
-          # Configure git user (required to push)
+          set -Eeuo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # Make sure we have the latest remote refs
           git fetch origin --prune
-
-          # Update local branches
           git checkout main
           git reset --hard origin/main
 
-          # Fast-forward merge if possible; otherwise create a merge commit
-          git merge origin/staging-config --no-edit || true
+          # Merge the remote branch we just deployed (not the possibly stale local)
+          git merge --no-edit origin/staging-config || true
 
-          # Push back to GitHub (uses GITHUB_TOKEN with contents: write)
           git push origin main
