@@ -60,6 +60,16 @@ jobs:
             rm -rf .next
             npm run build
 
+            # --- Stop existing service and cleanup ---
+            echo "🛑 Stopping existing service and cleaning up port 3001..."
+            systemctl stop "${SERVICE}" || true
+            
+            echo "🔫 Killing any process using port 3001..."
+            fuser -k 3001/tcp || true
+            
+            echo "⏳ Waiting for cleanup..."
+            sleep 5
+
             # --- Restart systemd service ---
             echo "🔄 Restarting systemd service: ${SERVICE}"
             systemctl daemon-reload || true
