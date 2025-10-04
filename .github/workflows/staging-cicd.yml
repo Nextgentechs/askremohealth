@@ -1,32 +1,35 @@
-name: 🚀 Deploy to Staging & Merge to Main
+name: 🚀 Deploy to Staging (staging.askremohealth)
 
 on:
   push:
     branches: ['staging-config']
-  pull_request:
-    branches: ['main']
-
-permissions:
-  contents: write
+  workflow_dispatch:
 
 jobs:
   deploy-staging:
-    name: Deploy to Staging Subdomain and Merge to Main
+    name: 📦 Deploy to Staging Subdomain
     runs-on: ubuntu-latest
+
+    # Optional: tie to a "staging" Environment in GitHub for per-env secrets/approvals
+    environment:
+      name: staging
+      url: https://staging.askremohealth
 
     env:
       BRANCH: staging-config
-      REPO_DIR: /root/askremohealth-staging          # ← change if your path differs
-      SERVICE: askremohealth-staging.service         # ← change if your service differs
-      HEALTH_URL: http://localhost:3001
+      REPO_DIR: /root/askremohealth-staging         # ⬅️ staging clone path on your Contabo VPS
+      SERVICE: askremohealth-staging.service        # ⬅️ systemd service for staging
+      HEALTH_URL: http://localhost:3001             # ⬅️ or use https://staging.askremohealth/health
+      GIT_URL: git@github.com:Nextgentechs/askremohealth.git
+      WEB_WORKSPACE: apps/web                       # ⬅️ if monorepo; leave as-is or set to ""
 
     steps:
-      - name: 📥 Checkout Code
+      - name: 📥 Checkout (for metadata only)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: 🚀 Deploy to Staging via SSH (systemd)
+      - name: 🚀 Deploy via SSH (systemd)
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -34,16 +37,23 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script_stop: true
           script: |
+            # =============================================================================
+            # Staging Deployment — staging.askremohealth (systemd)
+            # =============================================================================
             set -Eeuo pipefail
             trap 'echo "❌ Failed at line $LINENO. Last cmd: $BASH_COMMAND"' ERR
             set -x
 
-            echo "🔄 Starting STAGING deployment..."
             BRANCH="${BRANCH:-staging-config}"
             REPO_DIR="${REPO_DIR:-/root/askremohealth-staging}"
-            GIT_URL="git@github.com:Nextgentechs/askremohealth.git"
+            SERVICE="${SERVICE:-askremohealth-staging.service}"
+            HEALTH_URL="${HEALTH_URL:-http://localhost:3001}"
+            GIT_URL="${GIT_URL:-git@github.com:Nextgentechs/askremohealth.git}"
+            WEB_WORKSPACE="${WEB_WORKSPACE:-apps/web}"
 
-            # Ensure repo exists
+            echo "🔄 Starting STAGING deployment for branch '${BRANCH}'..."
+
+            # Ensure repo exists; clone if first run
             if [ ! -d "$REPO_DIR/.git" ]; then
               mkdir -p "$REPO_DIR"
               rm -rf "$REPO_DIR"
@@ -53,67 +63,61 @@ jobs:
             cd "$REPO_DIR"
             test "$(pwd)" = "$REPO_DIR"
 
+            # Heal remote-tracking refs to avoid lock-ref errors
             git remote set-url origin "$GIT_URL"
-
-            # Heal/refresh remote-tracking refs (prevents 'cannot lock ref ... expected ...')
             git remote prune origin || true
             git update-ref -d "refs/remotes/origin/$BRANCH" || true
             git fetch --prune origin "+refs/heads/*:refs/remotes/origin/*"
 
-            # Verify the remote branch exists
+            # Ensure the remote branch exists
             git rev-parse --verify "refs/remotes/origin/$BRANCH"
 
-            # Wrapper-safe local branch existence check (never exits non-zero)
-            if [ -n "$(git show-ref --heads -s "$BRANCH" 2>/dev/null || true)" ]; then
-              git checkout "$BRANCH"
-            else
-              git checkout -B "$BRANCH" "refs/remotes/origin/$BRANCH"
-            fi
+            # Wrapper-safe local branch selection (no non-zero on condition)
+            local_sha="$(git show-ref --heads -s "$BRANCH" 2>/dev/null || true)"
+            case "$local_sha" in
+              "")
+                git checkout -B "$BRANCH" "refs/remotes/origin/$BRANCH"
+                ;;
+              *)
+                git checkout "$BRANCH"
+                ;;
+            esac
 
-            # Ensure working tree matches remote exactly
+            # Hard reset to remote tip for clean build
             git reset --hard "refs/remotes/origin/$BRANCH"
+            echo "📥 Synced to origin/${BRANCH} at $(git rev-parse --short HEAD)"
 
-            echo "📦 Installing dependencies..."
+            echo "📦 Installing npm dependencies..."
             if [ -f package-lock.json ]; then
               npm ci || npm install
             else
               npm install
             fi
 
-            echo "🛠️ Building Next.js app..."
-            rm -rf apps/web/.next || true
-            npm run build --workspace=apps/web
+            echo "🛠️ Building app for STAGING..."
+            # Support monorepo (apps/web). If WEB_WORKSPACE exists, build it; else root build
+            if [ -n "$WEB_WORKSPACE" ] && [ -f "$WEB_WORKSPACE/package.json" ]; then
+              rm -rf "$WEB_WORKSPACE/.next" || true
+              npm run build --workspace="$WEB_WORKSPACE"
+            else
+              rm -rf .next || true
+              npm run build
+            fi
 
-            echo "🔄 Restarting systemd service for Staging..."
+            echo "🔄 Restarting systemd service: ${SERVICE}"
             systemctl restart "${SERVICE}"
             systemctl status "${SERVICE}" --no-pager || true
 
             echo "⏳ Health check (retries)..."
             for i in $(seq 1 12); do
-              if curl -fsS "${HEALTH_URL}" >/dev/null; then
-                echo "✅ Staging deployment healthy at ${HEALTH_URL}"
+              if curl -fsS "$HEALTH_URL" >/dev/null; then
+                echo "✅ Staging healthy at ${HEALTH_URL}"
                 break
               fi
-              echo "⏳ Attempt $i/12: service not ready yet; retrying in 5s..."
+              echo "⏳ Attempt $i/12: not ready, retrying in 5s..."
               sleep 5
             done
             # Final assert
-            curl -fsS "${HEALTH_URL}" >/dev/null
+            curl -fsS "$HEALTH_URL" >/dev/null
 
-            echo "🎉 Staging deployment completed."
-
-      - name: 🔀 Merge staging-config into main (only after successful deploy)
-        if: github.ref == 'refs/heads/staging-config'
-        run: |
-          set -Eeuo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          git fetch origin --prune
-          git checkout main
-          git reset --hard origin/main
-
-          # Merge the remote branch we just deployed
-          git merge --no-edit origin/staging-config || true
-
-          git push origin main
+            echo "🎉 Staging deployment completed successfully."
