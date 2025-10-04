@@ -37,6 +37,6 @@ jobs:
       - name: Run typecheck
         run: npm run typecheck
 
-      # Build Next.js app
+      # Build Next.js 
       - name: Build app
         run: npm run build
