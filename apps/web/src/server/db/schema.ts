@@ -358,6 +358,7 @@ export const labAppointments = pgTable('lab_appointments', {
   updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
   patientNotes: varchar('patient_notes'),
   doctorNotes: varchar('doctor_notes'),
+  status: appointmentsStatusEnum('status').notNull(),
 })
 
 
