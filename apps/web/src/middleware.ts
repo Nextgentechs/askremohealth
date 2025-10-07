@@ -37,6 +37,7 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(newUrl)
     }
   }
+  
 
   // If we're on the specialist path but not on the doctors subdomain
   if (isSpecialistRoute && !isDoctorsSubdomain) {
@@ -65,7 +66,18 @@ export async function middleware(req: NextRequest) {
 
     return response
   }
+// ===== Admin path guard (NO subdomain) =====
+  const roleCookie = req.cookies.get('role')?.value
+  const isAdminPublic = pathname === '/admin/login' || pathname === '/admin/signup'
 
+  if (isAdminRoute && !isAdminPublic) {
+    const isAdmin = roleCookie === 'admin'
+    if (!sessionId || !isAdmin) {
+      // Not logged in or not an admin → send to admin login
+      const url = new URL('/admin/login', req.url)
+      return NextResponse.redirect(url)
+    }
+  }
 
 
   return NextResponse.next()

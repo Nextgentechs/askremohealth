@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server'
-import { doctors, type subSpecialties } from '@web/server/db/schema'
+import { doctors,notifications, type subSpecialties } from '@web/server/db/schema'
 import { count, eq, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { adminProcedure } from '../trpc'
@@ -110,7 +110,36 @@ export const updateDoctorStatus = adminProcedure
   )
   .mutation(async ({ ctx, input }) => {
     const { id, status } = input
+
+    // Fetch doctor to get the userId for notification
+    const doc = await ctx.db.query.doctors.findFirst({
+      where: (d, { eq }) => eq(d.id, id),
+      columns: { userId: true },
+    })
+
+    if (!doc) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Doctor not found' })
+    }
+
+    // Update doctor status
     await ctx.db.update(doctors).set({ status }).where(eq(doctors.id, id))
+
+    // Notify the doctor
+    await ctx.db.insert(notifications).values({
+      userId: doc.userId,
+      title:
+        status === 'verified'
+          ? 'Verification approved'
+          : status === 'rejected'
+          ? 'Verification rejected'
+          : 'Verification pending',
+      message:
+        status === 'verified'
+          ? 'Your profile is now visible to patients.'
+          : status === 'rejected'
+          ? 'Your verification was rejected. Please update your documents and resubmit.'
+          : 'Your documents were received and are under review.',
+    })
 
     return { success: true }
   })

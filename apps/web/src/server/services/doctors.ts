@@ -192,6 +192,7 @@ export class Doctors {
           facility: facility?.placeId,
           officeId: officeLocation?.placeId,
           licenseNumber: input.registrationNumber,
+          status: 'pending',
         })
         .where(eq(doctorsTable.id, userId))
 
@@ -207,6 +208,10 @@ export class Doctors {
           name: pathname, // Store the path/filename
           url: uploadedUrl, // Store the full URL
         });
+        await trx.update(doctorsTable)
+         .set({ status: 'pending' })
+         .where(eq(doctorsTable.id, userId))
+                  
       }
     })
 
@@ -290,6 +295,7 @@ export class Doctors {
 
   static buildWhereConditions(input: FilterInput) {
     const conditions = []
+    conditions.push(eq(doctorsTable.status, 'verified'))
     if (input.specialty) {
       conditions.push(eq(doctorsTable.specialty, input.specialty))
     }
