@@ -1,25 +1,24 @@
-// app/admin/page.tsx
-import { redirect } from 'next/navigation'
-import { getCurrentUser } from '../../auth' 
+// app/admin/page.tsx  (server component)
+import Logo from '@web/components/logo'
+import { MobileMenu } from '@web/components/mobile-menu'
+import Link from 'next/link'
+import AuthClientWrapper from './AuthClientWrapper' // relative import inside app/admin
 
-export default async function AdminRoot() {
-  try {
-    const user = await getCurrentUser()
+export default function AdminPage() {
+  return (
+    <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 md:p-10">
+      <div className="fixed left-0 right-0 top-0 flex w-full items-center justify-between border-b border-b-border bg-background px-6 py-4 sm:px-12">
+        <div className="flex items-center gap-4">
+          <Logo href="/admin" />
+          <h2 className="text-lg font-semibold hidden sm:block">Admin Portal</h2>
+        </div>
+        <div className="flex items-center gap-4">
+          <Link href="/" className="hidden xl:inline-block">Back to Site</Link>
+          <MobileMenu />
+        </div>
+      </div>
 
-    // Not signed in → show admin login
-    if (!user) {
-      return redirect('/admin/login')
-    }
-
-    // Signed in but not an admin → send them to public home (or another page)
-    if (user.role !== 'admin') {
-      return redirect('/')
-    }
-
-    // Signed in admin → landing page (doctors dashboard)
-    return redirect('/admin/doctors')
-  } catch (err) {
-    // On any unexpected error, send to login (keeps behavior safe)
-    return redirect('/admin/login')
-  }
+      <AuthClientWrapper />
+    </div>
+  )
 }
