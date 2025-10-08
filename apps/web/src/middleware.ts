@@ -66,7 +66,7 @@ export async function middleware(req: NextRequest) {
 
     return response
   }
-// ===== Admin path guard (NO subdomain) =====
+/* ===== Admin path guard (NO subdomain) =====
   const roleCookie = req.cookies.get('role')?.value
   const isAdminPublic = pathname === '/admin/login' || pathname === '/admin/signup'
 
@@ -77,7 +77,7 @@ export async function middleware(req: NextRequest) {
       const url = new URL('/admin/login', req.url)
       return NextResponse.redirect(url)
     }
-  }
+  }*/
 
 
   return NextResponse.next()
