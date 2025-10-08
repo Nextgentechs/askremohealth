@@ -119,6 +119,7 @@ function Login({
             otp: result.otp
           }),
         })
+        
 
         const otpResult = await otpRes.json()
         
@@ -564,7 +565,7 @@ function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
           }
         }
         else if (user?.role === 'admin') {
-          router.push('/admin')
+          router.push('/admin/doctors')
         }
         else {
           // Fallback for any other roles or undefined roles, perhaps redirect to a generic home or login page
