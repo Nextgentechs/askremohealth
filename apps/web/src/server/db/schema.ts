@@ -83,7 +83,23 @@ export const users = pgTable('user', {
     .$onUpdate(() => new Date()),
 })
 export type User = InferSelectModel<typeof users>
-
+//the admin table
+export const admins = pgTable('admin', {
+  id: varchar('id').primaryKey().notNull(),
+  userId: varchar('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  phone: varchar('phone').unique(),
+  permissions: jsonb('permissions')
+    .$type<Array<{ resource: string; action: string }>>()
+    .default([]),
+  onboardingComplete: boolean('onboarding_complete').notNull().default(false),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .notNull()
+    .$onUpdate(() => new Date()),
+});
+export type Admin = InferSelectModel<typeof admins>
 export const patients = pgTable('patient', {
   id: varchar('id').primaryKey().notNull(),
   userId: varchar('user_id')

@@ -3,7 +3,7 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import AuthForm from '@web/components/auth-form'
+import AuthForm from '@web/components/adminAuth-form'
 
 export default function AuthClientWrapper() {
   const router = useRouter()

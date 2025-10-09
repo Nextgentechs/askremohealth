@@ -244,3 +244,21 @@ export const patientDetailsSchema = z.object({
     }),
 })
 export type PatientDetails = z.infer<typeof patientDetailsSchema>
+
+export const adminSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().optional(),
+  password: passwordSchema,
+  confirmPassword: z.string().min(8, "Confirm password must be at least 8 characters"),
+  role: z.enum(['admin']).default('admin'),
+  onboardingComplete: z.boolean().default(false),
+  permissions: z.array(
+    z.object({
+      resource: z.string(),
+      action: z.string(),
+    })
+  ).default([]),
+});
+export type AdminSchema = z.infer<typeof adminSchema>
