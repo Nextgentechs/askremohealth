@@ -1,8 +1,8 @@
 "use client";
 
 import { deletePost } from "@web/server/services/community/actions";
-import Image from "next/image";
 import { useState } from "react";
+import { Ellipsis } from "lucide-react";
 
 const PostInfo = ({ postId }: { postId: string }) => {
   const [open, setOpen] = useState(false);
@@ -10,11 +10,8 @@ const PostInfo = ({ postId }: { postId: string }) => {
   const deletePostWithId = deletePost.bind(null, postId);
   return (
     <div className="relative">
-      <Image
-        src="/assets/community/more.png"
-        width={16}
-        height={16}
-        alt=""
+      <Ellipsis
+        size={20}
         onClick={() => setOpen((prev) => !prev)}
         className="cursor-pointer"
       />
