@@ -9,6 +9,7 @@ import { ImageIcon, Video, X } from "lucide-react";
 import toast from 'react-hot-toast'
 import imageCompression from 'browser-image-compression';
 
+
 const AddPost = () => {
   const { data: user, isLoading } = api.users.currentUser.useQuery()
   const [desc, setDesc] = useState("");
@@ -116,6 +117,7 @@ const AddPost = () => {
                 setVideo(null);
                 setImageFileName("");
                 setVideoFileName("");
+                window.location.href = window.location.href;
             } else if (result?.error) {
               toast.error(result.error);
             }

@@ -27,15 +27,15 @@ export const addPost = async (formData: FormData, img?: string, video?: string) 
       return { error: "Invalid description" };
     }
 
-    await db.insert(posts).values({
+    const [newPost] = await db.insert(posts).values({
       desc: validatedDesc.data,
       userId,
       ...(img?.trim() && { img }),
       ...(video?.trim() && { video }),
-    });
+    }).returning();
 
     revalidatePath("/community");
-    return { success: true };
+    return { success: true, post: newPost };
   } catch (err) {
     console.log("Error in addPost:", err);
     return { error: "Failed to create post" };

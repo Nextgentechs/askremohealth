@@ -18,7 +18,10 @@ const PostInfo = ({ postId }: { postId: string }) => {
       {open && (
         <div className="absolute top-4 right-0 bg-white p-4 w-32 rounded-lg flex flex-col gap-2 text-xs shadow-lg z-30">
           
-          <form action={deletePostWithId}>
+          <form action={async () => {
+            await deletePostWithId();
+            window.location.reload();
+          }}>
             <button className="text-red-500">Delete</button>
           </form>
         </div>

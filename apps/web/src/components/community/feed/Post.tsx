@@ -4,7 +4,7 @@ import { posts } from "@web/server/db/schema";
 import PostInteraction from "@web/components/community/feed/PostInteraction";
 import { Suspense } from "react";
 import PostInfo from "@web/components/community/feed/PostInfo";
-import { api } from '@web/trpc/server'
+import { api } from '@web/trpc/react';
 import PostVideo from "./PostVideo";
 import { BadgeCheck } from "lucide-react";
 import Link from "next/link";
@@ -27,8 +27,8 @@ type FeedPostType = PostType & {
 };
 
 
-const Post = async ({ post }: { post: FeedPostType }) => {
-  const user = await api.users.currentUser();
+const Post = ({ post }: { post: FeedPostType }) => {
+  const { data: user } = api.users.currentUser.useQuery();
   const userId = user?.id;
   return (
     <div className="flex flex-col gap-4">
@@ -94,7 +94,7 @@ const Post = async ({ post }: { post: FeedPostType }) => {
           commentNumber={post._count.comments}
         />
       </Suspense>
-      <div className="h-px bg-gray-300 mt-3 w-full"></div>
+      <div className="h-px bg-gray-300 mt-0 w-full"></div>
     </div>
   );
 };
