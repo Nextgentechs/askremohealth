@@ -44,38 +44,40 @@ export async function middleware(req: NextRequest) {
   }
 
   // ---------- ADMIN SUBDOMAIN LOGIC ----------
-  if (isAdminSubdomain) {
-  // Root path on admin
-  if (pathname === '/') {
-    if (!sessionId) {
-      // No session, go to auth
-      const url = new URL(req.url)
-      url.pathname = '/auth'
+if (isAdminSubdomain) {
+  const adminHost =
+    process.env.NODE_ENV === 'production'
+      ? 'admin.askremohealth.com'
+      : 'admin.localhost'
+
+    // Root path on admin subdomain
+    if (pathname === '/') {
+      if (!sessionId) {
+        // No session: redirect to auth
+        const url = new URL('/auth', `https://${adminHost}`)
+        url.searchParams.set('role', 'admin')
+        return NextResponse.redirect(url)
+      } else {
+        // Session exists: redirect to dashboard
+        return NextResponse.redirect(new URL('/admin/doctors', `https://${adminHost}`))
+      }
+    }
+
+    // Protect admin pages (except public)
+    if (!sessionId && !isPublic) {
+      const url = new URL('/auth', `https://${adminHost}`)
       url.searchParams.set('role', 'admin')
       return NextResponse.redirect(url)
-    } else {
-      // Session exists, go to dashboard
-      return NextResponse.redirect(new URL('/admin/doctors', req.url))
     }
+
+    // Rewrite paths that are not under /admin
+    if (!isPublic && !pathname.startsWith('/admin')) {
+      const cleanPath = pathname.replace(/^\/+/, '')
+      return NextResponse.redirect(new URL(`/admin/${cleanPath}`, `https://${adminHost}`))
+    }
+
+    return NextResponse.next()
   }
-
-  // Protect other admin pages
-  if (!sessionId && !isPublic) {
-    const url = new URL(req.url)
-    url.pathname = '/auth'
-    url.searchParams.set('role', 'admin')
-    return NextResponse.redirect(url)
-  }
-
-  // Rewrite other paths under /admin
-  if (!isPublic && !pathname.startsWith('/admin')) {
-    const cleanPath = pathname.replace(/^\/+/, '')
-    return NextResponse.redirect(new URL(`/admin/${cleanPath}`, req.url))
-  }
-
-  return NextResponse.next()
-}
-
 
   // ---------- DOCTORS SUBDOMAIN LOGIC ----------
   if (isDoctorsSubdomain) {

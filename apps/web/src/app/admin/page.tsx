@@ -3,5 +3,5 @@ import { redirect } from 'next/navigation'
 
 export default function AdminPage() {
   // Imperative redirect
-  return redirect('/admin/test')
+  return redirect('/admin/doctors')
 }
