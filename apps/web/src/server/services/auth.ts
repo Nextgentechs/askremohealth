@@ -31,7 +31,7 @@ export class AuthService {
       // First, let's check what enum values are available
       console.log('Available role enum values:', roleEnum.enumValues)
       
-      let role: any = 'patient';
+      let role: typeof roleEnum.enumValues[number] = 'patient';
       
       if (requestHost?.includes('admin.')) {
         console.log('Admin subdomain detected')
