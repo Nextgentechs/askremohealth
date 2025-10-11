@@ -44,30 +44,26 @@ export async function middleware(req: NextRequest) {
   }
 
   // ---------- ADMIN SUBDOMAIN LOGIC ----------
-if (isAdminSubdomain) {
-  const adminHost =
-    process.env.NODE_ENV === 'production'
-      ? 'admin.askremohealth.com'
-      : 'admin.localhost'
+  if (isAdminSubdomain) {
+    const adminHost =
+      process.env.NODE_ENV === 'production'
+        ? 'admin.askremohealth.com'
+        : 'admin.localhost'
 
     // Root path on admin subdomain
     if (pathname === '/') {
       if (!sessionId) {
-        // No session: redirect to auth
-        const url = new URL('/auth', `https://${adminHost}`)
-        url.searchParams.set('role', 'admin')
-        return NextResponse.redirect(url)
+        // No session: redirect to generic /auth (role inferred in backend)
+        return NextResponse.redirect(new URL('/auth', `https://${adminHost}`))
       } else {
         // Session exists: redirect to dashboard
         return NextResponse.redirect(new URL('/admin/doctors', `https://${adminHost}`))
       }
     }
 
-    // Protect admin pages (except public)
+    // Protect other admin pages (except public)
     if (!sessionId && !isPublic) {
-      const url = new URL('/auth', `https://${adminHost}`)
-      url.searchParams.set('role', 'admin')
-      return NextResponse.redirect(url)
+      return NextResponse.redirect(new URL('/auth', `https://${adminHost}`))
     }
 
     // Rewrite paths that are not under /admin
@@ -78,6 +74,7 @@ if (isAdminSubdomain) {
 
     return NextResponse.next()
   }
+
 
   // ---------- DOCTORS SUBDOMAIN LOGIC ----------
   if (isDoctorsSubdomain) {
