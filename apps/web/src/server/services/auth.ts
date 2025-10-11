@@ -2,7 +2,7 @@ import { TRPCError } from '@trpc/server'
 import bcrypt from 'bcrypt'
 import { eq } from 'drizzle-orm'
 import { db } from '../db'
-import { users, patients } from '../db/schema'
+import { users, patients, roleEnum } from '../db/schema'
 import { createUserSession } from '../lib/session'
 import { redisClient } from '@web/redis/redis'
 import { generateOtp } from '../lib/generateOtp'
@@ -26,11 +26,11 @@ export class AuthService {
   static async signUp({ email, password, firstName, lastName, host }: SignUpInput) {
   try {
     // Infer role from host
-    let role: 'doctor' | 'admin' | 'lab' | 'patient'
+    let role 
     if (host?.startsWith('admin.')) {
-      role = 'admin'
+      role = roleEnum.enumValues[2];
     } else {
-      role = 'patient' // default for main domain
+      role = roleEnum.enumValues[0]; // default for main domain
     }
 
     // Validate role against enum
