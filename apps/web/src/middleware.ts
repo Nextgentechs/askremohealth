@@ -45,9 +45,9 @@ export async function middleware(req: NextRequest) {
 
   // ---------- ADMIN SUBDOMAIN LOGIC ----------
   if (isAdminSubdomain) {
-    // Admin landing -> redirect to admin dashboard
+    // Admin landing -> redirect to admin doctors
     if (pathname === '/') {
-      return NextResponse.redirect(new URL('/admindoctors', req.url))
+      return NextResponse.redirect(new URL('/admin/doctors', req.url))
     }
 
     // Protect admin pages (except public ones)
