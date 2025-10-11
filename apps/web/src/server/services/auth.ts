@@ -24,61 +24,51 @@ type SignInInput = {
 }
 
 export class AuthService {
-  static async signUp({ email, password, firstName, lastName, role, host }: SignUpInput) {
-  try {
-    // Infer role for admin subdomain
-    if (host?.startsWith('admin.')) {
-      role = 'admin'
-    }
+  static async signUp({ email, password, firstName, lastName, host }: SignUpInput) {
+    try {
+      // --- Infer role from host ---
+      let role: 'patient' | 'doctor' | 'admin' | 'lab'
+      if (host?.startsWith('admin.')) {
+        role = 'admin' // any user signing up from admin subdomain is admin
+      } else {
+        role = 'patient' // default to patient for normal domain signup
+      }
 
-    // Ensure role is valid for DB enum
-    const validRoles = ['patient', 'doctor', 'admin', 'lab'] as const
-    if (!role || !validRoles.includes(role as any)) {
-      throw new TRPCError({ code: 'BAD_REQUEST', message: 'Invalid role' })
-    }
+      // Validate role against enum
+      const validRoles = ['patient', 'doctor', 'admin', 'lab'] as const
+      if (!validRoles.includes(role)) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Invalid role' })
+      }
 
-    const existing = await db.query.users.findFirst({
-      where: eq(users.email, email),
-    })
+      // --- Check if user exists ---
+      const existing = await db.query.users.findFirst({
+        where: eq(users.email, email),
+      })
+      if (existing) throw new TRPCError({ code: 'CONFLICT', message: 'User already exists' })
 
-    if (existing) {
+      // --- Hash password and insert user ---
+      const hashedPassword = await bcrypt.hash(password, 10)
+      const insertedUsers = await db.insert(users)
+        .values({ email, password: hashedPassword, firstName, lastName, role })
+        .returning({ id: users.id })
+
+      const userId = insertedUsers[0]?.id
+
+      // --- Optional: create patient entry ---
+      if (role === 'patient' && userId) {
+        await db.insert(patients).values({ id: userId, userId })
+      }
+
+      return { success: true }
+    } catch (error) {
+      console.error('Error in signUp:', error)
       throw new TRPCError({
-        code: 'CONFLICT',
-        message: 'User already exists',
+        code: 'INTERNAL_SERVER_ERROR',
+        message: error instanceof Error ? error.message : 'Failed to create user',
       })
     }
-
-    const hashedPassword = await bcrypt.hash(password, 10)
-
-    const insertedUsers = await db
-      .insert(users)
-      .values({
-        email,
-        password: hashedPassword,
-        firstName,
-        lastName,
-        role, // <-- explicitly map to DB enum
-      })
-      .returning({ id: users.id })
-
-    const userId = insertedUsers[0]?.id
-
-    if (role === 'patient' && userId) {
-      await db.insert(patients).values({
-        id: userId,
-        userId: userId,
-      })
-    }
-
-    return { success: true }
-  } catch (error) {
-    console.error('Error in signUp:', error)
-    throw new TRPCError({
-      code: 'INTERNAL_SERVER_ERROR',
-      message: error instanceof Error ? error.message : 'Failed to create user',
-    })
   }
-}
+
 
   static async signIn({ email, password, host }: SignInInput) {
     try {
