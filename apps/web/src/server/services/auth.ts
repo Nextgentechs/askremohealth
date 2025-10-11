@@ -12,8 +12,7 @@ type SignUpInput = {
   email: string
   password: string
   firstName: string
-  lastName: string
-  //role: 'doctor' | 'admin' | 'lab' | 'patient'
+  lastName: string 
   host?: string
 }
 
