@@ -12,8 +12,7 @@ type SignUpInput = {
   email: string
   password: string
   firstName: string
-  lastName: string 
-  host?: string
+  lastName: string   
 }
 
 type SignInInput = {
@@ -23,11 +22,11 @@ type SignInInput = {
 
 
 export class AuthService {
-  static async signUp({ email, password, firstName, lastName, host }: SignUpInput) {
+  static async signUp({ email, password, firstName, lastName }: SignUpInput, requestHost?: string) {
   try {
     // Infer role from host
     let role: 'admin' | 'doctor' | 'patient' | 'lab' = 'patient';
-    if (host?.startsWith('admin.')) {
+    if (requestHost?.startsWith('admin.')) {
       role = 'admin';
     } else {
       role = 'patient'; // default for main domain

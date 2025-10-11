@@ -54,7 +54,7 @@ export async function middleware(req: NextRequest) {
     if (pathname === '/') {
       if (!sessionId) {
         // No session: redirect to generic /auth (role inferred in backend)
-        return NextResponse.redirect(new URL('/admin/test', `https://${adminHost}`))
+        return NextResponse.redirect(new URL('/auth', `https://${adminHost}`))
       } else {
         // Session exists: redirect to dashboard
         return NextResponse.redirect(new URL('/admin/doctors', `https://${adminHost}`))

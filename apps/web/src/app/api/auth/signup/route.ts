@@ -12,9 +12,8 @@ export async function POST(request: Request): Promise<Response> {
       email,
       password,
       firstName,
-      lastName,
-      host, // pass host so role can be inferred automatically
-    })
+      lastName,      
+    }, host)
    
     return NextResponse.json(result)
   } catch (error) {
