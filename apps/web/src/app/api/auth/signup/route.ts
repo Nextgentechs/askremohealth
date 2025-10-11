@@ -6,7 +6,7 @@ export async function POST(request: Request): Promise<Response> {
     const { email, password, firstName, lastName } = await request.json()
 
     // Get host from headers to infer role
-    const host = request.headers.get('host') || ''
+    const host = request.headers.get('host') ?? ''
 
     const result = await AuthService.signUp({
       email,
