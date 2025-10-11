@@ -28,55 +28,78 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from './ui/input-otp'
 import { passwordSchema } from '@web/server/api/validators'
 import { useCurrentUser } from '@web/hooks/use-current-user'
 
-// Zod schema for the admin signup form
-const adminSignupSchema = z.object({
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
-  email: z.string().email('Invalid email address'),
-  password: passwordSchema,
-  confirmPassword: passwordSchema,
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
-})
+export default function AuthForm() {
+  const [currentStep, setCurrentStep] = useState<'login' | 'signup' | 'otp'>(
+    'login',
+  )
+  const [loggedInEmail, setLoggedInEmail] = useState<string>('')
+  
 
-type AdminSignupFormData = z.infer<typeof adminSignupSchema>
-
-export default function AdminAuthForm() {
-  const [currentStep, setCurrentStep] = useState<'login' | 'signup' | 'otp'>('login')
-  const [loggedInEmail, setLoggedInEmail] = useState('')
 
   return (
-    <>
-      {currentStep === 'otp' && <InputOTPForm loggedInEmail={loggedInEmail} />}
+    <AnimatePresence mode="wait">
+      {currentStep === 'otp' && (
+        <motion.div
+          key="otp"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.2 }}
+        >
+          <InputOTPForm loggedInEmail={loggedInEmail} />
+        </motion.div>
+      )}
       {currentStep === 'signup' && (
-        <SignUp setCurrentStep={setCurrentStep} />
+        <motion.div
+          key="signup"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.2 }}
+        >
+          <SignUp setCurrentStep={setCurrentStep} />
+        </motion.div>
       )}
       {currentStep === 'login' && (
-        <Login
-          setLoggedInEmail={setLoggedInEmail}
-          setCurrentStep={setCurrentStep}
-        />
+        <motion.div
+          key="login"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.2 }}
+        >
+          <Login setLoggedInEmail={setLoggedInEmail} setCurrentStep={setCurrentStep} />
+        </motion.div>
       )}
-    </>
+    </AnimatePresence>
   )
 }
+const loginSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: passwordSchema
+})
 
-// Login form for admins
+type LoginFormData = z.infer<typeof loginSchema>
+
 function Login({
   setLoggedInEmail,
   setCurrentStep,
 }: {
-  setLoggedInEmail: React.Dispatch<React.SetStateAction<string>>
-  setCurrentStep: (step: 'login' | 'signup' | 'otp') => void
+    setLoggedInEmail: React.Dispatch<React.SetStateAction<string>>,
+    setCurrentStep: (step: 'login' | 'signup' | 'otp') => void
 }) {
   const [isLoading, setIsLoading] = useState(false)
-  const form = useForm({
-    resolver: zodResolver(adminSignupSchema),
-    defaultValues: { email: '', password: '' },
+  const searchParams = useSearchParams()
+  const form = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    }
+
   })
 
-  async function onSubmit(data: { email: string; password: string }) {
+  async function onSubmit(data:LoginFormData) {
     setIsLoading(true)
     try {
       const res = await fetch('/api/auth/signin', {
@@ -88,6 +111,37 @@ function Login({
 
       if (result.success) {
         setLoggedInEmail(data.email)
+        const otpRes = await fetch('/api/auth/sendotp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: data.email,
+            otp: result.otp
+          }),
+        })
+        
+
+        const otpResult = await otpRes.json()
+        
+        if (otpResult?.error?.message) {
+          toast({
+            title: 'OTP Error',
+            description: otpResult.error.message ?? 'Failed to send OTP',
+            variant: 'destructive',
+          })
+          return
+        }
+
+        toast({
+          title: 'Success',
+          description: 'Logged in successfully!',
+          duration: 3000,
+        })
+        toast({
+          title: 'Success',
+          description: 'OTP has been sent to your email!',
+          duration: 3000,
+        })
         setCurrentStep('otp')
       } else {
         toast({
@@ -107,14 +161,60 @@ function Login({
     }
   }
 
+  async function handleGoogleSignIn() {
+    setIsLoading(true)
+    try {
+      const role = searchParams.get('role') ?? 'doctor'
+      const callbackUrl = searchParams.get('callbackUrl')
+      // Call our API to get the Google OAuth URL
+      const response = await fetch('/api/auth/google/url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role, callbackUrl }),
+      })
+
+      const result = await response.json()
+      
+      if (result.url) {
+        window.location.href = result.url
+      } else {
+        throw new Error('Failed to get Google OAuth URL')
+      }
+    } catch {
+      toast({
+        title: 'Error',
+        description: 'Google sign-in failed',
+        variant: 'destructive',
+      })
+      setIsLoading(false)
+    }
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-xl">Admin Login</CardTitle>
-          <CardDescription>Sign in with your email and password</CardDescription>
+          <CardTitle className="text-xl">Login to your account</CardTitle>
+          <CardDescription>
+            Sign in with your email or Google account
+          </CardDescription>
         </CardHeader>
         <CardContent>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full gap-2"
+            onClick={handleGoogleSignIn}
+            disabled={isLoading}
+          >
+            <Google className="h-5 w-5" />
+            {isLoading ? <Loader className="h-4 w-4 animate-spin" /> : 'Sign in with Google'}
+          </Button>
+          <div className="relative my-2 text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
+            <span className="relative z-10 bg-background px-2 text-muted-foreground">
+              Or continue with
+            </span>
+          </div>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
@@ -130,6 +230,7 @@ function Login({
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="password"
@@ -164,41 +265,83 @@ function Login({
   )
 }
 
-// Signup form for admins
+
+const signUpSchema = z
+  .object({
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
+  email: z.string().email('Invalid email address'),
+  password: passwordSchema,
+  confirmPassword: passwordSchema,
+  role:z.string()
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword']
+  });
+
+type SignUpFormData = z.infer<typeof signUpSchema>
+
 function SignUp({
   setCurrentStep,
 }: {
   setCurrentStep: (step: 'login' | 'signup' | 'otp') => void
 }) {
   const [isLoading, setIsLoading] = useState(false)
-  const form = useForm<AdminSignupFormData>({
-    resolver: zodResolver(adminSignupSchema),
+  const searchParams = useSearchParams()
+  const role = searchParams.get("role")
+
+  const form = useForm<SignUpFormData>({
+    resolver: zodResolver(signUpSchema),
     defaultValues: {
       firstName: '',
       lastName: '',
       email: '',
       password: '',
-      confirmPassword: '',
-    },
+      confirmPassword:'',
+      role : role ?? ''
+    }
+    
   })
 
-  async function onSubmit(data: AdminSignupFormData) {
+  async function onSubmit(data:SignUpFormData) {
     setIsLoading(true)
     try {
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...data,
-          role: 'admin', // Role is explicitly set to 'admin' in the backend
-        }),
+        body: JSON.stringify(data),
       })
       const result = await res.json()
-
       if (result.success) {
+        const otpRes = await fetch('/api/auth/sendotp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: data.email,
+            otp: result.otp
+          }),
+        })
+
+        const otpResult = await otpRes.json()
+
+        if (otpResult?.error?.message) {
+          toast({
+            title: 'OTP Error',
+            description: otpResult.error.message ?? 'Failed to send OTP',
+            variant: 'destructive',
+          })
+          return
+        }
+
         toast({
           title: 'Success',
-          description: 'Sign Up was successful!',
+          description: 'Sign Up was successfully!',
+          duration: 3000,
+        })
+        toast({
+          title: 'Success',
+          description: 'OTP has been sent to your email!',
           duration: 3000,
         })
         setCurrentStep('otp')
@@ -220,14 +363,61 @@ function SignUp({
     }
   }
 
+  async function handleGoogleSignUp() {
+    setIsLoading(true)
+    try {
+      const role = searchParams.get('role') ?? 'doctor'
+      const callbackUrl = searchParams.get('callbackUrl')
+
+      // Call our API to get the Google OAuth URL
+      const response = await fetch('/api/auth/google/url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role, callbackUrl }),
+      })
+
+      const result = await response.json()
+      
+      if (result.url) {
+        window.location.href = result.url
+      } else {
+        throw new Error('Failed to get Google OAuth URL')
+      }
+    } catch {
+      toast({
+        title: 'Error',
+        description: 'Google sign-up failed',
+        variant: 'destructive',
+      })
+      setIsLoading(false)
+    }
+  }
+
   return (
     <div className="flex flex-col gap-6 mt-16">
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-xl">Admin Sign Up</CardTitle>
-          <CardDescription>Create a new admin account</CardDescription>
+          <CardTitle className="text-xl">Create an account</CardTitle>
+          <CardDescription>
+            Sign up with your email or Google account
+          </CardDescription>
         </CardHeader>
         <CardContent>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full gap-2"
+            onClick={handleGoogleSignUp}
+            disabled={isLoading}
+          >
+            <Google className="h-5 w-5" />
+            {isLoading ? <Loader className="h-4 w-4 animate-spin" /> : 'Sign up with Google'}
+          </Button>
+          <div className="relative my-2 text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
+            <span className="relative z-10 bg-background px-2 text-muted-foreground">
+              Or continue with
+            </span>
+          </div>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
@@ -243,6 +433,7 @@ function SignUp({
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="lastName"
@@ -256,6 +447,7 @@ function SignUp({
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="email"
@@ -269,6 +461,7 @@ function SignUp({
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="password"
@@ -315,8 +508,6 @@ function SignUp({
     </div>
   )
 }
-
-// OTP verification form (shared logic)
 
 const FormSchema = z.object({
   pin: z.string().min(6, { message: 'Invalid OTP' }),
@@ -474,5 +665,28 @@ function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+function Google(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...props} viewBox="0 0 533.5 544.3">
+      <path
+        fill="#4285f4"
+        d="M533.5 278.4c0-17.4-1.4-34.1-4-50.4H272v95.4h147.6c-6.3 34.1-25 62.9-53.4 82.2l86.3 67c50.2-46.3 80-114.7 80-194.2z"
+      />
+      <path
+        fill="#34a853"
+        d="M272 544.3c72.6 0 133.5-24.1 178-65.4l-86.3-67c-24 16-54.6 25.5-91.7 25.5-70.5 0-130.3-47.6-151.6-111.2l-88.9 69c43.9 86.5 134 149.1 240.5 149.1z"
+      />
+      <path
+        fill="#fbbc04"
+        d="M120.4 325.8C114.8 310.2 111.7 293.1 111.7 275s3.1-35.2 8.6-50.8L31.5 153.7C11.4 192.4 0 232.7 0 275s11.4 82.6 31.5 121.3l88.9-70.5z"
+      />
+      <path
+        fill="#ea4335"
+        d="M272 109.7c39.5 0 75.1 13.6 103.1 40.5l77.3-77.3C407.1 27.5 351.4 0 272 0 165.5 0 75.4 62.6 31.5 153.7l88.9 70.5C141.7 157.3 201.5 109.7 272 109.7z"
+      />
+    </svg>
   )
 }
