@@ -2,7 +2,7 @@ import { TRPCError } from '@trpc/server'
 import bcrypt from 'bcrypt'
 import { eq } from 'drizzle-orm'
 import { db } from '../db'
-import { users, patients, roleEnum } from '../db/schema'
+import { users, patients, } from '../db/schema'
 import { createUserSession } from '../lib/session'
 import { redisClient } from '@web/redis/redis'
 import { generateOtp } from '../lib/generateOtp'
@@ -57,7 +57,7 @@ export class AuthService {
         password: hashedPassword,
         firstName,
         lastName,
-        role // <-- explicitly map to DB enum
+        role, // <-- explicitly map to DB enum
       })
       .returning({ id: users.id })
 
