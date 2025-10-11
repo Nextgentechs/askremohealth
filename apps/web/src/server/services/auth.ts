@@ -26,11 +26,11 @@ export class AuthService {
   static async signUp({ email, password, firstName, lastName, host }: SignUpInput) {
   try {
     // Infer role from host
-    let role 
+    let role: 'admin' | 'doctor' | 'patient' | 'lab' = 'patient';
     if (host?.startsWith('admin.')) {
-      role = roleEnum.enumValues[2];
+      role = 'admin';
     } else {
-      role = roleEnum.enumValues[0]; // default for main domain
+      role = 'patient'; // default for main domain
     }
 
     // Validate role against enum
