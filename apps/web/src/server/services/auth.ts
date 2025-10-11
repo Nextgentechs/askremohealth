@@ -13,18 +13,28 @@ type SignUpInput = {
   password: string
   firstName: string
   lastName: string
-  role: 'doctor' | 'admin' | 'lab' | 'patient'
+  role?: 'doctor' | 'admin' | 'lab' | 'patient' // optional, inferred from host
+  host?: string // pass the request host
 }
 
 type SignInInput = {
   email: string
   password: string
+  host?: string // pass the request host
 }
 
-
 export class AuthService {
-  static async signUp({ email, password, firstName, lastName, role }: SignUpInput) {
+  static async signUp({ email, password, firstName, lastName, role, host }: SignUpInput) {
     try {
+      // Infer role for admin subdomain
+      if (host?.startsWith('admin.')) {
+        role = 'admin'
+      }
+
+      if (!role) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Role is required' })
+      }
+
       const existing = await db.query.users.findFirst({
         where: eq(users.email, email),
       })
@@ -40,115 +50,70 @@ export class AuthService {
 
       const insertedUsers = await db
         .insert(users)
-        .values({ 
-          email, 
-          password: hashedPassword, 
-          firstName, 
-          lastName,
-          role
-        })
-        .returning({ id: users.id });
+        .values({ email, password: hashedPassword, firstName, lastName, role })
+        .returning({ id: users.id })
 
-      const userId = insertedUsers[0]?.id;
+      const userId = insertedUsers[0]?.id
 
       if (role === 'patient' && userId) {
         await db.insert(patients).values({
           id: userId,
           userId: userId,
-          // phone, dob, emergencyContact can be set later during onboarding
-        });
+        })
       }
 
       return { success: true }
     } catch (error) {
       console.error('Error in signUp:', error)
-    
-      if (error instanceof Error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: error.message,
-        })
-      }
-    
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
-        message: 'Failed to create user',
+        message: error instanceof Error ? error.message : 'Failed to create user',
       })
     }
   }
-  
-  static async signIn({ email, password }: SignInInput) {
-    try {
-      const user = await db.query.users.findFirst({
-        where: eq(users.email, email),
-      });
 
+  static async signIn({ email, password, host }: SignInInput) {
+    try {
+      const user = await db.query.users.findFirst({ where: eq(users.email, email) })
 
       if (!user) {
-        console.warn(`SignIn attempt with unknown email: ${email}`);
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'SignIn attempt with unknown email',
-        });
+        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Unknown email' })
       }
 
-      const isValidPassword = await bcrypt.compare(password, user.password);
+      const isValidPassword = await bcrypt.compare(password, user.password)
       if (!isValidPassword) {
-        console.warn(`SignIn failed due to incorrect password for email: ${email}`);
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'SignIn failed due to incorrect password for email',
-        });
+        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Incorrect password' })
       }
 
-      const sessionUser = { id: user.id, email: user.email ?? '' };
-      // Only create the session and return the sessionId
-      const sessionId = await createUserSession(sessionUser);
-      // send the otp via email
+      // Check admin host
+      if (host?.startsWith('admin.') && user.role !== 'admin') {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'Only admins can login via admin subdomain',
+        })
+      }
+
+      const sessionUser = { id: user.id, email: user.email ?? '' }
+      const sessionId = await createUserSession(sessionUser)
 
       const otp = generateOtp()
-      await redisClient.set(`otp:${user.email}`, otp, {
-        ex: 300,
+      await redisClient.set(`otp:${user.email}`, otp, { ex: 300 })
+
+      return { success: true, userId: user.id, sessionId, role: user.role, otp }
+    } catch (error) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: error instanceof Error ? error.message : 'Failed to sign in',
       })
-
-      return { success: true, userId: user.id, sessionId, role: user.role, otp:otp };
-    } catch (error) {
-      console.log(error)
-      if (error instanceof TRPCError) {
-        throw error;
-      }
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'Failed to sign in',
-      });
     }
   }
+
   static async verifyOtp(email: string, otp: string) {
-    try {
-      const storedOtp = await redisClient.get(`otp:${email}`);
-
-      console.log('storedOtp', storedOtp)
-      console.log('otp',otp)
-  
-      if (!storedOtp || Number(storedOtp) !== Number(otp)) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'Invalid or expired OTP',
-        });
-      }
-  
-      await redisClient.del(`otp:${email}`);
-
-      return {
-        success: true,
-        message:'otp verified successfully'
-      };
-    } catch (error) {
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: error instanceof Error ? error.message : 'OTP verification failed',
-      });
+    const storedOtp = await redisClient.get(`otp:${email}`)
+    if (!storedOtp || Number(storedOtp) !== Number(otp)) {
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid or expired OTP' })
     }
+    await redisClient.del(`otp:${email}`)
+    return { success: true, message: 'OTP verified successfully' }
   }
-  
 }
