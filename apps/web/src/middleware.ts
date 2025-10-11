@@ -5,41 +5,45 @@ export async function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname
   const hostname = req.headers.get('host') ?? ''
 
-  // Check if the request is for the doctors subdomain
+  // Subdomain / route flags
   const isDoctorsSubdomain = hostname.startsWith('doctors.')
+  const isAdminSubdomain = hostname.startsWith('admin.')
   const isSpecialistRoute = pathname.startsWith('/specialist')
-   const isAdminSubdomain = hostname.startsWith('admin.')
   const isAdminRoute = pathname.startsWith('/admin')
 
-  // Define public paths for doctors subdomain (add more as needed)
-  const publicPaths = ['/', '/auth', '/about', '/contact']
+  // Public paths
+  const publicPaths = ['/', '/auth', '/about', '/contact', '/favicon.ico']
   const isPublic = publicPaths.some((path) =>
     pathname === path || pathname.startsWith(path + '/')
   )
 
-  // Only protect doctors subdomain
-  if (isDoctorsSubdomain) {
-    // Special case: root path should always go to the doctor's panel
-    if (pathname === '/') {
-      return NextResponse.redirect(new URL('/specialist/upcoming-appointments', req.url))
-    }
+  // ---------------------------
+  // Safety-net: if user hits /auth?role=admin and already has a session,
+  // redirect them straight to the admin doctors dashboard.
+  // ---------------------------
+  if (pathname === '/auth') {
+    const roleParam = req.nextUrl.searchParams.get('role')
+    if (roleParam === 'admin' && sessionId) {
+      const adminHost =
+        process.env.NODE_ENV === 'production' ? 'admin.askremohealth.com' : 'admin.localhost'
+      const target = new URL('/admin/doctors', `https://${adminHost}`)
+      const response = NextResponse.redirect(target)
 
-    if (!sessionId && !isPublic) {
-      // Redirect to /auth?role=doctor
-      const url = new URL(req.url)
-      url.pathname = '/auth'
-      url.searchParams.set('role', 'doctor')
-      return NextResponse.redirect(url)
-    }
-    // Only rewrite to /specialist if not a public path and not already on /specialist
-    if (!isPublic && !pathname.startsWith('/specialist')) {
-      const cleanPath = pathname.replace(/^\/+/, '')
-      const newUrl = new URL(`/specialist/${cleanPath}`, req.url)
-      return NextResponse.redirect(newUrl)
+      // ensure cookie is set for subdomain if not already; copy existing cookie
+      response.cookies.set('session-id', sessionId, {
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7,
+        domain: process.env.NODE_ENV === 'production' ? '.askremohealth.com' : undefined,
+      })
+
+      return response
     }
   }
-  
-// ---------- ADMIN SUBDOMAIN LOGIC ----------
+
+  // ---------- ADMIN SUBDOMAIN LOGIC ----------
   if (isAdminSubdomain) {
     // Admin landing -> redirect to admin dashboard
     if (pathname === '/') {
@@ -54,46 +58,85 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(url)
     }
 
-    // If request is not under /admin, rewrite to /admin/<path> or redirect
+    // If request is not under /admin, redirect to /admin/<path>
     if (!isPublic && !pathname.startsWith('/admin')) {
       const cleanPath = pathname.replace(/^\/+/, '')
-      // redirect keeps host as admin.askremohealth.com
       return NextResponse.redirect(new URL(`/admin/${cleanPath}`, req.url))
     }
 
     return NextResponse.next()
   }
 
-  // If we're on the specialist path but not on the doctors subdomain
-  if (isSpecialistRoute && !isDoctorsSubdomain) {
-    // Remove 'www.' if present
-    let doctorsHost = ''
-    if (process.env.NODE_ENV === 'production') {
-      doctorsHost = 'doctors.askremohealth.com'
-    } else {
-      // For local dev, use doctors.localhost
-      doctorsHost = 'doctors.localhost'
+  // ---------- DOCTORS SUBDOMAIN LOGIC ----------
+  if (isDoctorsSubdomain) {
+    // Special case: root path should always go to the doctor's panel
+    if (pathname === '/') {
+      return NextResponse.redirect(new URL('/specialist/upcoming-appointments', req.url))
     }
+
+    if (!sessionId && !isPublic) {
+      // Redirect to /auth?role=doctor
+      const url = new URL(req.url)
+      url.pathname = '/auth'
+      url.searchParams.set('role', 'doctor')
+      return NextResponse.redirect(url)
+    }
+
+    // Only rewrite to /specialist if not a public path and not already on /specialist
+    if (!isPublic && !pathname.startsWith('/specialist')) {
+      const cleanPath = pathname.replace(/^\/+/, '')
+      const newUrl = new URL(`/specialist/${cleanPath}`, req.url)
+      return NextResponse.redirect(newUrl)
+    }
+
+    return NextResponse.next()
+  }
+
+  // If we're on the specialist path but not on the doctors subdomain,
+  // redirect the user to the doctors subdomain and copy session cookie.
+  if (isSpecialistRoute && !isDoctorsSubdomain) {
+    const doctorsHost =
+      process.env.NODE_ENV === 'production' ? 'doctors.askremohealth.com' : 'doctors.localhost'
     const newUrl = new URL(pathname, `https://${doctorsHost}`)
     const response = NextResponse.redirect(newUrl)
 
-    // Copy session cookie to the new domain
     if (sessionId) {
       response.cookies.set('session-id', sessionId, {
         path: '/',
         secure: process.env.NODE_ENV === 'production',
-        httpOnly: false,
+        httpOnly: true,
         sameSite: 'lax',
         maxAge: 60 * 60 * 24 * 7,
-        domain: process.env.NODE_ENV === 'production' ? '.askremohealth.com' : undefined
+        domain: process.env.NODE_ENV === 'production' ? '.askremohealth.com' : undefined,
       })
     }
 
     return response
   }
-  // If we're on the admin path but not on the doctors subdomain
 
+  // If the request is for admin path on the main domain (not admin subdomain),
+  // redirect to the admin subdomain and copy cookie.
+  if (isAdminRoute && !isAdminSubdomain) {
+    const adminHost =
+      process.env.NODE_ENV === 'production' ? 'admin.askremohealth.com' : 'admin.localhost'
+    const newUrl = new URL(pathname, `https://${adminHost}`)
+    const response = NextResponse.redirect(newUrl)
 
+    if (sessionId) {
+      response.cookies.set('session-id', sessionId, {
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7,
+        domain: process.env.NODE_ENV === 'production' ? '.askremohealth.com' : undefined,
+      })
+    }
+
+    return response
+  }
+
+  // Default: allow request
   return NextResponse.next()
 }
 
