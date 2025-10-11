@@ -8,6 +8,7 @@ export async function middleware(req: NextRequest) {
   // Check if the request is for the doctors subdomain
   const isDoctorsSubdomain = hostname.startsWith('doctors.')
   const isSpecialistRoute = pathname.startsWith('/specialist')
+   const isAdminSubdomain = hostname.startsWith('admin.')
   const isAdminRoute = pathname.startsWith('/admin')
 
   // Define public paths for doctors subdomain (add more as needed)
@@ -38,6 +39,30 @@ export async function middleware(req: NextRequest) {
     }
   }
   
+// ---------- ADMIN SUBDOMAIN LOGIC ----------
+  if (isAdminSubdomain) {
+    // Admin landing -> redirect to admin dashboard
+    if (pathname === '/') {
+      return NextResponse.redirect(new URL('/admin/dashboard', req.url))
+    }
+
+    // Protect admin pages (except public ones)
+    if (!sessionId && !isPublic) {
+      const url = new URL(req.url)
+      url.pathname = '/auth'
+      url.searchParams.set('role', 'admin')
+      return NextResponse.redirect(url)
+    }
+
+    // If request is not under /admin, rewrite to /admin/<path> or redirect
+    if (!isPublic && !pathname.startsWith('/admin')) {
+      const cleanPath = pathname.replace(/^\/+/, '')
+      // redirect keeps host as admin.askremohealth.com
+      return NextResponse.redirect(new URL(`/admin/${cleanPath}`, req.url))
+    }
+
+    return NextResponse.next()
+  }
 
   // If we're on the specialist path but not on the doctors subdomain
   if (isSpecialistRoute && !isDoctorsSubdomain) {
@@ -66,18 +91,7 @@ export async function middleware(req: NextRequest) {
 
     return response
   }
-/* ===== Admin path guard (NO subdomain) =====
-  const roleCookie = req.cookies.get('role')?.value
-  const isAdminPublic = pathname === '/admin/login' || pathname === '/admin/signup'
-
-  if (isAdminRoute && !isAdminPublic) {
-    const isAdmin = roleCookie === 'admin'
-    if (!sessionId || !isAdmin) {
-      // Not logged in or not an admin → send to admin login
-      const url = new URL('/admin/login', req.url)
-      return NextResponse.redirect(url)
-    }
-  }*/
+  // If we're on the admin path but not on the doctors subdomain
 
 
   return NextResponse.next()
