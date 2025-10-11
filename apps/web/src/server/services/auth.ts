@@ -23,51 +23,95 @@ type SignInInput = {
 
 export class AuthService {
   static async signUp({ email, password, firstName, lastName }: SignUpInput, requestHost?: string) {
-  try {
-    // Infer role from host
-    let role: 'admin' | 'doctor' | 'patient' | 'lab' = 'patient';
-    if (requestHost?.startsWith('admin.')) {
-      role = 'admin';
-    } else {
-      role = 'patient'; // default for main domain
+    try {
+      console.log('=== SIGNUP DEBUG INFO ===')
+      console.log('Input email:', email)
+      console.log('Request host:', requestHost)
+
+      // First, let's check what enum values are available
+      console.log('Available role enum values:', roleEnum.enumValues)
+      
+      let role: any = 'patient';
+      
+      if (requestHost?.includes('admin.')) {
+        console.log('Admin subdomain detected')
+        role = 'admin';
+      } else {
+        console.log('Default domain, setting role to patient')
+        role = 'patient';
+      }
+
+      console.log('Selected role:', role)
+      console.log('Role type:', typeof role)
+
+      // Check if role exists in enum
+      const isValidRole = roleEnum.enumValues.includes(role)
+      console.log('Is valid role?', isValidRole)
+
+      if (!isValidRole) {
+        console.error('INVALID ROLE DETECTED:', role)
+        console.error('Expected one of:', roleEnum.enumValues)
+        throw new TRPCError({ 
+          code: 'BAD_REQUEST', 
+          message: `Invalid role "${role}". Must be one of: ${roleEnum.enumValues.join(', ')}` 
+        })
+      }
+
+      // Check if user already exists
+      console.log('Checking for existing user...')
+      const existing = await db.query.users.findFirst({
+        where: eq(users.email, email),
+      })
+      
+      if (existing) {
+        console.log('User already exists:', email)
+        throw new TRPCError({ code: 'CONFLICT', message: 'User already exists' })
+      }
+
+      console.log('Hashing password...')
+      const hashedPassword = await bcrypt.hash(password, 10)
+      
+      console.log('Inserting user with role:', role)
+      const insertedUsers = await db.insert(users)
+        .values({ 
+          email, 
+          password: hashedPassword, 
+          firstName, 
+          lastName, 
+          role 
+        })
+        .returning({ id: users.id })
+
+      console.log('User inserted successfully, ID:', insertedUsers[0]?.id)
+      const userId = insertedUsers[0]?.id
+
+      // Insert into patients table if role is patient
+      if (role === 'patient' && userId) {
+        console.log('Inserting into patients table...')
+        await db.insert(patients).values({ id: userId, userId })
+      }
+
+      console.log('=== SIGNUP COMPLETED SUCCESSFULLY ===')
+      return { success: true }
+    } catch ( error) {
+      if(error instanceof Error) {
+      console.error('=== SIGNUP ERROR ===')
+      console.error('Error type:', error?.constructor?.name)
+      console.error('Error message:', error?.message)
+      console.error('Error stack:', error?.stack)
+      }
+      if (error instanceof TRPCError) {
+        console.log('TRPCError with code:', error.code)
+        throw error;
+      }
+      
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: error instanceof Error ? error.message : 'Failed to create user',
+      })
     }
-
-    // Validate role against enum
-    const validRoles = ['patient', 'doctor', 'admin', 'lab'] as const
-    if (!validRoles.includes(role)) {
-      throw new TRPCError({ code: 'BAD_REQUEST', message: 'Invalid role' })
-    }
-
-    // Check if user already exists
-    const existing = await db.query.users.findFirst({
-      where: eq(users.email, email),
-    })
-    if (existing) {
-      throw new TRPCError({ code: 'CONFLICT', message: 'User already exists' })
-    }
-
-    // Hash password and insert
-    const hashedPassword = await bcrypt.hash(password, 10)
-    const insertedUsers = await db.insert(users)
-      .values({ email, password: hashedPassword, firstName, lastName, role })
-      .returning({ id: users.id })
-
-    const userId = insertedUsers[0]?.id
-
-    // Optional: insert into patients table if role is patient
-    if (role === 'patient' && userId) {
-      await db.insert(patients).values({ id: userId, userId })
-    }
-
-    return { success: true }
-  } catch (error) {
-    console.error('Error in signUp:', error)
-    throw new TRPCError({
-      code: 'INTERNAL_SERVER_ERROR',
-      message: error instanceof Error ? error.message : 'Failed to create user',
-    })
   }
-  }
+
   
   static async signIn({ email, password }: SignInInput) {
     try {
