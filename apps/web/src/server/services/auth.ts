@@ -2,7 +2,7 @@ import { TRPCError } from '@trpc/server'
 import bcrypt from 'bcrypt'
 import { eq } from 'drizzle-orm'
 import { db } from '../db'
-import { users, patients, } from '../db/schema'
+import { users, patients,} from '../db/schema'
 import { createUserSession } from '../lib/session'
 import { redisClient } from '@web/redis/redis'
 import { generateOtp } from '../lib/generateOtp'
@@ -12,8 +12,7 @@ type SignUpInput = {
   email: string
   password: string
   firstName: string
-  lastName: string
-  role?: 'doctor' | 'admin' | 'lab' | 'patient' // optional, inferred from host
+  lastName: string  
   host?: string // pass the request host
 }
 
