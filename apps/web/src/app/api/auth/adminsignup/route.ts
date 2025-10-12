@@ -16,10 +16,10 @@ export async function POST(request: Request) {
     );
 
     return NextResponse.json(result)
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Admin signup error:', error);
     return NextResponse.json(
-      { success: false, message: error.message ?? 'Failed to create admin' },
+      { success: false, message: error instanceof Error ? error.message : 'Failed to create admin' },
       { status: 400 }
     );
   }
