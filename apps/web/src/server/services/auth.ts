@@ -2,7 +2,7 @@ import { TRPCError } from '@trpc/server'
 import bcrypt from 'bcrypt'
 import { eq } from 'drizzle-orm'
 import { db } from '../db'
-import { users, patients, roleEnum } from '../db/schema'
+import { users, patients, roleEnum, admins } from '../db/schema'
 import { createUserSession } from '../lib/session'
 import { redisClient } from '@web/redis/redis'
 import { generateOtp } from '../lib/generateOtp'
@@ -28,9 +28,7 @@ export class AuthService {
       console.log('Input email:', email)
       console.log('Request host:', requestHost)
 
-      // First, let's check what enum values are available
-      console.log('Available role enum values:', roleEnum.enumValues)
-      
+      // Use the exact enum values from your schema
       let role: typeof roleEnum.enumValues[number] = 'patient';
       
       if (requestHost?.includes('admin.')) {
@@ -42,20 +40,6 @@ export class AuthService {
       }
 
       console.log('Selected role:', role)
-      console.log('Role type:', typeof role)
-
-      // Check if role exists in enum
-      const isValidRole = roleEnum.enumValues.includes(role)
-      console.log('Is valid role?', isValidRole)
-
-      if (!isValidRole) {
-        console.error('INVALID ROLE DETECTED:', role)
-        console.error('Expected one of:', roleEnum.enumValues)
-        throw new TRPCError({ 
-          code: 'BAD_REQUEST', 
-          message: `Invalid role "${role}". Must be one of: ${roleEnum.enumValues.join(', ')}` 
-        })
-      }
 
       // Check if user already exists
       console.log('Checking for existing user...')
@@ -85,29 +69,59 @@ export class AuthService {
       console.log('User inserted successfully, ID:', insertedUsers[0]?.id)
       const userId = insertedUsers[0]?.id
 
-      // Insert into patients table if role is patient
-      if (role === 'patient' && userId) {
-        console.log('Inserting into patients table...')
-        await db.insert(patients).values({ id: userId, userId })
+      if (!userId) {
+        throw new TRPCError({ 
+          code: 'INTERNAL_SERVER_ERROR', 
+          message: 'Failed to create user - no user ID returned' 
+        })
       }
 
-      console.log('=== SIGNUP COMPLETED SUCCESSFULLY ===')
-      return { success: true }
-    } catch ( error) {
-      if(error instanceof Error) {
-      console.error('=== SIGNUP ERROR ===')
-      console.error('Error type:', error?.constructor?.name)
-      console.error('Error message:', error?.message)
-      console.error('Error stack:', error?.stack)
+      // Create the appropriate record based on role
+      if (role === 'patient') {
+        console.log('Inserting into patients table...')
+        await db.insert(patients).values({ 
+          id: userId, 
+          userId 
+        })
+        console.log('Patient record created')
+      } else if (role === 'admin') {
+        console.log('Inserting into admins table...')
+        await db.insert(admins).values({ 
+          id: userId, 
+          userId 
+        })
+        console.log('Admin record created')
       }
+      // Add similar blocks for 'doctor' and 'lab' roles if needed
+
+      console.log('=== SIGNUP COMPLETED SUCCESSFULLY ===')
+      return { success: true, userId }
+    } catch (error: any) {
+      console.error('=== SIGNUP ERROR ===')
+      console.error('Error name:', error?.name)
+      console.error('Error message:', error?.message)
+      console.error('Error code:', error?.code)
+      console.error('Full error details:', error)
+      
+      // Handle specific database errors
+      if (error?.code === '23505') { // Unique constraint violation
+        throw new TRPCError({ code: 'CONFLICT', message: 'User already exists' })
+      }
+      
+      if (error?.code === '22P02') { // Invalid enum value
+        throw new TRPCError({ 
+          code: 'BAD_REQUEST', 
+          message: 'Invalid role value' 
+        })
+      }
+
       if (error instanceof TRPCError) {
-        console.log('TRPCError with code:', error.code)
         throw error;
       }
       
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
-        message: error instanceof Error ? error.message : 'Failed to create user',
+        message: error?.message || 'Failed to create user',
       })
     }
   }
