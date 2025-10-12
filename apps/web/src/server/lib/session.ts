@@ -2,6 +2,7 @@ import { z } from 'zod'
 import crypto from "crypto"
 import { redisClient } from '@web/redis/redis'
 
+
 const SESSION_EXPIRATION_SECONDS = 60 * 60 * 24 * 7
 const COOKIE_SESSION_KEY = "session-id"
 
@@ -9,6 +10,12 @@ export const sessionSchema = z.object({
   id: z.string(),
   email: z.string()
 })
+export const adminSessionSchema = z.object({
+  id: z.string(),
+  email: z.string(),
+  role: z.literal('admin'), // only accept admin role
+});
+type AdminSession = z.infer<typeof adminSessionSchema>;
 
 type UserSession = z.infer<typeof sessionSchema>
 
@@ -102,5 +109,12 @@ export async function getUserSessionById(sessionId: string) {
   if (!rawUser || typeof rawUser !== 'string') return null
 
   const parsed = sessionSchema.safeParse(JSON.parse(rawUser))
+  return parsed.success ? parsed.data : null
+}
+export async function getAdminSessionById(sessionId: string): Promise<AdminSession | null> { 
+  const rawUser = await redisClient.get(`session:${sessionId}`)
+  if (!rawUser || typeof rawUser !== 'string') return null
+
+  const parsed = adminSessionSchema.safeParse(JSON.parse(rawUser))
   return parsed.success ? parsed.data : null
 }
