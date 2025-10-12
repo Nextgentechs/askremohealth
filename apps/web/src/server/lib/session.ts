@@ -154,7 +154,7 @@ export async function getAdminSessionById(sessionId: string): Promise<AdminSessi
     // Return admin session with role
     const adminSession: AdminSession = {
       id: user.id,
-      email: user.email || '',
+      email: user.email ?? '', // Fixed: || to ??
       role: 'admin'
     };
 

@@ -40,8 +40,8 @@ export async function POST(request: Request) {
     console.log('All fields validated successfully');
 
     // Get session for authorization
-    const sessionId = request.headers.get('session-id') || 
-                     request.headers.get('cookie')?.match(/session-id=([^;]+)/)?.[1];
+    const sessionId = request.headers.get('session-id') ?? 
+                     request.headers.get('cookie')?.match(/session-id=([^;]+)/)?.[1]; // Fixed: || to ??
     console.log('Session ID:', sessionId);
 
     let currentUser = undefined;
@@ -54,31 +54,35 @@ export async function POST(request: Request) {
 
     const result = await AuthService.adminSignUp(
       { email, password, firstName, lastName, role: 'admin' },
-      currentUser ?? undefined
+      currentUser ?? undefined // Fixed: || to ??
     );
 
     console.log('Admin signup successful for:', email);
     return NextResponse.json(result);
 
-  } catch (error: any) {
+  } catch (error: unknown) { // Fixed: any to unknown
     console.error('Admin signup API error:', error);
     
     let statusCode = 400;
-    let message = error?.message || 'Failed to create admin account';
+    let message = 'Failed to create admin account';
 
-    if (error?.code === 'CONFLICT') {
-      statusCode = 409;
-      message = 'User already exists';
-    } else if (error?.code === 'FORBIDDEN') {
-      statusCode = 403;
-      message = 'Only existing admins can create new admin accounts';
+    if (error instanceof Error) {
+      message = error.message;
+      // Check for specific error codes if your error has a code property
+      const errorWithCode = error as { code?: string };
+      if (errorWithCode.code === 'CONFLICT') {
+        statusCode = 409;
+        message = 'User already exists';
+      } else if (errorWithCode.code === 'FORBIDDEN') {
+        statusCode = 403;
+        message = 'Only existing admins can create new admin accounts';
+      }
     }
 
     return NextResponse.json(
       { 
         success: false, 
-        message,
-        code: error?.code
+        message
       },
       { status: statusCode }
     );
