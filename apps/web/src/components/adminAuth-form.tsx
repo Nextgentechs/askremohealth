@@ -307,7 +307,7 @@ function SignUp({
   async function onSubmit(data:SignUpFormData) {
     setIsLoading(true)
     try {
-      const res = await fetch('/api/auth/signup', {
+      const res = await fetch('/api/auth/adminsignup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),

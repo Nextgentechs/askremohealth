@@ -1,20 +1,21 @@
 import { NextResponse } from 'next/server'
+// import { cookies } from 'next/headers'
 import { AuthService } from '@web/server/services/auth'
 
 export async function POST(request: Request): Promise<Response> {
   try {
-    const { email, password, firstName, lastName } = await request.json()
-
-    // Get host from headers to infer role
-    const host = request.headers.get('host') ?? ''
-
-    const result = await AuthService.signUp({
-      email,
-      password,
-      firstName,
-      lastName,      
-    }, host)
-   
+    const { email, password, firstName, lastName,role } = await request.json()
+    const result = await AuthService.signUp({ email, password, firstName, lastName,role })
+    //auto-login after signup
+    // if ('sessionId' in result && result.sessionId) {
+    //   (await cookies()).set('session-id', String(result.sessionId), {
+    //           path: '/',
+    //           secure: process.env.NODE_ENV === 'production',
+    //           httpOnly: true,
+    //           sameSite: 'lax',
+    //           maxAge: 60 * 60 * 24 * 7,
+    //         })
+    // }
     return NextResponse.json(result)
   } catch (error) {
     console.error('Error in signUp:', error)
