@@ -1,6 +1,6 @@
+// /api/auth/adminsignup/route.ts
 import { NextResponse } from 'next/server';
 import { AuthService } from '@web/server/services/auth';
-import { getAdminSessionById } from '@web/server/lib/session';
 
 export async function POST(request: Request) {
   console.log('=== ADMIN SIGNUP API CALLED ===');
@@ -39,28 +39,16 @@ export async function POST(request: Request) {
 
     console.log('All fields validated successfully');
 
-    // Get session for authorization
-    const sessionId = request.headers.get('session-id') ?? 
-                     request.headers.get('cookie')?.match(/session-id=([^;]+)/)?.[1]; // Fixed: || to ??
-    console.log('Session ID:', sessionId);
-
-    let currentUser = undefined;
-    if (sessionId) {
-      currentUser = await getAdminSessionById(sessionId);
-      console.log('Current admin user from session:', currentUser);
-    } else {
-      console.log('No session ID provided - this might be first admin creation');
-    }
-
+    // Call AuthService without session checking
     const result = await AuthService.adminSignUp(
-      { email, password, firstName, lastName, role: 'admin' },
-      currentUser ?? undefined // Fixed: || to ??
+      { email, password, firstName, lastName, role: 'admin' }
+      // No currentUser parameter needed
     );
 
     console.log('Admin signup successful for:', email);
     return NextResponse.json(result);
 
-  } catch (error: unknown) { // Fixed: any to unknown
+  } catch (error: unknown) {
     console.error('Admin signup API error:', error);
     
     let statusCode = 400;
@@ -68,14 +56,12 @@ export async function POST(request: Request) {
 
     if (error instanceof Error) {
       message = error.message;
-      // Check for specific error codes if your error has a code property
       const errorWithCode = error as { code?: string };
       if (errorWithCode.code === 'CONFLICT') {
         statusCode = 409;
         message = 'User already exists';
       } else if (errorWithCode.code === 'FORBIDDEN') {
         statusCode = 403;
-        message = 'Only existing admins can create new admin accounts';
       }
     }
 
