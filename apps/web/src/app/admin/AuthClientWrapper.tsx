@@ -21,8 +21,7 @@ export default function AuthClientWrapper() {
   }, [router])
 
   return (
-    <div className="flex w-full max-w-sm flex-col gap-6">
-      <h1>test23</h1>
+    <div className="flex w-full max-w-sm flex-col gap-6">      
       <AuthForm /> {/* original AuthForm - we are NOT passing props */}
     </div>
   )
