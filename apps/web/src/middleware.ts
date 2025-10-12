@@ -5,17 +5,23 @@ export async function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname
   const hostname = req.headers.get('host') ?? ''
   const xOriginalHost = req.headers.get('x-original-host') // From nginx proxy
+  const xProxySource = req.headers.get('x-proxy-source') // From nginx proxy
 
-  // Use the original host if available (from proxy), otherwise use the current host
-  const effectiveHostname = xOriginalHost ?? hostname
+  // Check if this is a proxied request from admin.askremohealth.com
+  const isProxiedAdminRequest = xProxySource === 'admin-subdomain' || 
+                               (hostname === 'staging.askremohealth.com' && 
+                                xOriginalHost === 'admin.askremohealth.com')
+
+  // Use the original host for proxied requests, otherwise use current host
+  const effectiveHostname = isProxiedAdminRequest ? (xOriginalHost ?? hostname) : hostname
 
   const isDoctorsSubdomain = effectiveHostname.startsWith('doctors.')
-  const isAdminSubdomain = effectiveHostname.startsWith('admin.')
+  const isAdminSubdomain = effectiveHostname.startsWith('admin.') || isProxiedAdminRequest
   const isSpecialistRoute = pathname.startsWith('/specialist')
   const isAdminRoute = pathname.startsWith('/admin')
 
-  // Debug logging
-  console.log(`Middleware - Host: ${hostname}, Effective Host: ${effectiveHostname}, Path: ${pathname}, Session: ${!!sessionId}`)
+  // Debug logging - enhanced to show proxy info
+  console.log(`Middleware - Host: ${hostname}, Effective Host: ${effectiveHostname}, Proxied: ${isProxiedAdminRequest}, Path: ${pathname}, Session: ${!!sessionId}`)
 
   // Public paths - adminAuth is a public auth page
   const publicPaths = ['/', '/auth', '/adminAuth', '/about', '/contact', '/favicon.ico']
@@ -34,8 +40,9 @@ export async function middleware(req: NextRequest) {
   }
 
   // ---------- ADMIN SUBDOMAIN BEHAVIOR ----------
+  // This now includes both direct admin subdomain access AND proxied requests
   if (isAdminSubdomain) {
-    console.log(`Admin subdomain detected: effectiveHost=${effectiveHostname}, pathname=${pathname}, sessionId=${!!sessionId}`)
+    console.log(`Admin access detected - Proxied: ${isProxiedAdminRequest}, Path: ${pathname}, Session: ${!!sessionId}`)
 
     // Admin root: pick landing - either auth (no session) or dashboard (session)
     if (pathname === '/') {
@@ -72,15 +79,23 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
-  // If the request is to the adminAuth path on the MAIN hostname, redirect to admin subdomain
-  if (pathname === '/adminAuth' && !isAdminSubdomain) {
+  // FIX: Only redirect to admin.askremohealth.com if we're NOT a proxied request
+  // and we're on the main domain (not staging)
+  if (pathname === '/adminAuth' && !isAdminSubdomain && !isProxiedAdminRequest && !hostname.includes('staging.')) {
     const adminHost = 'admin.askremohealth.com'
-    console.log(`AdminAuth on main domain - redirecting to ${adminHost}`)
+    console.log(`AdminAuth on production domain - redirecting to ${adminHost}`)
     return NextResponse.redirect(new URL('/adminAuth', `https://${adminHost}`))
   }
 
+  // FIX: Allow adminAuth on staging without redirect when it's a proxied request
+  if (pathname === '/adminAuth' && isProxiedAdminRequest) {
+    console.log('AdminAuth on proxied admin request - allowing access')
+    return NextResponse.next()
+  }
+
   // If the request is an /admin route on MAIN domain, redirect to admin subdomain and copy session cookie (if present)
-  if (isAdminRoute && !isAdminSubdomain) {
+  // But only if it's not a proxied request and not on staging
+  if (isAdminRoute && !isAdminSubdomain && !isProxiedAdminRequest && !hostname.includes('staging.')) {
     const adminHost = 'admin.askremohealth.com'
     const newUrl = new URL(pathname, `https://${adminHost}`)
     const response = NextResponse.redirect(newUrl)
@@ -117,7 +132,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // If we're on a specialist path on main domain, redirect to doctors subdomain (copy cookie when present)
-  if (isSpecialistRoute && !isDoctorsSubdomain) {
+  if (isSpecialistRoute && !isDoctorsSubdomain && !hostname.includes('staging.')) {
     const doctorsHost = 'doctors.askremohealth.com'
     const newUrl = new URL(pathname, `https://${doctorsHost}`)
     const response = NextResponse.redirect(newUrl)
