@@ -2,7 +2,7 @@ import { NextResponse, NextRequest } from 'next/server'
 
 export async function middleware(req: NextRequest) {
   const sessionId = req.cookies.get('session-id')?.value
-  const pathname = req.nextUrl.pathname // e.g. "/adminAuth" or "/admin/doctors"
+  const pathname = req.nextUrl.pathname
   const hostname = req.headers.get('host') ?? ''
 
   const isDoctorsSubdomain = hostname.startsWith('doctors.')
@@ -27,37 +27,38 @@ export async function middleware(req: NextRequest) {
   }
 
   // ---------- ADMIN SUBDOMAIN BEHAVIOR ----------
-  // if we're on admin.askremohealth.com, serve admin pages
   if (isAdminSubdomain) {
     const adminHost =
       process.env.NODE_ENV === 'production' ? 'admin.askremohealth.com' : 'admin.localhost'
 
+    console.log(`Admin subdomain: pathname=${pathname}, sessionId=${!!sessionId}`)
+
     // Admin root: pick landing - either auth (no session) or dashboard (session)
     if (pathname === '/') {
       if (!sessionId) {
-        // rewrite so admin host serves the admin auth page (/adminAuth)
-        // rewrite keeps the hostname as admin.askremohealth.com
-        return NextResponse.rewrite(new URL('/adminAuth', `https://${adminHost}`))
+        // Rewrite to adminAuth page - this is correct
+        return NextResponse.rewrite(new URL('/adminAuth', req.url))
       } else {
-        return NextResponse.redirect(new URL('/admin/doctors', `https://${adminHost}`))
+        return NextResponse.redirect(new URL('/admin/doctors', req.url))
       }
     }
 
     // If visiting the admin auth page on the admin host and the user already has a session, redirect to dashboard
     if (pathname === '/adminAuth' && sessionId) {
-      return NextResponse.redirect(new URL('/admin/doctors', `https://${adminHost}`))
+      return NextResponse.redirect(new URL('/admin/doctors', req.url))
     }
 
     // Protect admin pages (except public paths like /adminAuth)
     if (!sessionId && !isPublic) {
       // redirect to adminAuth on the same host
-      return NextResponse.redirect(new URL('/adminAuth', `https://${adminHost}`))
+      return NextResponse.redirect(new URL('/adminAuth', req.url))
     }
 
-    // If a request on admin host is not under /admin and not public, rewrite to /admin/<path>
+    // FIX: Only redirect non-public, non-admin routes that are NOT /adminAuth
+    // Allow /adminAuth to be served directly without redirect
     if (!isPublic && !pathname.startsWith('/admin') && pathname !== '/adminAuth') {
       const cleanPath = pathname.replace(/^\/+/, '')
-      return NextResponse.redirect(new URL(`/admin/${cleanPath}`, `https://${adminHost}`))
+      return NextResponse.redirect(new URL(`/admin/${cleanPath}`, req.url))
     }
 
     // allow the request to proceed (auth page or allowed admin path)
@@ -127,16 +128,8 @@ export async function middleware(req: NextRequest) {
   return NextResponse.next()
 }
 
-// Configure which paths the middleware should run on
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
     '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
 }
