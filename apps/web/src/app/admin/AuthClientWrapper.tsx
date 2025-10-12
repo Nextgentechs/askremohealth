@@ -3,12 +3,12 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import AuthForm from '@web/components/adminAuth-form'
+import AdminAuthForm from '@web/components/adminAuth-form'
 
 export default function AuthClientWrapper() {
   const router = useRouter()
 
-  // Ensure the URL has the query params so AuthForm can read them with useSearchParams()
+  // Ensure the URL has the query params so AdminAuthForm can read them with useSearchParams()
   useEffect(() => {
     const search = window.location.search
     const hasRole = search.includes('role=admin')
@@ -21,8 +21,9 @@ export default function AuthClientWrapper() {
   }, [router])
 
   return (
-    <div className="flex w-full max-w-sm flex-col gap-6">      
-      <AuthForm /> {/* original AuthForm - we are NOT passing props */}
+    <div className="flex w-full max-w-sm flex-col gap-6">
+      <h1>test</h1>
+      <AdminAuthForm />
     </div>
   )
 }
