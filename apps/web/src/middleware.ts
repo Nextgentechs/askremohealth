@@ -21,7 +21,7 @@ export async function middleware(req: NextRequest) {
   // Safety-net: if user hits /auth?role=admin and already has a session,
   // redirect them straight to the admin doctors dashboard.
   // ---------------------------
-  if (pathname === '/auth') {
+  if (pathname === '/adminAuth') {
     const roleParam = req.nextUrl.searchParams.get('role')
     if (roleParam === 'admin' && sessionId) {
       const adminHost =
@@ -53,8 +53,8 @@ export async function middleware(req: NextRequest) {
     // Root path on admin subdomain
     if (pathname === '/') {
       if (!sessionId) {
-        // No session: redirect to generic /auth (role inferred in backend)
-        return NextResponse.redirect(new URL('/auth', `https://${adminHost}`))
+        // No session: redirect to generic /adminAuth (role inferred in backend)
+        return NextResponse.redirect(new URL('/adminAuth', `https://${adminHost}`))
       } else {
         // Session exists: redirect to dashboard
         return NextResponse.redirect(new URL('/admin/doctors', `https://${adminHost}`))
@@ -63,7 +63,7 @@ export async function middleware(req: NextRequest) {
 
     // Protect other admin pages (except public)
     if (!sessionId && !isPublic) {
-      return NextResponse.redirect(new URL('/auth', `https://${adminHost}`))
+      return NextResponse.redirect(new URL('/adminAuth', `https://${adminHost}`))
     }
 
     // Rewrite paths that are not under /admin
