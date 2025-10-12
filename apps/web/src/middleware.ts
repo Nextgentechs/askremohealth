@@ -1,4 +1,4 @@
-import { NextResponse, NextRequest } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(req: NextRequest) {
   const sessionId = req.cookies.get('session-id')?.value
@@ -7,7 +7,7 @@ export async function middleware(req: NextRequest) {
   const xOriginalHost = req.headers.get('x-original-host') // From nginx proxy
 
   // Use the original host if available (from proxy), otherwise use the current host
-  const effectiveHostname = xOriginalHost || hostname
+  const effectiveHostname = xOriginalHost ?? hostname
 
   const isDoctorsSubdomain = effectiveHostname.startsWith('doctors.')
   const isAdminSubdomain = effectiveHostname.startsWith('admin.')
@@ -35,9 +35,6 @@ export async function middleware(req: NextRequest) {
 
   // ---------- ADMIN SUBDOMAIN BEHAVIOR ----------
   if (isAdminSubdomain) {
-    // Use the effective hostname for admin host determination
-    const adminHost = effectiveHostname
-
     console.log(`Admin subdomain detected: effectiveHost=${effectiveHostname}, pathname=${pathname}, sessionId=${!!sessionId}`)
 
     // Admin root: pick landing - either auth (no session) or dashboard (session)
