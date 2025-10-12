@@ -4,11 +4,18 @@ export async function middleware(req: NextRequest) {
   const sessionId = req.cookies.get('session-id')?.value
   const pathname = req.nextUrl.pathname
   const hostname = req.headers.get('host') ?? ''
+  const xOriginalHost = req.headers.get('x-original-host') // From nginx proxy
 
-  const isDoctorsSubdomain = hostname.startsWith('doctors.')
-  const isAdminSubdomain = hostname.startsWith('admin.')
+  // Use the original host if available (from proxy), otherwise use the current host
+  const effectiveHostname = xOriginalHost || hostname
+
+  const isDoctorsSubdomain = effectiveHostname.startsWith('doctors.')
+  const isAdminSubdomain = effectiveHostname.startsWith('admin.')
   const isSpecialistRoute = pathname.startsWith('/specialist')
   const isAdminRoute = pathname.startsWith('/admin')
+
+  // Debug logging
+  console.log(`Middleware - Host: ${hostname}, Effective Host: ${effectiveHostname}, Path: ${pathname}, Session: ${!!sessionId}`)
 
   // Public paths - adminAuth is a public auth page
   const publicPaths = ['/', '/auth', '/adminAuth', '/about', '/contact', '/favicon.ico']
@@ -28,55 +35,57 @@ export async function middleware(req: NextRequest) {
 
   // ---------- ADMIN SUBDOMAIN BEHAVIOR ----------
   if (isAdminSubdomain) {
-    const adminHost =
-      process.env.NODE_ENV === 'production' ? 'admin.askremohealth.com' : 'admin.localhost'
+    // Use the effective hostname for admin host determination
+    const adminHost = effectiveHostname
 
-    console.log(`Admin subdomain: pathname=${pathname}, sessionId=${!!sessionId}`)
+    console.log(`Admin subdomain detected: effectiveHost=${effectiveHostname}, pathname=${pathname}, sessionId=${!!sessionId}`)
 
     // Admin root: pick landing - either auth (no session) or dashboard (session)
     if (pathname === '/') {
       if (!sessionId) {
-        // Rewrite to adminAuth page - this is correct
+        // Rewrite to adminAuth page
+        console.log('Admin root without session - rewriting to /adminAuth')
         return NextResponse.rewrite(new URL('/adminAuth', req.url))
       } else {
+        console.log('Admin root with session - redirecting to /admin/doctors')
         return NextResponse.redirect(new URL('/admin/doctors', req.url))
       }
     }
 
     // If visiting the admin auth page on the admin host and the user already has a session, redirect to dashboard
     if (pathname === '/adminAuth' && sessionId) {
+      console.log('Admin auth page with session - redirecting to dashboard')
       return NextResponse.redirect(new URL('/admin/doctors', req.url))
     }
 
     // Protect admin pages (except public paths like /adminAuth)
-    if (!sessionId && !isPublic) {
-      // redirect to adminAuth on the same host
+    if (!sessionId && !isPublic && pathname.startsWith('/admin')) {
+      console.log('Protected admin route without session - redirecting to /adminAuth')
       return NextResponse.redirect(new URL('/adminAuth', req.url))
     }
 
-    // FIX: Only redirect non-public, non-admin routes that are NOT /adminAuth
-    // Allow /adminAuth to be served directly without redirect
+    // Only redirect non-public, non-admin routes that are NOT /adminAuth
     if (!isPublic && !pathname.startsWith('/admin') && pathname !== '/adminAuth') {
       const cleanPath = pathname.replace(/^\/+/, '')
+      console.log(`Non-admin route on admin subdomain - redirecting to /admin/${cleanPath}`)
       return NextResponse.redirect(new URL(`/admin/${cleanPath}`, req.url))
     }
 
-    // allow the request to proceed (auth page or allowed admin path)
+    console.log('Allowing request to proceed on admin subdomain')
     return NextResponse.next()
   }
 
   // If the request is to the adminAuth path on the MAIN hostname (askremohealth.com),
   // redirect to admin subdomain so admins use admin.askremohealth.com/adminAuth
   if (pathname === '/adminAuth' && !isAdminSubdomain) {
-    const adminHost =
-      process.env.NODE_ENV === 'production' ? 'admin.askremohealth.com' : 'admin.localhost'
+    const adminHost = 'admin.askremohealth.com' // Always redirect to production admin domain
+    console.log(`AdminAuth on main domain - redirecting to ${adminHost}`)
     return NextResponse.redirect(new URL('/adminAuth', `https://${adminHost}`))
   }
 
   // If the request is an /admin route on MAIN domain, redirect to admin subdomain and copy session cookie (if present)
   if (isAdminRoute && !isAdminSubdomain) {
-    const adminHost =
-      process.env.NODE_ENV === 'production' ? 'admin.askremohealth.com' : 'admin.localhost'
+    const adminHost = 'admin.askremohealth.com' // Always redirect to production admin domain
     const newUrl = new URL(pathname, `https://${adminHost}`)
     const response = NextResponse.redirect(newUrl)
 
@@ -85,6 +94,7 @@ export async function middleware(req: NextRequest) {
       response.cookies.set('session-id', sessionId, cookieOptions)
     }
 
+    console.log(`Admin route on main domain - redirecting to ${newUrl.toString()}`)
     return response
   }
 
