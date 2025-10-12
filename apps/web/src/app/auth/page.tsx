@@ -24,32 +24,32 @@ import { useRouter } from 'next/navigation'
 const navOptions = [
   {
     label: 'Home',
-    href: 'https://staging.askremohealth.com/',
+    href: 'https://admin.askremohealth.com/',
     icon: Home,
   },
   {
     label: 'About Us',
-    href: 'https://staging.askremohealth.com/about-us',
+    href: 'https://admin.askremohealth.com/about-us',
     icon: Info,
   },
   {
     label: 'Consult a Doctor',
-    href: 'https://staging.askremohealth.com/find-specialists',
+    href: 'https://admin.askremohealth.com/find-specialists',
     icon: Stethoscope,
   },
   {
     label: 'Lab Tests',
-    href: 'https://staging.askremohealth.com/laboratories',
+    href: 'https://admin.askremohealth.com/laboratories',
     icon: FlaskConical,
   },
   {
     label: 'Blogs',
-    href: 'https://staging.askremohealth.com/articles',
+    href: 'https://admin.askremohealth.com/articles',
     icon: Book,
   },
   {
     label: 'Contact Us',
-    href: 'https://staging.askremohealth.com/contact-us',
+    href: 'https://admin.askremohealth.com/contact-us',
     icon: BriefcaseMedical,
   },
 ]
