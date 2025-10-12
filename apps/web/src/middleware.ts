@@ -11,11 +11,12 @@ export async function middleware(req: NextRequest) {
 
   const isDoctorsSubdomain = effectiveHostname.startsWith('doctors.')
   const isAdminSubdomain = effectiveHostname.startsWith('admin.')
+  const isStagingEnvironment = hostname.includes('staging.') || effectiveHostname.includes('staging.')
   const isSpecialistRoute = pathname.startsWith('/specialist')
   const isAdminRoute = pathname.startsWith('/admin')
 
   // Debug logging
-  console.log(`Middleware - Host: ${hostname}, Effective Host: ${effectiveHostname}, Path: ${pathname}, Session: ${!!sessionId}`)
+  console.log(`Middleware - Host: ${hostname}, Effective Host: ${effectiveHostname}, Staging: ${isStagingEnvironment}, Path: ${pathname}, Session: ${!!sessionId}`)
 
   // Public paths - adminAuth is a public auth page
   const publicPaths = ['/', '/auth', '/adminAuth', '/about', '/contact', '/favicon.ico']
@@ -72,17 +73,22 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
-  // If the request is to the adminAuth path on the MAIN hostname (askremohealth.com),
-  // redirect to admin subdomain so admins use admin.askremohealth.com/adminAuth
-  if (pathname === '/adminAuth' && !isAdminSubdomain) {
-    const adminHost = 'admin.askremohealth.com' // Always redirect to production admin domain
-    console.log(`AdminAuth on main domain - redirecting to ${adminHost}`)
+  // FIX: Only redirect to admin.askremohealth.com if we're NOT on staging
+  if (pathname === '/adminAuth' && !isAdminSubdomain && !isStagingEnvironment) {
+    const adminHost = 'admin.askremohealth.com'
+    console.log(`AdminAuth on production domain - redirecting to ${adminHost}`)
     return NextResponse.redirect(new URL('/adminAuth', `https://${adminHost}`))
   }
 
+  // FIX: Allow adminAuth on staging without redirect
+  if (pathname === '/adminAuth' && !isAdminSubdomain && isStagingEnvironment) {
+    console.log('AdminAuth on staging - allowing access without redirect')
+    return NextResponse.next()
+  }
+
   // If the request is an /admin route on MAIN domain, redirect to admin subdomain and copy session cookie (if present)
-  if (isAdminRoute && !isAdminSubdomain) {
-    const adminHost = 'admin.askremohealth.com' // Always redirect to production admin domain
+  if (isAdminRoute && !isAdminSubdomain && !isStagingEnvironment) {
+    const adminHost = 'admin.askremohealth.com'
     const newUrl = new URL(pathname, `https://${adminHost}`)
     const response = NextResponse.redirect(newUrl)
 
@@ -93,6 +99,12 @@ export async function middleware(req: NextRequest) {
 
     console.log(`Admin route on main domain - redirecting to ${newUrl.toString()}`)
     return response
+  }
+
+  // FIX: Allow admin routes on staging without redirect
+  if (isAdminRoute && !isAdminSubdomain && isStagingEnvironment) {
+    console.log('Admin route on staging - allowing access without redirect')
+    return NextResponse.next()
   }
 
   // ---------- DOCTORS SUBDOMAIN LOGIC ----------
@@ -118,9 +130,8 @@ export async function middleware(req: NextRequest) {
   }
 
   // If we're on a specialist path on main domain, redirect to doctors subdomain (copy cookie when present)
-  if (isSpecialistRoute && !isDoctorsSubdomain) {
-    const doctorsHost =
-      process.env.NODE_ENV === 'production' ? 'doctors.askremohealth.com' : 'doctors.localhost'
+  if (isSpecialistRoute && !isDoctorsSubdomain && !isStagingEnvironment) {
+    const doctorsHost = 'doctors.askremohealth.com'
     const newUrl = new URL(pathname, `https://${doctorsHost}`)
     const response = NextResponse.redirect(newUrl)
 
