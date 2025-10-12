@@ -12,7 +12,7 @@ export async function middleware(req: NextRequest) {
   const isAdminRoute = pathname.startsWith('/admin')
 
   // Public paths
-  const publicPaths = ['/', '/auth', '/about', '/contact', '/favicon.ico']
+  const publicPaths = ['/', '/auth', '/adminAuth', '/about', '/contact', '/favicon.ico']
   const isPublic = publicPaths.some((path) =>
     pathname === path || pathname.startsWith(path + '/')
   )
