@@ -397,7 +397,7 @@ function SignUp({
     <div className="flex flex-col gap-6 mt-16">
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-xl">Create an account</CardTitle>
+          <CardTitle className="text-xl">Create an account...testing</CardTitle>
           <CardDescription>
             Sign up with your email or Google account
           </CardDescription>
