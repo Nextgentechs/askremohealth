@@ -1,6 +1,9 @@
 import { z } from 'zod'
 import crypto from "crypto"
 import { redisClient } from '@web/redis/redis'
+import { db } from '../db' // Add this import
+import { eq } from 'drizzle-orm' // Add this import
+import { users } from '../db/schema' // Add this import
 
 
 const SESSION_EXPIRATION_SECONDS = 60 * 60 * 24 * 7
@@ -111,10 +114,55 @@ export async function getUserSessionById(sessionId: string) {
   const parsed = sessionSchema.safeParse(JSON.parse(rawUser))
   return parsed.success ? parsed.data : null
 }
-export async function getAdminSessionById(sessionId: string): Promise<AdminSession | null> { 
-  const rawUser = await redisClient.get(`session:${sessionId}`)
-  if (!rawUser || typeof rawUser !== 'string') return null
+export async function getAdminSessionById(sessionId: string): Promise<AdminSession | null> {
+  console.log('getAdminSessionById called with sessionId:', sessionId);
+  
+  try {
+    // First get the basic session data
+    const rawUser = await redisClient.get(`session:${sessionId}`)
+    if (!rawUser || typeof rawUser !== 'string') {
+      console.log('No session found for ID:', sessionId);
+      return null;
+    }
 
-  const parsed = adminSessionSchema.safeParse(JSON.parse(rawUser))
-  return parsed.success ? parsed.data : null
+    const parsed = sessionSchema.safeParse(JSON.parse(rawUser))
+    if (!parsed.success) {
+      console.log('Failed to parse session data:', parsed.error);
+      return null;
+    }
+
+    const sessionUser = parsed.data;
+    console.log('Session user found:', sessionUser);
+
+    // Check if the user is an admin by querying the database
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, sessionUser.id),
+    });
+
+    if (!user) {
+      console.log('No user found in database for ID:', sessionUser.id);
+      return null;
+    }
+
+    console.log('User found in database:', { id: user.id, email: user.email, role: user.role });
+
+    if (user.role !== 'admin') {
+      console.log('User is not an admin. Role:', user.role);
+      return null;
+    }
+
+    // Return admin session with role
+    const adminSession: AdminSession = {
+      id: user.id,
+      email: user.email || '',
+      role: 'admin'
+    };
+
+    console.log('Admin session validated successfully:', adminSession);
+    return adminSession;
+
+  } catch (error) {
+    console.error('Error in getAdminSessionById:', error);
+    return null;
+  }
 }
