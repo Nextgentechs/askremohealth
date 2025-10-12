@@ -224,7 +224,7 @@ function Login({
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="you@example.com" {...field} />
+                      <Input type="email" placeholder="you@example.com" autoComplete='email' {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -238,7 +238,7 @@ function Login({
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="********" {...field} />
+                      <Input type="password" placeholder="********" autoComplete='new-password' {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -299,21 +299,42 @@ function SignUp({
       email: '',
       password: '',
       confirmPassword:'',
-      role : role ?? ''
+      role : 'admin'
     }
     
   })
 
-  async function onSubmit(data:SignUpFormData) {
+  async function onSubmit(data: SignUpFormData) {
     setIsLoading(true)
+    console.log('Form data being submitted:', data);
+    
     try {
+      // Only send the fields that the API expects
+      const apiData = {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        password: data.password
+        // Don't send confirmPassword or role - the API sets role to 'admin' automatically
+      }
+
+      console.log('Sending to API:', apiData);
+
       const res = await fetch('/api/auth/adminsignup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify(apiData),
       })
+
       const result = await res.json()
+      console.log('API response:', result);
+
+      if (!res.ok) {
+        throw new Error(result.message || `HTTP error! status: ${res.status}`);
+      }
+
       if (result.success) {
+        // Send OTP after successful signup
         const otpRes = await fetch('/api/auth/sendotp', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -325,10 +346,10 @@ function SignUp({
 
         const otpResult = await otpRes.json()
 
-        if (otpResult?.error?.message) {
+        if (!otpRes.ok || otpResult?.error) {
           toast({
             title: 'OTP Error',
-            description: otpResult.error.message ?? 'Failed to send OTP',
+            description: otpResult?.error?.message ?? 'Failed to send OTP',
             variant: 'destructive',
           })
           return
@@ -336,26 +357,27 @@ function SignUp({
 
         toast({
           title: 'Success',
-          description: 'Sign Up was successfully!',
+          description: 'Account created successfully!',
           duration: 3000,
         })
         toast({
-          title: 'Success',
-          description: 'OTP has been sent to your email!',
+          title: 'OTP Sent',
+          description: 'Verification code has been sent to your email!',
           duration: 3000,
         })
         setCurrentStep('otp')
       } else {
         toast({
-          title: 'Error',
-          description: result.error ?? 'Sign Up failed',
+          title: 'Sign Up Failed',
+          description: result.message || 'Please try again',
           variant: 'destructive',
         })
       }
-    } catch {
+    } catch (error: any) {
+      console.error('Signup error:', error);
       toast({
         title: 'Error',
-        description: 'An unknown error occurred',
+        description: error.message || 'An unknown error occurred',
         variant: 'destructive',
       })
     } finally {
@@ -397,7 +419,7 @@ function SignUp({
     <div className="flex flex-col gap-6 mt-16">
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-xl">Create an account...testing</CardTitle>
+          <CardTitle className="text-xl">Create an account</CardTitle>
           <CardDescription>
             Sign up with your email or Google account
           </CardDescription>
@@ -427,7 +449,7 @@ function SignUp({
                   <FormItem>
                     <FormLabel>First Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="John" {...field} />
+                      <Input placeholder="John" autoComplete="given-name" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -441,7 +463,7 @@ function SignUp({
                   <FormItem>
                     <FormLabel>Last Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Doe" {...field} />
+                      <Input placeholder="Doe" autoComplete="family-name" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -455,7 +477,7 @@ function SignUp({
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="you@example.com" {...field} />
+                      <Input type="email" placeholder="you@example.com" autoComplete="email" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -469,7 +491,7 @@ function SignUp({
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="********" {...field} />
+                      <Input type="password" placeholder="********" autoComplete="new-password" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -482,7 +504,7 @@ function SignUp({
                   <FormItem>
                     <FormLabel>Confirm Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="********" {...field} />
+                      <Input type="password" placeholder="********" autoComplete="new-password" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
