@@ -140,33 +140,27 @@ export class AuthService {
   // ==================== ADMIN-ONLY AUTH ====================
 
   // ---------------------- ADMIN SIGNUP ----------------------
+  // ---------------------- ADMIN SIGNUP - COMPLETELY OPEN ----------------------
   static async adminSignUp(input: SignUpInput, currentUser?: UserWithLab) {
     try {
-      console.log('AdminSignUp called:', { email: input.email, currentUser: currentUser?.email });
-      
-      // Check if any admins exist
-      const firstAdmin = await db.query.users.findFirst({
-        where: eq(users.role, 'admin'),
+      console.log('=== ADMIN SIGNUP (OPEN) ===');
+      console.log('Creating admin account for:', input.email);
+
+      // Only check if user already exists
+      const existingUser = await db.query.users.findFirst({
+        where: eq(users.email, input.email),
       });
 
-      console.log('First admin check:', firstAdmin ? 'exists' : 'does not exist');
-
-      // First admin can be created freely
-      if (!firstAdmin) {
-        console.log('Creating first admin account');
-        return await this.createAdminUser(input);
-      }
-
-      // Subsequent admins require currentUser to be admin
-      if (!currentUser || currentUser.role !== 'admin') {
-        throw new TRPCError({ 
-          code: 'FORBIDDEN', 
-          message: 'Only existing admins can create new admins' 
+      if (existingUser) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'User already exists',
         });
       }
 
-      console.log('Creating admin account by existing admin:', currentUser.email);
+      // Create admin account
       return await this.createAdminUser(input);
+
     } catch (error) {
       console.error('Admin signup error:', error);
       if (error instanceof TRPCError) {
