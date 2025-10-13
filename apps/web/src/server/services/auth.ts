@@ -283,29 +283,40 @@ export class AuthService {
 
   static async verifyOtp(email: string, otp: string) {
     try {
-      const storedOtp = await redisClient.get(`otp:${email}`);
-
-      console.log('storedOtp', storedOtp);
-      console.log('otp', otp);
-  
-      if (!storedOtp || Number(storedOtp) !== Number(otp)) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'Invalid or expired OTP',
-        });
+      if (!email || !otp) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Email and OTP required' });
       }
-  
+
+      const storedOtp = await redisClient.get(`otp:${email}`);
+      if (!storedOtp || String(storedOtp) !== String(otp)) {
+        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid or expired OTP' });
+      }
+
+      // delete OTP
       await redisClient.del(`otp:${email}`);
+
+      // find user (so we can create a session and return role/id)
+      const user = await db.query.users.findFirst({ where: eq(users.email, email) });
+      if (!user) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
+      }
+
+      // create server-side session (createUserSession should return the session id)
+      const sessionUser = { id: user.id, email: user.email ?? '' };
+      const sessionId = await createUserSession(sessionUser);
 
       return {
         success: true,
-        message: 'OTP verified successfully'
+        message: 'OTP verified',
+        userId: user.id,
+        role: user.role,
+        sessionId,
       };
-    } catch (error) {
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: error instanceof Error ? error.message : 'OTP verification failed',
-      });
+    } catch (err) {
+      if (err instanceof TRPCError) throw err;
+      console.error('[verifyOtp] unexpected:', err);
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'OTP verification failed' });
     }
   }
+
 }
