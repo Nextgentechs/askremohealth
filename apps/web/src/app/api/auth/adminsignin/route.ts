@@ -1,6 +1,5 @@
-// app/api/auth/adminsignin/route.ts  (or pages/api/auth/adminsignin.ts)
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { serialize } from 'cookie';
 import { AuthService } from '@web/server/services/auth';
 
 export async function POST(request: Request) {
@@ -9,28 +8,23 @@ export async function POST(request: Request) {
     const result = await AuthService.adminSignIn({ email, password });
 
     if (result?.sessionId) {
-      // set cookie on the outgoing response
-      (await cookies()).set('session-id', result.sessionId, {
+      // create cookie string with domain set for all subdomains
+      const cookie = serialize('session-id', result.sessionId, {
+        httpOnly: true,
+        secure: true,                // required when SameSite=None
+        sameSite: 'none',
         path: '/',
-        secure: process.env.NODE_ENV === 'production',
-        httpOnly: true,           // secure server-only cookie
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 7, // 7 days
+        domain: '.askremohealth.com', // NOTE leading dot
+        maxAge: 60 * 60 * 24 * 7,
       });
+      const res = NextResponse.json({ success: true });
+      res.headers.set('Set-Cookie', cookie);
+      return res;
     }
 
-    // server redirect to admin doctors
-    const redirectUrl = new URL('/admin/doctors', request.url);
-    return NextResponse.redirect(redirectUrl);
-  } catch (error: unknown) {
-    console.error('Error in adminSignIn:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        message: 'Admin sign in failed',
-        error: error instanceof Error ? error.message : String(error),
-      },
-      { status: 400 }
-    );
+    return NextResponse.json({ success: false }, { status: 400 });
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ success: false, message: 'failed' }, { status: 500 });
   }
 }

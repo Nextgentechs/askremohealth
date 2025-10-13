@@ -562,7 +562,7 @@ function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
       const res = await fetch('/api/auth/verifyotp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ otp: data.pin, email: loggedInEmail }),
+        body: JSON.stringify({ otp: data.pin, email: loggedInEmail,  userType: user?.role }),
       })
 
       const result = await res.json()
