@@ -557,54 +557,76 @@ function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
 
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    setIsLoading(true)
-    try {
-      const res = await fetch('/api/auth/verifyotp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ otp: data.pin, email: loggedInEmail,  userType: user?.role }),
-      })
+  setIsLoading(true)
+  try {
+    const res = await fetch('/api/auth/verifyotp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include', // ensure the cookie sent/accepted
+      body: JSON.stringify({ otp: data.pin, email: loggedInEmail }),
+    })
 
-      const result = await res.json()
-      if (result.success) {
-        toast({
-          title: 'Success',
-          description: 'OTP verified successfully!',
-          duration: 3000,
-        })
-        if (user?.role === 'patient') {
-          if (!user?.onboardingComplete) {
-            router.push('/patient/onboarding/patient-details')
-          } else {
-            router.push('/patient/upcoming-appointments')
-          }
-        }
-        else if (user?.role === 'doctor') {
-          if (!user?.onboardingComplete) {
-            router.push('/specialist/onboarding/personal-details')
-          } else {
-            router.push('/specialist/upcoming-appointments')
-          }
-        }
-        else if (user?.role === 'admin') {
-          router.push('/admin/doctors')
-        }
-        else {
-          // Fallback for any other roles or undefined roles, perhaps redirect to a generic home or login page
-          router.push('/')
-        }
-      }
-      else {
-        toast({
-          title: 'Error',
-          description: result.message,
-          variant: 'destructive',
-        })
-      }
-    } finally {
-      setIsLoading(false)
+    const result = await res.json()
+    if (!res.ok || !result?.success) {
+      toast({
+        title: 'Error',
+        description: result?.message ?? 'OTP verification failed',
+        variant: 'destructive',
+      })
+      return
     }
+
+    // OTP verified successfully — now fetch current user using the session cookie
+    const meResp = await fetch('/api/auth/me', {
+      method: 'GET',
+      credentials: 'include',
+    })
+
+    const me = await meResp.json()
+    if (!meResp.ok || !me?.success || !me.user) {
+      // fallback: force a full reload that will pick up cookie & server-rendered auth
+      window.location.reload()
+      return
+    }
+
+    const user = me.user as {
+      role: 'patient' | 'doctor' | 'admin' | 'lab'
+      onboardingComplete?: boolean
+    }
+
+    // redirect based on the freshly fetched user
+    if (user.role === 'patient') {
+      if (!user.onboardingComplete) {
+        router.push('/patient/onboarding/patient-details')
+      } else {
+        router.push('/patient/upcoming-appointments')
+      }
+    } else if (user.role === 'doctor') {
+      if (!user.onboardingComplete) {
+        router.push('/specialist/onboarding/personal-details')
+      } else {
+        router.push('/specialist/upcoming-appointments')
+      }
+    } else if (user.role === 'admin') {
+      // navigate to admin subdomain path on the current origin
+      // If you need to land on admin.askremohealth domain specifically:
+      // window.location.href = 'https://admin.askremohealth/admin/doctors'
+      router.push('/admin/doctors')
+    } else {
+      router.push('/')
+    }
+  } catch (err: any) {
+    console.error('OTP submit error', err)
+    toast({
+      title: 'Error',
+      description: err?.message ?? 'An error occurred',
+      variant: 'destructive',
+    })
+  } finally {
+    setIsLoading(false)
   }
+}
+
 
   async function handleResend() {
     setResendIsLoading(true)
