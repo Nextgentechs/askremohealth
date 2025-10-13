@@ -138,144 +138,151 @@ export class AuthService {
   }
 
   // ==================== ADMIN-ONLY AUTH ====================
- 
-  static async adminSignUp(input: SignUpInput, currentUser?: UserWithLab) {
-    try {
-      console.log('=== ADMIN SIGNUP (OPEN) ===');
-      console.log('Creating admin account for:', input.email);
 
-      // Only check if user already exists
-      const existingUser = await db.query.users.findFirst({
-        where: eq(users.email, input.email),
-      });
-
-      if (existingUser) {
-        throw new TRPCError({
-          code: 'CONFLICT',
-          message: 'User already exists',
-        });
-      }
-
-      // Create admin account
-      return await this.createAdminUser(input);
-
-    } catch (error) {
-      console.error('Admin signup error:', error);
-      if (error instanceof TRPCError) {
-        throw error;
-      }
-      throw new TRPCError({ 
-        code: 'INTERNAL_SERVER_ERROR', 
-        message: error instanceof Error ? error.message : 'Failed to create admin' 
-      });
+static async adminSignUp(input: SignUpInput, currentUser?: UserWithLab) {
+  try {
+    if (!input?.email || !input?.password || !input?.firstName || !input?.lastName) {
+      throw new TRPCError({ code: 'BAD_REQUEST', message: 'Missing required fields' });
     }
-  }
 
-  // Private method to create admin user and admin record
-  private static async createAdminUser(input: SignUpInput) {
-    const { email, password, firstName, lastName } = input;
+    console.log('=== ADMIN SIGNUP (OPEN) === Creating admin:', input.email);
 
-    // Check if user already exists
-    const existing = await db.query.users.findFirst({
-      where: eq(users.email, email),
+    // Only check if user already exists
+    const existingUser = await db.query.users.findFirst({
+      where: eq(users.email, input.email),
+      columns: { id: true, email: true },
     });
 
-    if (existing) {
+    if (existingUser) {
       throw new TRPCError({
         code: 'CONFLICT',
         message: 'User already exists',
       });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Create admin account
+    return await this.createAdminUser(input);
+  } catch (error) {
+    console.error('Admin signup error:', error);
+    if (error instanceof TRPCError) throw error;
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: error instanceof Error ? error.message : 'Failed to create admin',
+    });
+  }
+}
 
-    // Create user with admin role
-    const insertedUsers = await db
-      .insert(users)
-      .values({ 
-        email, 
-        password: hashedPassword, 
-        firstName, 
-        lastName,
-        role: 'admin'
-      })
-      .returning({ id: users.id });
+// Private helper
+private static async createAdminUser(input: SignUpInput) {
+  const { email, password, firstName, lastName } = input;
+  if (!email || !password) {
+    throw new TRPCError({ code: 'BAD_REQUEST', message: 'Email and password required' });
+  }
 
-    const userId = insertedUsers[0]?.id;
-    if (!userId) {
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'Failed to create user - no user ID returned',
-      });
+  const existing = await db.query.users.findFirst({
+    where: eq(users.email, email),
+    columns: { id: true },
+  });
+
+  if (existing) {
+    throw new TRPCError({ code: 'CONFLICT', message: 'User already exists' });
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  const insertedUsers = await db
+    .insert(users)
+    .values({
+      email,
+      password: hashedPassword,
+      firstName,
+      lastName,
+      role: 'admin',
+    })
+    .returning({ id: users.id });
+
+  const userId = insertedUsers[0]?.id;
+  if (!userId) {
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'Failed to create user - no user ID returned',
+    });
+  }
+
+  // create admin record (if you keep a separate admins table)
+  await db.insert(admins).values({
+    id: userId,
+    userId,
+    permissions: [],
+  });
+
+  console.log('Admin user and record created successfully for:', email);
+  return { success: true, userId };
+}
+
+// ---------------------- ADMIN SIGNIN ----------------------
+static async adminSignIn({ email, password }: SignInInput) {
+  try {
+    if (!email || !password) {
+      throw new TRPCError({ code: 'BAD_REQUEST', message: 'Email and password required' });
     }
 
-    // Create admin record
-    await db.insert(admins).values({
-      id: userId,
-      userId,
-      permissions: [],
+    console.log('AdminSignIn attempt for:', email);
+
+    // Find user
+    const user = await db.query.users.findFirst({
+      where: eq(users.email, email),
+      columns: { id: true, email: true, password: true, role: true },
     });
 
-    console.log('Admin user and record created successfully for:', email);
-    return { success: true, userId };
-  }
-
-  // ---------------------- ADMIN SIGNIN ----------------------
-  static async adminSignIn({ email, password }: SignInInput) {
-    try {
-      console.log('AdminSignIn attempt for:', email);
-      
-      // First, verify credentials using regular signin
-      const user = await db.query.users.findFirst({
-        where: eq(users.email, email),
-      });
-
-      if (!user) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'Invalid email or password',
-        });
-      }
-
-      // Check if user is an admin
-      if (user.role !== 'admin') {
-        throw new TRPCError({ 
-          code: 'UNAUTHORIZED', 
-          message: 'User is not an admin. Please use regular signin.' 
-        });
-      }
-
-      const isValidPassword = await bcrypt.compare(password, user.password);
-      if (!isValidPassword) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'Invalid email or password',
-        });
-      }
-
-      // Create session
-      const sessionUser = { id: user.id, email: user.email ?? '' };
-      const sessionId = await createUserSession(sessionUser);
-
-      // Generate OTP
-      const otp = generateOtp();
-      await redisClient.set(`otp:${user.email}`, otp, {
-        ex: 300,
-      });
-
-      console.log('AdminSignIn successful for:', email);
-      return { success: true, userId: user.id, sessionId, role: user.role, otp: otp };
-    } catch (error) {
-      console.error('Admin signin error:', error);
-      if (error instanceof TRPCError) {
-        throw error;
-      }
+    if (!user) {
       throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'Failed to sign in as admin',
+        code: 'UNAUTHORIZED',
+        message: 'Invalid email or password',
       });
     }
+
+    // Check admin role
+    if (user.role !== 'admin') {
+      throw new TRPCError({
+        code: 'UNAUTHORIZED',
+        message: 'User is not an admin. Please use regular signin.',
+      });
+    }
+
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) {
+      throw new TRPCError({
+        code: 'UNAUTHORIZED',
+        message: 'Invalid email or password',
+      });
+    }
+
+    // Create session (session util should enrich role if needed)
+    const sessionUser = { id: user.id, email: user.email ?? '', role: 'admin' as const };
+    const sessionId = await createUserSession(sessionUser);
+
+    // Generate OTP and store in redis (lowercase 'ex')
+    const otp = generateOtp();
+    await redisClient.set(`otp:${user.email}`, otp, {
+      ex: 300,
+    });
+
+    console.log('AdminSignIn successful for:', email);
+
+    // IMPORTANT: service returns sessionId for server-side cookie setting.
+    // Do not echo the sessionId directly in client JSON responses that reach browsers.
+    return { success: true, userId: user.id, sessionId, role: user.role, otp };
+  } catch (error) {
+    console.error('Admin signin error:', error);
+    if (error instanceof TRPCError) throw error;
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'Failed to sign in as admin',
+    });
   }
+}
+
 
   // ==================== COMMON METHODS ====================
 

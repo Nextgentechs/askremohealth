@@ -99,30 +99,32 @@ function Login({
 
   })
 
-  async function onSubmit(data:LoginFormData) {
+  async function onSubmit(data: LoginFormData) {
     setIsLoading(true)
     try {
       const res = await fetch('/api/auth/adminsignin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // <- important
         body: JSON.stringify(data),
       })
       const result = await res.json()
 
       if (result.success) {
         setLoggedInEmail(data.email)
+
         const otpRes = await fetch('/api/auth/sendotp', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include', // <- important
           body: JSON.stringify({
             email: data.email,
-            otp: result.otp
+            otp: result.otp,
           }),
         })
-        
 
         const otpResult = await otpRes.json()
-        
+
         if (otpResult?.error?.message) {
           toast({
             title: 'OTP Error',
@@ -150,7 +152,8 @@ function Login({
           variant: 'destructive',
         })
       }
-    } catch {
+    } catch (err) {
+      console.error('Login error', err)
       toast({
         title: 'Error',
         description: 'An error occurred',
@@ -160,6 +163,7 @@ function Login({
       setIsLoading(false)
     }
   }
+
 
   async function handleGoogleSignIn() {
     setIsLoading(true)
@@ -323,6 +327,7 @@ function SignUp({
       const res = await fetch('/api/auth/adminsignup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // <- important
         body: JSON.stringify(apiData),
       })
 
@@ -338,6 +343,7 @@ function SignUp({
         const otpRes = await fetch('/api/auth/sendotp', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include', // <- important
           body: JSON.stringify({
             email: data.email,
             otp: result.otp
@@ -631,36 +637,37 @@ function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
   async function handleResend() {
     setResendIsLoading(true)
     try {
-      const response = await fetch('api/auth/resendotp', {
+      const response = await fetch('/api/auth/resendotp', { // leading slash
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:JSON.stringify({email:loggedInEmail})
+        credentials: 'include', // <- important
+        body: JSON.stringify({ email: loggedInEmail }),
       })
 
       const result = await response.json()
 
       if (!response.ok || !result.success) {
-        throw new Error(result.error ?? 'Something went wrong');
+        throw new Error(result.error ?? 'Something went wrong')
       }
 
       toast({
         title: 'Success',
         description: 'OTP sent successfully!',
         duration: 3000,
-      });
-  
-    }
-    catch {
+      })
+    } catch (err: unknown) {
+      console.error('Resend OTP error', err)
       toast({
         title: 'Error',
-        description: 'Failed to resend OTP',
+        description: (err as Error)?.message ?? 'Failed to resend OTP',
         variant: 'destructive',
         duration: 4000,
-      });
+      })
     } finally {
       setResendIsLoading(false)
     }
   }
+
 
   return (
     <div className="flex flex-col gap-6">

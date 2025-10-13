@@ -2,6 +2,9 @@
 import { AuthService } from "@web/server/services/auth";
 import { NextResponse } from "next/server";
 
+const COOKIE_NAME = 'session-id';
+const SESSION_MAX_AGE = 60 * 60 * 24 * 7; // one week
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -16,30 +19,38 @@ export async function POST(request: Request) {
 
     const result = await AuthService.verifyOtp(email, otp);
 
-    if (result.success) {
-      // Create the JSON response
+    if (result?.success) {
+      // ensure verifyOtp returned a sessionId
+      if (!result.sessionId) {
+        console.error('verifyOtp succeeded but no sessionId returned for', email);
+        return NextResponse.json({ success: false, message: 'No session created' }, { status: 500 });
+      }
+
+      // Build JSON response WITHOUT exposing sessionId
       const response = NextResponse.json({
         success: true,
-        message: result.message,
+        message: result.message ?? 'OTP verified',
         userId: result.userId,
         role: result.role
       });
 
-      // Set the session cookie in the response
-      response.cookies.set('session-id', result.sessionId, {
+      // Set cookie - HttpOnly and SameSite=None in production for cross-subdomain
+      response.cookies.set(COOKIE_NAME, result.sessionId, {
         path: '/',
         secure: process.env.NODE_ENV === 'production',
-        httpOnly: false,
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 7, // 1 week
+        httpOnly: true, // important for security
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        maxAge: SESSION_MAX_AGE,
         domain: process.env.NODE_ENV === 'production' ? '.askremohealth.com' : undefined,
       });
 
       return response;
     }
 
-    return NextResponse.json(result);
+    // verification failed (result may contain message)
+    return NextResponse.json(result, { status: 401 });
   } catch (error) {
+    console.error('verifyotp error', error);
     return NextResponse.json(
       {
         success: false,
