@@ -7,10 +7,10 @@ export async function middleware(req: NextRequest) {
   const xOriginalHost = req.headers.get('x-original-host') // From nginx proxy
   const xProxySource = req.headers.get('x-proxy-source') // From nginx proxy
 
-  // Check if this is a proxied request from admin.askremohealth.com
+  // Check if this is a proxied request from admin subdomain
   const isProxiedAdminRequest = xProxySource === 'admin-subdomain' || 
-                               (hostname === 'staging.askremohealth.com' && 
-                                xOriginalHost === 'admin.askremohealth.com')
+                               (hostname.includes('staging.askremohealth.com') && 
+                                xOriginalHost?.includes('admin.askremohealth.com'))
 
   // Use the original host for proxied requests, otherwise use current host
   const effectiveHostname = isProxiedAdminRequest ? (xOriginalHost ?? hostname) : hostname
@@ -20,32 +20,50 @@ export async function middleware(req: NextRequest) {
   const isSpecialistRoute = pathname.startsWith('/specialist')
   const isAdminRoute = pathname.startsWith('/admin')
 
-  // Debug logging - enhanced to show proxy info
-  console.log(`Middleware - Host: ${hostname}, Effective Host: ${effectiveHostname}, Proxied: ${isProxiedAdminRequest}, Path: ${pathname}, Session: ${!!sessionId}`)
+  // Determine if we're on production or staging
+  const isProduction = hostname === 'askremohealth.com' || hostname === 'www.askremohealth.com'
+  const isStaging = hostname.includes('staging.askremohealth.com')
 
-  // Public paths - adminAuth is a public auth page
+  // Debug logging
+  console.log(`Middleware - Host: ${hostname}, Effective Host: ${effectiveHostname}, Proxied: ${isProxiedAdminRequest}, Production: ${isProduction}, Staging: ${isStaging}, Path: ${pathname}, Session: ${!!sessionId}`)
+
+  // Public paths
   const publicPaths = ['/', '/auth', '/adminAuth', '/about', '/contact', '/favicon.ico']
   const isPublic = publicPaths.some((path) =>
     pathname === path || pathname.startsWith(path + '/')
   )
 
-  // helper for cookie options when copying across domains
-  const cookieOptions = {
-    path: '/',
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: false,
-    sameSite: 'lax' as const,
-    maxAge: 60 * 60 * 24 * 7,
-    domain: process.env.NODE_ENV === 'production' ? '.askremohealth.com' : undefined,
-  }
-
   // ---------- ADMIN SUBDOMAIN BEHAVIOR ----------
-  // This now includes both direct admin subdomain access AND proxied requests
+  // This works for both staging (proxied) and production (direct) admin subdomain access
   if (isAdminSubdomain) {
     console.log(`Admin access detected - Proxied: ${isProxiedAdminRequest}, Path: ${pathname}, Session: ${!!sessionId}`)
 
-    // CRITICAL CHANGE: Always serve /adminAuth for root path on admin subdomain
-    // This matches your nginx configuration that redirects / to /adminAuth
+    // CRITICAL: For proxied requests without cookies, we need alternative session handling
+    if (isProxiedAdminRequest && !sessionId) {
+      // Check for session in query parameters or other headers
+      const urlSessionId = req.nextUrl.searchParams.get('sessionId')
+      
+      if (urlSessionId && pathname.startsWith('/admin')) {
+        // If we have a session ID in query params for admin routes, set it as cookie
+        const response = NextResponse.next()
+        response.cookies.set('session-id', urlSessionId, {
+          path: '/',
+          secure: process.env.NODE_ENV === 'production',
+          httpOnly: false,
+          sameSite: 'lax' as const,
+          maxAge: 60 * 60 * 24 * 7,
+        })
+        return response
+      }
+      
+      // If no session and trying to access protected admin routes, redirect to adminAuth
+      if (!isPublic && pathname.startsWith('/admin')) {
+        console.log('Proxied admin route without session - redirecting to /adminAuth')
+        return NextResponse.redirect(new URL('/adminAuth', req.url))
+      }
+    }
+
+    // Always serve /adminAuth for root path on admin subdomain
     if (pathname === '/') {
       console.log('Admin root - rewriting to /adminAuth')
       return NextResponse.rewrite(new URL('/adminAuth', req.url))
@@ -57,8 +75,8 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(new URL('/admin/doctors', req.url))
     }
 
-    // Protect admin pages (except public paths like /adminAuth)
-    if (!sessionId && !isPublic && pathname.startsWith('/admin')) {
+    // Protect admin pages (except public paths like /adminAuth) for non-proxied requests
+    if (!isProxiedAdminRequest && !sessionId && !isPublic && pathname.startsWith('/admin')) {
       console.log('Protected admin route without session - redirecting to /adminAuth')
       return NextResponse.redirect(new URL('/adminAuth', req.url))
     }
@@ -74,36 +92,26 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
-  // FIX: Handle adminAuth on staging - allow both direct access and proxied requests
-  if (pathname === '/adminAuth' && hostname.includes('staging.')) {
-    console.log('AdminAuth on staging domain - allowing access')
+  // ---------- MAIN DOMAIN LOGIC (both staging and production) ----------
+  
+  // Handle adminAuth on main domains - allow direct access
+  if (pathname === '/adminAuth' && (isStaging || isProduction)) {
+    console.log('AdminAuth on main domain - allowing access')
     return NextResponse.next()
   }
 
-  // FIX: Only redirect to admin.askremohealth.com if we're NOT a proxied request
-  // and we're on the production main domain
-  if (pathname === '/adminAuth' && !isAdminSubdomain && !isProxiedAdminRequest && 
-      !hostname.includes('staging.') && hostname === 'askremohealth.com') {
-    const adminHost = 'admin.askremohealth.com'
-    console.log(`AdminAuth on production domain - redirecting to ${adminHost}`)
-    return NextResponse.redirect(new URL('/adminAuth', `https://${adminHost}`))
-  }
-
-  // If the request is an /admin route on PRODUCTION main domain, redirect to admin subdomain and copy session cookie (if present)
-  // But only if it's not a proxied request and not on staging
-  if (isAdminRoute && !isAdminSubdomain && !isProxiedAdminRequest && 
-      !hostname.includes('staging.') && hostname === 'askremohealth.com') {
+  // If the request is an /admin route on PRODUCTION main domain, redirect to admin subdomain
+  if (isAdminRoute && !isAdminSubdomain && !isProxiedAdminRequest && isProduction) {
     const adminHost = 'admin.askremohealth.com'
     const newUrl = new URL(pathname, `https://${adminHost}`)
-    const response = NextResponse.redirect(newUrl)
-
-    if (sessionId) {
-      // copy cookie so admin subdomain and sibling subdomains can access it
-      response.cookies.set('session-id', sessionId, cookieOptions)
-    }
-
     console.log(`Admin route on production main domain - redirecting to ${newUrl.toString()}`)
-    return response
+    return NextResponse.redirect(newUrl)
+  }
+
+  // If the request is an /admin route on STAGING main domain, allow it (no redirect)
+  if (isAdminRoute && !isAdminSubdomain && !isProxiedAdminRequest && isStaging) {
+    console.log('Admin route on staging main domain - allowing direct access')
+    return NextResponse.next()
   }
 
   // ---------- DOCTORS SUBDOMAIN LOGIC ----------
@@ -128,21 +136,21 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
-  // If we're on a specialist path on PRODUCTION main domain, redirect to doctors subdomain (copy cookie when present)
-  if (isSpecialistRoute && !isDoctorsSubdomain && 
-      !hostname.includes('staging.') && hostname === 'askremohealth.com') {
+  // If we're on a specialist path on PRODUCTION main domain, redirect to doctors subdomain
+  if (isSpecialistRoute && !isDoctorsSubdomain && isProduction) {
     const doctorsHost = 'doctors.askremohealth.com'
     const newUrl = new URL(pathname, `https://${doctorsHost}`)
-    const response = NextResponse.redirect(newUrl)
-
-    if (sessionId) {
-      response.cookies.set('session-id', sessionId, cookieOptions)
-    }
-
-    return response
+    console.log(`Specialist route on production main domain - redirecting to ${doctorsHost}`)
+    return NextResponse.redirect(newUrl)
   }
 
-  // Default: allow the request on main domain and staging
+  // If we're on a specialist path on STAGING main domain, allow it (no redirect)
+  if (isSpecialistRoute && !isDoctorsSubdomain && isStaging) {
+    console.log('Specialist route on staging main domain - allowing direct access')
+    return NextResponse.next()
+  }
+
+  // Default: allow the request
   return NextResponse.next()
 }
 
