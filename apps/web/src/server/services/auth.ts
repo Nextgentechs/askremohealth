@@ -138,9 +138,7 @@ export class AuthService {
   }
 
   // ==================== ADMIN-ONLY AUTH ====================
-
-  // ---------------------- ADMIN SIGNUP ----------------------
-  // ---------------------- ADMIN SIGNUP - COMPLETELY OPEN ----------------------
+ 
   static async adminSignUp(input: SignUpInput, currentUser?: UserWithLab) {
     try {
       console.log('=== ADMIN SIGNUP (OPEN) ===');
