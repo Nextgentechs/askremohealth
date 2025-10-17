@@ -1,6 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@web/components/ui/tabs'
 import AdminDetailsProfileForm from './AdminDetailsProfileForm'
 
+export const dynamic = 'force-dynamic'
 
 export default function Page() {
   return (
