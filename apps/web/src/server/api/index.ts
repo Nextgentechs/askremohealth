@@ -9,7 +9,7 @@ import * as video from './routers/video'
 import * as admin from './routers/admin'
 import * as articles from './routers/articles'
 import * as patients from './routers/patients'
-// import * as auth from './routers/auth'
+import * as adminuser from './routers/adminuser'
 import * as officeLocations from './routers/office-locations'
 import { labsRouter } from './routers/labs'
 import * as tests from './routers/tests';
@@ -26,7 +26,7 @@ export const appRouter = createTRPCRouter({
   doctors: createTRPCRouter(doctors),
   video: createTRPCRouter(video),
   admin: createTRPCRouter(admin),
-  // auth: createTRPCRouter(auth),
+  adminuser: createTRPCRouter(adminuser),
   officeLocations: createTRPCRouter(officeLocations),
   articles: createTRPCRouter(articles),
   patients: createTRPCRouter(patients),
