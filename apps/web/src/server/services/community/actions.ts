@@ -27,15 +27,15 @@ export const addPost = async (formData: FormData, img?: string, video?: string) 
       return { error: "Invalid description" };
     }
 
-    await db.insert(posts).values({
+    const [newPost] = await db.insert(posts).values({
       desc: validatedDesc.data,
       userId,
       ...(img?.trim() && { img }),
       ...(video?.trim() && { video }),
-    });
+    }).returning();
 
     revalidatePath("/community");
-    return { success: true };
+    return { success: true, post: newPost };
   } catch (err) {
     console.log("Error in addPost:", err);
     return { error: "Failed to create post" };
@@ -153,4 +153,85 @@ export const initiateConsult = async (doctorId: string, patientId: string) => {
   }).onConflictDoNothing().returning();
     
   redirect(`/community/chats/${chatId}`);
+};
+
+export const addReply = async (postId: string, parentCommentId: string, desc: string) => {
+  const user = await api.users.currentUser();
+  const userId = user?.id;
+
+  if (!userId) throw new Error("User is not authenticated!");
+
+  try {
+    const [createdReply] = await db
+      .insert(comments)
+      .values({
+        desc,
+        userId,
+        postId,
+        parentCommentId,
+      })
+      .returning();
+
+    const userData = await db
+      .select({
+        user: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          role: users.role,
+        },
+        profilePicture: profilePictures.url,
+      })
+      .from(users)
+      .leftJoin(doctors, eq(users.id, doctors.userId))
+      .leftJoin(profilePictures, eq(doctors.id, profilePictures.doctorId))
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    // Get parent comment user info
+    const parentCommentData = await db
+      .select({
+        user: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          role: users.role,
+        },
+      })
+      .from(comments)
+      .innerJoin(users, eq(comments.userId, users.id))
+      .where(eq(comments.id, parentCommentId))
+      .limit(1);
+
+    return {
+      ...createdReply,
+      user: userData[0]?.user ?? {
+        id: userId,
+        firstName: '',
+        lastName: '',
+        role: 'patient' as const,
+      },
+      profilePicture: userData[0]?.profilePicture ?? null,
+      parentCommentUser: parentCommentData[0]?.user ?? null,
+    };
+  } catch (err) {
+    console.log(err);
+    throw new Error("Something went wrong!");
+  }
+};
+
+export const deleteComment = async (commentId: string) => {
+  const user = await api.users.currentUser();
+  const userId = user?.id;
+
+  if (!userId) throw new Error("User is not authenticated!");
+
+  try {
+    await db
+      .delete(comments)
+      .where(eq(comments.id, commentId));
+  } catch (err) {
+    console.log(err);
+    throw new Error("Something went wrong!");
+  }
 };
