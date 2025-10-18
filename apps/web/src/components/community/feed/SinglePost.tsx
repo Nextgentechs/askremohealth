@@ -80,7 +80,7 @@ const SinglePost = async ({ postId }: SinglePostProps) => {
       </div>
 
       {/* Post content */}
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2">
         {/* USER */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">

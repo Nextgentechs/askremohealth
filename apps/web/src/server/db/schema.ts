@@ -11,6 +11,7 @@ import {
   text,
   time,
 } from 'drizzle-orm/pg-core'
+import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 
 export const roleEnum = pgEnum('role', ['patient', 'doctor', 'admin', 'lab'])
 
@@ -383,6 +384,7 @@ export const comments = pgTable('comment', {
   updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
   userId: varchar('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   postId: uuid('post_id').notNull().references(() => posts.id, { onDelete: 'cascade' }),
+  parentCommentId: uuid('parent_comment_id').references((): AnyPgColumn => comments.id, { onDelete: 'cascade' }),
 })
 
 export type Comment = InferSelectModel<typeof comments>

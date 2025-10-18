@@ -1,60 +1,51 @@
+"use client";
+
+import { useState, useEffect, useRef } from "react";
 import Post from "./Post";
-import { db } from "@web/server/db";
-import { posts, users, likes, comments, doctors, profilePictures } from "@web/server/db/schema";
-import { eq, desc, count } from "drizzle-orm";
+import { loadMorePosts } from "@web/server/services/community/feed_actions";
 
-const Feed = async () => {
-  const rawPosts = await db
-    .select({
-      id: posts.id,
-      desc: posts.desc,
-      img: posts.img,
-      video: posts.video,
-      createdAt: posts.createdAt,
-      updatedAt: posts.updatedAt,
-      userId: posts.userId,
-      user: {
-        id: users.id,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        role: users.role,
+type PostData = Awaited<ReturnType<typeof loadMorePosts>>[number];
+
+const Feed = ({ initialPosts }: { initialPosts: PostData[] }) => {
+  const [posts, setPosts] = useState(initialPosts);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(initialPosts.length === 5);
+  const observerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && hasMore && !loading) {
+          setLoading(true);
+          loadMorePosts(page + 1).then(newPosts => {
+            if (newPosts.length < 5) setHasMore(false);
+            setPosts(prev => [...prev, ...newPosts]);
+            setPage(prev => prev + 1);
+            setLoading(false);
+          });
+        }
       },
-      profilePicture: profilePictures.url,
-    })
-    .from(posts)
-    .innerJoin(users, eq(posts.userId, users.id))
-    .leftJoin(doctors, eq(users.id, doctors.userId))
-    .leftJoin(profilePictures, eq(doctors.id, profilePictures.doctorId))
-    .orderBy(desc(posts.createdAt));
+      { threshold: 1.0 }
+    );
 
-  // Get likes and comment counts for each post
-  const postsData = await Promise.all(
-    rawPosts.map(async (post) => {
-      const postLikes = await db
-        .select({ userId: likes.userId })
-        .from(likes)
-        .where(eq(likes.postId, post.id));
-
-      const commentCount = await db
-        .select({ count: count() })
-        .from(comments)
-        .where(eq(comments.postId, post.id));
-
-      return {
-        ...post,
-        likes: postLikes,
-        _count: {
-          comments: commentCount[0]?.count ?? 0,
-        },
-      };
-    })
-  );
+    if (observerRef.current) observer.observe(observerRef.current);
+    return () => observer.disconnect();
+  }, [page, hasMore, loading]);
 
   return (
-    <div className="p-4 bg-white shadow-md rounded-lg flex flex-col gap-12">
-      {postsData.length ? (postsData.map(post => (
-        <Post key={post.id} post={post} />
-      ))) : "No posts found!"}
+    <div className="p-4 bg-white shadow-md rounded-lg flex flex-col gap-3">
+      {posts.length ? (
+        posts.map(post => <Post key={post.id} post={post} />)
+      ) : (
+        "No posts found!"
+      )}
+      {loading && (
+        <div className="flex justify-center py-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-900"></div>
+        </div>
+      )}
+      <div ref={observerRef} className="h-4" />
     </div>
   );
 };
