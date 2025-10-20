@@ -89,7 +89,7 @@ function NavUser() {
             <DropdownMenuSeparator />
 
             <DropdownMenuGroup>
-              <Link href="/admin/profile">
+              <Link href="/admin-template/adminprofile">
                 <DropdownMenuItem>
                   <User className="mr-2 h-4 w-4" />
                   My Profile
