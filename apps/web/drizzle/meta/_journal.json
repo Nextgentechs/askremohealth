@@ -29,6 +29,13 @@
       "when": 1760185202527,
       "tag": "0003_describe_change_here",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1761125054237,
+      "tag": "0004_square_gateway",
+      "breakpoints": true
     }
   ]
 }
