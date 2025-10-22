@@ -7,6 +7,9 @@ export default {
   dialect: 'postgresql',
   dbCredentials: {
     url: env.DATABASE_URL,
+    ssl: {
+      rejectUnauthorized: false, // required for Neon
+    },
   },
 } satisfies Config
 
