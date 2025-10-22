@@ -50,6 +50,13 @@
       "when": 1761135266073,
       "tag": "0006_lumpy_changeling",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1761135823066,
+      "tag": "0007_typical_rafael_vega",
+      "breakpoints": true
     }
   ]
 }
