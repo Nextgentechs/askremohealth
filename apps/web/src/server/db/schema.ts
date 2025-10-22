@@ -296,7 +296,8 @@ export const articles = pgTable('articles', {
   publishedAt: timestamp('published_at'),
   updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
   status: varchar('status', { length: 50 }).default('draft'), // 'draft' | 'published' | 'archived'
-  verified: boolean('verified').default(false),
+ verified: boolean('verified').default(false),
+ verified2: boolean('verified').default(false),
 })
 
 export const article_images = pgTable('article_images', {
@@ -376,4 +377,14 @@ export const labAppointments = pgTable('lab_appointments', {
   updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
   patientNotes: varchar('patient_notes'),
   doctorNotes: varchar('doctor_notes'),
+})
+
+export const labAvailability2 = pgTable('lab_availability2', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  lab_id: varchar('place_id')
+    .notNull()
+    .references(() => labs.placeId, { onDelete: 'cascade' }),
+  day_of_week: weekDayEnum('day_of_week').notNull(),
+  start_time: time('start_time').notNull(),
+  end_time: time('end_time').notNull(), 
 })

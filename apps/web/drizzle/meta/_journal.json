@@ -36,6 +36,20 @@
       "when": 1761125054237,
       "tag": "0004_square_gateway",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1761134822118,
+      "tag": "0005_pale_gwen_stacy",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1761135266073,
+      "tag": "0006_lumpy_changeling",
+      "breakpoints": true
     }
   ]
 }

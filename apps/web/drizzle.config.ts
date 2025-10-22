@@ -6,10 +6,8 @@ export default {
   schema: './src/server/db/schema.ts',
   dialect: 'postgresql',
   dbCredentials: {
-    url: env.DATABASE_URL,
-    ssl: {
-      rejectUnauthorized: false, // required for Neon
-    },
+    url: env.DATABASE_URL,   
   },
+      
 } satisfies Config
 
