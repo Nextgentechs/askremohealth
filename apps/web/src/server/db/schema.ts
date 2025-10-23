@@ -378,12 +378,3 @@ export const labAppointments = pgTable('lab_appointments', {
   doctorNotes: varchar('doctor_notes'),
 })
 
-export const labAvailability2 = pgTable('lab_availability2', {
-  id: uuid('id').primaryKey().notNull().defaultRandom(),
-  lab_id: varchar('place_id')
-    .notNull()
-    .references(() => labs.placeId, { onDelete: 'cascade' }),
-  day_of_week: weekDayEnum('day_of_week').notNull(),
-  start_time: time('start_time').notNull(),
-  end_time: time('end_time').notNull(), 
-})

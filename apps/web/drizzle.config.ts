@@ -8,6 +8,8 @@ export default {
   dbCredentials: {
     url: env.DATABASE_URL,   
   },
-      
+  migrations: {
+    schema: "public",
+  },
 } satisfies Config
 
