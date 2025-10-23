@@ -69,7 +69,7 @@ export const subSpecialties = pgTable('sub_specialty', {
 })
 
 export const users = pgTable('user', {
-  id: uuid('id').primaryKey().defaultRandom(),
+  id: varchar('id').primaryKey().notNull().default(sql`gen_random_uuid()`),
   firstName: varchar('first_name').notNull(),
   lastName: varchar('last_name').notNull(),
   email: varchar('email'),
