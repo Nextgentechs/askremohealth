@@ -133,6 +133,8 @@ export const articles = pgTable("articles", {
 	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
 	publishedAt: timestamp("published_at", { mode: 'string' }),
 	updatedAt: timestamp("updated_at", { mode: 'string' }),
+	status: varchar('status', { length: 50 }).default('draft'), // safe default
+  	verified: boolean('verified').default(false),          
 });
 
 export const labs = pgTable("labs", {
