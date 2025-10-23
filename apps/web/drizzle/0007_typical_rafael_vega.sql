@@ -1,1 +1,0 @@
-ALTER TABLE "articles" ADD COLUMN "verified" boolean DEFAULT false;

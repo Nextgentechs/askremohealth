@@ -1,1 +1,0 @@
-DROP TABLE "lab_availability2";

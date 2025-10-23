@@ -40,7 +40,7 @@ EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "admin" (
+CREATE TABLE IF NOT EXISTS "admin_users" (
 	"id" varchar PRIMARY KEY NOT NULL,
 	"user_id" varchar NOT NULL,
 	"phone" varchar,
@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS "admin" (
 	"onboarding_complete" boolean DEFAULT false NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp NOT NULL,
-	CONSTRAINT "admin_phone_unique" UNIQUE("phone")
+	CONSTRAINT "admin_users_phone_unique" UNIQUE("phone")
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "appointment_attachments" (
@@ -159,14 +159,6 @@ CREATE TABLE IF NOT EXISTS "lab_appointments" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "lab_availability" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"place_id" varchar NOT NULL,
-	"day_of_week" "week_day" NOT NULL,
-	"start_time" time NOT NULL,
-	"end_time" time NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "lab_availability2" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"place_id" varchar NOT NULL,
 	"day_of_week" "week_day" NOT NULL,
@@ -299,7 +291,7 @@ CREATE TABLE IF NOT EXISTS "user" (
 );
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "admin" ADD CONSTRAINT "admin_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;
+ ALTER TABLE "admin_users" ADD CONSTRAINT "admin_users_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -384,12 +376,6 @@ END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "lab_availability" ADD CONSTRAINT "lab_availability_place_id_labs_place_id_fk" FOREIGN KEY ("place_id") REFERENCES "public"."labs"("place_id") ON DELETE cascade ON UPDATE no action;
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
- ALTER TABLE "lab_availability2" ADD CONSTRAINT "lab_availability2_place_id_labs_place_id_fk" FOREIGN KEY ("place_id") REFERENCES "public"."labs"("place_id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
