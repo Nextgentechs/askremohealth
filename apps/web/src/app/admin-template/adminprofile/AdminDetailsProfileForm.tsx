@@ -15,7 +15,7 @@ import { useEffect } from 'react'
 export default function AdminDetailsProfileForm() {
   // Fetch current admin info
   const [user] = api.users.currentUser.useSuspenseQuery()
-  const { data: admin } = api.adminuser.getCurrentAdmin.useQuery()
+  const { data: admin_user } = api.adminuser.getCurrentAdmin.useQuery()
 
   const form = useForm<AdminSchema>({
     resolver: zodResolver(adminSchema),
@@ -23,12 +23,12 @@ export default function AdminDetailsProfileForm() {
       firstName: user?.firstName ?? '',
       lastName: user?.lastName ?? '',
       email: user?.email ?? '',
-      phone: admin?.phone ?? user?.phone ?? '',
+      phone: admin_user?.phone ?? user?.phone ?? '',
       password: '',
       confirmPassword: '',
       role: 'admin',
-      onboardingComplete: admin?.onboardingComplete ?? false,
-      permissions: admin?.permissions ?? [],
+      onboardingComplete: admin_user?.onboardingComplete ?? false,
+      permissions: admin_user?.permissions ?? [],
     },
   })
 
@@ -37,20 +37,20 @@ export default function AdminDetailsProfileForm() {
 
   // Reset form when user/admin data updates
   useEffect(() => {
-    if (user && admin) {
+    if (user && admin_user) {
       form.reset({
         firstName: user.firstName ?? '',
         lastName: user.lastName ?? '',
         email: user.email ?? '',
-        phone: admin.phone ?? user.phone ?? '',
+        phone: admin_user.phone ?? user.phone ?? '',
         password: '',
         confirmPassword: '',
         role: 'admin',
-        onboardingComplete: admin.onboardingComplete ?? false,
-        permissions: admin.permissions ?? [],
+        onboardingComplete: admin_user.onboardingComplete ?? false,
+        permissions: admin_user.permissions ?? [],
       })
     }
-  }, [user, admin, form])
+  }, [user, admin_user, form])
 
   const onSubmit = form.handleSubmit(async (data) => {
     try {
