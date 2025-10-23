@@ -2,7 +2,7 @@ import { TRPCError } from '@trpc/server'
 import bcrypt from 'bcrypt'
 import { eq } from 'drizzle-orm'
 import { db } from '../db'
-import { users, patients, admins } from '../db/schema'
+import { users, patients, adminUser } from '../db/schema'
 import { createUserSession } from '../lib/session'
 import { redisClient } from '@web/redis/redis'
 import { generateOtp } from '../lib/generateOtp'
@@ -210,7 +210,7 @@ private static async createAdminUser(input: SignUpInput) {
   }
 
   // create admin record (if you keep a separate admins table)
-  await db.insert(admins).values({
+  await db.insert(adminUser).values({
     id: userId,
     userId,
     permissions: [],
