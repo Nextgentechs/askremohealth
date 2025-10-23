@@ -5,57 +5,15 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1739717607861,
-      "tag": "0000_overjoyed_sue_storm",
+      "when": 1761201714724,
+      "tag": "0000_special_bloodstorm",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1748239864124,
-      "tag": "0001_classy_rattler",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1753173201075,
-      "tag": "0002_grey_red_wolf",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1760185202527,
-      "tag": "0003_describe_change_here",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1761125054237,
-      "tag": "0004_square_gateway",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1761134822118,
-      "tag": "0005_pale_gwen_stacy",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1761135266073,
-      "tag": "0006_lumpy_changeling",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "7",
-      "when": 1761135823066,
-      "tag": "0007_typical_rafael_vega",
+      "when": 1761230906219,
+      "tag": "0001_strange_sister_grimm",
       "breakpoints": true
     }
   ]
