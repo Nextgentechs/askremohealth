@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { protectedProcedure, publicProcedure } from '../trpc'
 import { db } from '@web/server/db'
-import { users, admins } from '@web/server/db/schema'
+import { users, adminUser } from '@web/server/db/schema'
 import { eq } from 'drizzle-orm'
 import { adminSchema } from '@web/server/api/validators'
 
@@ -20,13 +20,13 @@ export const updateAdminDetails = protectedProcedure
       .where(eq(users.id, ctx.user.id!))
 
     await db
-      .update(admins)
+      .update(adminUser)
       .set({
         phone: input.phone ?? null,
         onboardingComplete: input.onboardingComplete ?? false,
         permissions: input.permissions ?? [],
       })
-      .where(eq(admins.userId, ctx.user.id!))
+      .where(eq(adminUser.userId, ctx.user.id!))
 
     return { success: true, message: 'Admin updated successfully' }
   })
@@ -35,8 +35,8 @@ export const updateAdminDetails = protectedProcedure
 export const getCurrentAdmin = protectedProcedure.query(async ({ ctx }) => {
   if (!ctx.user) return null
 
-  const admin = await db.query.admins.findFirst({
-    where: (admin, { eq }) => eq(admin.userId, ctx.user.id),
+  const admin_user = await db.query.adminUser.findFirst({
+    where: (adminUser, { eq }) => eq(adminUser.userId, ctx.user.id),
     with: {
       user: {
         columns: {
@@ -49,16 +49,16 @@ export const getCurrentAdmin = protectedProcedure.query(async ({ ctx }) => {
     },
   })
 
-  if (!admin) return null
+  if (!admin_user) return null
 
   return {
-    firstName: admin.user?.firstName ?? '',
-    lastName: admin.user?.lastName ?? '',
-    email: admin.user?.email ?? '',
-    role: admin.user?.role ?? '',
-    phone: admin.phone ?? '',
-    onboardingComplete: admin.onboardingComplete ?? false,
-    permissions: admin.permissions ?? [],
+    firstName: admin_user.user?.firstName ?? '',
+    lastName: admin_user.user?.lastName ?? '',
+    email: admin_user.user?.email ?? '',
+    role: admin_user.user?.role ?? '',
+    phone: admin_user.phone ?? '',
+    onboardingComplete: admin_user.onboardingComplete ?? false,
+    permissions: admin_user.permissions ?? [],
   }
 })
 
@@ -70,7 +70,7 @@ export const deleteAdmin = protectedProcedure
       throw new Error('Unauthorized: Only admins can delete other admins')
     }
 
-    await db.delete(admins).where(eq(admins.userId, input.id))
+    await db.delete(adminUser).where(eq(adminUser.userId, input.id))
     await db.delete(users).where(eq(users.id, input.id))
 
     return { success: true, message: 'Admin deleted successfully' }

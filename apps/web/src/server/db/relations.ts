@@ -5,7 +5,7 @@ import {
   certificates,
   doctors,
   facilities,
-  admins,
+  adminUser,
   operatingHours,
   patients,
   profilePictures,
@@ -52,9 +52,9 @@ export const doctorRelations = relations(doctors, ({ one, many }) => ({
   reviews: many(reviews),
 }))
 
-export const adminRelations = relations(admins, ({ one, many }) => ({
+export const adminRelations = relations(adminUser, ({ one, many }) => ({
   user: one(users, {
-    fields: [admins.userId],
+    fields: [adminUser.userId],
     references: [users.id],
   }),
   

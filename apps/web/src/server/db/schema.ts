@@ -84,7 +84,7 @@ export const users = pgTable('user', {
 })
 export type User = InferSelectModel<typeof users>
 //the admin table
-export const admins = pgTable('admin', {
+export const adminUser = pgTable('admin_users', {
   id: varchar('id').primaryKey().notNull(),
   userId: varchar('user_id')
     .notNull()
@@ -99,7 +99,7 @@ export const admins = pgTable('admin', {
     .notNull()
     .$onUpdate(() => new Date()),
 });
-export type Admin = InferSelectModel<typeof admins>
+export type adminUsers = InferSelectModel<typeof adminUser>
 export const patients = pgTable('patient', {
   id: varchar('id').primaryKey().notNull(),
   userId: varchar('user_id')
