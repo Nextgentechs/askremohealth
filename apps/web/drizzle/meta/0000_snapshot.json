@@ -1,11 +1,11 @@
 {
-  "id": "1cb0381b-1e62-48f4-b043-5f31f6a69b7b",
+  "id": "98a2f3e7-cce0-4245-b1d5-606d067bc950",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "public.admin": {
-      "name": "admin",
+    "public.admin_users": {
+      "name": "admin_users",
       "schema": "",
       "columns": {
         "id": {
@@ -56,9 +56,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "admin_user_id_user_id_fk": {
-          "name": "admin_user_id_user_id_fk",
-          "tableFrom": "admin",
+        "admin_users_user_id_user_id_fk": {
+          "name": "admin_users_user_id_user_id_fk",
+          "tableFrom": "admin_users",
           "tableTo": "user",
           "columnsFrom": [
             "user_id"
@@ -72,8 +72,8 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "admin_phone_unique": {
-          "name": "admin_phone_unique",
+        "admin_users_phone_unique": {
+          "name": "admin_users_phone_unique",
           "nullsNotDistinct": false,
           "columns": [
             "phone"
@@ -898,62 +898,6 @@
         "lab_availability_place_id_labs_place_id_fk": {
           "name": "lab_availability_place_id_labs_place_id_fk",
           "tableFrom": "lab_availability",
-          "tableTo": "labs",
-          "columnsFrom": [
-            "place_id"
-          ],
-          "columnsTo": [
-            "place_id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
-    },
-    "public.lab_availability2": {
-      "name": "lab_availability2",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "place_id": {
-          "name": "place_id",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "day_of_week": {
-          "name": "day_of_week",
-          "type": "week_day",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "start_time": {
-          "name": "start_time",
-          "type": "time",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "end_time": {
-          "name": "end_time",
-          "type": "time",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "lab_availability2_place_id_labs_place_id_fk": {
-          "name": "lab_availability2_place_id_labs_place_id_fk",
-          "tableFrom": "lab_availability2",
           "tableTo": "labs",
           "columnsFrom": [
             "place_id"
