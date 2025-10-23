@@ -113,7 +113,7 @@ export const specialty = pgTable("specialty", {
 });
 
 export const user = pgTable("user", {
-	id: varchar("id").default(gen_random_uuid()).notNull(),
+	id: varchar("id").primaryKey().notNull().default(sql`gen_random_uuid()`),
 	firstName: varchar("first_name").notNull(),
 	lastName: varchar("last_name").notNull(),
 	email: varchar("email"),
