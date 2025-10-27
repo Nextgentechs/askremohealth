@@ -8,6 +8,41 @@
       "when": 1761239925207,
       "tag": "0000_left_the_phantom",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1760000413952,
+      "tag": "0003_warm_spitfire",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1760874253008,
+      "tag": "0004_remarkable_scalphunter",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1761327629272,
+      "tag": "0005_magical_rawhide_kid",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1761328514768,
+      "tag": "0006_hard_thor_girl",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1761328530194,
+      "tag": "0007_loud_moondragon",
+      "breakpoints": true
     }
   ]
 }
