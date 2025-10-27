@@ -1,7 +1,5 @@
 'use client'
 
-import { useState } from 'react'
-import { api, type RouterOutputs } from '@web/trpc/react'
 import { Button } from '@web/components/ui/button'
 import { Badge } from '@web/components/ui/badge'
 import {
@@ -13,174 +11,189 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@web/components/ui/dialog'
-import { Check, X } from 'lucide-react'
+import { api, type RouterOutputs } from '@web/trpc/react'
+import { Check, X, Trash2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useToast } from '@web/hooks/use-toast'
-import Image from 'next/image'
+import React from 'react'
 
-// Utility to strip HTML tags from content
-function stripHtml(html: string) {
-  const div = document.createElement('div')
-  div.innerHTML = html
-  return div.textContent ?? div.innerText ?? ''
-}
+// FIXED TYPE: index into articlesList array
+type AdminArticle = RouterOutputs['articles']['listArticles']['articlesList'][number]
 
-// Admin Actions for each article
-function ArticleActions({ article }: { article: RouterOutputs['articles']['listArticles']['articlesList'][number] }) {
+export function AdminArticleActions({ article }: { article: AdminArticle }) {
+  const router = useRouter()
   const { toast } = useToast()
-  const utils = api.useContext()
-  const [actionType, setActionType] = useState<'publish' | 'unpublish' | 'verify' | 'delete' | null>(null)
 
-  const publishMutation = api.articles.publishArticle.useMutation({
-    onSuccess: () => {
-      toast({ title: 'Article published!' })
-      utils.articles.listArticles.invalidate()
-      setActionType(null)
-    },
-  })
+  // Mutations
+  const publishMutation = api.articles.publishArticle.useMutation()
+  const unpublishMutation = api.articles.unpublishArticle.useMutation()
+  const verifyMutation = api.articles.verifyArticle.useMutation()
+  const deleteMutation = api.articles.deleteArticle.useMutation()
 
-  const unpublishMutation = api.articles.unpublishArticle.useMutation({
-    onSuccess: () => {
-      toast({ title: 'Article unpublished!' })
-      utils.articles.listArticles.invalidate()
-      setActionType(null)
-    },
-  })
+  // Dialog states
+  const [isPublishDialogOpen, setIsPublishDialogOpen] = React.useState(false)
+  const [isUnpublishDialogOpen, setIsUnpublishDialogOpen] = React.useState(false)
+  const [isVerifyDialogOpen, setIsVerifyDialogOpen] = React.useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false)
 
-  const verifyMutation = api.articles.verifyArticle.useMutation({
-    onSuccess: () => {
-      toast({ title: 'Article verified!' })
-      utils.articles.listArticles.invalidate()
-      setActionType(null)
-    },
-  })
-
-  const deleteMutation = api.articles.deleteArticle.useMutation({
-    onSuccess: () => {
-      toast({ title: 'Article deleted!' })
-      utils.articles.listArticles.invalidate()
-      setActionType(null)
-    },
-  })
+  const handleMutation = async (
+    mutation: typeof publishMutation | typeof unpublishMutation | typeof verifyMutation | typeof deleteMutation,
+    actionName: string,
+    dialogSetter: React.Dispatch<React.SetStateAction<boolean>>
+  ) => {
+    try {
+      await mutation.mutateAsync({ id: article.id })
+      toast({
+        title: `${actionName} successful`,
+        description: `Article ${actionName.toLowerCase()} successfully.`,
+      })
+      router.refresh()
+    } catch (error) {
+      console.error(error)
+      toast({ title: 'Error', description: `Failed to ${actionName.toLowerCase()}.` })
+    } finally {
+      dialogSetter(false)
+    }
+  }
 
   return (
-    <div className="flex flex-wrap gap-2">
-      {/* Publish/Unpublish */}
-      {article.status === 'draft' ? (
-        <Button
-          className="bg-blue-600 hover:bg-blue-700"
-          disabled={publishMutation.isLoading}
-          onClick={() => {
-            setActionType('publish')
-            publishMutation.mutate({ articleId: article.id })
-          }}
-        >
-          Publish
-        </Button>
-      ) : (
-        <Button
-          variant="outline"
-          disabled={unpublishMutation.isLoading}
-          onClick={() => {
-            setActionType('unpublish')
-            unpublishMutation.mutate({ articleId: article.id })
-          }}
-        >
-          Unpublish
-        </Button>
+    <div className="flex gap-2 flex-wrap">
+      {/* Publish */}
+      {article.status !== 'published' && (
+        <Dialog open={isPublishDialogOpen} onOpenChange={setIsPublishDialogOpen}>
+          <DialogTrigger asChild>
+            <Button variant="default" className="bg-green-500 hover:bg-green-600">
+              <Check className="h-4 w-4 mr-1" /> Publish
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Publish Article</DialogTitle>
+              <DialogDescription>Are you sure you want to publish this article?</DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setIsPublishDialogOpen(false)}
+                disabled={publishMutation.status === 'pending'}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="bg-green-500 hover:bg-green-600"
+                disabled={publishMutation.status === 'pending'}
+                onClick={() => handleMutation(publishMutation, 'Publish', setIsPublishDialogOpen)}
+              >
+                {publishMutation.status === 'pending' ? 'Publishing...' : 'Publish'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Unpublish */}
+      {article.status === 'published' && (
+        <Dialog open={isUnpublishDialogOpen} onOpenChange={setIsUnpublishDialogOpen}>
+          <DialogTrigger asChild>
+            <Button variant="destructive" className="bg-yellow-500 hover:bg-yellow-600">
+              <X className="h-4 w-4 mr-1" /> Unpublish
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Unpublish Article</DialogTitle>
+              <DialogDescription>Are you sure you want to unpublish this article?</DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setIsUnpublishDialogOpen(false)}
+                disabled={unpublishMutation.status === 'pending'}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="bg-yellow-500 hover:bg-yellow-600"
+                disabled={unpublishMutation.status === 'pending'}
+                onClick={() => handleMutation(unpublishMutation, 'Unpublish', setIsUnpublishDialogOpen)}
+              >
+                {unpublishMutation.status === 'pending' ? 'Unpublishing...' : 'Unpublish'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
 
       {/* Verify */}
       {!article.verified && (
-        <Button
-          className="bg-green-600 hover:bg-green-700"
-          disabled={verifyMutation.isLoading}
-          onClick={() => {
-            setActionType('verify')
-            verifyMutation.mutate({ articleId: article.id })
-          }}
-        >
-          Verify
-        </Button>
+        <Dialog open={isVerifyDialogOpen} onOpenChange={setIsVerifyDialogOpen}>
+          <DialogTrigger asChild>
+            <Button variant="default" className="bg-blue-500 hover:bg-blue-600">
+              <Check className="h-4 w-4 mr-1" /> Verify
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Verify Article</DialogTitle>
+              <DialogDescription>Are you sure you want to verify this article?</DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setIsVerifyDialogOpen(false)}
+                disabled={verifyMutation.status === 'pending'}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="bg-blue-500 hover:bg-blue-600"
+                disabled={verifyMutation.status === 'pending'}
+                onClick={() => handleMutation(verifyMutation, 'Verify', setIsVerifyDialogOpen)}
+              >
+                {verifyMutation.status === 'pending' ? 'Verifying...' : 'Verify'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
 
       {/* Delete */}
-      <Button
-        variant="destructive"
-        disabled={deleteMutation.isLoading}
-        onClick={() => {
-          setActionType('delete')
-          deleteMutation.mutate({ articleId: article.id })
-        }}
-      >
-        Delete
-      </Button>
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogTrigger asChild>
+          <Button variant="destructive" className="bg-red-500 hover:bg-red-600">
+            <Trash2 className="h-4 w-4 mr-1" /> Delete
+          </Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Article</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this article? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+              disabled={deleteMutation.status === 'pending'}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-red-500 hover:bg-red-600"
+              disabled={deleteMutation.status === 'pending'}
+              onClick={() => handleMutation(deleteMutation, 'Delete', setIsDeleteDialogOpen)}
+            >
+              {deleteMutation.status === 'pending' ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      {/* Status badges */}
-      {article.verified && <Badge className="bg-green-600">Verified</Badge>}
-      {article.status === 'published' && <Badge className="bg-blue-600">Published</Badge>}
-      {article.status === 'draft' && <Badge className="bg-gray-500">Draft</Badge>}
+      {/* Status Badges */}
+      {article.verified && <Badge className="bg-green-500">Verified</Badge>}
+      {article.status === 'published' && <Badge className="bg-blue-500">Published</Badge>}
+      {article.status === 'draft' && <Badge className="bg-yellow-500">Draft</Badge>}
     </div>
-  )
-}
-
-export default function AdminArticlesPage() {
-  const [page, setPage] = useState(1)
-  const { data, isLoading, error } = api.articles.listArticles.useQuery(
-    { page, limit: 10 },
-    { staleTime: 1000 * 60 }
-  )
-
-  return (
-    <main className="min-h-screen bg-gray-50 py-10">
-      <div className="container mx-auto px-4">
-        <h1 className="text-3xl font-bold mb-6">Admin Articles</h1>
-
-        {isLoading && <div className="text-center py-16 text-lg">Loading articles...</div>}
-        {error && <div className="text-center py-16 text-red-500 text-lg">{error.message}</div>}
-        {!isLoading && !error && (!data?.articlesList || data.articlesList.length === 0) && (
-          <div className="text-center py-16 text-gray-500 text-lg">No articles found.</div>
-        )}
-
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {data?.articlesList.map((article) => {
-            const date = article.updatedAt ?? article.publishedAt ?? article.createdAt
-            const dateLabel = article.updatedAt
-              ? 'Updated on'
-              : article.publishedAt
-              ? 'Published on'
-              : 'Created on'
-            const formattedDate = new Date(date).toLocaleDateString(undefined, {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-            })
-            const plainContent = stripHtml(article.content)
-            const preview = plainContent.length > 120 ? plainContent.slice(0, 120) + '...' : plainContent
-
-            return (
-              <div key={article.id} className="bg-white rounded-lg shadow p-4 flex flex-col">
-                {article.image?.url ? (
-                  <Image src={article.image.url} alt={article.title} width={450} height={250} className="rounded-md object-cover mb-4" />
-                ) : (
-                  <div className="h-48 bg-gray-200 rounded-md flex items-center justify-center mb-4">
-                    <span className="text-gray-400">No image</span>
-                  </div>
-                )}
-                <h2 className="text-lg font-semibold">{article.title}</h2>
-                <p className="text-gray-600 text-sm mb-2">{preview}</p>
-                <span className="text-xs text-gray-400 mb-4">{dateLabel} {formattedDate}</span>
-                <ArticleActions article={article} />
-              </div>
-            )
-          })}
-        </div>
-
-        {data?.totalCount && data.totalCount > page * 10 && (
-          <div className="flex justify-center mt-6">
-            <Button onClick={() => setPage(page + 1)}>Load More</Button>
-          </div>
-        )}
-      </div>
-    </main>
   )
 }
