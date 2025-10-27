@@ -29,6 +29,12 @@
       "@web/*": ["./src/*"]
     }
   },
+  "ts-node": {
+    "compilerOptions": {
+      "module": "CommonJS",
+      "target": "ES6"
+    }
+  },
   "include": [
     ".eslintrc.cjs",
     "next-env.d.ts",
@@ -38,7 +44,8 @@
     "**/*.js",
     "src",
      "emailjs.d.ts",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    "server.ts"
   ],
   "exclude": ["node_modules"]
 }
