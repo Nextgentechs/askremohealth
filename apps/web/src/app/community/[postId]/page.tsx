@@ -8,8 +8,8 @@ interface SinglePostPageProps {
   };
 }
 
-const SinglePostPage = async ({ params }: SinglePostPageProps) => {
-  // Just destructure directly, no `await`
+// Make this a normal function, NOT async (unless you do async work inside)
+const SinglePostPage = ({ params }: SinglePostPageProps) => {
   const { postId } = params;
 
   return (
