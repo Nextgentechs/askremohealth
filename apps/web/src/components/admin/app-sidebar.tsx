@@ -161,5 +161,6 @@ const data = {
     { title: 'Doctors', url: '/admin/doctors', icon: Users },
     { title: 'Patients', url: '/admin-template/patients', icon: Users },
     { title: 'Appointments', url: '/admin-template/appointments', icon: Users },
+    { title: 'Articles', url: '/admin-template/articles-actions', icon: Users },
   ],
 }
