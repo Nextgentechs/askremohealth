@@ -9,8 +9,8 @@ interface SinglePostPageProps {
 }
 
 const SinglePostPage = async ({ params }: SinglePostPageProps) => {
-
-    const { postId } = await params;
+  // Just destructure directly, no `await`
+  const { postId } = params;
 
   return (
     <div className="flex gap-6 pt-1">
