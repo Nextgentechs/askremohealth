@@ -2,14 +2,12 @@ import LeftMenu from "@web/components/community/leftMenu/LeftMenu";
 import RightMenu from "@web/components/community/rightMenu/RightMenu";
 import SinglePost from "@web/components/community/feed/SinglePost";
 
-// Next.js dynamic route page props for [postId] page
-interface PageProps {
-  params: {
-    postId: string;
-  };
+// Next.js provides params as { [key: string]: string }
+interface Params {
+  postId: string;
 }
 
-const SinglePostPage = async ({ params }: PageProps) => {
+const SinglePostPage = async ({ params }: { params: Params }) => {
   const { postId } = params;
 
   return (
