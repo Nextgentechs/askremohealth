@@ -13,7 +13,7 @@ import {
 } from 'drizzle-orm/pg-core'
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 
-export const roleEnum = pgEnum('role', ['patient', 'doctor', 'admin', 'lab'])
+export const roleEnum = pgEnum('role', ['patient', 'doctor', 'lab', 'admin'])
 
 export const weekDayEnum = pgEnum('week_day', [
   'monday',
@@ -280,6 +280,8 @@ export const articles = pgTable('articles', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   publishedAt: timestamp('published_at'),
   updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
+  status: varchar('status', { length: 50 }).default('draft'), // 'draft' | 'published' | 'archived' |
+  verified: boolean('verified').default(false),
 })
 
 export const article_images = pgTable('article_images', {
