@@ -11,8 +11,9 @@ import {
   text,
   time,
 } from 'drizzle-orm/pg-core'
+import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 
-export const roleEnum = pgEnum('role', ['patient', 'doctor', 'admin', 'lab'])
+export const roleEnum = pgEnum('role', ['patient', 'doctor', 'lab', 'admin'])
 
 export const weekDayEnum = pgEnum('week_day', [
   'monday',
@@ -376,5 +377,61 @@ export const labAppointments = pgTable('lab_appointments', {
   updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
   patientNotes: varchar('patient_notes'),
   doctorNotes: varchar('doctor_notes'),
+  status: appointmentsStatusEnum('status').notNull(),
 })
 
+
+// Community module
+
+export const posts = pgTable('post', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  desc: text('desc').notNull(),
+  img: text('img'),
+  video: text('video'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
+  userId: varchar('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+})
+
+export type Post = InferSelectModel<typeof posts>
+
+export const comments = pgTable('comment', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  desc: text('desc').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
+  userId: varchar('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  postId: uuid('post_id').notNull().references(() => posts.id, { onDelete: 'cascade' }),
+  parentCommentId: uuid('parent_comment_id').references((): AnyPgColumn => comments.id, { onDelete: 'cascade' }),
+})
+
+export type Comment = InferSelectModel<typeof comments>
+
+export const likes = pgTable('like', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  userId: varchar('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  postId: uuid('post_id').references(() => posts.id, { onDelete: 'cascade' }),
+  commentId: uuid('comment_id').references(() => comments.id, { onDelete: 'cascade' }),
+})
+
+export type Like = InferSelectModel<typeof likes>
+
+export const chats = pgTable('chat', {
+  id: varchar('id').primaryKey().notNull().default(sql`gen_random_uuid()`),
+  doctorId: varchar('doctor_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  patientId: varchar('patient_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+})
+
+export type Chat = InferSelectModel<typeof chats>
+
+export const messages = pgTable('message', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  content: text('content').notNull(),
+  senderId: varchar('sender_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  chatId: varchar('chat_id').notNull().references(() => chats.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+})
+
+export type Message = InferSelectModel<typeof messages>
