@@ -9,8 +9,8 @@ interface Params {
   postId: string
 }
 
-const SinglePostPage = async ({ params }: { params: Params }) => {
-  const { postId } = params
+const SinglePostPage = async ({ params }: { params: Promise<Params> }) => {
+  const { postId } = await params
 
   // Fetch the post server-side using TRPC
   const post = await api.community.getPostById.useQuery({ postId })
