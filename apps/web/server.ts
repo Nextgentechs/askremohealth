@@ -10,27 +10,45 @@ const port = Number(process.env.PORT) || 3000;
 const app = next({ dev, hostname, port });
 const handler = app.getRequestHandler();
 
-
+// Declare a global variable for the server Socket.IO instance
 declare global {
-  var io: Server;
+  var ioServer: Server | undefined;
 }
 
 app.prepare().then(() => {
   const httpServer = createServer(handler);
-  const io = new Server(httpServer);
 
+  // Create Socket.IO server instance
+  const io = new Server(httpServer, {
+    cors: {
+      origin: '*', // adjust based on your frontend URL
+    },
+  });
+
+  // Handle socket connections
   io.on('connection', (socket) => {
+    console.log('New client connected:', socket.id);
+
     socket.on('join-chat', (chatId: string) => {
+      console.log(`Socket ${socket.id} joining chat ${chatId}`);
       socket.join(chatId);
+    });
+
+    socket.on('disconnect', () => {
+      console.log('Client disconnected:', socket.id);
     });
   });
 
-  global.io = io;
+  // Attach to globalThis to make accessible elsewhere if needed
+  globalThis.ioServer = io;
 
+  // Error handling
   httpServer.on('error', (err) => {
+    console.error('Server error:', err);
     throw err;
   });
 
+  // Start listening
   httpServer.listen(port, () => {
     console.log(`> Ready on http://${hostname}:${port}`);
   });
