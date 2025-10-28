@@ -10,6 +10,7 @@ import * as admin from './routers/admin'
 import * as articles from './routers/articles'
 import * as patients from './routers/patients'
 import * as adminuser from './routers/adminuser'
+import {communityRouter} from './routers/community'
 import * as officeLocations from './routers/office-locations'
 import { labsRouter } from './routers/labs'
 import * as tests from './routers/tests';
@@ -32,6 +33,7 @@ export const appRouter = createTRPCRouter({
   patients: createTRPCRouter(patients),
   labs: createTRPCRouter(labsRouter),
   tests: createTRPCRouter(tests),
+  community: createTRPCRouter(communityRouter)
 })
 
 // export type definition of API
