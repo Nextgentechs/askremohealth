@@ -48,7 +48,7 @@ export async function POST(
     };
 
   // Emit to socket
-  const io = (global as any).io;
+  const io = globalThis.ioServer;
   if (io) {
     io.to(chatId).emit("new-message", messageWithSender);
   }

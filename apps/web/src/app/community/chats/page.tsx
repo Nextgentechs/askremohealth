@@ -44,7 +44,7 @@ const ChatsPage = async () => {
         <div className="flex flex-col gap-2">
           <h1 className="text-2xl font-bold ml-4">My Chats</h1>
           {userChats.length === 0 ? (
-            <p className="text-gray-700 ml-4 mt-4">You don&apos;t have any chats initiated. Make a post so a doctor can reach out.</p>
+            <p className="text-gray-700 italic ml-4 mt-4">You don&apos;t have any chats initiated. Make a post so a doctor can reach out.</p>
           ) : (
           <div className="space-y-2">
             {userChats.map((chat) => {
