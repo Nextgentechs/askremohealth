@@ -56,36 +56,36 @@ const Post = ({ post }: { post: FeedPostType }) => {
         {userId === post.user.id && <PostInfo postId={post.id} />}
       </div>
       {/* DESC */}
-      <Link href={`/community/${post.id}`} className="cursor-pointer">
-        <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
+        <Link href={`/community/${post.id}`} className="cursor-pointer">
           <p>{post.desc}</p>
-          {post.img && (
-            <div className="w-full min-h-96 relative">
-              <Image
-                src={post.img}
-                fill
-                className="object-cover rounded-md"
-                alt=""
-              />
-            </div>
-          )}
-          {post.video && (
-              <PostVideo
-                  id={`video-${post.id}`}
-                  src={
-                    post.video
-                      ? (
-                          post.video
-                            .split("/upload/")[1]
-                            ?.split("/").slice(1).join("/")
-                            .replace(/\.[^/.]+$/, "") ?? ""
-                        )
-                      : ""
-                  }
-              />
-          )}
-        </div>
-      </Link>
+        </Link>
+        {post.img && (
+          <div className="w-full min-h-96 relative">
+            <Image
+              src={post.img}
+              fill
+              className="object-cover rounded-md"
+              alt=""
+            />
+          </div>
+        )}
+        {post.video && (
+            <PostVideo
+                id={`video-${post.id}`}
+                src={
+                  post.video
+                    ? (
+                        post.video
+                          .split("/upload/")[1]
+                          ?.split("/").slice(1).join("/")
+                          .replace(/\.[^/.]+$/, "") ?? ""
+                      )
+                    : ""
+                }
+            />
+        )}
+      </div>
       {/* INTERACTION */}
       <Suspense fallback="Loading...">
         <PostInteraction

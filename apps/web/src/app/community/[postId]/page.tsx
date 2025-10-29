@@ -1,8 +1,7 @@
-// apps/web/src/app/community/[postId]/page.tsx
 import LeftMenu from "@web/components/community/leftMenu/LeftMenu";
 import RightMenu from "@web/components/community/rightMenu/RightMenu";
 import SinglePost from "@web/components/community/feed/SinglePost";
-import { api } from '@web/trpc/react'
+import { api } from '@web/trpc/server'
 import { notFound } from 'next/navigation'
 
 interface Params {
@@ -12,8 +11,7 @@ interface Params {
 const SinglePostPage = async ({ params }: { params: Promise<Params> }) => {
   const { postId } = await params
 
-  // Fetch the post server-side using TRPC
-  const post = await api.community.getPostById.useQuery({ postId })
+  const post = await api.community.getPostById({ postId })
   if (!post) return notFound()
 
   return (
