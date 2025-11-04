@@ -1,0 +1,111 @@
+name: 🚧 Deploy AskRemoHealth (Staging)
+
+on:
+  push:
+    branches:
+      - staging-config
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: 📦 Deploy to Staging
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout (for metadata only)
+        uses: actions/checkout@v3
+
+      - name: 🚀 Deploy via SSH (staging)
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -euo pipefail
+            echo "🔄 Starting staging deployment..."
+
+            # --- Config ---
+            BRANCH="staging-config"
+            APP_DIR="/root/askremohealth-staging"
+            SERVICE="askremohealth-staging.service"
+            HEALTH_URL="http://localhost:3001"
+
+            echo "📁 Using APP_DIR=${APP_DIR}"
+            echo "🌿 Using BRANCH=${BRANCH}"
+            echo "🧩 Using SERVICE=${SERVICE}"
+            echo "🩺 Health check URL: ${HEALTH_URL}"
+
+            # --- Code update ---
+            cd "${APP_DIR}"
+            echo "📥 Fetching latest code..."
+            git fetch --all --prune
+            git checkout "${BRANCH}"
+            # Reset to remote to avoid drift
+            git reset --hard "origin/${BRANCH}"
+            git pull --ff-only origin "${BRANCH}"
+
+            # --- Dependencies & build ---
+            echo "📦 Installing dependencies..."
+            # Use install (not ci) to avoid lockfile mismatch issues
+            npm install
+
+            echo "🛠️ Building Next.js app..."
+            rm -rf .next
+            npm run build
+
+            # --- Stop existing service and cleanup ---
+            echo "🛑 Stopping existing service and cleaning up port 3001..."
+            systemctl stop "${SERVICE}" || true
+            
+            echo "🔫 Killing any process using port 3001..."
+            fuser -k 3001/tcp || true
+            
+            echo "⏳ Waiting for cleanup..."
+            sleep 5
+
+            # --- Restart systemd service ---
+            echo "🔄 Restarting systemd service: ${SERVICE}"
+            systemctl daemon-reload || true
+            systemctl restart "${SERVICE}"
+            sleep 5
+
+            echo "🧪 Checking service status..."
+            if systemctl is-active --quiet "${SERVICE}"; then
+              echo "✅ ${SERVICE} is active."
+            else
+              echo "❌ ${SERVICE} failed to start. Recent logs:"
+              journalctl -u "${SERVICE}" --no-pager -n 100
+              exit 1
+            fi
+
+            # --- Reload Nginx (for subdomain proxy) ---
+            echo "🔁 Reloading Nginx..."
+            if nginx -t; then
+              systemctl reload nginx
+              echo "✅ Nginx reloaded."
+            else
+              echo "❌ Nginx config test failed!"
+              exit 1
+            fi
+
+            # --- Health check ---
+            echo "⏳ Waiting for app to be ready..."
+            sleep 8
+            echo "🔍 Health check: ${HEALTH_URL}"
+            if curl -fsSL --max-time 10 "${HEALTH_URL}" >/dev/null; then
+              echo "🎉 Staging deployment successful and responding."
+            else
+              echo "⚠️ Health check failed at ${HEALTH_URL}"
+              echo "🔎 Showing last 100 logs from ${SERVICE}:"
+              journalctl -u "${SERVICE}" --no-pager -n 100
+              exit 1
+            fi
+
+            echo "✅ Staging deploy finished."

@@ -5,6 +5,7 @@ import {
   certificates,
   doctors,
   facilities,
+  adminUser,
   operatingHours,
   patients,
   profilePictures,
@@ -21,7 +22,12 @@ import {
   labTestsAvailable,
   tests,
   labAvailability,
-  labAppointments
+  labAppointments,
+  likes,
+  posts,
+  comments,
+  chats,
+  messages
 } from './schema'
 
 export const doctorRelations = relations(doctors, ({ one, many }) => ({
@@ -51,6 +57,14 @@ export const doctorRelations = relations(doctors, ({ one, many }) => ({
   reviews: many(reviews),
 }))
 
+export const adminRelations = relations(adminUser, ({ one, many }) => ({
+  user: one(users, {
+    fields: [adminUser.userId],
+    references: [users.id],
+  }),
+  
+}));
+
 export const patientRelations = relations(patients, ({ many,one }) => ({
   appointments: many(appointments),
   user: one(users, {
@@ -71,6 +85,16 @@ export const userRelations = relations(users, ({ one,many }) => ({
   }),
   notifications: many(notifications),
   articles: many(articles),
+  posts: many(posts),
+  comments: many(comments),
+  likes: many(likes),
+  sentMessages: many(messages),
+  doctorChats: many(chats, {
+    relationName: 'doctorChats',
+  }),
+  patientChats: many(chats, {
+    relationName: 'patientChats',
+  }),
 }));
 
 
@@ -160,7 +184,7 @@ export const profilePictureRelations = relations(
       references: [doctors.id],
     }),
   }),
-)
+) 
 
 export const articleRelations = relations(articles, ({ one }) => ({
   image: one(article_images, {
@@ -175,7 +199,6 @@ export const articleImageRelations = relations(article_images, ({ one }) => ({
     references: [articles.id],
   }),
 }))
-
 
 export const labRelations = relations(labs, ({ one, many }) => ({
   user: one(users, {
@@ -234,3 +257,72 @@ export const labAppointmentRelations = relations(
     }),
   }),
 );
+
+// Community module
+
+export const postsRelations = relations(posts, ({ one, many }) => ({
+  user: one(users, {
+    fields: [posts.userId],
+    references: [users.id],
+  }),
+  comments: many(comments),
+  likes: many(likes),
+}))
+
+export const commentsRelations = relations(comments, ({ one, many }) => ({
+  user: one(users, {
+    fields: [comments.userId],
+    references: [users.id],
+  }),
+  post: one(posts, {
+    fields: [comments.postId],
+    references: [posts.id],
+  }),
+  parentComment: one(comments, {
+    fields: [comments.parentCommentId],
+    references: [comments.id],
+    relationName: 'replies',
+  }),
+  replies: many(comments, {
+    relationName: 'replies',
+  }),
+  likes: many(likes),
+}))
+
+export const likesRelations = relations(likes, ({ one }) => ({
+  user: one(users, {
+    fields: [likes.userId],
+    references: [users.id],
+  }),
+  post: one(posts, {
+    fields: [likes.postId],
+    references: [posts.id],
+  }),
+  comment: one(comments, {
+    fields: [likes.commentId],
+    references: [comments.id],
+  }),
+}))
+
+export const chatsRelations = relations(chats, ({ one, many }) => ({
+  doctor: one(users, {
+    fields: [chats.doctorId],
+    references: [users.id],
+  }),
+  patient: one(users, {
+    fields: [chats.patientId],
+    references: [users.id],
+  }),
+  messages: many(messages),
+}))
+
+export const messagesRelations = relations(messages, ({ one }) => ({
+  sender: one(users, {
+    fields: [messages.senderId],
+    references: [users.id],
+  }),
+  chat: one(chats, {
+    fields: [messages.chatId],
+    references: [chats.id],
+  }),
+}))

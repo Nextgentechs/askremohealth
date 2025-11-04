@@ -38,7 +38,7 @@ const AboutUs = () => {
                   className="justify-start text-start sm:justify-center sm:text-center"
                   value="providers"
                 >
-                  For Healthcare Providers
+                  For Healthcare Providers...
                 </TabsTrigger>
                
               </TabsList>

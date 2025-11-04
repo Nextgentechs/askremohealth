@@ -1,0 +1,42 @@
+name: CI for Feature Branches
+
+on:
+  push:
+    branches-ignore:
+      - main
+      - staging-config
+  pull_request:
+    branches-ignore:
+      - main
+      - staging-config
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout repo
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Setup Node.js 20
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      # Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # Run lint
+      - name: Run lint
+        run: npm run lint
+
+      # Run typecheck
+      - name: Run typecheck
+        run: npm run typecheck
+
+      # Build Next.js 
+      - name: Build app
+        run: npm run build

@@ -20,11 +20,11 @@ type UserWithLab = Awaited<ReturnType<typeof getUserWithLabQuery>>;
 const GOOGLE_CLIENT_ID = process.env.AUTH_GOOGLE_ID!
 const GOOGLE_CLIENT_SECRET = process.env.AUTH_GOOGLE_SECRET!
 const BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://askremohealth.com' 
-  : 'http://localhost:3000'
+  ? 'https://staging.askremohealth.com' 
+  : 'http://localhost:3001'
 
 // Generate Google OAuth URL
-export function getGoogleAuthUrl(role: 'doctor' | 'patient' | 'lab' = 'doctor', callbackUrl?: string) {
+export function getGoogleAuthUrl(role: 'doctor' | 'admin' | 'patient' | 'lab' = 'doctor', callbackUrl?: string) {
   const redirectUri = `${BASE_URL}/api/auth/google/callback`
   const scope = 'email profile'
   const state = btoa(JSON.stringify({ role, callbackUrl })) // Encode role in state
@@ -86,9 +86,9 @@ async function createOrUpdateUser(googleUser: { email: string, given_name: strin
 
   if (!existingUser) {
     // Prevent new admin accounts from being created
-    if (role === 'admin') {
+    /*if (role === 'admin') {
       throw new Error('Cannot create new admin accounts via this method.')
-    }
+    }*/
 
     // Insert new user
     const [newUser] = await db.insert(users).values({

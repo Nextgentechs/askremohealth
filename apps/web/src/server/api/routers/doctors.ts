@@ -5,7 +5,7 @@ import {
   users as usersTable,
   doctors as doctorsTable,
   facilities as facilitiesTable,
-  officeLocation as officeLocationTable
+  officeLocation as officeLocationTable  
 } from '@web/server/db/schema'
 import assert from 'assert'
 import { db } from '@web/server/db'
@@ -56,6 +56,7 @@ export const updateAvailabilityDetails = protectedProcedure
 export const currentDoctor = publicProcedure.query(async ({ ctx }) => {
   if (!ctx.user) return null
   const userId = ctx.user.id ?? ''
+  
   const doctor = await db.query.doctors.findFirst({
     where: (doctor) => eq(doctor.id, userId),
     with: {
@@ -345,7 +346,7 @@ export const searchByLocation = publicProcedure
     if (genders?.length) {
       conditions.push(inArray(doctorsTable.gender, genders))
     }
-
+    conditions.push(eq(doctorsTable.status, 'verified'))
     // Start building the query with conditions
     const doctorsQuery = db.query.doctors.findMany({
       where: conditions.length > 0 ? and(...conditions) : undefined,
