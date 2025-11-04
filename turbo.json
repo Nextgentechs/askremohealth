@@ -36,6 +36,9 @@
       "dependsOn": ["^build"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
+     "@repo/eslint-config#build": {
+      "outputs": []
+    },
     "lint": {},
     "dev": {
       "cache": false,

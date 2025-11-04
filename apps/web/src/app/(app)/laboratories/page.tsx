@@ -3,6 +3,7 @@ import LabsList from "@web/components/labs-list"
 import { LabsService } from "@web/server/services/labs"
 import SearchForm from "./_components/search-form"
 
+export const dynamic = 'force-dynamic'
 
 const Laboratories = async () => {
   const labs = await LabsService.list()

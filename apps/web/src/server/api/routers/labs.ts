@@ -270,6 +270,7 @@ export const bookLabAppointment = protectedProcedure
       labId: input.labId,
       patientId: patient.id,
       doctorId,
+      status: 'scheduled',
       appointmentDate,
       patientNotes: input.notes,
       createdAt: new Date(),

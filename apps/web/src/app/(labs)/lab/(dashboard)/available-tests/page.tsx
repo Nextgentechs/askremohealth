@@ -4,6 +4,8 @@ import { columns } from './columns'
 import { Loader } from 'lucide-react'
 import { getCurrentUser } from '@web/auth'
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function Page() {
   const session = await getCurrentUser();
