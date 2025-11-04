@@ -1,94 +1,82 @@
-name: CI/CD Pipeline
+name: 🚀 Deploy AskRemoHealth
 
 on:
   push:
-    branches: ['main', 'staging']
+    branches:
+      - main
 
 jobs:
-  build:
-    name: Build and Test
-    runs-on: ubuntu-latest
-
-    env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      JWT_SECRET: ${{ secrets.JWT_SECRET }}
-      BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
-      GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
-      CRON_SECRET: ${{ secrets.CRON_SECRET }}
-      TWILIO_API_KEY_SECRET: ${{ secrets.TWILIO_API_KEY_SECRET }}
-      TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
-      TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
-      TWILIO_API_KEY_SID: ${{ secrets.TWILIO_API_KEY_SID }}
-      CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
-      AUTH_GOOGLE_ID: ${{ secrets.AUTH_GOOGLE_ID }}
-      AUTH_GOOGLE_SECRET: ${{ secrets.AUTH_GOOGLE_SECRET }}
-      OBJECT_STORAGE_ENDPOINT: ${{ secrets.OBJECT_STORAGE_ENDPOINT }}
-      OBJECT_STORAGE_REGION: ${{ secrets.OBJECT_STORAGE_REGION }}
-      OBJECT_STORAGE_BUCKET: ${{ secrets.OBJECT_STORAGE_BUCKET }}
-      OBJECT_STORAGE_KEY: ${{ secrets.OBJECT_STORAGE_KEY }}
-      OBJECT_STORAGE_SECRET: ${{ secrets.OBJECT_STORAGE_SECRET }}
-      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
-      NEXT_PUBLIC_CLERK_SIGN_IN_URL: ${{ secrets.NEXT_PUBLIC_CLERK_SIGN_IN_URL }}
-      NEXT_PUBLIC_CLERK_SIGN_UP_URL: ${{ secrets.NEXT_PUBLIC_CLERK_SIGN_UP_URL }}
-      NEXT_PUBLIC_RESEND_API_KEY: ${{ secrets.NEXT_PUBLIC_RESEND_API_KEY }}
-      NEXT_PUBLIC_FROM_EMAIL: ${{ secrets.NEXT_PUBLIC_FROM_EMAIL }}
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Lint and Type Check
-        run: npm run check --workspace=@askvirtualhealthcare/web
-
-      - name: Build App
-        run: npm run build --workspace=@askvirtualhealthcare/web
-
-  deploy_staging:
-    name: Deploy to Vercel (Staging)
-    needs: build
-    if: github.ref == 'refs/heads/staging'
+  deploy:
+    name: 📦 Deploy to Production
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v3
 
-      - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--prod'
-
-  deploy_production:
-    name: Deploy to Production (Main Domain)
-    needs: build
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Deploy via SSH to Production
-        uses: appleboy/ssh-action@v1.0.3
+      - name: 🚀 Deploy via SSH
+        uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /var/www/askremohealth.com
+            # =============================================================================
+            # 🚀 Full Deployment Script for AskRemoHealth
+            # Purpose: Deploy latest code, rebuild, restart PM2, reload Nginx
+            # =============================================================================
+
+            set -e
+            echo "🔄 Starting deployment..."
+
+            # 1. Navigate to App Directory
+            cd /root/askremohealth
+            echo "📁 Changed to /root/askremohealth"
+
+            # 2. Pull Latest Code from main
+            echo "📥 Pulling latest code from origin/main..."
+            git checkout main
             git pull origin main
-            npm install --production=false
-            npm run build --workspace=@askvirtualhealthcare/web
-            pm2 restart askremohealth
+
+            # 3. Merge into dev branch
+            echo "🔀 Merging main into dev..."
+            git checkout dev
+            git merge main --no-edit
+
+            # 4. Install Dependencies
+            echo "📦 Installing npm dependencies..."
+            npm install
+
+            # 5. Build the Next.js App
+            echo "🛠️ Building Next.js app..."
+            rm -rf .next
+            npm run build
+
+            # 6. Restart PM2 Process
+            echo "🔄 Restarting PM2 process: askremohealth-web"
+            pm2 restart askremohealth-web
+            pm2 save
+
+            # 7. Reload Nginx
+            echo "🔁 Reloading Nginx..."
+            nginx -t && systemctl reload nginx
+            if [ $? -eq 0 ]; then
+              echo "✅ Nginx reloaded successfully"
+            else
+              echo "❌ Nginx config error! Check with: nginx -t"
+              exit 1
+            fi
+
+            # 8. Final Health Check
+            echo "⏳ Waiting for app to start..."
+            sleep 10
+            
+            echo "🔍 Checking if app is responding..."
+            if curl -f http://localhost:3000; then
+              echo "✅ Deployment successful! Site is live."
+            else
+              echo "⚠️ Site not responding. Check logs with: pm2 logs askremohealth-web"
+              exit 1
+            fi
+
+            echo "🎉 Deployment completed."
