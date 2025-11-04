@@ -1,0 +1,74 @@
+name: 🚀 Deploy AskRemoHealth (Production)
+
+on:
+  workflow_dispatch:  # allows manual trigger
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: 🌍 Deploy to Production (askremohealth.com)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🧪 Verify build before deploy
+        run: |
+          npm ci
+          npm run build --workspace=@askvirtualhealthcare/web
+
+      - name: 🚦 Wait for approval
+        if: github.event_name == 'workflow_dispatch'
+        uses: trstringer/manual-approval@v1
+        with:
+          approvers: |
+            your-github-username
+          minimum-approvals: 1
+          issue-title: "Approve Production Deployment"
+          issue-body: "Review staging.askremohealth.com before deploying."
+
+      - name: 🚀 Deploy via SSH (Production)
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.PROD_SSH_HOST }}
+          username: ${{ secrets.PROD_SSH_USER }}
+          key: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
+          script: |
+            set -euo pipefail
+            echo "🔄 Starting production deployment..."
+
+            BRANCH="main"
+            APP_DIR="/root/askremohealth"
+            SERVICE="askremohealth.service"
+            HEALTH_URL="http://localhost:3000"
+
+            cd "${APP_DIR}"
+            git fetch --all --prune
+            git checkout "${BRANCH}"
+            git reset --hard "origin/${BRANCH}"
+            git pull --ff-only origin "${BRANCH}"
+
+            echo "📦 Installing dependencies..."
+            npm install
+
+            echo "🛠️ Building app..."
+            rm -rf .next
+            npm run build
+
+            echo "🔄 Restarting systemd service..."
+            systemctl daemon-reload || true
+            systemctl restart "${SERVICE}"
+
+            echo "✅ App deployed. Checking health..."
+            sleep 8
+            curl -fsSL --max-time 10 "${HEALTH_URL}" >/dev/null && echo "🟢 Healthy!" || (echo "🔴 Health check failed!" && exit 1)
