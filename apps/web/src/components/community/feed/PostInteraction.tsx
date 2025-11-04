@@ -1,9 +1,8 @@
 "use client";
 
-import { switchLike } from "@web/server/services/community/actions";
 import { api } from '@web/trpc/react'
 import { Heart, MessageCircleMore, Send } from "lucide-react";
-import { useOptimistic, useState, useEffect } from "react";
+import { useOptimistic, useState, useEffect, startTransition } from "react";
 
 const PostInteraction = ({
   postId,
@@ -15,6 +14,8 @@ const PostInteraction = ({
   commentNumber: number;
 }) => {
   const { data: user, isLoading } = api.users.currentUser.useQuery()
+  const switchLikeMutation = api.community.switchLike.useMutation();
+
   const userId = user?.id;
   const isLoaded = !isLoading;
   const [likeState, setLikeState] = useState({
@@ -41,31 +42,48 @@ const PostInteraction = ({
     }
   );
 
-  const likeAction = async () => {
-    switchOptimisticLike("");
-    try {
-      switchLike(postId);
-      setLikeState((state) => ({
-        likeCount: state.isLiked ? state.likeCount - 1 : state.likeCount + 1,
-        isLiked: !state.isLiked,
-      }));
-    } catch (err) {
-      console.log(err);
-    }
+  // const likeAction = async () => {
+  //   startTransition(() => {
+  //     switchOptimisticLike("");
+  //   });
+
+  //   try {
+  //     await switchLikeMutation.mutateAsync({ postId });
+  //     setLikeState((state) => ({
+  //       likeCount: state.isLiked ? state.likeCount - 1 : state.likeCount + 1,
+  //       isLiked: !state.isLiked,
+  //     }));
+  //   } catch (err) {
+  //     console.log(err);
+  //   }
+  // };
+
+  const likeAction = () => {
+    startTransition(() => {
+      switchOptimisticLike("");
+    });
+    
+    switchLikeMutation.mutate({ postId }, {
+      onSuccess: () => {
+        setLikeState((state) => ({
+          likeCount: state.isLiked ? state.likeCount - 1 : state.likeCount + 1,
+          isLiked: !state.isLiked,
+        }));
+      }
+    });
   };
+
   return (
     <div className="flex items-center justify-between text-sm -my-1">
       <div className="flex gap-8">
         <div className="flex items-center gap-4 bg-slate-50 p-2 rounded-xl">
-          <form action={likeAction}>
-            <button>
+          <button onClick={likeAction}>
             {optimisticLike.isLiked ? (
-            <Heart size={18} className="w-4 h-4 fill-red-500 text-red-500 cursor-pointer" />
+              <Heart size={18} className="w-4 h-4 fill-red-500 text-red-500 cursor-pointer" />
             ) : (
-            <Heart size={18} className="w-4 h-4 cursor-pointer" />
+              <Heart size={18} className="w-4 h-4 cursor-pointer" />
             )}
-            </button>
-          </form>
+          </button>
           <span className="text-gray-300">|</span>
           <span className="text-gray-500">
             {optimisticLike.likeCount}
