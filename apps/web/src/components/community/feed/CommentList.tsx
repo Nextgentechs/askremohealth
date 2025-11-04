@@ -1,6 +1,5 @@
 "use client";
 
-import { addComment, initiateConsult } from "@web/server/services/community/actions";
 import { api } from '@web/trpc/react'
 import { comments } from "@web/server/db/schema";
 import Image from "next/image";
@@ -8,7 +7,7 @@ import { useOptimistic, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { BadgeCheck, Heart, Ellipsis, Trash2 } from "lucide-react";
 import CommentReplies from "./CommentReplies";
-import { deleteComment } from "@web/server/services/community/actions";
+import { useRouter } from 'next/navigation';
 
 
 type Comment = typeof comments.$inferSelect;
@@ -59,9 +58,15 @@ const CommentList = ({
 }) => {
   const { data: user } = api.users.currentUser.useQuery()
   const { data: doctor } = api.doctors.currentDoctor.useQuery()
+  const addCommentMutation = api.community.addComment.useMutation()
+  const deleteCommentMutation = api.community.deleteComment.useMutation()
+  const initiateConsultMutation = api.community.initiateConsult.useMutation()
+
   const [commentState, setCommentState] = useState(comments);
   const [desc, setDesc] = useState("");
   const [showMenu, setShowMenu] = useState<string | null>(null);
+
+  const router = useRouter();
 
   const add = async () => {
     if (!user || !desc) return;
@@ -77,13 +82,16 @@ const CommentList = ({
       user: {
         id: user.id,
         firstName: "Sending",
-        lastName: "Please Wait...",
+        lastName: "...",
         role: user.role ?? "patient",
       },
       profilePicture: doctor?.profilePicture?.url ?? null,
     });
     try {
-      const createdComment = await addComment(postId, desc);
+      const createdComment = await addCommentMutation.mutateAsync({
+        postId,
+        desc
+      });
       
       const normalizedComment: CommentWithUser = {
         ...createdComment,
@@ -110,7 +118,7 @@ const CommentList = ({
 
   const deleteCommentAction = async (commentId: string) => {
     try {
-      await deleteComment(commentId);
+      await deleteCommentMutation.mutateAsync({ commentId });
       setCommentState((prev) => prev.filter(c => c.id !== commentId));
       setShowMenu(null);
     } catch (err) {
@@ -177,8 +185,17 @@ const CommentList = ({
                     )}
                     {comment.user.role === 'doctor' && 
                     user?.id === postAuthorId && (
-                        <form action={() => initiateConsult(comment.user.id, user.id)}>
-                            <ChatPrivatelyButton />
+                        <form action={async () => {
+                          try {
+                            const result = await initiateConsultMutation.mutateAsync({
+                              doctorId: comment.user.id
+                            });
+                            router.push(`/community/chats/${result.chatId}`);
+                          } catch (err) {
+                            console.error(err);
+                          }
+                        }}>
+                          <ChatPrivatelyButton />
                         </form>
                     )}
                   </span>

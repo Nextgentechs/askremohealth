@@ -1,13 +1,19 @@
 "use client";
 
-import { deletePost } from "@web/server/services/community/actions";
+import { api } from '@web/trpc/react'; 
 import { useState } from "react";
 import { Ellipsis } from "lucide-react";
 
 const PostInfo = ({ postId }: { postId: string }) => {
   const [open, setOpen] = useState(false);
 
-  const deletePostWithId = deletePost.bind(null, postId);
+  const deletePostMutation = api.community.deletePost.useMutation({
+    onSuccess: () => {
+      window.location.reload();
+    }
+  });
+  const utils = api.useUtils();
+
   return (
     <div className="relative">
       <Ellipsis
@@ -18,12 +24,16 @@ const PostInfo = ({ postId }: { postId: string }) => {
       {open && (
         <div className="absolute top-4 right-0 bg-white p-4 w-32 rounded-lg flex flex-col gap-2 text-xs shadow-lg z-30">
           
-          <form action={async () => {
-            await deletePostWithId();
-            window.location.reload();
-          }}>
-            <button className="text-red-500">Delete</button>
-          </form>
+          <button 
+            className="text-red-500"
+            onClick={async () => {
+              await deletePostMutation.mutateAsync({ postId });
+              utils.community.loadPosts.invalidate();
+              setOpen(false);
+            }}
+          >
+            Delete
+          </button>
         </div>
       )}
     </div>
