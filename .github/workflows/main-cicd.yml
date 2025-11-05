@@ -1,10 +1,9 @@
-name: 🚀 Deploy AskRemoHealth
+name: 🚀 Deploy AskRemoHealth - Main dormain
 
 on:
   push:
     branches:
       - main
-  workflow_dispatch:
 
 jobs:
   deploy:
@@ -22,62 +21,71 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            # =============================================================================
+            # 🚀 Full Deployment Script for AskRemoHealth
+            # Purpose: Deploy latest code, clean old builds, rebuild, restart PM2, reload Nginx
+            # =============================================================================
+
             set -e
             echo "🔄 Starting deployment..."
 
-            # --- Navigate to App Directory ---
+            # 1. Navigate to App Directory
             cd /root/askremohealth
             echo "📁 Changed to /root/askremohealth"
 
-            # --- Clean up and force sync with origin/main ---
-            echo "🧹 Cleaning local changes and syncing with GitHub..."
-            git fetch --all --prune
+            # 2. Ensure we’re on main and up to date
+            echo "📥 Pulling latest code from origin/main..."
+            git fetch origin
+            git checkout main
             git reset --hard origin/main
-            git clean -fd
 
-            # --- (Optional) Sync dev branch with main ---
-            if git rev-parse --verify dev >/dev/null 2>&1; then
-              echo "🔀 Merging main into dev..."
-              git checkout dev
-              git merge main --no-edit || echo "⚠️ Merge conflicts ignored"
-              git checkout main
-            else
-              echo "ℹ️ No dev branch found, skipping merge."
-            fi
+            # 3. (Optional) Sync dev branch
+            echo "🔀 Merging main into dev..."
+            git checkout dev
+            git merge main --no-edit
+            git checkout main
 
-            # --- Install dependencies ---
+            # 4. 🧹 Clean previous builds and caches
+            echo "🧹 Cleaning old build artifacts..."
+            rm -rf .next
+            rm -rf apps/web/.next
+            rm -rf apps/web/.next/export
+            rm -rf node_modules
+            rm -rf apps/web/node_modules
+
+            # 5. 📦 Install Dependencies
             echo "📦 Installing npm dependencies..."
             npm install
 
-            # --- Build the Next.js App ---
+            # 6. 🛠️ Build the Next.js App
             echo "🛠️ Building Next.js app..."
-            rm -rf .next
             npm run build
 
-            # --- Restart PM2 ---
-            echo "🔄 Restarting PM2 process..."
+            # 7. 🔄 Restart PM2 Process
+            echo "🔄 Restarting PM2 process: askremohealth-web"
             pm2 restart askremohealth-web || pm2 start npm --name "askremohealth-web" -- run start
             pm2 save
 
-            # --- Reload Nginx ---
+            # 8. 🔁 Reload Nginx
             echo "🔁 Reloading Nginx..."
             nginx -t && systemctl reload nginx
             if [ $? -eq 0 ]; then
               echo "✅ Nginx reloaded successfully"
             else
-              echo "❌ Nginx config test failed!"
+              echo "❌ Nginx config error! Check with: nginx -t"
               exit 1
             fi
 
-            # --- Health Check ---
+            # 9. ⏳ Health Check
             echo "⏳ Waiting for app to start..."
             sleep 10
+
             echo "🔍 Checking if app is responding..."
-            if curl -fsSL http://localhost:3000 >/dev/null; then
-              echo "✅ Deployment successful! Site is live on askremohealth.com"
+            if curl -f http://localhost:3000; then
+              echo "✅ Deployment successful! Site is live."
             else
-              echo "⚠️ App not responding. Check logs with: pm2 logs askremohealth-web"
+              echo "⚠️ Site not responding. Check logs with: pm2 logs askremohealth-web"
               exit 1
             fi
 
-            echo "🎉 Deployment completed successfully."
+            echo "🎉 Deployment completed successfully!"
