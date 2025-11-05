@@ -12,36 +12,21 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      # --- Core Backend & JWT ---
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
-      AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
-      PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET }}
-
-      # --- External Services ---
+      BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
       GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
       CRON_SECRET: ${{ secrets.CRON_SECRET }}
       TWILIO_API_KEY_SECRET: ${{ secrets.TWILIO_API_KEY_SECRET }}
       TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
       TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
       TWILIO_API_KEY_SID: ${{ secrets.TWILIO_API_KEY_SID }}
-
-      # --- Clerk Auth ---
       CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
       NEXT_PUBLIC_CLERK_SIGN_IN_URL: ${{ secrets.NEXT_PUBLIC_CLERK_SIGN_IN_URL }}
       NEXT_PUBLIC_CLERK_SIGN_UP_URL: ${{ secrets.NEXT_PUBLIC_CLERK_SIGN_UP_URL }}
-
-      # --- Email / Notifications ---
       NEXT_PUBLIC_RESEND_API_KEY: ${{ secrets.NEXT_PUBLIC_RESEND_API_KEY }}
       NEXT_PUBLIC_FROM_EMAIL: ${{ secrets.NEXT_PUBLIC_FROM_EMAIL }}
-      SMTP_USER: ${{ secrets.SMTP_USER }}
-      SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
-      SMTP_HOST: ${{ secrets.SMTP_HOST }}
-      SMTP_FROM: ${{ secrets.SMTP_FROM }}
-      SMTP_TO: ${{ secrets.SMTP_TO }}
-
-      # --- Cloud Storage ---
       OBJECT_STORAGE_ENDPOINT: ${{ secrets.OBJECT_STORAGE_ENDPOINT || 'https://placeholder-endpoint.com' }}
       OBJECT_STORAGE_REGION: ${{ secrets.OBJECT_STORAGE_REGION || 'placeholder-region' }}
       OBJECT_STORAGE_BUCKET: ${{ secrets.OBJECT_STORAGE_BUCKET || 'placeholder-bucket' }}
@@ -53,11 +38,6 @@ jobs:
       AUTH_GOOGLE_SECRET: ${{ secrets.AUTH_GOOGLE_SECRET || 'placeholder-google-secret' }}
       NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
       NEXT_PUBLIC_GOOGLE_CLIENT_SECRET: ${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET }}
-
-      # --- Misc ---
-      REDIS_URL: ${{ secrets.REDIS_URL }}
-      REDIS_TOKEN: ${{ secrets.REDIS_TOKEN }}
-      NEXT_PUBLIC_VERCEL_URL: ${{ secrets.NEXT_PUBLIC_VERCEL_URL }}
 
     steps:
       - name: 📥 Checkout code
