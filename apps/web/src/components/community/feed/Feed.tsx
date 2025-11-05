@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useRef } from "react";
 import Post from "./Post";
-import { loadMorePosts } from "@web/server/services/community/feed_actions";
+import { api } from '@web/trpc/react';
 
-type PostData = Awaited<ReturnType<typeof loadMorePosts>>[number];
+type PostData = NonNullable<ReturnType<typeof api.community.loadPosts.useQuery>['data']>[number];
 
 const Feed = ({ initialPosts }: { initialPosts: PostData[] }) => {
   const [posts, setPosts] = useState(initialPosts);
@@ -13,16 +13,20 @@ const Feed = ({ initialPosts }: { initialPosts: PostData[] }) => {
   const [hasMore, setHasMore] = useState(initialPosts.length === 5);
   const observerRef = useRef<HTMLDivElement>(null);
 
+  const { data: newPosts, isLoading } = api.community.loadPosts.useQuery(
+    { page: page + 1 },
+    { enabled: false } 
+  );
+  const { refetch } = api.community.loadPosts.useQuery({ page: page + 1 });
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting && hasMore && !loading) {
-          setLoading(true);
-          loadMorePosts(page + 1).then(newPosts => {
-            if (newPosts.length < 5) setHasMore(false);
-            setPosts(prev => [...prev, ...newPosts]);
+        if (entries[0]?.isIntersecting && hasMore && !isLoading) { 
+          refetch().then(({ data }) => { 
+            if (data && data.length < 5) setHasMore(false);
+            if (data) setPosts(prev => [...prev, ...data]);
             setPage(prev => prev + 1);
-            setLoading(false);
           });
         }
       },
@@ -31,7 +35,7 @@ const Feed = ({ initialPosts }: { initialPosts: PostData[] }) => {
 
     if (observerRef.current) observer.observe(observerRef.current);
     return () => observer.disconnect();
-  }, [page, hasMore, loading]);
+  }, [page, hasMore, isLoading, refetch]);
 
   return (
     <div className="p-4 bg-white shadow-md rounded-lg flex flex-col gap-3">
@@ -40,7 +44,7 @@ const Feed = ({ initialPosts }: { initialPosts: PostData[] }) => {
       ) : (
         "No posts found!"
       )}
-      {loading && (
+      {isLoading && (
         <div className="flex justify-center py-4">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-900"></div>
         </div>
