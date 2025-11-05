@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Post from "./Post";
 import { api } from '@web/trpc/react';
 
-type PostData = NonNullable<ReturnType<typeof api.community.loadPosts.useQuery>['data']>[number];
+type PostData = Parameters<typeof Post>[0]['post'];
 
 const Feed = ({ initialPosts }: { initialPosts: PostData[] }) => {
   const [posts, setPosts] = useState(initialPosts);
