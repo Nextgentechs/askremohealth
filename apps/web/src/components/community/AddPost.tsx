@@ -4,7 +4,6 @@ import { api } from '@web/trpc/react'
 import Image from "next/image";
 import { useState, useRef } from "react";
 import AddPostButton from "@web/components/community/AddPostButton";
-import { addPost } from "@web/server/services/community/actions";
 import { ImageIcon, Video, X } from "lucide-react";
 import toast from 'react-hot-toast'
 import imageCompression from 'browser-image-compression';
@@ -12,6 +11,13 @@ import imageCompression from 'browser-image-compression';
 
 const AddPost = () => {
   const { data: user, isLoading } = api.users.currentUser.useQuery()
+  
+  const addPostMutation = api.community.addPost.useMutation({
+    onSuccess: async () => {
+      window.location.reload();
+    }
+  });
+
   const [desc, setDesc] = useState("");
   const [img, setImg] = useState<{ secure_url: string } | null>(null);
   const [video, setVideo] = useState<{ secure_url: string } | null>(null);
@@ -91,9 +97,6 @@ const AddPost = () => {
     }
   };
 
-  if (isLoading) {
-    return "Loading...";
-  }
 
   return (
     <div className="p-4 bg-white shadow-md rounded-lg flex gap-4 justify-between text-sm">
@@ -108,28 +111,50 @@ const AddPost = () => {
       {/* POST */}
       <div className="flex-1">
         {/* TEXT INPUT */}
-        <form action={async (formData) => {
-            const result = await addPost(formData, img?.secure_url ?? "", video?.secure_url ?? "");
-            if (result?.success) {
-                toast.success('Your post was sent');
-                setDesc("");
-                setImg(null);
-                setVideo(null);
-                setImageFileName("");
-                setVideoFileName("");
-                window.location.href = window.location.href;
-            } else if (result?.error) {
-              toast.error(result.error);
-            }
+        <form onSubmit={async (e) => { 
+          e.preventDefault();
+          
+          try {
+            await addPostMutation.mutateAsync({
+              desc,
+              img: img?.secure_url,
+              video: video?.secure_url
+            });
+            
+            toast.success('Your post was sent');
+            setDesc("");
+            setImg(null);
+            setVideo(null);
+            setImageFileName("");
+            setVideoFileName("");
+            
+            
+          } catch (error) {
+            toast.error('Failed to create post');
+          }
         }} className="flex gap-4">
           <textarea
             placeholder="Make a new post anonymously"
             className="flex-1 bg-slate-100 rounded-lg p-2"
             name="desc"
+            value={desc} 
             onChange={(e) => setDesc(e.target.value)}
           ></textarea>
           <div className="">
-            <AddPostButton />
+            <button
+              type="submit"
+              className="bg-violet-900 text-white font-medium p-2 mt-2 rounded-md disabled:bg-violet-900/50 disabled:cursor-not-allowed hover:bg-violet-900/90"
+              disabled={addPostMutation.isPending}
+            >
+              {addPostMutation.isPending ? (
+                <div className="flex items-center gap-2">
+                  <div className="inline-block h-[10px] w-[10px] animate-spin rounded-full border-2 border-white-300 border-solid border-current border-e-transparent align-[-0.125em] text-surface motion-reduce:animate-[spin_1.5s_linear_infinite]" />
+                  Sending
+                </div>
+              ) : (
+                "Send"
+              )}
+            </button>
           </div>
         </form>
 

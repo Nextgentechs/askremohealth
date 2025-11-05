@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { addReply, deleteComment } from "@web/server/services/community/actions";
 import { api } from '@web/trpc/react';
 import Image from "next/image";
 import { BadgeCheck, Heart, Ellipsis, Trash2 } from "lucide-react";
@@ -40,6 +39,9 @@ const CommentReplies = ({
 }) => {
   const { data: user } = api.users.currentUser.useQuery();
   const { data: doctor } = api.doctors.currentDoctor.useQuery();
+  const addReplyMutation = api.community.addReply.useMutation();
+  const deleteCommentMutation = api.community.deleteComment.useMutation();
+
   const [showReplies, setShowReplies] = useState(false);
   const [replyInput, setReplyInput] = useState("");
   const [repliesState, setRepliesState] = useState(initialReplies);
@@ -67,17 +69,21 @@ const CommentReplies = ({
     });
 
     try {
-      const createdReply = await addReply(postId, commentId, replyInput);
+      const createdReply = await addReplyMutation.mutateAsync({
+        postId,
+        parentCommentId: commentId,
+        desc: replyInput
+      });
       setRepliesState((prev) => [...prev, createdReply as Reply]);
       setReplyInput("");
     } catch (err) {
-      console.error(err);
+      console.log(err);
     }
   };
 
   const deleteReplyAction = async (replyId: string) => {
     try {
-      await deleteComment(replyId);
+      await deleteCommentMutation.mutateAsync({ commentId: replyId });
       setRepliesState((prev) => prev.filter(r => r.id !== replyId));
       setShowMenu(null);
     } catch (err) {
