@@ -1,0 +1,91 @@
+name: 🚀 Deploy AskRemoHealth - Main dormain
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: 📦 Deploy to Production
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v3
+
+      - name: 🚀 Deploy via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # =============================================================================
+            # 🚀 Full Deployment Script for AskRemoHealth
+            # Purpose: Deploy latest code, clean old builds, rebuild, restart PM2, reload Nginx
+            # =============================================================================
+
+            set -e
+            echo "🔄 Starting deployment..."
+
+            # 1. Navigate to App Directory
+            cd /root/askremohealth
+            echo "📁 Changed to /root/askremohealth"
+
+            # 2. Ensure we’re on main and up to date
+            echo "📥 Pulling latest code from origin/main..."
+            git fetch origin
+            git checkout main
+            git reset --hard origin/main
+
+            # 3. (Optional) Sync dev branch
+            echo "🔀 Merging main into dev..."
+            git checkout dev
+            git merge main --no-edit
+            git checkout main
+
+            # 4. 🧹 Clean previous builds and caches
+            echo "🧹 Cleaning old build artifacts..."
+            rm -rf .next
+            rm -rf apps/web/.next
+            rm -rf apps/web/.next/export
+            rm -rf node_modules
+            rm -rf apps/web/node_modules
+
+            # 5. 📦 Install Dependencies
+            echo "📦 Installing npm dependencies..."
+            npm install
+
+            # 6. 🛠️ Build the Next.js App
+            echo "🛠️ Building Next.js app..."
+            npm run build
+
+            # 7. 🔄 Restart PM2 Process
+            echo "🔄 Restarting PM2 process: askremohealth-web"
+            pm2 restart askremohealth-web || pm2 start npm --name "askremohealth-web" -- run start
+            pm2 save
+
+            # 8. 🔁 Reload Nginx
+            echo "🔁 Reloading Nginx..."
+            nginx -t && systemctl reload nginx
+            if [ $? -eq 0 ]; then
+              echo "✅ Nginx reloaded successfully"
+            else
+              echo "❌ Nginx config error! Check with: nginx -t"
+              exit 1
+            fi
+
+            # 9. ⏳ Health Check
+            echo "⏳ Waiting for app to start..."
+            sleep 10
+
+            echo "🔍 Checking if app is responding..."
+            if curl -f http://localhost:3000; then
+              echo "✅ Deployment successful! Site is live."
+            else
+              echo "⚠️ Site not responding. Check logs with: pm2 logs askremohealth-web"
+              exit 1
+            fi
+
+            echo "🎉 Deployment completed successfully!"
