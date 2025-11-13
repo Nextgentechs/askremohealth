@@ -20,6 +20,7 @@ import {
   Users,
 } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { usePathname } from 'next/navigation'
 import Logo from '../logo'
 import {
@@ -43,7 +44,7 @@ interface AdminUser {
 function NavUser() {
   const { isMobile } = useSidebar()
   const { user } = useCurrentUser() as { user: AdminUser | null }
-
+  const router = useRouter()
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -98,7 +99,7 @@ function NavUser() {
               <DropdownMenuItem
                 onClick={async () => {
                   await fetch('/api/auth/signout', { method: 'POST' })
-                  window.location.href = '/'
+                  router.push('/')
                 }}
               >
                 <LogOut className="mr-2 h-4 w-4" />
