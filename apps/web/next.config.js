@@ -3,9 +3,8 @@
  * for Docker builds.
  */
 import './src/env.js'
-import webpack from 'webpack'
 
-/** @type {import("next").NextConfig} */
+/** @type {import('next').NextConfig} */
 const config = {
   images: {
     remotePatterns: [
@@ -14,19 +13,18 @@ const config = {
         hostname: 'do5q0y4otbt6jaho.public.blob.vercel-storage.com',
       },
       {
-        protocol: "https",
-        hostname: "res.cloudinary.com",
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
       },
     ],
   },
-  
+
   eslint: {
     ignoreDuringBuilds: true,
   },
 
   webpack: (config, { dev, isServer }) => {
     if (!dev && !isServer) {
-      // Override console.error to filter hydration warnings in production
       const originalConsoleError = console.error;
       console.error = (...args) => {
         if (
