@@ -1,4 +1,4 @@
-name: 🚀 Deploy AskRemoHealth-renewd
+name: 🚀 Deploy AskRemoHealth
 
 on:
   push:
