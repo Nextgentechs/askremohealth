@@ -24,32 +24,32 @@ import { useRouter } from 'next/navigation'
 const navOptions = [
   {
     label: 'Home',
-    href: 'https://staging.askremohealth.com/',
+    href: 'https://askremohealth.com/',
     icon: Home,
   },
   {
     label: 'About Us',
-    href: 'https://staging.askremohealth.com/about-us',
+    href: 'https://askremohealth.com/about-us',
     icon: Info,
   },
   {
     label: 'Consult a Doctor',
-    href: 'https://staging.askremohealth.com/find-specialists',
+    href: 'https://askremohealth.com/find-specialists',
     icon: Stethoscope,
   },
   {
     label: 'Lab Tests',
-    href: 'https://staging.askremohealth.com/laboratories',
+    href: 'https://askremohealth.com/laboratories',
     icon: FlaskConical,
   },
   {
     label: 'Blogs',
-    href: 'https://staging.askremohealth.com/articles',
+    href: 'https://askremohealth.com/articles',
     icon: Book,
   },
   {
     label: 'Contact Us',
-    href: 'https://staging.askremohealth.com/contact-us',
+    href: 'https://askremohealth.com/contact-us',
     icon: BriefcaseMedical,
   },
 ]
@@ -61,7 +61,7 @@ export default function LoginPage() {
     <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 md:p-10">
       <div className="fixed left-0 right-0 top-0 flex w-full items-center justify-between border-b border-b-border bg-background px-6 py-4 sm:px-12">
         <div className="flex items-center justify-center gap-4">
-          <Logo href="https://staging.askremohealth.com/" />
+          <Logo href="https://askremohealth.com/" />
           <NavigationMenu className="hidden list-none gap-1 xl:flex">
             {' '}
             {/* Adjusted for responsiveness */}
