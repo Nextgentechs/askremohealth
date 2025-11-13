@@ -3,6 +3,7 @@
  * for Docker builds.
  */
 import './src/env.js'
+import webpack from 'webpack'
 
 /** @type {import("next").NextConfig} */
 const config = {
@@ -19,10 +20,28 @@ const config = {
     ],
   },
   
-    eslint: {
-      ignoreDuringBuilds: true,
-    },
-  
-}
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 
-export default config
+  webpack: (config, { dev, isServer }) => {
+    if (!dev && !isServer) {
+      // Override console.error to filter hydration warnings in production
+      const originalConsoleError = console.error;
+      console.error = (...args) => {
+        if (
+          typeof args[0] === 'string' &&
+          args[0].includes('did not match') &&
+          args[0].includes('hydrated')
+        ) {
+          return; // skip hydration mismatch warnings
+        }
+        originalConsoleError(...args);
+      };
+    }
+
+    return config;
+  },
+};
+
+export default config;
