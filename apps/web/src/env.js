@@ -15,14 +15,18 @@ export const env = createEnv({
     TWILIO_API_KEY_SID: z.string(),
     CLERK_SECRET_KEY: z.string(),
 
-    // Optional to stop CI/CD failures
-    AUTH_GOOGLE_ID: z.string().optional(),
-    AUTH_GOOGLE_SECRET: z.string().optional(),
-    OBJECT_STORAGE_ENDPOINT: z.string().url().optional(),
-    OBJECT_STORAGE_REGION: z.string().optional(),
-    OBJECT_STORAGE_BUCKET: z.string().optional(),
-    OBJECT_STORAGE_KEY: z.string().optional(),
-    OBJECT_STORAGE_SECRET: z.string().optional(),
+    // Make optional envs always valid strings
+    AUTH_GOOGLE_ID: z.string().default(""),
+    AUTH_GOOGLE_SECRET: z.string().default(""),
+
+    OBJECT_STORAGE_ENDPOINT: z.string().default(""),
+    OBJECT_STORAGE_REGION: z.string().default(""),
+    OBJECT_STORAGE_BUCKET: z.string().default(""),
+    OBJECT_STORAGE_KEY: z.string().default(""),
+    OBJECT_STORAGE_SECRET: z.string().default(""),
+
+    REDIS_URL: z.string().default(""),
+    REDIS_TOKEN: z.string().default(""),
   },
 
   client: {
@@ -48,11 +52,15 @@ export const env = createEnv({
 
     AUTH_GOOGLE_ID: process.env.AUTH_GOOGLE_ID || '',
     AUTH_GOOGLE_SECRET: process.env.AUTH_GOOGLE_SECRET || '',
+
     OBJECT_STORAGE_ENDPOINT: process.env.OBJECT_STORAGE_ENDPOINT || '',
     OBJECT_STORAGE_REGION: process.env.OBJECT_STORAGE_REGION || '',
     OBJECT_STORAGE_BUCKET: process.env.OBJECT_STORAGE_BUCKET || '',
     OBJECT_STORAGE_KEY: process.env.OBJECT_STORAGE_KEY || '',
     OBJECT_STORAGE_SECRET: process.env.OBJECT_STORAGE_SECRET || '',
+
+    REDIS_URL: process.env.REDIS_URL || '',
+    REDIS_TOKEN: process.env.REDIS_TOKEN || '',
 
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || '',
     NEXT_PUBLIC_CLERK_SIGN_IN_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL || '',
@@ -61,6 +69,7 @@ export const env = createEnv({
     NEXT_PUBLIC_FROM_EMAIL: process.env.NEXT_PUBLIC_FROM_EMAIL || '',
   },
 
+  // Must be false or empty strings will break AWS
+  emptyStringAsUndefined: false,
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
-  emptyStringAsUndefined: true,
 })
