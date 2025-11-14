@@ -1,3 +1,5 @@
+'use client'
+
 import Image from 'next/image'
 import Doctor from 'public/assets/hero.webp'
 import BookAppointmentButton from './BookAppointmentButton'
@@ -32,6 +34,7 @@ export default function HeroSection() {
         src={Doctor}
         alt="Doctor Image"
         priority
+        sizes="408px"
         className="hidden mt-14 lg:block w-[408px] h-[408px] xl:w-[488px] xl:h-[488px]"
       />
     </section>

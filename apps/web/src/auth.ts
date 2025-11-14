@@ -1,33 +1,38 @@
 import { eq } from 'drizzle-orm'
 import { db } from './server/db'
 import { users, labs } from './server/db/schema'
-import { cookies } from 'next/headers'
+import { cookies as nextCookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getUserSessionById } from './server/lib/session'
+import { NextResponse } from 'next/server'
+import { type ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies'
 
-// Helper function to infer the type of a user with their lab relation
+// Helper to infer user with lab relation
 async function getUserWithLabQuery() {
   return await db.query.users.findFirst({
-    with: {
-      lab: true,
-    },
-  });
+    with: { lab: true },
+  })
 }
 
-type UserWithLab = Awaited<ReturnType<typeof getUserWithLabQuery>>;
+type UserWithLab = Awaited<ReturnType<typeof getUserWithLabQuery>>
 
-// Google OAuth configuration
+// Google OAuth config
 const GOOGLE_CLIENT_ID = process.env.AUTH_GOOGLE_ID!
 const GOOGLE_CLIENT_SECRET = process.env.AUTH_GOOGLE_SECRET!
-const BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://staging.askremohealth.com' 
-  : 'http://localhost:3001'
+const BASE_URL =
+  process.env.NODE_ENV === 'production'
+    ? 'https://staging.askremohealth.com'
+    : 'http://localhost:3001'
 
-// Generate Google OAuth URL
-export function getGoogleAuthUrl(role: 'doctor' | 'admin' | 'patient' | 'lab' = 'doctor', callbackUrl?: string) {
+// --- GOOGLE OAUTH FUNCTIONS ---
+
+export function getGoogleAuthUrl(
+  role: 'doctor' | 'admin' | 'patient' | 'lab' = 'doctor',
+  callbackUrl?: string
+) {
   const redirectUri = `${BASE_URL}/api/auth/google/callback`
   const scope = 'email profile'
-  const state = btoa(JSON.stringify({ role, callbackUrl })) // Encode role in state
+  const state = btoa(JSON.stringify({ role, callbackUrl }))
 
   const params = new URLSearchParams({
     client_id: GOOGLE_CLIENT_ID,
@@ -36,19 +41,16 @@ export function getGoogleAuthUrl(role: 'doctor' | 'admin' | 'patient' | 'lab' = 
     response_type: 'code',
     state,
     access_type: 'offline',
-    prompt: 'consent'
+    prompt: 'consent',
   })
-  
+
   return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
 }
 
-// Exchange code for tokens
 async function exchangeCodeForTokens(code: string) {
   const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       client_id: GOOGLE_CLIENT_ID,
       client_secret: GOOGLE_CLIENT_SECRET,
@@ -58,39 +60,27 @@ async function exchangeCodeForTokens(code: string) {
     }),
   })
 
-  if (!tokenResponse.ok) {
-    throw new Error('Failed to exchange code for tokens')
-  }
-
+  if (!tokenResponse.ok) throw new Error('Failed to exchange code for tokens')
   return tokenResponse.json()
 }
 
-// Get user info from Google
 async function getGoogleUserInfo(accessToken: string) {
   const userResponse = await fetch(
     `https://www.googleapis.com/oauth2/v2/userinfo?access_token=${accessToken}`
   )
-
-  if (!userResponse.ok) {
-    throw new Error('Failed to get user info from Google')
-  }
-
+  if (!userResponse.ok) throw new Error('Failed to get user info from Google')
   return userResponse.json()
 }
 
-// Create or update user in database
-async function createOrUpdateUser(googleUser: { email: string, given_name: string, family_name: string }, role: string) {
+async function createOrUpdateUser(
+  googleUser: { email: string; given_name: string; family_name: string },
+  role: string
+) {
   const existingUser = await db.query.users.findFirst({
     where: eq(users.email, googleUser.email),
   })
 
   if (!existingUser) {
-    // Prevent new admin accounts from being created
-    /*if (role === 'admin') {
-      throw new Error('Cannot create new admin accounts via this method.')
-    }*/
-
-    // Insert new user
     const [newUser] = await db.insert(users).values({
       email: googleUser.email,
       firstName: googleUser.given_name ?? '',
@@ -98,112 +88,100 @@ async function createOrUpdateUser(googleUser: { email: string, given_name: strin
       role: role as 'doctor' | 'patient' | 'admin' | 'lab',
       password: '',
     }).returning()
-    
+
     return newUser
   }
 
   return existingUser
 }
 
-import { type ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies'
+// --- SESSION HANDLING ---
 
-// Set session cookie
-function setSessionCookie(userId: string, cookies: ReadonlyRequestCookies) {
+function setSessionCookie(userId: string, cookieStore: ReadonlyRequestCookies) {
   const domain = process.env.NODE_ENV === 'production' ? '.askremohealth.com' : '.localhost'
-  
-  cookies.set('session-id', userId, {
+  cookieStore.set('session-id', userId, {
     path: '/',
     secure: process.env.NODE_ENV === 'production',
-    httpOnly: false,
+    httpOnly: true,
     sameSite: 'lax',
     maxAge: 60 * 60 * 24 * 7, // 7 days
-    domain
+    domain,
   })
 }
 
-// Get current user from session - handles both Redis and direct database sessions
+// Get current user safely for SSR and hydration
 export async function getCurrentUser(): Promise<UserWithLab | null> {
   try {
-    const cookieStore = await cookies()
+    const cookieStore = await nextCookies()
     const sessionId = cookieStore.get('session-id')?.value
-    
-    if (!sessionId) {
-      return null
-    }
+    if (!sessionId) return null
 
-    // First, try to get user from Redis session (email/password login)
+    // Try Redis session first
     const redisUser = await getUserSessionById(sessionId)
-    
     if (redisUser) {
-      // If we have a Redis session, get the full user from database using the user ID from the session
-      const user = await db.query.users.findFirst({
+      return await db.query.users.findFirst({
         where: eq(users.id, redisUser.id),
-        with: {
-          lab: true,
-        },
+        with: { lab: true },
       })
-      return user
     }
 
-    // If no Redis session, try direct database lookup (Google OAuth)
-    const user = await db.query.users.findFirst({
+    // Fallback: direct DB session (Google OAuth)
+    return await db.query.users.findFirst({
       where: eq(users.id, sessionId),
-      with: {
-        lab: true,
-      },
+      with: { lab: true },
     })
-
-    return user
   } catch (error) {
     console.error('Error getting current user:', error)
     return null
   }
 }
 
-// Sign out user
-export async function signOut() {
+// Sign out user completely
+export async function signOut(cookieStore?: ReadonlyRequestCookies)  {
   try {
-    const cookieStore = await cookies()
-    const sessionId = cookieStore.get('session-id')?.value
-    
+    const cookiesResolved = cookieStore ?? (await nextCookies())// always defined
+    if (!cookiesResolved) {
+      // fallback, should rarely happen
+      return NextResponse.json({ error: 'No cookie store available' }, { status: 500 })
+    }
+
+    const sessionId = cookiesResolved.get('session-id')?.value
+
     if (sessionId) {
-      // Clear Redis session if it exists
-      const redisClient = (await import('@web/redis/redis')).redisClient
+      const { redisClient } = await import('@web/redis/redis')
       await redisClient.del(`session:${sessionId}`)
     }
-    
-    // Clear the session cookie
-    cookieStore.set('session-id', '', { 
+
+    // Clear the cookie in the response
+    const response = NextResponse.json({ success: true })
+    response.cookies.set('session-id', '', {
       maxAge: 0,
       path: '/',
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      sameSite: 'lax',
       domain: process.env.NODE_ENV === 'production' ? '.askremohealth.com' : '.localhost'
     })
+
+    return response
   } catch (error) {
     console.error('Error during sign out:', error)
+    return NextResponse.json({ error: 'Sign out failed' }, { status: 500 })
   }
 }
 
-// Handle Google OAuth callback
+// --- GOOGLE CALLBACK ---
+
 export async function handleGoogleCallback(code: string, state: string) {
   try {
-    // Decode state to get role
     const { role, callbackUrl } = JSON.parse(atob(state))
-
-    // Exchange code for tokens
     const tokens = await exchangeCodeForTokens(code)
-    
-    // Get user info from Google
     const googleUser = await getGoogleUserInfo(tokens.access_token)
-    
-    // Create or update user in database
     const user = await createOrUpdateUser(googleUser, role)
-    
-    if (!user) {
-      throw new Error('Failed to create or update user')
-    }
-    
-    // Set session cookie
-    const cookieStore = await cookies()
+
+    if (!user) throw new Error('Failed to create or update user')
+
+    const cookieStore = await nextCookies()
     setSessionCookie(user.id, cookieStore)
 
     return { success: true, user, callbackUrl }
@@ -213,20 +191,16 @@ export async function handleGoogleCallback(code: string, state: string) {
   }
 }
 
-// Require authentication middleware
+// --- MIDDLEWARE HELPERS ---
+
 export async function requireAuth() {
   const user = await getCurrentUser()
-  if (!user) {
-    redirect('/auth')
-  }
+  if (!user) redirect('/auth')
   return user
 }
 
-// Require specific role middleware
 export async function requireRole(role: 'doctor' | 'patient' | 'admin' | 'lab') {
   const user = await getCurrentUser()
-  if (!user || user.role !== role) {
-    redirect('/')
-  }
+  if (!user || user.role !== role) redirect('/')
   return user
 }
