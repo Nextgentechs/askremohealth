@@ -1,26 +1,19 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 
 export default function SuppressHydrationWarnings({ children }: { children: React.ReactNode }) {
+  const [ready, setReady] = useState(false)
+
   useEffect(() => {
-    const originalError = console.error
-
-    console.error = (...args) => {
-      const msg = args[0]
-      if (typeof msg === 'string' && msg.includes('Hydration failed')) {
-        return
-      }
-      if (typeof msg === 'string' && msg.includes('Text content does not match server-rendered HTML')) {
-        return
-      }
-      originalError(...args)
-    }
-
-    return () => {
-      console.error = originalError
-    }
+    // Delay just enough so React can safely re-render
+    const id = requestAnimationFrame(() => setReady(true))
+    return () => cancelAnimationFrame(id)
   }, [])
 
-  return <>{children}</>
+  return (
+    <div suppressHydrationWarning>
+      {ready ? children : null}
+    </div>
+  )
 }
