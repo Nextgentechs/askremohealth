@@ -16,8 +16,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={GeistSans.className}>
-      <body className="bg-background text-foreground antialiased">
+    <html lang="en" className={GeistSans.className} suppressHydrationWarning={true}>
+      <body className="bg-background text-foreground antialiased" suppressHydrationWarning={true}>
         {/* Only render client-dependent components after hydration */}
         <SuppressHydrationWarnings>
           <Provider>
