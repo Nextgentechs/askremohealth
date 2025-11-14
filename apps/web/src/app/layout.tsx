@@ -21,8 +21,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         {/* Only render client-dependent components after hydration */}
         <SuppressHydrationWarnings>
           <Provider>
-            {children}
-            <Toaster />
+            {children}            
           </Provider>
         </SuppressHydrationWarnings>
       </body>

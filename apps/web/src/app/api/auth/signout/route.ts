@@ -1,13 +1,13 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import { signOut } from '@web/auth'
+import { signOut as signOutAuth } from '@web/auth'
 
 export async function POST(_request: NextRequest) {
   try {
-    await signOut()
-    
-    return NextResponse.json({ success: true })
+    const response = await signOutAuth() // signOut internally calls `cookies()`
+    return response
   } catch (error) {
     console.error('Sign out error:', error)
     return NextResponse.json({ error: 'Sign out failed' }, { status: 500 })
   }
 }
+
