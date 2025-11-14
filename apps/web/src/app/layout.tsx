@@ -4,6 +4,7 @@ import { Toaster } from '@web/components/ui/toaster'
 import Provider from '@web/providers/provider'
 import { GeistSans } from 'geist/font/sans'
 import { type Metadata } from 'next'
+import SuppressHydrationWarnings from './_components/SuppressHydrationWarnings'
 
 export const metadata: Metadata = {
   title: 'Ask RemoHealth',
@@ -19,10 +20,12 @@ export default async function RootLayout({
   return (
     <html lang="en" className={GeistSans.className} suppressHydrationWarning>
       <body className="bg-background text-foreground antialiased">
-        <Provider>
-          {children}
-          <Toaster />
-        </Provider>
+        <SuppressHydrationWarnings>
+          <Provider>
+            {children}
+            <Toaster />
+          </Provider>
+        </SuppressHydrationWarnings>
       </body>
     </html>
   )
