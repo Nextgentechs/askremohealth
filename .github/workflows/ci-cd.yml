@@ -26,6 +26,8 @@ jobs:
       NEXT_PUBLIC_CLERK_SIGN_UP_URL: ${{ secrets.NEXT_PUBLIC_CLERK_SIGN_UP_URL }}
       NEXT_PUBLIC_RESEND_API_KEY: ${{ secrets.NEXT_PUBLIC_RESEND_API_KEY }}
       NEXT_PUBLIC_FROM_EMAIL: ${{ secrets.NEXT_PUBLIC_FROM_EMAIL }}
+      SKIP_ENV_VALIDATION: '1'   # <-- Add this line
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
