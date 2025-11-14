@@ -14,12 +14,11 @@ export const metadata: Metadata = {
   },
 }
 
-export default async function RootLayout({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={GeistSans.className} suppressHydrationWarning>
-      <body className="bg-background text-foreground antialiased" suppressHydrationWarning>
+    <html lang="en" className={GeistSans.className}>
+      <body className="bg-background text-foreground antialiased">
+        {/* Only render client-dependent components after hydration */}
         <SuppressHydrationWarnings>
           <Provider>
             {children}

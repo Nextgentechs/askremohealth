@@ -3,17 +3,16 @@
 import { useState, useEffect } from 'react'
 
 export default function SuppressHydrationWarnings({ children }: { children: React.ReactNode }) {
-  const [ready, setReady] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    // Delay just enough so React can safely re-render
-    const id = requestAnimationFrame(() => setReady(true))
-    return () => cancelAnimationFrame(id)
+    // Only mark as mounted on the client
+    setMounted(true)
   }, [])
 
-  return (
-    <div suppressHydrationWarning>
-      {ready ? children : null}
-    </div>
-  )
+  // Render nothing during SSR to avoid mismatches
+  if (!mounted) return null
+
+  // Render children normally once mounted
+  return <>{children}</>
 }
