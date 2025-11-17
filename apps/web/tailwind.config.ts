@@ -1,7 +1,9 @@
-import { type Config } from 'tailwindcss'
-import { fontFamily } from 'tailwindcss/defaultTheme'
+import { type Config } from 'tailwindcss';
+import { fontFamily } from 'tailwindcss/defaultTheme';
+import tailwindAnimate from 'tailwindcss-animate';
+import typography from '@tailwindcss/typography';
 
-export default {
+const config: Config = {
   darkMode: ['class'],
   content: ['./src/**/*.tsx'],
   theme: {
@@ -12,12 +14,8 @@ export default {
           '20%,50%': { opacity: '0' },
         },
         'streaming-progress': {
-          '0%': {
-            transform: 'translateX(-100%)',
-          },
-          '100%': {
-            transform: 'translateX(500%)',
-          },
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(500%)' },
         },
       },
       animation: {
@@ -109,5 +107,7 @@ export default {
       },
     },
   },
-  plugins: [require('tailwindcss-animate'), require('@tailwindcss/typography')],
-} satisfies Config
+  plugins: [tailwindAnimate, typography],
+};
+
+export default config;
