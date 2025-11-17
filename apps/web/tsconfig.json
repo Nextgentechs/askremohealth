@@ -7,26 +7,32 @@
     "allowJs": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-
-
     /* Strictness */
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "checkJs": true,
-
     /* Bundled projects */
-    "lib": ["dom", "dom.iterable", "ESNext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "ESNext"
+    ],
     "noEmit": true,
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "jsx": "preserve",
-    "plugins": [{ "name": "next" }],
+    "jsx": "react-jsx",
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "incremental": true,
-
     /* Path Aliases */
     "baseUrl": ".",
     "paths": {
-      "@web/*": ["./src/*"]
+      "@web/*": [
+        "./src/*"
+      ]
     }
   },
   "ts-node": {
@@ -43,9 +49,12 @@
     "**/*.cjs",
     "**/*.js",
     "src",
-     "emailjs.d.ts",
+    "emailjs.d.ts",
     ".next/types/**/*.ts",
-    "server.ts"
+    "server.ts",
+    ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }
