@@ -50,7 +50,7 @@ jobs:
             npm run build --workspace=@askvirtualhealthcare/web
           else
             echo "Skipping strict build check for ${GITHUB_REF##*/}"
-            npm
+          fi
 
 
       - name: Deploy to Vercel
