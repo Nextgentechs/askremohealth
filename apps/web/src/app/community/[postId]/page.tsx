@@ -15,17 +15,17 @@ const SinglePostPage = async ({ params }: { params: Promise<Params> }) => {
   if (!post) return notFound()
 
   return (
-    <div className="flex gap-6 pt-1">
-      <div className="hidden xl:block w-[20%]">
+    <div className="flex gap-6 pt-1 h-[calc(100vh-96px)] overflow-hidden">
+      <div className="hidden xl:block w-[20%] overflow-y-auto">
         <LeftMenu type="home" />
       </div>
 
-      <div className="w-full lg:w-[70%] xl:w-[50%]">
+      <div className="w-full lg:w-[70%] xl:w-[50%] overflow-y-auto">
         {/* Pass full post object to SinglePost */}
         <SinglePost postId={postId} />
       </div>
 
-      <div className="hidden lg:block w-[30%]">
+      <div className="hidden lg:block w-[30%] overflow-y-auto">
         <RightMenu />
       </div>
     </div>
