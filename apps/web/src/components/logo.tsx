@@ -10,7 +10,7 @@ export default function Logo({
 }: LogoProps & { href?: string }) {
   return (
     <Link href={href}>
-      <div className="relative w-[120px] h-[40px] md:w-[158px] md:h-[48px]">
+      <div className="relative w-[120px] h-[40px] md:w-[158px] md:h-[48px]" suppressHydrationWarning={true}>
         <Image
           src="/assets/ask-logo.png"
           alt="askvirtualhealthcare logo"
