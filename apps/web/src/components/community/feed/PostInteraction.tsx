@@ -16,6 +16,8 @@ const PostInteraction = ({
   const { data: user, isLoading } = api.users.currentUser.useQuery()
   const switchLikeMutation = api.community.switchLike.useMutation();
 
+  const utils = api.useUtils();
+
   const userId = user?.id;
   const isLoaded = !isLoading;
   const [likeState, setLikeState] = useState({
@@ -42,35 +44,43 @@ const PostInteraction = ({
     }
   );
 
-  // const likeAction = async () => {
+
+  // const likeAction = () => {
   //   startTransition(() => {
   //     switchOptimisticLike("");
   //   });
-
-  //   try {
-  //     await switchLikeMutation.mutateAsync({ postId });
-  //     setLikeState((state) => ({
-  //       likeCount: state.isLiked ? state.likeCount - 1 : state.likeCount + 1,
-  //       isLiked: !state.isLiked,
-  //     }));
-  //   } catch (err) {
-  //     console.log(err);
-  //   }
+    
+  //   switchLikeMutation.mutate({ postId }, {
+  //     onSuccess: () => {
+  //       setLikeState((state) => ({
+  //         likeCount: state.isLiked ? state.likeCount - 1 : state.likeCount + 1,
+  //         isLiked: !state.isLiked,
+  //       }));
+  //     }
+  //   });
   // };
 
-  const likeAction = () => {
+  const likeAction = async () => {
+    const previousLikeState = { ...likeState };
+    
     startTransition(() => {
       switchOptimisticLike("");
     });
     
-    switchLikeMutation.mutate({ postId }, {
-      onSuccess: () => {
-        setLikeState((state) => ({
-          likeCount: state.isLiked ? state.likeCount - 1 : state.likeCount + 1,
-          isLiked: !state.isLiked,
-        }));
-      }
-    });
+    setLikeState(prev => ({
+      likeCount: prev.isLiked ? prev.likeCount - 1 : prev.likeCount + 1,
+      isLiked: !prev.isLiked,
+    }));
+    
+    try {
+      await switchLikeMutation.mutateAsync({ postId });
+    } catch (err) {
+      setLikeState(previousLikeState);
+      startTransition(() => {
+        switchOptimisticLike("");
+      });
+      console.log("Failed to switch like:", err);
+    }
   };
 
   return (
