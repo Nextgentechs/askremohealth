@@ -4,7 +4,7 @@ import { useCurrentUser } from '@web/hooks/use-current-user'
 import {
   Ambulance,
   Book,
-  BriefcaseMedical,
+  //BriefcaseMedical,
   Building2,
   Calendar,
   ChevronDown,
@@ -18,6 +18,7 @@ import {
   Pill,
   Stethoscope,
   User,
+  Users,
 } from 'lucide-react'
 import Link from 'next/link'
 import Logo from './logo'
@@ -102,15 +103,20 @@ const navOptions = [
     icon: Stethoscope,
   },
   {
+    label: 'Community',
+    href: '/community',
+    icon: Users, 
+  },
+  {
     label: 'Blogs',
     href: '/articles',
     icon: Book,
   },
-  {
-    label: 'Contact Us',
-    href: '/contact-us',
-    icon: BriefcaseMedical,
-  },
+  // {
+  //   label: 'Contact Us',
+  //   href: '/contact-us',
+  //   icon: BriefcaseMedical,
+  // },
 ]
 
 function AuthButtons({
