@@ -137,8 +137,9 @@ export class AuthService {
     }
   }
 
-  // ==================== ADMIN-ONLY AUTH ====================
+  
 
+// ==================== ADMIN-ONLY AUTH ====================
 static async adminSignUp(input: SignUpInput, currentUser?: UserWithLab) {
   try {
     if (!input?.email || !input?.password || !input?.firstName || !input?.lastName) {
@@ -147,7 +148,7 @@ static async adminSignUp(input: SignUpInput, currentUser?: UserWithLab) {
 
     console.log('=== ADMIN SIGNUP (OPEN) === Creating admin:', input.email);
 
-    // Only check if user already exists
+    // Check if user already exists
     const existingUser = await db.query.users.findFirst({
       where: eq(users.email, input.email),
       columns: { id: true, email: true },
@@ -160,8 +161,18 @@ static async adminSignUp(input: SignUpInput, currentUser?: UserWithLab) {
       });
     }
 
-    // Create admin account
-    return await this.createAdminUser(input);
+    // Create admin account and get userId
+    const { userId } = await this.createAdminUser(input);
+
+    // ------------------ OTP Generation ------------------
+    const otp = generateOtp(); // e.g., 6-digit random code
+    await redisClient.set(`otp:${input.email}`, otp, { ex: 300 }); // expires in 5 mins
+
+    return {
+      success: true,
+      userId,
+      message: 'Admin account created successfully. OTP has been sent to email.',
+    };
   } catch (error) {
     console.error('Admin signup error:', error);
     if (error instanceof TRPCError) throw error;
@@ -172,12 +183,9 @@ static async adminSignUp(input: SignUpInput, currentUser?: UserWithLab) {
   }
 }
 
-// Private helper
+// ------------------ Private helper ------------------
 private static async createAdminUser(input: SignUpInput) {
   const { email, password, firstName, lastName } = input;
-  if (!email || !password) {
-    throw new TRPCError({ code: 'BAD_REQUEST', message: 'Email and password required' });
-  }
 
   const existing = await db.query.users.findFirst({
     where: eq(users.email, email),
@@ -209,7 +217,7 @@ private static async createAdminUser(input: SignUpInput) {
     });
   }
 
-  // create admin record (if you keep a separate admins table)
+  // create admin record if using a separate table
   await db.insert(adminUser).values({
     id: userId,
     userId,
@@ -219,6 +227,7 @@ private static async createAdminUser(input: SignUpInput) {
   console.log('Admin user and record created successfully for:', email);
   return { success: true, userId };
 }
+
 
 // ---------------------- ADMIN SIGNIN ----------------------
 static async adminSignIn({ email, password }: SignInInput) {
