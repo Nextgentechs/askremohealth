@@ -27,7 +27,7 @@ type FeedPostType = PostType & {
 };
 
 
-const Post = ({ post }: { post: FeedPostType }) => {
+const Post = ({ post, onDeletePost }: { post: FeedPostType; onDeletePost?: (postId: string) => void }) => {  
   const { data: user } = api.users.currentUser.useQuery();
   const userId = user?.id;
   return (
@@ -53,7 +53,7 @@ const Post = ({ post }: { post: FeedPostType }) => {
             )}
           </span>
         </div>
-        {userId === post.user.id && <PostInfo postId={post.id} />}
+        {userId === post.user.id && <PostInfo postId={post.id} onDeletePost={onDeletePost} />}
       </div>
       {/* DESC */}
       <div className="flex flex-col gap-4">
