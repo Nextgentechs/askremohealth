@@ -1,5 +1,4 @@
 import { createServer } from 'http';
-import { parse } from 'url';
 import next from 'next';
 import { Server } from 'socket.io';
 
@@ -10,46 +9,49 @@ const port = Number(process.env.PORT) || 3000;
 const app = next({ dev, hostname, port });
 const handler = app.getRequestHandler();
 
-// Declare a global variable for the server Socket.IO instance
+// eslint-disable-next-line no-var
 declare global {
   var ioServer: Server | undefined;
 }
 
-app.prepare().then(() => {
-  const httpServer = createServer(handler);
+(async () => {
+  try {
+    await app.prepare();
 
-  // Create Socket.IO server instance
-  const io = new Server(httpServer, {
-    cors: {
-      origin: '*', // adjust based on your frontend URL
-    },
-  });
+    const httpServer = createServer(handler);
 
-  // Handle socket connections
-  io.on('connection', (socket) => {
-    console.log('New client connected:', socket.id);
-
-    socket.on('join-chat', (chatId: string) => {
-      console.log(`Socket ${socket.id} joining chat ${chatId}`);
-      socket.join(chatId);
+    const io = new Server(httpServer, {
+      cors: {
+        origin: '*', // adjust to your frontend URL in production
+      },
     });
 
-    socket.on('disconnect', () => {
-      console.log('Client disconnected:', socket.id);
+    io.on('connection', (socket) => {
+      console.log('New client connected:', socket.id);
+
+      socket.on('join-chat', (chatId: string) => {
+        console.log(`Socket ${socket.id} joining chat ${chatId}`);
+        socket.join(chatId);
+      });
+
+      socket.on('disconnect', () => {
+        console.log('Client disconnected:', socket.id);
+      });
     });
-  });
 
-  // Attach to globalThis to make accessible elsewhere if needed
-  globalThis.ioServer = io;
+    // Attach to globalThis for access in other modules
+    globalThis.ioServer = io;
 
-  // Error handling
-  httpServer.on('error', (err) => {
-    console.error('Server error:', err);
-    throw err;
-  });
+    httpServer.on('error', (err) => {
+      console.error('Server error:', err);
+      throw err;
+    });
 
-  // Start listening
-  httpServer.listen(port, () => {
-    console.log(`> Ready on http://${hostname}:${port}`);
-  });
-});
+    httpServer.listen(port, () => {
+      console.log(`> Ready on http://${hostname}:${port}`);
+    });
+  } catch (err) {
+    console.error('Error starting server:', err);
+    process.exit(1);
+  }
+})();
