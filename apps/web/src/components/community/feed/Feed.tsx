@@ -13,11 +13,24 @@ const Feed = ({ initialPosts }: { initialPosts: PostData[] }) => {
   const [hasMore, setHasMore] = useState(initialPosts.length === 5);
   const observerRef = useRef<HTMLDivElement>(null);
 
-  const { data: newPosts, isLoading } = api.community.loadPosts.useQuery(
-    { page: page + 1 },
-    { enabled: false } 
+  const { data: newPosts, isLoading, refetch } = api.community.loadPosts.useQuery(
+    { page: 1 }
   );
-  const { refetch } = api.community.loadPosts.useQuery({ page: page + 1 });
+
+  // Listen for invalidations and prepend new posts
+  useEffect(() => {
+    if (newPosts && newPosts.length > 0) {
+      setPosts(prev => {
+        const existingIds = new Set(prev.map(p => p.id));
+        const freshPosts = newPosts.filter(p => !existingIds.has(p.id));
+        return [...freshPosts, ...prev];
+      });
+    }
+  }, [newPosts]);
+
+  const handleDeletePost = (postId: string) => {
+    setPosts(prev => prev.filter(post => post.id !== postId));
+  };
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -40,7 +53,13 @@ const Feed = ({ initialPosts }: { initialPosts: PostData[] }) => {
   return (
     <div className="p-4 bg-white shadow-md rounded-lg flex flex-col gap-3">
       {posts.length ? (
-        posts.map(post => <Post key={post.id} post={post} />)
+        posts.map(post => (
+          <Post 
+            key={post.id} 
+            post={post} 
+            onDeletePost={handleDeletePost}
+          />
+        ))
       ) : (
         "No posts found!"
       )}

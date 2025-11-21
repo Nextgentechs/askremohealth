@@ -4,15 +4,17 @@ import { api } from '@web/trpc/react';
 import { useState } from "react";
 import { Ellipsis } from "lucide-react";
 
-const PostInfo = ({ postId }: { postId: string }) => {
+const PostInfo = ({ postId, onDeletePost }: { postId: string; onDeletePost?: (postId: string) => void }) => {
   const [open, setOpen] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const deletePostMutation = api.community.deletePost.useMutation({
     onSuccess: () => {
-      window.location.reload();
+      onDeletePost?.(postId);
+      setOpen(false);
+      setShowConfirm(false);
     }
   });
-  const utils = api.useUtils();
 
   return (
     <div className="relative">
@@ -23,17 +25,35 @@ const PostInfo = ({ postId }: { postId: string }) => {
       />
       {open && (
         <div className="absolute top-4 right-0 bg-white p-4 w-32 rounded-lg flex flex-col gap-2 text-xs shadow-lg z-30">
-          
           <button 
             className="text-red-500"
-            onClick={async () => {
-              await deletePostMutation.mutateAsync({ postId });
-              utils.community.loadPosts.invalidate();
-              setOpen(false);
-            }}
+            onClick={() => setShowConfirm(true)}
           >
             Delete
           </button>
+        </div>
+      )}
+      
+      {showConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm">
+            <p className="mb-4 text-sm">Are you sure you want to delete this post?</p>
+            <div className="flex gap-3 justify-end">
+              <button 
+                className="px-4 py-2 text-sm border rounded hover:bg-gray-100"
+                onClick={() => setShowConfirm(false)}
+              >
+                Cancel
+              </button>
+              <button 
+                className="px-4 py-2 text-sm bg-red-500 text-white rounded hover:bg-red-600"
+                onClick={() => deletePostMutation.mutateAsync({ postId })}
+                disabled={deletePostMutation.isPending}
+              >
+                {deletePostMutation.isPending ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
