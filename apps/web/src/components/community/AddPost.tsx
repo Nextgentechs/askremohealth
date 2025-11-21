@@ -12,9 +12,11 @@ import imageCompression from 'browser-image-compression';
 const AddPost = () => {
   const { data: user, isLoading } = api.users.currentUser.useQuery()
   
+  const utils = api.useUtils();
+  
   const addPostMutation = api.community.addPost.useMutation({
     onSuccess: async () => {
-      window.location.reload();
+      utils.community.loadPosts.invalidate();
     }
   });
 
