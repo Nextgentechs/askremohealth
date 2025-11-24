@@ -6,7 +6,7 @@ import { Suspense } from "react";
 import PostInfo from "@web/components/community/feed/PostInfo";
 import { api } from '@web/trpc/react';
 import PostVideo from "./PostVideo";
-import { BadgeCheck } from "lucide-react";
+import { BadgeCheck, CircleUserRound } from "lucide-react";
 import Link from "next/link";
 
 
@@ -34,13 +34,13 @@ const Post = ({ post, onDeletePost }: { post: FeedPostType; onDeletePost?: (post
     <div className="flex flex-col gap-4">
       {/* USER */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <Image
-            src={post.profilePicture ?? "/assets/community/noAvatar.png"}
+            src={post.profilePicture ?? "/assets/community/noAvatar2.png"}
             width={40}
             height={40}
             alt=""
-            className="w-10 h-10 rounded-full"
+            className="w-9 h-9 rounded-full"
           />
           <span className="font-medium flex items-center gap-1">
             
