@@ -67,7 +67,7 @@ const ChatsPage = async () => {
                     >
                         <div className="flex items-center gap-4">
                             <Image
-                                src={otherUserProfilePicture ?? "/assets/community/noAvatar.png"}
+                                src={otherUserProfilePicture ?? "/assets/community/noAvatar2.png"}
                                 alt={otherUserName}
                                 width={40}
                                 height={40}

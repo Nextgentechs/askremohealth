@@ -85,7 +85,7 @@ const PostInteraction = ({
 
   return (
     <div className="flex items-center justify-between text-sm -my-1">
-      <div className="flex gap-8">
+      <div className="flex gap-8 mt-3">
         <div className="flex items-center gap-4 bg-slate-50 p-2 rounded-xl">
           <button onClick={likeAction}>
             {optimisticLike.isLiked ? (
