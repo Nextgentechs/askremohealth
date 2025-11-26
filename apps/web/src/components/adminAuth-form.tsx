@@ -616,8 +616,8 @@ function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
     } else if (user.role === 'admin') {
       // navigate to admin subdomain path on the current origin
       // If you need to land on admin.askremohealth domain specifically:
-      // window.location.href = 'https://admin.askremohealth/admin/doctors'
-      router.push('/admin/doctors')
+      window.location.href = 'https://admin.askremohealth/admin/doctors'
+      //router.push('/admin/doctors')
     } else {
       router.push('/')
     }
