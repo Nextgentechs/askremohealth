@@ -83,13 +83,13 @@ const SinglePost = async ({ postId }: SinglePostProps) => {
       <div className="flex flex-col gap-2">
         {/* USER */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <Image
-              src={post.profilePicture ?? "/assets/community/noAvatar.png"}
+              src={post.profilePicture ?? "/assets/community/noAvatar2.png"}
               width={40}
               height={40}
               alt=""
-              className="w-10 h-10 rounded-full"
+              className="w-9 h-9 rounded-full"
             />
             <span className="font-medium flex items-center gap-1">
               

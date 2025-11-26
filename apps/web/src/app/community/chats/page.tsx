@@ -36,7 +36,7 @@ const ChatsPage = async () => {
 
 
   return (
-    <div className="flex gap-6 pt-1 h-[calc(100vh-96px)] overflow-hidden">
+    <div className="flex gap-6 pt-1 h-[calc(100vh-56px)] lg:h-[calc(100vh-80px)] overflow-hidden">
       <div className="hidden xl:block w-[20%] overflow-y-auto">
         <LeftMenu type="home" />
       </div>
@@ -67,7 +67,7 @@ const ChatsPage = async () => {
                     >
                         <div className="flex items-center gap-4">
                             <Image
-                                src={otherUserProfilePicture ?? "/assets/community/noAvatar.png"}
+                                src={otherUserProfilePicture ?? "/assets/community/noAvatar2.png"}
                                 alt={otherUserName}
                                 width={40}
                                 height={40}

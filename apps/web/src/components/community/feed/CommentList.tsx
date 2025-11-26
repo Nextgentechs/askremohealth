@@ -135,7 +135,7 @@ const CommentList = ({
     {user && (
         <div className="flex items-center gap-4 mt-0">
           <Image
-            src={doctor?.profilePicture?.url ?? "/assets/community/noAvatar.png"}
+            src={doctor?.profilePicture?.url ?? "/assets/community/noAvatar2.png"}
             alt=""
             width={32}
             height={32}
@@ -167,7 +167,7 @@ const CommentList = ({
               <div className="flex gap-4 justify-between mt-6 ml-4">
                 {/* AVATAR */}
                 <Image
-                  src={comment.profilePicture ?? "/assets/community/noAvatar.png"}
+                  src={comment.profilePicture ?? "/assets/community/noAvatar2.png"}
                   alt=""
                   width={24}
                   height={24}
