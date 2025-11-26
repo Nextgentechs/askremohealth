@@ -14,6 +14,7 @@ const config = {
       },
     ],
   },
+  devIndicators: false,
 
   // Enable Turbopack explicitly
   turbopack: {},
