@@ -8,13 +8,14 @@ export async function POST(request: Request) {
     const result = await AuthService.adminSignIn({ email, password });
 
     if (result?.sessionId) {
-      // create cookie string with domain set for all subdomains
+      const isProd = process.env.NODE_ENV === 'production';
+  
       const cookie = serialize('session-id', result.sessionId, {
         httpOnly: true,
-        secure: true,                // required when SameSite=None
-        sameSite: 'none',
+        secure: isProd,                  // only require secure in production
+        sameSite: isProd ? 'none' : 'lax', 
         path: '/',
-        domain: '.askremohealth.com', // NOTE leading dot
+        domain: isProd ? '.askremohealth.com' : undefined, // undefined allows localhost/staging
         maxAge: 60 * 60 * 24 * 7,
       });
       const res = NextResponse.json({ success: true });
