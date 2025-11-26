@@ -49,8 +49,8 @@ jobs:
 
             # 5. Build the Next.js App
             echo "🛠️ Building Next.js app..."
-            rm -rf .next
-            npm run build
+            rm -rf apps/web/.next
+            npm run build --workspace=@askvirtualhealthcare/web
 
             # 6. Restart PM2 Process
             echo "🔄 Restarting PM2 process: askremohealth-web"
