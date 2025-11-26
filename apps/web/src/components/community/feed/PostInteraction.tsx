@@ -2,6 +2,7 @@
 
 import { api } from '@web/trpc/react'
 import { Heart, MessageCircleMore, Send } from "lucide-react";
+import Link from 'next/link';
 import { useOptimistic, useState, useEffect, startTransition } from "react";
 
 const PostInteraction = ({
@@ -44,22 +45,6 @@ const PostInteraction = ({
     }
   );
 
-
-  // const likeAction = () => {
-  //   startTransition(() => {
-  //     switchOptimisticLike("");
-  //   });
-    
-  //   switchLikeMutation.mutate({ postId }, {
-  //     onSuccess: () => {
-  //       setLikeState((state) => ({
-  //         likeCount: state.isLiked ? state.likeCount - 1 : state.likeCount + 1,
-  //         isLiked: !state.isLiked,
-  //       }));
-  //     }
-  //   });
-  // };
-
   const likeAction = async () => {
     const previousLikeState = { ...likeState };
     
@@ -86,7 +71,7 @@ const PostInteraction = ({
   return (
     <div className="flex items-center justify-between text-sm -my-1">
       <div className="flex gap-8 mt-3">
-        <div className="flex items-center gap-4 bg-slate-50 p-2 rounded-xl">
+        <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl">
           <button onClick={likeAction}>
             {optimisticLike.isLiked ? (
               <Heart size={18} className="w-4 h-4 fill-red-500 text-red-500 cursor-pointer" />
@@ -94,28 +79,24 @@ const PostInteraction = ({
               <Heart size={18} className="w-4 h-4 cursor-pointer" />
             )}
           </button>
-          <span className="text-gray-300">|</span>
           <span className="text-gray-500">
             {optimisticLike.likeCount}
-            <span className="hidden md:inline"> Likes</span>
           </span>
         </div>
+        <Link href={`/community/${postId}`}>
+          <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl">
+            <MessageCircleMore size={18} />
+            <span className="text-gray-500">
+              {commentNumber}
+            </span>
+          </div>
+        </Link>
         <div className="flex items-center gap-4 bg-slate-50 p-2 rounded-xl">
-          <MessageCircleMore size={18} />
-          <span className="text-gray-300">|</span>
-          <span className="text-gray-500">
-            {commentNumber}<span className="hidden md:inline"> Comments</span>
-          </span>
+          <Send size={18}/>
         </div>
       </div>
       <div className="">
-        <div className="flex items-center gap-4 bg-slate-50 p-2 rounded-xl">
-          <Send size={18}/>
-          <span className="text-gray-300">|</span>
-          <span className="text-gray-500">
-            <span className="hidden md:inline"> Share</span>
-          </span>
-        </div>
+        
       </div>
     </div>
   );

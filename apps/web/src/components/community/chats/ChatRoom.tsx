@@ -83,7 +83,7 @@ const ChatRoom = ({ chatId, currentUserId, messages: initialMessages, otherUserN
               <ChevronLeft />
             </Link>
             <Image
-                src={otherUserProfilePicture ?? "/assets/community/noAvatar.png"}
+                src={otherUserProfilePicture ?? "/assets/community/noAvatar2.png"}
                 alt={otherUserName}
                 width={32}
                 height={32}

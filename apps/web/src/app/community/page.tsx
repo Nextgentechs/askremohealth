@@ -8,7 +8,7 @@ const Homepage = async () => {
   const initialPosts = await api.community.loadPosts({ page: 1 });
   
   return (
-    <div className="flex gap-0 lg:gap-6 pt-1 h-[calc(100vh-96px)] overflow-hidden">
+    <div className="flex gap-0 lg:gap-6 pt-1 h-[calc(100vh-56px)] lg:h-[calc(100vh-80px)] overflow-hidden">
       <div className="hidden xl:block w-[20%] overflow-y-auto">
         <LeftMenu type="home" />
       </div>
