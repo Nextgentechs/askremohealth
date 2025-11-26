@@ -4,7 +4,7 @@ import { useCurrentUser } from '@web/hooks/use-current-user'
 import {
   Ambulance,
   Book,
-  //BriefcaseMedical,
+  BriefcaseMedical,
   Building2,
   Calendar,
   ChevronDown,
