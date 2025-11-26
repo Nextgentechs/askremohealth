@@ -67,7 +67,7 @@ const Comments = async ({postId, postAuthorId}:{postId:string, postAuthorId: str
     }, {} as Record<string, Array<typeof commentsWithParentUsers[number]>>);
 
   return (
-    <div className="">
+    <div className="mt-3">
       <CommentList 
         comments={topLevelComments} 
         repliesMap={repliesMap}

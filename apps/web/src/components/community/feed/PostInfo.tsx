@@ -2,7 +2,7 @@
 
 import { api } from '@web/trpc/react'; 
 import { useState } from "react";
-import { Ellipsis } from "lucide-react";
+import { Ellipsis, Trash2 } from "lucide-react";
 
 const PostInfo = ({ postId, onDeletePost }: { postId: string; onDeletePost?: (postId: string) => void }) => {
   const [open, setOpen] = useState(false);
@@ -26,9 +26,10 @@ const PostInfo = ({ postId, onDeletePost }: { postId: string; onDeletePost?: (po
       {open && (
         <div className="absolute top-4 right-0 bg-white p-4 w-32 rounded-lg flex flex-col gap-2 text-xs shadow-lg z-30">
           <button 
-            className="text-red-500"
+            className="flex items-center gap-2 text-red-500 text-sm hover:bg-gray-50 rounded"
             onClick={() => setShowConfirm(true)}
           >
+            <Trash2 size={14} />
             Delete
           </button>
         </div>
