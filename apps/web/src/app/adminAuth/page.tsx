@@ -85,7 +85,7 @@ export default function LoginPage() {
           <Button
             variant="outline"
             className="rounded-full hidden xl:flex"
-            onClick={() => router.push('/admin')}
+            onClick={() => router.push('/adminAuth')}
           >
             {' '}
             {/* Hide on mobile */}
