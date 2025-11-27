@@ -198,7 +198,7 @@ function Login({
     <div className="flex flex-col gap-6">
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-xl">Login to your account as an Admin</CardTitle>
+          <CardTitle className="text-xl">Login to your account</CardTitle>
           <CardDescription>
             Sign in with your email or Google account
           </CardDescription>
@@ -601,13 +601,26 @@ function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
     }
 
     // redirect based on the freshly fetched user
-      if (user.role === 'admin' && result.redirectTo) {
-        // Ensure full URL redirect for admin subdomain
-        window.location.assign(result.redirectTo);
+    if (user.role === 'patient') {
+      if (!user.onboardingComplete) {
+        router.push('/patient/onboarding/patient-details')
       } else {
-        router.push(result.redirectTo ?? '/');
+        router.push('/patient/upcoming-appointments')
       }
-    
+    } else if (user.role === 'doctor') {
+      if (!user.onboardingComplete) {
+        router.push('/specialist/onboarding/personal-details')
+      } else {
+        router.push('/specialist/upcoming-appointments')
+      }
+    } else if (user.role === 'admin') {
+      // navigate to admin subdomain path on the current origin
+      // If you need to land on admin.askremohealth domain specifically:
+      // window.location.href = 'https://admin.askremohealth/admin/doctors'
+      router.push('/admin/doctors')
+    } else {
+      router.push('/')
+    }
   } catch (err: any) {
     console.error('OTP submit error', err)
     toast({
