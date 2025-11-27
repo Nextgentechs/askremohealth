@@ -115,7 +115,7 @@ export class AuthService {
         });
       }
 
-      const sessionUser = { id: user.id, email: user.email ?? '' };
+      const sessionUser = { id: user.id, email: user.email ?? '' , role: user.role,};
       const sessionId = await createUserSession(sessionUser);
 
       const otp = generateOtp()

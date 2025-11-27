@@ -37,11 +37,11 @@ export async function POST(request: Request) {
       // Set cookie - HttpOnly and SameSite=None in production for cross-subdomain
       response.cookies.set(COOKIE_NAME, result.sessionId, {
         path: '/',
-        secure: process.env.NODE_ENV === 'production',
-        httpOnly: true, // important for security
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        secure: true,
+        httpOnly: true,
+        sameSite: 'none',
         maxAge: SESSION_MAX_AGE,
-        domain: process.env.NODE_ENV === 'production' ? '.askremohealth.com' : undefined,
+        domain: '.askremohealth.com',
       });
 
       return response;
