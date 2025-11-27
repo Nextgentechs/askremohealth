@@ -23,12 +23,12 @@ export async function middleware(req: NextRequest) {
 
   // ---------- ADMIN SUBDOMAIN ----------
   if (isAdminSubdomain) {
-    // Rewrite root to login
+    // Rewrite root to login page
     if (pathname === '/') {
       return NextResponse.rewrite(new URL('/adminAuth', `https://admin.askremohealth.com`))
     }
 
-    // Handle session from query parameter (e.g., after login redirect)
+    // Handle session from query parameter (after login redirect)
     const urlSessionId = req.nextUrl.searchParams.get('sessionId')
     if (urlSessionId) {
       const response = NextResponse.next()
@@ -43,12 +43,12 @@ export async function middleware(req: NextRequest) {
       return response
     }
 
-    // Redirect logged-in users from login page to dashboard
+    // Redirect logged-in admins from login page to dashboard
     if (pathname === '/adminAuth' && sessionId) {
       return NextResponse.redirect(new URL('/admin/doctors', `https://admin.askremohealth.com`))
     }
 
-    // Protect admin pages
+    // Protect admin pages (only redirect if not logged in)
     if (!sessionId && !isPublic && pathname.startsWith('/admin')) {
       return NextResponse.redirect(new URL('/adminAuth', `https://admin.askremohealth.com`))
     }
@@ -65,7 +65,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // ---------- MAIN DOMAIN ----------
-  // Allow /adminAuth directly
+  // Allow /adminAuth directly without redirect for non-admin users
   if (pathname === '/adminAuth') return NextResponse.next()
 
   // Redirect /admin on main production domain to admin subdomain
