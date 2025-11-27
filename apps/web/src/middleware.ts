@@ -36,17 +36,14 @@ export async function middleware(req: NextRequest) {
   // ADMIN SUBDOMAIN LOGIC
   // -----------------------------
   if (isAdminSubdomain) {
-    // Treat root `/` as `/adminAuth` implicitly
-    const isLoginPage = pathname === '/' || pathname === '/adminAuth'
-
-    // Already logged-in admin visiting login → redirect to dashboard
-    if (isLoginPage && sessionId) {
-      return NextResponse.redirect('https://admin.askremohealth.com/admin/doctors')
+    // Root `/` → redirect to `/adminAuth`
+    if (pathname === '/' || pathname === '') {
+      return NextResponse.redirect('https://admin.askremohealth.com/adminAuth')
     }
 
-    // Unauthenticated visiting root `/` → rewrite to `/adminAuth`
-    if (pathname === '/') {
-      return NextResponse.rewrite('https://admin.askremohealth.com/adminAuth')
+    // Already logged-in admin visiting login → dashboard
+    if (pathname === '/adminAuth' && sessionId) {
+      return NextResponse.redirect('https://admin.askremohealth.com/admin/doctors')
     }
 
     // Require login for protected admin pages
@@ -54,7 +51,7 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect('https://admin.askremohealth.com/adminAuth')
     }
 
-    // Prevent visiting non-admin pages
+    // Prevent visiting non-admin pages on admin subdomain
     if (!isPublic && !pathname.startsWith('/admin') && pathname !== '/adminAuth') {
       const cleanPath = pathname.replace(/^\/+/, '')
       return NextResponse.redirect(`https://admin.askremohealth.com/admin/${cleanPath}`)
