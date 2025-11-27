@@ -48,8 +48,12 @@ jobs:
             npm install
 
             # 5. Build the Next.js App
-            echo "🛠️ Building Next.js app..."
+            echo "🧹 Cleaning build caches..."
             rm -rf apps/web/.next
+            rm -rf .next
+            rm -rf .turbo
+            rm -rf node_modules/.cache
+            echo "🛠️ Building Next.js app..."
             npm run build --workspace=@askvirtualhealthcare/web
 
             # 6. Restart PM2 Process
