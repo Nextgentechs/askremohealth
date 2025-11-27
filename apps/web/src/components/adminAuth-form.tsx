@@ -601,24 +601,9 @@ function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
     }
 
     // redirect based on the freshly fetched user
-    if (user.role === 'patient') {
-      if (!user.onboardingComplete) {
-        router.push('/patient/onboarding/patient-details')
+      if (result.redirectTo) {
+          window.location.href = result.redirectTo;
       } else {
-        router.push('/patient/upcoming-appointments')
-      }
-    } else if (user.role === 'doctor') {
-      if (!user.onboardingComplete) {
-        router.push('/specialist/onboarding/personal-details')
-      } else {
-        router.push('/specialist/upcoming-appointments')
-      }
-    } else if (user.role === 'admin') {
-      // navigate to admin subdomain path on the current origin
-      // If you need to land on admin.askremohealth domain specifically:
-      window.location.href = result.redirectTo;
-      //router.push('/admin/doctors')
-    } else {
       router.push('/')
     }
   } catch (err: any) {
