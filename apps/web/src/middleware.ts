@@ -5,18 +5,18 @@ export async function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname
   const hostname = req.headers.get('host') ?? ''
 
+  // -----------------------------
   // Subdomain detection
+  // -----------------------------
   const isAdminSubdomain = hostname.startsWith('admin.')
   const isDoctorsSubdomain = hostname.startsWith('doctors.')
-
-  // Route-type detection
+  
+  // Route detection
   const isAdminRoute = pathname.startsWith('/admin')
   const isSpecialistRoute = pathname.startsWith('/specialist')
 
-  // Domain environment
-  const isProduction =
-    hostname === 'askremohealth.com' || hostname === 'www.askremohealth.com'
-
+  // Environment detection
+  const isProduction = hostname === 'askremohealth.com' || hostname === 'www.askremohealth.com'
   const isStaging = hostname.includes('staging.askremohealth.com')
 
   // Public pages (not protected)
@@ -26,25 +26,25 @@ export async function middleware(req: NextRequest) {
   )
 
   // -----------------------------
-  // ADMIN SUBDOMAIN (admin.askremohealth.com)
+  // ADMIN SUBDOMAIN LOGIC
   // -----------------------------
   if (isAdminSubdomain) {
-    // Root → /adminAuth
+    // Default root → redirect to /adminAuth
     if (pathname === '/') {
-      return NextResponse.rewrite(new URL('/adminAuth', req.url))
+      return NextResponse.redirect(new URL('/adminAuth', req.url))
     }
 
-    // Auth page but already logged in
+    // Already logged in on login page → redirect to dashboard
     if (pathname === '/adminAuth' && sessionId) {
       return NextResponse.redirect(new URL('/admin/doctors', req.url))
     }
 
-    // Protected admin pages
-    if (!sessionId && !isPublic && pathname.startsWith('/admin')) {
+    // Protected admin pages → require session
+    if (!sessionId && pathname.startsWith('/admin') && !isPublic) {
       return NextResponse.redirect(new URL('/adminAuth', req.url))
     }
 
-    // Prevent visiting non-admin routes
+    // Prevent visiting non-admin pages in admin subdomain
     if (!isPublic && !pathname.startsWith('/admin') && pathname !== '/adminAuth') {
       const clean = pathname.replace(/^\/+/, '')
       return NextResponse.redirect(new URL(`/admin/${clean}`, req.url))
@@ -54,41 +54,39 @@ export async function middleware(req: NextRequest) {
   }
 
   // -----------------------------
-  // MAIN DOMAIN – PRODUCTION (askremohealth.com)
+  // MAIN DOMAIN – PRODUCTION
   // -----------------------------
-
-  // Admin routes belong to admin subdomain
   if (isAdminRoute && isProduction) {
+    // Redirect admin paths to admin subdomain
     const adminURL = new URL(pathname, 'https://admin.askremohealth.com')
     return NextResponse.redirect(adminURL)
   }
 
-  // adminAuth on main domain allowed
   if (pathname === '/adminAuth') {
+    // Allow adminAuth on main domain (for testing or staging)
     return NextResponse.next()
   }
 
   // -----------------------------
-  // MAIN DOMAIN – STAGING (staging.askremohealth.com)
+  // MAIN DOMAIN – STAGING
   // -----------------------------
-
-  // Staging serves /admin directly (no redirect)
   if (isAdminRoute && isStaging) {
+    // Allow /admin directly on staging
     return NextResponse.next()
   }
 
   // -----------------------------
-  // DOCTORS SUBDOMAIN
+  // DOCTORS SUBDOMAIN LOGIC
   // -----------------------------
   if (isDoctorsSubdomain) {
-    // Root → upcoming appointments
+    // Root → redirect to upcoming appointments
     if (pathname === '/') {
       return NextResponse.redirect(
         new URL('/specialist/upcoming-appointments', req.url)
       )
     }
 
-    // Unauthenticated → login
+    // Require login
     if (!sessionId && !isPublic) {
       const url = new URL(req.url)
       url.pathname = '/auth'
@@ -108,7 +106,6 @@ export async function middleware(req: NextRequest) {
   // -----------------------------
   // SPECIALIST ROUTES ON MAIN DOMAIN
   // -----------------------------
-
   if (isSpecialistRoute && isProduction) {
     const doctorsURL = new URL(pathname, 'https://doctors.askremohealth.com')
     return NextResponse.redirect(doctorsURL)
@@ -118,7 +115,9 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
-  // Default: allow
+  // -----------------------------
+  // Default fallback → allow
+  // -----------------------------
   return NextResponse.next()
 }
 
