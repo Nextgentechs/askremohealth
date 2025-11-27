@@ -27,7 +27,7 @@ export async function middleware(req: NextRequest) {
   // -----------------------------
   // Public paths (not protected)
   // -----------------------------
-  const publicPaths = ['/', '/auth', '/adminAuth', '/about', '/contact', '/favicon.ico']
+  const publicPaths = ['/auth', '/adminAuth', '/about', '/contact', '/favicon.ico']
   const isPublic = publicPaths.some(
     (p) => pathname === p || pathname.startsWith(p + '/')
   )
@@ -36,14 +36,17 @@ export async function middleware(req: NextRequest) {
   // ADMIN SUBDOMAIN LOGIC
   // -----------------------------
   if (isAdminSubdomain) {
-    // Root `/` → redirect to `/adminAuth`
-    if (pathname === '/' || pathname === '') {
-      return NextResponse.redirect('https://admin.askremohealth.com/adminAuth')
-    }
+    const isRoot = pathname === '/' || pathname === ''
+    const isLoginPage = pathname === '/adminAuth' || isRoot
 
     // Already logged-in admin visiting login → dashboard
-    if (pathname === '/adminAuth' && sessionId) {
+    if (isLoginPage && sessionId) {
       return NextResponse.redirect('https://admin.askremohealth.com/admin/doctors')
+    }
+
+    // Non-logged-in visiting root `/` → rewrite to `/adminAuth`
+    if (isRoot && !sessionId) {
+      return NextResponse.rewrite('https://admin.askremohealth.com/adminAuth')
     }
 
     // Require login for protected admin pages
@@ -61,7 +64,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // -----------------------------
-  // MAIN DOMAIN
+  // MAIN DOMAIN LOGIC
   // -----------------------------
   // Redirect admin routes on main domain to admin subdomain
   if (isAdminRoute && isProduction) {
@@ -76,7 +79,9 @@ export async function middleware(req: NextRequest) {
   // -----------------------------
   if (isDoctorsSubdomain) {
     if (pathname === '/') {
-      return NextResponse.redirect('https://doctors.askremohealth.com/specialist/upcoming-appointments')
+      return NextResponse.redirect(
+        'https://doctors.askremohealth.com/specialist/upcoming-appointments'
+      )
     }
 
     if (!sessionId && !isPublic) {
@@ -88,7 +93,9 @@ export async function middleware(req: NextRequest) {
 
     if (!isPublic && !pathname.startsWith('/specialist')) {
       const clean = pathname.replace(/^\/+/, '')
-      return NextResponse.redirect(`https://doctors.askremohealth.com/specialist/${clean}`)
+      return NextResponse.redirect(
+        `https://doctors.askremohealth.com/specialist/${clean}`
+      )
     }
 
     return NextResponse.next()
