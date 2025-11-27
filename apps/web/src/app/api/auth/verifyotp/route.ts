@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     }
 
     // Determine redirect URL based on role
-    let redirectTo = '/';
+    let redirectTo = null;
     switch (result.role) {
       case 'admin':
         redirectTo = 'https://admin.askremohealth.com/admin/doctors';
@@ -40,6 +40,8 @@ export async function POST(request: Request) {
       case 'lab':
         redirectTo = '/lab/dashboard';
         break;
+      default:
+        redirectTo = '/';
     }
 
     // Set session cookie for cross-subdomain
