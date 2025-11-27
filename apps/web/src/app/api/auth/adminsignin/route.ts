@@ -9,8 +9,9 @@ async function setSessionCookie(sessionId: string) {
   return serialize('session-id', sessionId, {
     httpOnly: true,
     secure: isProd,
-    sameSite: 'lax', // safe for same domain
+    sameSite: 'lax',
     path: '/',
+    domain: '.askremohealth.com',   // IMPORTANT: allow all subdomains
     maxAge: 60 * 60 * 24 * 7, // 7 days
   });
 }

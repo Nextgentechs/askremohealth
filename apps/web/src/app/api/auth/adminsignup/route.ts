@@ -11,6 +11,7 @@ async function setSessionCookie(sessionId: string) {
     secure: isProd,
     sameSite: 'lax',
     path: '/',
+    domain: '.askremohealth.com',   // IMPORTANT: allow all subdomains
     maxAge: 60 * 60 * 24 * 7, // 7 days
   });
 }
