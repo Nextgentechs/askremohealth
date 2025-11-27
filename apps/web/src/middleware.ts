@@ -1,16 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(req: NextRequest) {
+  const pathname = req.nextUrl.pathname;
+  const hostname = req.headers.get("host") ?? "";
   const sessionId = req.cookies.get("session-id")?.value ?? null;
 
-  const url = req.nextUrl;
-  const pathname = url.pathname;
-  const hostname = req.headers.get("host") ?? "";
-
+  // Detect proxied admin requests (staging)
   const xOriginalHost = req.headers.get("x-original-host");
   const xProxySource = req.headers.get("x-proxy-source");
-
-  // Detect proxied admin requests (staging)
   const isProxiedAdmin =
     xProxySource === "admin-subdomain" ||
     (hostname.includes("staging.askremohealth.com") &&
@@ -18,110 +15,72 @@ export async function middleware(req: NextRequest) {
 
   const effectiveHost = isProxiedAdmin ? xOriginalHost ?? hostname : hostname;
 
-  // Domain checks
   const isAdminDomain = effectiveHost.startsWith("admin.");
   const isDoctorsDomain = effectiveHost.startsWith("doctors.");
-
   const isProduction =
-    hostname === "askremohealth.com" ||
-    hostname === "www.askremohealth.com";
-
+    hostname === "askremohealth.com" || hostname === "www.askremohealth.com";
   const isStaging = hostname.includes("staging.askremohealth.com");
-
-  // Public admin paths
-  const adminPublic = ["/adminAuth", "/favicon.ico"];
-  const isAdminPublic = adminPublic.includes(pathname);
-
-  // Public main paths
-  const mainPublic = ["/", "/auth", "/about", "/contact", "/favicon.ico"];
-  const isMainPublic = mainPublic.some((p) => pathname === p || pathname.startsWith(p + "/"));
 
   // ---------- ADMIN SUBDOMAIN ----------
   if (isAdminDomain || isProxiedAdmin) {
-    // 1. Root always → /adminAuth
-    if (pathname === "/") {
-      const newUrl = url.clone();
-      newUrl.pathname = "/adminAuth";
-      return NextResponse.rewrite(newUrl);
+    const loginPage = "/adminAuth";
+    const dashboard = "/admin/doctors";
+
+    // If logged in and hits login page or root → go to dashboard
+    if (sessionId && (pathname === "/" || pathname === loginPage)) {
+      return NextResponse.redirect(new URL(dashboard, req.url));
     }
 
-    // 2. If on /adminAuth and logged in → dashboard
-    if (pathname === "/adminAuth" && sessionId) {
-      const dashboard = url.clone();
-      dashboard.pathname = "/admin/doctors";
-      return NextResponse.redirect(dashboard);
+    // If not logged in and tries to access protected admin routes → go to login
+    if (!sessionId && pathname.startsWith("/admin") && pathname !== loginPage) {
+      return NextResponse.redirect(new URL(loginPage, req.url));
     }
 
-    // 3. Protect all /admin routes if no session
-    if (pathname.startsWith("/admin") && !sessionId) {
-      const auth = url.clone();
-      auth.pathname = "/adminAuth";
-      return NextResponse.redirect(auth);
+    // Only rewrite root to login if not logged in
+    if (!sessionId && pathname === "/") {
+      return NextResponse.rewrite(new URL(loginPage, req.url));
     }
 
-    // 4. If someone visits non-admin path → rewrite into /admin/*
-    if (!pathname.startsWith("/admin") && pathname !== "/adminAuth") {
-      const clean = pathname.replace(/^\/+/, "");
-      const newUrl = url.clone();
-      newUrl.pathname = `/admin/${clean}`;
-      return NextResponse.redirect(newUrl);
-    }
-
+    // Allow everything else
     return NextResponse.next();
   }
 
   // ---------- DOCTORS SUBDOMAIN ----------
   if (isDoctorsDomain) {
-    // Root redirects to doctor dashboard
     if (pathname === "/") {
-      const newUrl = url.clone();
-      newUrl.pathname = "/specialist/upcoming-appointments";
-      return NextResponse.redirect(newUrl);
+      return NextResponse.redirect(
+        new URL("/specialist/upcoming-appointments", req.url)
+      );
     }
 
-    // Require login for specialist pages
-    if (!sessionId && !isMainPublic) {
-      const newUrl = url.clone();
-      newUrl.pathname = "/auth";
-      newUrl.searchParams.set("role", "doctor");
-      return NextResponse.redirect(newUrl);
-    }
-
-    // Force all non-specialist routes into /specialist/*
-    if (!pathname.startsWith("/specialist") && !isMainPublic) {
-      const clean = pathname.replace(/^\/+/, "");
-      const newUrl = url.clone();
-      newUrl.pathname = `/specialist/${clean}`;
-      return NextResponse.redirect(newUrl);
+    if (!sessionId && !pathname.startsWith("/auth")) {
+      const url = req.nextUrl.clone();
+      url.pathname = "/auth";
+      url.searchParams.set("role", "doctor");
+      return NextResponse.redirect(url);
     }
 
     return NextResponse.next();
   }
 
-  // ---------- MAIN DOMAIN (Production) ----------
+  // ---------- MAIN DOMAIN ----------
   if (isProduction) {
+    // Redirect /admin on main → admin subdomain
     if (pathname.startsWith("/admin")) {
-      // NEVER serve admin pages on main domain → redirect to admin subdomain
-      const newUrl = new URL(url.pathname, "https://admin.askremohealth.com");
-      return NextResponse.redirect(newUrl);
+      return NextResponse.redirect(
+        new URL(pathname, "https://admin.askremohealth.com")
+      );
     }
 
-    // Redirect specialist pages to doctors subdomain
+    // Redirect /specialist → doctors subdomain
     if (pathname.startsWith("/specialist")) {
-      const newUrl = new URL(url.pathname, "https://doctors.askremohealth.com");
-      return NextResponse.redirect(newUrl);
+      return NextResponse.redirect(
+        new URL(pathname, "https://doctors.askremohealth.com")
+      );
     }
-
-    return NextResponse.next();
   }
 
-  // ---------- MAIN DOMAIN (Staging) ----------
-  if (isStaging) {
-    // Allow admin routes on staging main domain
-    return NextResponse.next();
-  }
-
-  // Default allow
+  // Allow all other requests
   return NextResponse.next();
 }
 
