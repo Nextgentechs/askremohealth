@@ -46,7 +46,7 @@ export async function middleware(req: NextRequest) {
 
     // Non-logged-in visiting root `/` → rewrite to `/adminAuth`
     if (isRoot && !sessionId) {
-      return NextResponse.rewrite('https://admin.askremohealth.com/adminAuth')
+      return NextResponse.redirect('https://admin.askremohealth.com/adminAuth')
     }
 
     // Require login for protected admin pages
