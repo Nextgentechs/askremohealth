@@ -5,34 +5,48 @@ export async function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname
   const hostname = req.headers.get('host') ?? ''
 
+  // -----------------------------
+  // Subdomain detection
+  // -----------------------------
   const isAdminSubdomain = hostname.startsWith('admin.')
   const isDoctorsSubdomain = hostname.startsWith('doctors.')
 
+  // -----------------------------
+  // Route detection
+  // -----------------------------
   const isAdminRoute = pathname.startsWith('/admin')
   const isSpecialistRoute = pathname.startsWith('/specialist')
 
+  // -----------------------------
+  // Environment detection
+  // -----------------------------
   const isProduction =
     hostname === 'askremohealth.com' || hostname === 'www.askremohealth.com'
   const isStaging = hostname.includes('staging.askremohealth.com')
 
-  // Public pages (not protected)
+  // -----------------------------
+  // Public paths (not protected)
+  // -----------------------------
   const publicPaths = ['/', '/auth', '/adminAuth', '/about', '/contact', '/favicon.ico']
   const isPublic = publicPaths.some(
     (p) => pathname === p || pathname.startsWith(p + '/')
   )
 
   // -----------------------------
-  // ADMIN SUBDOMAIN
+  // ADMIN SUBDOMAIN LOGIC
   // -----------------------------
   if (isAdminSubdomain) {
-    // Root → redirect to /adminAuth
-    if (pathname === '/') {
-      return NextResponse.redirect('https://admin.askremohealth.com/adminAuth')
+    // Treat root `/` as `/adminAuth` implicitly
+    const isLoginPage = pathname === '/' || pathname === '/adminAuth'
+
+    // Already logged-in admin visiting login → redirect to dashboard
+    if (isLoginPage && sessionId) {
+      return NextResponse.redirect('https://admin.askremohealth.com/admin/doctors')
     }
 
-    // Already logged-in admin visiting login → dashboard
-    if (pathname === '/adminAuth' && sessionId) {
-      return NextResponse.redirect('https://admin.askremohealth.com/admin/doctors')
+    // Unauthenticated visiting root `/` → rewrite to `/adminAuth`
+    if (pathname === '/') {
+      return NextResponse.rewrite('https://admin.askremohealth.com/adminAuth')
     }
 
     // Require login for protected admin pages
@@ -61,7 +75,7 @@ export async function middleware(req: NextRequest) {
   if (pathname === '/adminAuth') return NextResponse.next()
 
   // -----------------------------
-  // DOCTORS SUBDOMAIN
+  // DOCTORS SUBDOMAIN LOGIC
   // -----------------------------
   if (isDoctorsSubdomain) {
     if (pathname === '/') {
@@ -94,7 +108,7 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
-  // Default
+  // Default: allow
   return NextResponse.next()
 }
 
