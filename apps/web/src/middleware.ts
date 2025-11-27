@@ -14,7 +14,6 @@ export async function middleware(req: NextRequest) {
       xOriginalHost?.includes("admin.askremohealth.com"));
 
   const effectiveHost = isProxiedAdmin ? xOriginalHost ?? hostname : hostname;
-
   const isAdminDomain = effectiveHost.startsWith("admin.");
   const isDoctorsDomain = effectiveHost.startsWith("doctors.");
   const isProduction =
@@ -26,22 +25,22 @@ export async function middleware(req: NextRequest) {
     const loginPage = "/adminAuth";
     const dashboard = "/admin/doctors";
 
-    // If logged in and hits login page or root → go to dashboard
-    if (sessionId && (pathname === "/" || pathname === loginPage)) {
-      return NextResponse.redirect(new URL(dashboard, req.url));
-    }
-
-    // If not logged in and tries to access protected admin routes → go to login
-    if (!sessionId && pathname.startsWith("/admin") && pathname !== loginPage) {
-      return NextResponse.redirect(new URL(loginPage, req.url));
-    }
-
-    // Only rewrite root to login if not logged in
+    // 1️⃣ Root '/' → rewrite to login page if NOT logged in
     if (!sessionId && pathname === "/") {
       return NextResponse.rewrite(new URL(loginPage, req.url));
     }
 
-    // Allow everything else
+    // 2️⃣ If logged in and hits root or login → redirect to dashboard
+    if (sessionId && (pathname === "/" || pathname === loginPage)) {
+      return NextResponse.redirect(new URL(dashboard, req.url));
+    }
+
+    // 3️⃣ Protect /admin/* routes → redirect to login if not logged in
+    if (!sessionId && pathname.startsWith("/admin") && pathname !== loginPage) {
+      return NextResponse.redirect(new URL(loginPage, req.url));
+    }
+
+    // 4️⃣ Allow everything else
     return NextResponse.next();
   }
 
