@@ -5,18 +5,14 @@ export async function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname
   const hostname = req.headers.get('host') ?? ''
 
-  // -----------------------------
-  // Subdomain detection
-  // -----------------------------
   const isAdminSubdomain = hostname.startsWith('admin.')
   const isDoctorsSubdomain = hostname.startsWith('doctors.')
-  
-  // Route detection
+
   const isAdminRoute = pathname.startsWith('/admin')
   const isSpecialistRoute = pathname.startsWith('/specialist')
 
-  // Environment detection
-  const isProduction = hostname === 'askremohealth.com' || hostname === 'www.askremohealth.com'
+  const isProduction =
+    hostname === 'askremohealth.com' || hostname === 'www.askremohealth.com'
   const isStaging = hostname.includes('staging.askremohealth.com')
 
   // Public pages (not protected)
@@ -26,67 +22,52 @@ export async function middleware(req: NextRequest) {
   )
 
   // -----------------------------
-  // ADMIN SUBDOMAIN LOGIC
+  // ADMIN SUBDOMAIN
   // -----------------------------
   if (isAdminSubdomain) {
-    // Default root → redirect to /adminAuth
+    // Root → redirect to /adminAuth
     if (pathname === '/') {
-      return NextResponse.redirect(new URL('/adminAuth', req.url))
+      return NextResponse.redirect('https://admin.askremohealth.com/adminAuth')
     }
 
-    // Already logged in on login page → redirect to dashboard
+    // Already logged-in admin visiting login → dashboard
     if (pathname === '/adminAuth' && sessionId) {
-      return NextResponse.redirect(new URL('/admin/doctors', req.url))
+      return NextResponse.redirect('https://admin.askremohealth.com/admin/doctors')
     }
 
-    // Protected admin pages → require session
+    // Require login for protected admin pages
     if (!sessionId && pathname.startsWith('/admin') && !isPublic) {
-      return NextResponse.redirect(new URL('/adminAuth', req.url))
+      return NextResponse.redirect('https://admin.askremohealth.com/adminAuth')
     }
 
-    // Prevent visiting non-admin pages in admin subdomain
+    // Prevent visiting non-admin pages
     if (!isPublic && !pathname.startsWith('/admin') && pathname !== '/adminAuth') {
-      const clean = pathname.replace(/^\/+/, '')
-      return NextResponse.redirect(new URL(`/admin/${clean}`, req.url))
+      const cleanPath = pathname.replace(/^\/+/, '')
+      return NextResponse.redirect(`https://admin.askremohealth.com/admin/${cleanPath}`)
     }
 
     return NextResponse.next()
   }
 
   // -----------------------------
-  // MAIN DOMAIN – PRODUCTION
+  // MAIN DOMAIN
   // -----------------------------
+  // Redirect admin routes on main domain to admin subdomain
   if (isAdminRoute && isProduction) {
-    // Redirect admin paths to admin subdomain
-    const adminURL = new URL(pathname, 'https://admin.askremohealth.com')
-    return NextResponse.redirect(adminURL)
+    return NextResponse.redirect(`https://admin.askremohealth.com${pathname}`)
   }
 
-  if (pathname === '/adminAuth') {
-    // Allow adminAuth on main domain (for testing or staging)
-    return NextResponse.next()
-  }
+  // Allow adminAuth on main domain
+  if (pathname === '/adminAuth') return NextResponse.next()
 
   // -----------------------------
-  // MAIN DOMAIN – STAGING
-  // -----------------------------
-  if (isAdminRoute && isStaging) {
-    // Allow /admin directly on staging
-    return NextResponse.next()
-  }
-
-  // -----------------------------
-  // DOCTORS SUBDOMAIN LOGIC
+  // DOCTORS SUBDOMAIN
   // -----------------------------
   if (isDoctorsSubdomain) {
-    // Root → redirect to upcoming appointments
     if (pathname === '/') {
-      return NextResponse.redirect(
-        new URL('/specialist/upcoming-appointments', req.url)
-      )
+      return NextResponse.redirect('https://doctors.askremohealth.com/specialist/upcoming-appointments')
     }
 
-    // Require login
     if (!sessionId && !isPublic) {
       const url = new URL(req.url)
       url.pathname = '/auth'
@@ -94,10 +75,9 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(url)
     }
 
-    // Force all pages into /specialist
     if (!isPublic && !pathname.startsWith('/specialist')) {
       const clean = pathname.replace(/^\/+/, '')
-      return NextResponse.redirect(new URL(`/specialist/${clean}`, req.url))
+      return NextResponse.redirect(`https://doctors.askremohealth.com/specialist/${clean}`)
     }
 
     return NextResponse.next()
@@ -107,17 +87,14 @@ export async function middleware(req: NextRequest) {
   // SPECIALIST ROUTES ON MAIN DOMAIN
   // -----------------------------
   if (isSpecialistRoute && isProduction) {
-    const doctorsURL = new URL(pathname, 'https://doctors.askremohealth.com')
-    return NextResponse.redirect(doctorsURL)
+    return NextResponse.redirect(`https://doctors.askremohealth.com${pathname}`)
   }
 
   if (isSpecialistRoute && isStaging) {
     return NextResponse.next()
   }
 
-  // -----------------------------
-  // Default fallback → allow
-  // -----------------------------
+  // Default
   return NextResponse.next()
 }
 
