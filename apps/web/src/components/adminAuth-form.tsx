@@ -198,7 +198,7 @@ function Login({
     <div className="flex flex-col gap-6">
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-xl">Login to your account</CardTitle>
+          <CardTitle className="text-xl">Login to your account as an Admin</CardTitle>
           <CardDescription>
             Sign in with your email or Google account
           </CardDescription>
