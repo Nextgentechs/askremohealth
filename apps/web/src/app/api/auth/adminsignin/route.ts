@@ -28,10 +28,11 @@ export async function POST(request: Request) {
     }
 
     const cookie = await setSessionCookie(result.sessionId);
+    const redirectUrl = 'https://admin.askremohealth.com/admin/doctors';
 
     const res = NextResponse.json({
       success: true,
-      redirectTo: '/admin/doctors', // frontend uses this after OTP
+      redirectTo: redirectUrl, // frontend uses this after OTP
       otp: result.otp, // if OTP needed
     });
 
