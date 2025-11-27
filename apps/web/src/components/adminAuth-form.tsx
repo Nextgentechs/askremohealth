@@ -601,11 +601,13 @@ function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
     }
 
     // redirect based on the freshly fetched user
-      if (result.redirectTo) {
-          window.location.href = result.redirectTo;
+      if (user.role === 'admin' && result.redirectTo) {
+        // Ensure full URL redirect for admin subdomain
+        window.location.assign(result.redirectTo);
       } else {
-      router.push('/')
-    }
+        router.push(result.redirectTo ?? '/');
+      }
+    
   } catch (err: any) {
     console.error('OTP submit error', err)
     toast({
