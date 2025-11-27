@@ -9,7 +9,7 @@ jobs:
   deploy:
     name: 📦 Deploy to Askremohealth prod
     runs-on: ubuntu-latest
-#test run
+
     steps:
       - name: 📥 Checkout Code
         uses: actions/checkout@v3
