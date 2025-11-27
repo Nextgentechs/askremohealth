@@ -1,6 +1,9 @@
 name: 🚀 Deploy AskRemoHealth
-#rerun
 on:
+  workflow_run:
+    workflows: ["🚀 Promote Staging → Main (Manual Approval)"]
+    types:
+      - completed
   push:
     branches:
       - main
@@ -11,6 +14,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: 📝 Log trigger reason
+        run: echo "Triggered by workflow_run or push"
       - name: 📥 Checkout Code
         uses: actions/checkout@v3
 
