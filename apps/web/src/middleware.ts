@@ -1,154 +1,155 @@
-import { NextResponse, type NextRequest } from 'next/server'
+import { NextResponse, type NextRequest } from "next/server";
+
+/**
+ * Helpers
+ */
+const PUBLIC_PATHS = ["/", "/auth", "/adminAuth", "/about", "/contact", "/favicon.ico"];
+
+const isPublicPath = (path: string) =>
+  PUBLIC_PATHS.some((p) => path === p || path.startsWith(p + "/"));
+
+const redirectTo = (req: NextRequest, path: string) => {
+  const url = req.nextUrl.clone();
+  url.pathname = path;
+  return NextResponse.redirect(url);
+};
+
+const rewriteTo = (req: NextRequest, path: string) => {
+  const url = req.nextUrl.clone();
+  url.pathname = path;
+  return NextResponse.rewrite(url);
+};
 
 export async function middleware(req: NextRequest) {
-  const sessionId = req.cookies.get('session-id')?.value ?? null
-  const pathname = req.nextUrl.pathname
-  const hostname = req.headers.get('host') ?? ''
+  const pathname = req.nextUrl.pathname;
+  const hostname = req.headers.get("host") ?? "";
+  const sessionId = req.cookies.get("session-id")?.value ?? null;
 
-  const isAdminSubdomain =
-    hostname === 'admin.askremohealth.com' || hostname.startsWith('admin.')
-
-  const isDoctorsSubdomain = hostname.startsWith('doctors.')
-  const isSpecialistRoute = pathname.startsWith('/specialist')
-  const isAdminRoute = pathname.startsWith('/admin')
+  const isAdminSub = hostname === "admin.askremohealth.com" || hostname.startsWith("admin.");
+  const isDoctorsSub = hostname.startsWith("doctors.");
 
   const isProduction =
-    hostname === 'askremohealth.com' || hostname === 'www.askremohealth.com'
-  const isStaging =
-    hostname === 'staging.askremohealth.com' ||
-    hostname.startsWith('staging.')
+    hostname === "askremohealth.com" || hostname === "www.askremohealth.com";
 
-  const publicPaths = ['/', '/auth', '/adminAuth', '/about', '/contact', '/favicon.ico']
-  const isPublic = publicPaths.some(
-    (path) => pathname === path || pathname.startsWith(path + '/')
-  )
+  const inPublic = isPublicPath(pathname);
 
   console.log(
-    `Middleware - Host: ${hostname}, Path: ${pathname}, Session: ${!!sessionId}, AdminSubdomain: ${isAdminSubdomain}, DoctorsSubdomain: ${isDoctorsSubdomain}`
-  )
+    `Host: ${hostname} | Path: ${pathname} | Session: ${!!sessionId} | Admin: ${isAdminSub} | Doctors: ${isDoctorsSub}`
+  );
 
-  // ----------------------------------------------------------
+  // -----------------------------------------------------------------------------------
   // ADMIN SUBDOMAIN
-  // ----------------------------------------------------------
-  if (isAdminSubdomain) {
-    // Visit admin.askremohealth.com → rewrite to /adminAuth
-    if (pathname === '/') {
-      const url = req.nextUrl.clone()
-      url.pathname = '/adminAuth'
-      return NextResponse.rewrite(url)
+  // -----------------------------------------------------------------------------------
+  if (isAdminSub) {
+    // Always redirect admin root → /adminAuth
+    if (pathname === "/") {
+      return redirectTo(req, "/adminAuth");
     }
 
-    // Set session via ?sessionId=
-    const urlSessionId = req.nextUrl.searchParams.get('sessionId')
+    // Set session via ?sessionId
+    const urlSessionId = req.nextUrl.searchParams.get("sessionId");
     if (urlSessionId && !sessionId) {
-      const response = NextResponse.next()
-      response.cookies.set('session-id', urlSessionId, {
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
+      const response = NextResponse.next();
+      response.cookies.set("session-id", urlSessionId, {
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
         httpOnly: true,
-        sameSite: 'lax',
-        domain: '.askremohealth.com',
+        sameSite: "lax",
+        domain: ".askremohealth.com",
         maxAge: 60 * 60 * 24 * 7,
-      })
-      return response
+      });
+      return response;
     }
 
-    // If logged in and visiting /adminAuth → redirect to dashboard
-    if (pathname === '/adminAuth' && sessionId) {
-      const url = req.nextUrl.clone()
-      url.pathname = '/admin/doctors'
-      return NextResponse.redirect(url)
+    // Already authenticated → skip login
+    if (pathname === "/adminAuth" && sessionId) {
+      return redirectTo(req, "/admin/doctors");
     }
 
-    // Allow access to /adminAuth for non-authenticated admins
-    if (pathname === '/adminAuth' && !sessionId) {
-      return NextResponse.next()
+    // Protect /admin/*
+    if (!sessionId && pathname.startsWith("/admin")) {
+      return redirectTo(req, "/adminAuth");
     }
 
-    // Protect /admin/* routes from non-logged-in users
-    if (!sessionId && !isPublic && pathname.startsWith('/admin')) {
-      const url = req.nextUrl.clone()
-      url.pathname = '/adminAuth'
-      return NextResponse.redirect(url)
+    // Normalize admin paths → force /admin/*
+    if (!pathname.startsWith("/admin") && pathname !== "/adminAuth") {
+      const clean = pathname.replace(/^\/+/, "");
+      return redirectTo(req, `/admin/${clean}`);
     }
 
-    // Redirect stray paths on admin subdomain to /admin/*
-    if (!isPublic && !pathname.startsWith('/admin') && pathname !== '/adminAuth') {
-      const url = req.nextUrl.clone()
-      const cleanPath = pathname.replace(/^\/+/, '')
-      url.pathname = `/admin/${cleanPath}`
-      return NextResponse.redirect(url)
-    }
-
-    return NextResponse.next()
+    return NextResponse.next();
   }
 
-  // ----------------------------------------------------------
+  // -----------------------------------------------------------------------------------
   // DOCTORS SUBDOMAIN
-  // ----------------------------------------------------------
-  if (isDoctorsSubdomain) {
-    if (pathname === '/') {
-      return NextResponse.redirect(
-        new URL('/specialist/upcoming-appointments', req.url)
-      )
+  // -----------------------------------------------------------------------------------
+  if (isDoctorsSub) {
+    // Root → specialist dashboard
+    if (pathname === "/") {
+      return redirectTo(req, "/specialist/upcoming-appointments");
     }
 
-    if (!sessionId && !isPublic) {
-      const url = new URL(req.url)
-      url.pathname = '/auth'
-      url.searchParams.set('role', 'doctor')
-      return NextResponse.redirect(url)
+    // Protect pages
+    if (!sessionId && !inPublic) {
+      const url = req.nextUrl.clone();
+      url.pathname = "/auth";
+      url.searchParams.set("role", "doctor");
+      return NextResponse.redirect(url);
     }
 
-    if (!isPublic && !pathname.startsWith('/specialist')) {
-      const cleanPath = pathname.replace(/^\/+/, '')
-      return NextResponse.redirect(new URL(`/specialist/${cleanPath}`, req.url))
+    // Normalize: everything → /specialist/*
+    if (!pathname.startsWith("/specialist") && !inPublic) {
+      const clean = pathname.replace(/^\/+/, "");
+      return redirectTo(req, `/specialist/${clean}`);
     }
 
-    return NextResponse.next()
+    return NextResponse.next();
   }
 
-  // ----------------------------------------------------------
-  // SPECIALIST ROUTES ON MAIN DOMAIN
-  // ----------------------------------------------------------
-  if (isSpecialistRoute && !isDoctorsSubdomain) {
+  // -----------------------------------------------------------------------------------
+  // SPECIALIST PATHS ON MAIN DOMAIN → MOVE TO DOCTORS SUBDOMAIN
+  // -----------------------------------------------------------------------------------
+  if (pathname.startsWith("/specialist") && !isDoctorsSub) {
     const doctorsHost = isProduction
-      ? 'doctors.askremohealth.com'
-      : 'doctors.localhost'
+      ? "doctors.askremohealth.com"
+      : "doctors.localhost";
 
-    const newUrl = new URL(pathname, `https://${doctorsHost}`)
-    const response = NextResponse.redirect(newUrl)
+    const target = new URL(pathname, `https://${doctorsHost}`);
+    const response = NextResponse.redirect(target);
 
     if (sessionId) {
-      response.cookies.set('session-id', sessionId, {
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
+      response.cookies.set("session-id", sessionId, {
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
         httpOnly: false,
-        sameSite: 'lax',
+        sameSite: "lax",
         maxAge: 60 * 60 * 24 * 7,
         domain:
-          process.env.NODE_ENV === 'production' ? '.askremohealth.com' : undefined,
-      })
+          process.env.NODE_ENV === "production" ? ".askremohealth.com" : undefined,
+      });
     }
 
-    return response
+    return response;
   }
 
-  // ----------------------------------------------------------
-  // MAIN DOMAIN ADMIN ROUTES
-  // ----------------------------------------------------------
-  if (isAdminRoute && !isAdminSubdomain) {
+  // -----------------------------------------------------------------------------------
+  // ADMIN PATHS ON MAIN DOMAIN → MOVE TO ADMIN SUBDOMAIN
+  // -----------------------------------------------------------------------------------
+  if (pathname.startsWith("/admin") && !isAdminSub) {
     if (isProduction) {
       return NextResponse.redirect(
-        new URL(pathname, 'https://admin.askremohealth.com')
-      )
+        new URL(pathname, "https://admin.askremohealth.com")
+      );
     }
-    return NextResponse.next()
+    return NextResponse.next();
   }
 
-  return NextResponse.next()
+  // -----------------------------------------------------------------------------------
+  // DEFAULT: allow
+  // -----------------------------------------------------------------------------------
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
-}
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+};
