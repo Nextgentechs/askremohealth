@@ -37,7 +37,22 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error('Upload error:', error);
-    return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
-  }
+      const debugInfo = {
+        error: 'Upload failed',
+        envVars: {
+          cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ? 'PRESENT' : 'ABSENT',
+          apiKey: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY ? 'PRESENT' : 'ABSENT',
+          apiSecret: process.env.CLOUDINARY_API_SECRET ? 'PRESENT' : 'ABSENT',
+        },
+        errorMessage: error instanceof Error ? error.message : String(error),
+        errorStack: error instanceof Error ? error.stack : 'N/A',
+      };
+      console.error('[UPLOAD_ERROR]', debugInfo);
+      return NextResponse.json(debugInfo, { status: 500 });
+    }
 }
+
+// catch (error) {
+//     console.error('Upload error:', error);
+//     return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+//   }

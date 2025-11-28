@@ -8,4 +8,3 @@ export default {
   connectionString: env.DATABASE_URL,
   out: './drizzle/migrations', 
 } satisfies Config
-
