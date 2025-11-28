@@ -121,7 +121,10 @@ function CurrentUser({
         <Button variant="outline">
           <User />
           <span>
-            {user?.firstName} {user?.lastName}
+            {user?.firstName}
+            <span className="hidden lg:inline">
+              {" "}{user?.lastName}
+            </span>
           </span>
           <ChevronsUpDown className="ml-auto size-4" />
         </Button>
