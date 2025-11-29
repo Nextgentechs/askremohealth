@@ -23,7 +23,12 @@ const rewriteTo = (req: NextRequest, path: string) => {
 export async function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
   const hostname = req.headers.get("host") ?? "";
+
+  // Main session (patients/doctors)
   const sessionId = req.cookies.get("session-id")?.value ?? null;
+
+  // Admin session (separate cookie)
+  const adminSession = req.cookies.get("session-admin")?.value ?? null;
 
   const isAdminSub = hostname === "admin.askremohealth.com" || hostname.startsWith("admin.");
   const isDoctorsSub = hostname.startsWith("doctors.");
@@ -34,23 +39,23 @@ export async function middleware(req: NextRequest) {
   const inPublic = isPublicPath(pathname);
 
   console.log(
-    `Host: ${hostname} | Path: ${pathname} | Session: ${!!sessionId} | Admin: ${isAdminSub} | Doctors: ${isDoctorsSub}`
+    `Host: ${hostname} | Path: ${pathname} | AdminSession: ${!!adminSession} | Session: ${!!sessionId} | AdminSub: ${isAdminSub} | DoctorSub: ${isDoctorsSub}`
   );
 
   // -----------------------------------------------------------------------------------
   // ADMIN SUBDOMAIN
   // -----------------------------------------------------------------------------------
   if (isAdminSub) {
-    // Always redirect admin root → /adminAuth
+    // Root → /adminAuth
     if (pathname === "/") {
       return redirectTo(req, "/adminAuth");
     }
 
-    // Set session via ?sessionId
+    // Set admin session via ?sessionId
     const urlSessionId = req.nextUrl.searchParams.get("sessionId");
-    if (urlSessionId && !sessionId) {
+    if (urlSessionId && !adminSession) {
       const response = NextResponse.next();
-      response.cookies.set("session-id", urlSessionId, {
+      response.cookies.set("session-admin", urlSessionId, {
         path: "/",
         secure: process.env.NODE_ENV === "production",
         httpOnly: true,
@@ -61,17 +66,17 @@ export async function middleware(req: NextRequest) {
       return response;
     }
 
-    // Already authenticated → skip login
-    if (pathname === "/adminAuth" && sessionId) {
+    // Authenticated admins skip adminAuth
+    if (pathname === "/adminAuth" && adminSession) {
       return redirectTo(req, "/admin/doctors");
     }
 
-    // Protect /admin/*
-    if (!sessionId && pathname.startsWith("/admin")) {
+    // Unauthenticated admins can't access /admin/*
+    if (!adminSession && pathname.startsWith("/admin")) {
       return redirectTo(req, "/adminAuth");
     }
 
-    // Normalize admin paths → force /admin/*
+    // Normalize all admin URLs
     if (!pathname.startsWith("/admin") && pathname !== "/adminAuth") {
       const clean = pathname.replace(/^\/+/, "");
       return redirectTo(req, `/admin/${clean}`);
@@ -84,12 +89,12 @@ export async function middleware(req: NextRequest) {
   // DOCTORS SUBDOMAIN
   // -----------------------------------------------------------------------------------
   if (isDoctorsSub) {
-    // Root → specialist dashboard
+    // Root → upcoming appointments
     if (pathname === "/") {
       return redirectTo(req, "/specialist/upcoming-appointments");
     }
 
-    // Protect pages
+    // Protect doctor pages
     if (!sessionId && !inPublic) {
       const url = req.nextUrl.clone();
       url.pathname = "/auth";
@@ -97,7 +102,7 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    // Normalize: everything → /specialist/*
+    // Normalize: must always be /specialist/*
     if (!pathname.startsWith("/specialist") && !inPublic) {
       const clean = pathname.replace(/^\/+/, "");
       return redirectTo(req, `/specialist/${clean}`);
@@ -117,6 +122,7 @@ export async function middleware(req: NextRequest) {
     const target = new URL(pathname, `https://${doctorsHost}`);
     const response = NextResponse.redirect(target);
 
+    // Preserve doctor session
     if (sessionId) {
       response.cookies.set("session-id", sessionId, {
         path: "/",
@@ -145,7 +151,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // -----------------------------------------------------------------------------------
-  // DEFAULT: allow
+  // DEFAULT ALLOW
   // -----------------------------------------------------------------------------------
   return NextResponse.next();
 }
