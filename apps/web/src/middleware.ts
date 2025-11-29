@@ -16,38 +16,60 @@ export async function middleware(req: NextRequest) {
   )
 
   // ----------------------------------------------------------
-  // ADMIN SUBDOMAIN LOGIC - FIXED
+  // OPTION A: COOKIE NORMALIZATION FOR ALL SUBDOMAINS
+  // Ensures session-id works correctly across:
+  // admin.askremohealth.com
+  // doctors.askremohealth.com
+  // askremohealth.com
+  // ----------------------------------------------------------
+  if (sessionId) {
+    const res = NextResponse.next()
+    res.cookies.set("session-id", sessionId, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      domain: ".askremohealth.com",   // critical fix
+      maxAge: 60 * 60 * 24 * 7,
+    })
+    return res
+  }
+
+
+  // ----------------------------------------------------------
+  // ADMIN SUBDOMAIN LOGIC — ALWAYS REQUIRE AUTHENTICATION
   // ----------------------------------------------------------
   if (isAdminSubdomain) {
-    // 1. If no session and NOT on adminAuth → redirect to adminAuth
+    // 1. No session → always redirect to /adminAuth
     if (!sessionId && pathname !== '/adminAuth') {
       const url = req.nextUrl.clone()
       url.pathname = '/adminAuth'
-      return NextResponse.redirect(url) // Use redirect instead of rewrite
+      return NextResponse.redirect(url)
     }
 
-    // 2. If no session but already on adminAuth → allow access
+    // 2. No session & currently on /adminAuth → allowed
     if (!sessionId && pathname === '/adminAuth') {
       return NextResponse.next()
     }
 
-    // 3. If has session and on root → redirect to /admin/doctors
+    // 3. Authenticated & visiting root → go to dashboard
     if (sessionId && pathname === '/') {
       const url = req.nextUrl.clone()
       url.pathname = '/admin/doctors'
       return NextResponse.redirect(url)
     }
 
-    // 4. If has session and on adminAuth → redirect to /admin/doctors
+    // 4. Authenticated & visiting /adminAuth → skip it
     if (sessionId && pathname === '/adminAuth') {
       const url = req.nextUrl.clone()
       url.pathname = '/admin/doctors'
       return NextResponse.redirect(url)
     }
 
-    // 5. Allow all other authenticated requests
+    // 5. Authenticated → allow all /admin/... routes
     return NextResponse.next()
   }
+
 
   // ----------------------------------------------------------
   // DOCTORS SUBDOMAIN LOGIC (unchanged)
@@ -72,6 +94,7 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(newUrl)
     }
   }
+
 
   // ----------------------------------------------------------
   // SPECIALIST ROUTE ON MAIN DOMAIN → redirect to doctors subdomain
@@ -102,8 +125,10 @@ export async function middleware(req: NextRequest) {
     return response
   }
 
+
   return NextResponse.next()
 }
+
 
 // Middleware matcher
 export const config = {

@@ -99,11 +99,11 @@ function NavUser() {
               <DropdownMenuItem
                 onClick={async () => {
                   await fetch('/api/auth/signout', { method: 'POST' })
-                  router.push('https://admin.askremohealth.com')
+                  router.push('/adminAuth')
                 }}
               >
                 <LogOut className="mr-2 h-4 w-4" />
-                Sign-out Admin
+                Signout
               </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>
