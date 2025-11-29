@@ -10,38 +10,47 @@ export async function middleware(req: NextRequest) {
   const isSpecialistRoute = pathname.startsWith('/specialist')
   const isAdminRoute = pathname.startsWith('/admin')
 
-  const publicPaths = ['/', '/auth', '/about', '/contact']
+  const publicPaths = ['/', '/auth', '/about', '/contact', '/adminAuth']
   const isPublic = publicPaths.some((path) =>
     pathname === path || pathname.startsWith(path + '/')
   )
 
   // ----------------------------------------------------------
-  // ADMIN SUBDOMAIN LOGIC
+  // ADMIN SUBDOMAIN LOGIC - FIXED
   // ----------------------------------------------------------
   if (isAdminSubdomain) {
-    // 1. Landing page → always rewrite to /adminAuth
-    if (!sessionId) {
-      if (pathname !== '/adminAuth') {
-        const url = req.nextUrl.clone()
-        url.pathname = '/adminAuth'
-        return NextResponse.rewrite(url)
-      }
+    // 1. If no session and NOT on adminAuth → redirect to adminAuth
+    if (!sessionId && pathname !== '/adminAuth') {
+      const url = req.nextUrl.clone()
+      url.pathname = '/adminAuth'
+      return NextResponse.redirect(url) // Use redirect instead of rewrite
+    }
+
+    // 2. If no session but already on adminAuth → allow access
+    if (!sessionId && pathname === '/adminAuth') {
       return NextResponse.next()
     }
 
-    // 2. Authenticated but visiting root → go to /admin/doctors
+    // 3. If has session and on root → redirect to /admin/doctors
     if (sessionId && pathname === '/') {
       const url = req.nextUrl.clone()
       url.pathname = '/admin/doctors'
       return NextResponse.redirect(url)
     }
 
-    // 3. Allow authenticated users to access /admin/... freely
+    // 4. If has session and on adminAuth → redirect to /admin/doctors
+    if (sessionId && pathname === '/adminAuth') {
+      const url = req.nextUrl.clone()
+      url.pathname = '/admin/doctors'
+      return NextResponse.redirect(url)
+    }
+
+    // 5. Allow all other authenticated requests
     return NextResponse.next()
   }
 
   // ----------------------------------------------------------
-  // DOCTORS SUBDOMAIN LOGIC (unchanged from your version)
+  // DOCTORS SUBDOMAIN LOGIC (unchanged)
   // ----------------------------------------------------------
   if (isDoctorsSubdomain) {
     if (pathname === '/') {
