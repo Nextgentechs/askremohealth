@@ -98,12 +98,17 @@ function NavUser() {
               </Link>
               <DropdownMenuItem
                 onClick={async () => {
-                  await fetch('/api/auth/signout', { method: 'POST' })
+                  await fetch('/api/auth/signout', {
+                    method: 'POST',
+                    credentials: 'include'
+                  })
+
+                  router.refresh()
                   router.push('/adminAuth')
                 }}
               >
                 <LogOut className="mr-2 h-4 w-4" />
-                Signout
+                Sign-out
               </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>

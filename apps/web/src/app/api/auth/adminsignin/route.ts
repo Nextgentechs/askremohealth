@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { serialize } from 'cookie';
+import { cookies } from 'next/headers'
 import { AuthService } from '@web/server/services/auth';
 
 export async function POST(request: Request) {
@@ -9,22 +9,22 @@ export async function POST(request: Request) {
 
     if (result?.sessionId) {
       // create cookie string with domain set for all subdomains
-      const cookie = serialize('session-id', result.sessionId, {
-        httpOnly: true,
-        secure: true,                // required when SameSite=None
-        sameSite: 'none',
-        path: '/',
-        domain: '.askremohealth.com', // NOTE leading dot
-        maxAge: 60 * 60 * 24 * 7,
-      });
-      const res = NextResponse.json({ success: true });
-      res.headers.set('Set-Cookie', cookie);
-      return res;
+      (await cookies()).set('session-id', result.sessionId, {
+              path: '/',
+              secure: process.env.NODE_ENV === 'production',
+              httpOnly: false,
+              sameSite: 'lax',
+              maxAge: 60 * 60 * 24 * 7,
+            })
+      
     }
 
-    return NextResponse.json({ success: false }, { status: 400 });
-  } catch (err) {
-    console.error(err);
-    return NextResponse.json({ success: false, message: 'failed' }, { status: 500 });
-  }
+    return NextResponse.json(result)
+  } catch (error) {
+      console.error('Error in signIn:', error)
+      return NextResponse.json(
+        { success: false, message: 'Sign in failed', error: error instanceof Error ? error.message : String(error) },
+        { status: 500 }
+      )
+    } 
 }
