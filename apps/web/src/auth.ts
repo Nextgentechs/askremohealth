@@ -137,43 +137,38 @@ export async function getCurrentUser(): Promise<UserWithLab | null> {
 }
 
 // Sign out user completely
-export async function signOut() {
-  const cookieStore = await nextCookies()
-  const sessionId = cookieStore.get('session-id')?.value
+export async function signOut(cookieStore?: ReadonlyRequestCookies)  {
+  try {
+    const cookiesResolved = cookieStore ?? (await nextCookies())// always defined
+    if (!cookiesResolved) {
+      // fallback, should rarely happen
+      return NextResponse.json({ error: 'No cookie store available' }, { status: 500 })
+    }
 
-  if (sessionId) {
-    const { redisClient } = await import('@web/redis/redis')
-    await redisClient.del(`session:${sessionId}`)
-  }
+    const sessionId = cookiesResolved.get('session-id')?.value
 
-  const response = NextResponse.json({ success: true })
+    if (sessionId) {
+      const { redisClient } = await import('@web/redis/redis')
+      await redisClient.del(`session:${sessionId}`)
+    }
 
-  const production = process.env.NODE_ENV === 'production'
-
-  // MUST clear all variants of this cookie
-  const cookieVariants = [
-    { name: 'session-id', domain: '.askremohealth.com' },
-    { name: 'session-id', domain: 'admin.askremohealth.com' },
-    { name: '__clerk_db_jwt', domain: '.askremohealth.com' },
-    { name: '__clerk_db_jwt', domain: 'admin.askremohealth.com' },
-    { name: '__client_uat', domain: '.askremohealth.com' },
-    { name: '__client_uat', domain: 'admin.askremohealth.com' },
-  ]
-
-  cookieVariants.forEach(c => {
-    response.cookies.set(c.name, '', {
-      path: '/',
+    // Clear the cookie in the response
+    const response = NextResponse.json({ success: true })
+    response.cookies.set('session-id', '', {
       maxAge: 0,
-      secure: production,
+      path: '/',
+      secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
       sameSite: 'lax',
-      domain: c.domain
+      domain: process.env.NODE_ENV === 'production' ? '.askremohealth.com' : '.localhost'
     })
-  })
 
-  return response
+    return response
+  } catch (error) {
+    console.error('Error during sign out:', error)
+    return NextResponse.json({ error: 'Sign out failed' }, { status: 500 })
+  }
 }
-
 
 // --- GOOGLE CALLBACK ---
 
