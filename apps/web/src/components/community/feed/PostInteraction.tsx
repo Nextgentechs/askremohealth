@@ -1,7 +1,7 @@
 "use client";
 
 import { api } from '@web/trpc/react'
-import { Heart, MessageCircleMore, Send } from "lucide-react";
+import { Heart, MessageCircleMore, Send, Link as LinkIcon, X } from "lucide-react";
 import Link from 'next/link';
 import { useOptimistic, useState, useEffect, startTransition } from "react";
 
@@ -25,6 +25,9 @@ const PostInteraction = ({
     likeCount: likes.length,
     isLiked: false,
   });
+
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (isLoaded && userId) {
@@ -68,6 +71,17 @@ const PostInteraction = ({
     }
   };
 
+  const handleCopyLink = async () => {
+    const postLink = `${window.location.origin}/community/${postId}`;
+    try {
+      await navigator.clipboard.writeText(postLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy link:", err);
+    }
+  };
+
   return (
     <div className="flex items-center justify-between text-sm -my-1">
       <div className="flex gap-8 mt-3">
@@ -91,10 +105,35 @@ const PostInteraction = ({
             </span>
           </div>
         </Link>
-        <div className="flex items-center gap-4 bg-slate-50 p-2 rounded-xl">
+        <button 
+          onClick={() => setShowShareModal(true)}
+          className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors"
+        >
           <Send size={18}/>
-        </div>
+        </button>
       </div>
+      {showShareModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setShowShareModal(false)}>
+          <div className="bg-white rounded-lg p-6 w-96 shadow-lg" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Share Post</h2>
+              <button 
+                onClick={() => setShowShareModal(false)}
+                className="hover:bg-slate-100 p-1 rounded transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <button
+              onClick={handleCopyLink}
+              className="w-full flex items-center gap-3 p-3 hover:bg-slate-100 rounded-lg transition-colors"
+            >
+              <LinkIcon size={20} />
+              <span>{copied ? "Copied!" : "Copy Link"}</span>
+            </button>
+          </div>
+        </div>
+      )}
       <div className="">
         
       </div>
