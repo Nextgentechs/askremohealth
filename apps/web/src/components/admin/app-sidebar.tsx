@@ -102,9 +102,8 @@ function NavUser() {
                     method: 'POST',
                     credentials: 'include'
                   })
-
-                  router.refresh()
-                  window.location.href = 'https://admin.askremohealth.com'
+                  //router.refresh()
+                  window.location.href = 'https://admin.askremohealth.com/adminAuth'
                 }}
               >
                 <LogOut className="mr-2 h-4 w-4" />
