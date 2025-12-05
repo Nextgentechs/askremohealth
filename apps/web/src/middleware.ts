@@ -18,7 +18,6 @@ export async function middleware(req: NextRequest) {
   // ADMIN SUBDOMAIN RULES
   // ---------------------------------------------------
   if (isAdminSubdomain) {
-
     // No session → always redirect to /adminAuth
     if (!sessionId && !pathname.startsWith('/adminAuth')) {
       const url = req.nextUrl.clone()

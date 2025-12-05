@@ -104,11 +104,11 @@ function NavUser() {
                   })
 
                   router.refresh()
-                  router.push('/adminAuth')
+                  window.location.href = 'https://admin.askremohealth.com'
                 }}
               >
                 <LogOut className="mr-2 h-4 w-4" />
-                Sign-out
+                Log-out
               </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>
