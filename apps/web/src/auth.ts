@@ -4,7 +4,7 @@ import { users, labs } from './server/db/schema'
 import { cookies as nextCookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getUserSessionById } from './server/lib/session'
-import { NextResponse } from 'next/server'
+import { NextResponse,NextRequest } from 'next/server'
 import { type ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies'
 
 // Helper to infer user with lab relation
@@ -137,38 +137,42 @@ export async function getCurrentUser(): Promise<UserWithLab | null> {
 }
 
 // Sign out user completely
-export async function signOut(cookieStore?: ReadonlyRequestCookies)  {
+export async function signOut(req: NextRequest) {
   try {
-    const cookiesResolved = cookieStore ?? (await nextCookies())// always defined
-    if (!cookiesResolved) {
-      // fallback, should rarely happen
-      return NextResponse.json({ error: 'No cookie store available' }, { status: 500 })
-    }
-
+    const cookiesResolved = await nextCookies()
     const sessionId = cookiesResolved.get('session-id')?.value
 
+    // Delete session in Redis
     if (sessionId) {
       const { redisClient } = await import('@web/redis/redis')
       await redisClient.del(`session:${sessionId}`)
     }
 
-    // Clear the cookie in the response
+    // Dynamically set domain for clearing cookie
+    const host = req.headers.get('host') || ''
+    const domain =
+      process.env.NODE_ENV === 'production'
+        ? host // exact host, e.g., admin.askremohealth.com
+        : undefined // localhost, omit domain
+
     const response = NextResponse.json({ success: true })
+
     response.cookies.set('session-id', '', {
       maxAge: 0,
       path: '/',
       secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
       sameSite: 'lax',
-      domain: process.env.NODE_ENV === 'production' ? '.askremohealth.com' : '.localhost'
+      domain,
     })
 
     return response
   } catch (error) {
-    console.error('Error during sign out:', error)
+    console.error('Sign out error:', error)
     return NextResponse.json({ error: 'Sign out failed' }, { status: 500 })
   }
 }
+
 
 // --- GOOGLE CALLBACK ---
 

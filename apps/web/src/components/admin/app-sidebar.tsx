@@ -98,12 +98,25 @@ function NavUser() {
               </Link>
               <DropdownMenuItem
                 onClick={async () => {
-                  await fetch('/api/auth/signout', {
-                    method: 'POST',
-                    credentials: 'include'
-                  })
-                  //router.refresh()
-                  window.location.href = 'https://admin.askremohealth.com/adminAuth'
+                  try {
+                    const res = await fetch('/api/auth/signout', {
+                      method: 'POST',
+                      credentials: 'include'
+                    })
+                    const data = await res.json()
+
+                    if (data.success) {
+                      // Redirect back to the current subdomain's login page
+                      const origin = window.location.origin
+                      window.location.href = `${origin}/auth` // or '/adminAuth' if you want a fixed page
+                    } else {
+                      console.error('Logout failed:', data.error)
+                      alert('Logout failed. Please try again.')
+                    }
+                  } catch (err) {
+                    console.error('Logout request error:', err)
+                    alert('Logout request failed. Please try again.')
+                  }
                 }}
               >
                 <LogOut className="mr-2 h-4 w-4" />
