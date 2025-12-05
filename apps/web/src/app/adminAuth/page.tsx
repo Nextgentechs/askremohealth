@@ -89,7 +89,7 @@ export default function LoginPage() {
           >
             {' '}
             {/* Hide on mobile */}
-            Back to signin
+            Back 
           </Button>
           <MobileMenu /> {/* Add MobileMenu component */}
         </div>
