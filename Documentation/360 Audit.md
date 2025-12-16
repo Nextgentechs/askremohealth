@@ -1,244 +1,439 @@
 # 🔍 Comprehensive 360-Degree Audit Report: Ask Remo Health
 
-## Executive Summary
-
-After conducting a thorough analysis of the codebase, I've identified **95+ critical gaps** across authentication, database, user flows, API security, error handling, and deployment readiness. This report categorizes all findings by severity and area.
+**Last Updated:** December 16, 2025  
+**Audit Version:** 2.0  
+**Status:** Production Readiness Assessment
 
 ---
 
-## 🔴 CRITICAL ISSUES (Must Fix Before Deployment)
+## Executive Summary
 
-### 1. Authentication & Security Vulnerabilities
+This comprehensive audit evaluates the Ask Remo Health platform across all dimensions: user experience, design system, frontend, backend, database, security, and DevOps. The platform has made **significant progress** since the initial audit, with many critical security issues resolved.
 
-| #    | Issue                                                                                      | Location                                                             | Impact                       |
-| ---- | ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- | ---------------------------- |
-| 1.1  | **No password reset functionality** - Users cannot recover their accounts                  | Missing entirely                                                     | Users locked out permanently |
-| 1.2  | **No email verification** - Emails are not confirmed before use                            | Signup flow                                                          | Fake accounts, spam          |
-| 1.3  | **OTP returned in API response** - Security leak in signin response                        | auth.ts returns `otp: otp`                                           | OTP visible in network tab   |
-| 1.4  | **Session cookie `httpOnly: false`** - Session ID accessible via JavaScript                | route.ts, session.ts                                                 | XSS can steal sessions       |
-| 1.5  | **Doctor middleware doesn't verify role** - Any logged-in user can access doctor endpoints | trpc.ts                                                              | Major authorization bypass   |
-| 1.6  | **Admin middleware doesn't verify admin role** - Only checks if logged in                  | trpc.ts                                                              | Any user can access admin    |
-| 1.7  | **No rate limiting on auth endpoints** - Brute force vulnerable                            | All auth routes                                                      | Account takeover             |
-| 1.8  | **No CSRF protection on API routes**                                                       | All `/api/auth/*` routes                                             | CSRF attacks                 |
-| 1.9  | **Clerk keys in env but authentication uses custom session system** - Mixed auth systems   | env.js + auth.ts                                                     | Inconsistent auth            |
-| 1.10 | **Clerk import in onboarding page but not used consistently**                              | specialist/onboarding/page.tsx#L1/specialist/onboarding/page.tsx#L1) | Clerk/NextAuth conflict      |
+### Current Status Overview
 
-### 2. Database Schema & Data Integrity Issues
+| Category            | Status              | Score |
+| ------------------- | ------------------- | ----- |
+| **Security**        | ✅ Improved         | 8/10  |
+| **Authentication**  | ✅ Robust           | 9/10  |
+| **Database Schema** | ✅ Production-Ready | 9/10  |
+| **API Design**      | ✅ Well-Structured  | 8/10  |
+| **UI/UX**           | ⚠️ Needs Polish     | 7/10  |
+| **Testing**         | 🔴 Critical Gap     | 2/10  |
+| **Documentation**   | ⚠️ Partial          | 6/10  |
 
-| #   | Issue                                                                            | Location                                                               | Impact                |
-| --- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | --------------------- |
-| 2.1 | **No unique constraint on user email** - Duplicate emails possible               | schema.ts - `email: varchar('email')`                                  | Data corruption       |
-| 2.2 | **Patient phone should be unique but nullable** - Inconsistent with doctor phone | schema.ts                                                              | Query failures        |
-| 2.3 | **Missing updatedAt default value** - `NOT NULL` but no default                  | schema.ts, schema.ts                                                   | Insert failures       |
-| 2.4 | **No indexes on frequently queried fields** - Missing indexes                    | `appointments.doctorId`, `appointments.patientId`, `doctors.specialty` | Slow queries at scale |
-| 2.5 | **Doctor schema has first_name/last_name but they moved to users table**         | Migration mismatch - 0000_overjoyed_sue_storm.sql                      | Schema inconsistency  |
-| 2.6 | **Notifications table exists but never used** - No notification service          | schema.ts                                                              | Dead code             |
-| 2.7 | **Reviews table has nullable doctorId** - Can have orphan reviews                | schema.ts                                                              | Data integrity        |
-| 2.8 | **No soft delete implemented** - Hard deletes everywhere                         | All tables                                                             | No audit trail        |
-| 2.9 | **Missing relations export** - `officeLocation` relations not complete           | relations.ts                                                           | Query limitations     |
+---
 
-### 3. API & Backend Gaps
+## ✅ RESOLVED ISSUES (Previously Critical)
 
-| #    | Issue                                                                 | Location                                     | Impact                   |
-| ---- | --------------------------------------------------------------------- | -------------------------------------------- | ------------------------ |
-| 3.1  | **Auth router is commented out** - No tRPC auth endpoints             | index.ts - `// auth: createTRPCRouter(auth)` | Inconsistent API         |
-| 3.2  | **Auth router file is just comments** - Empty implementation          | routers/auth.ts                              | No tRPC auth             |
-| 3.3  | **No input sanitization** - SQL injection possible in raw SQL queries | doctors.ts                                   | Security vulnerability   |
-| 3.4  | **Articles not filtered by published status** - Drafts visible        | articles.ts                                  | Drafts exposed           |
-| 3.5  | **Missing delete article endpoint**                                   | articles.ts                                  | Feature gap              |
-| 3.6  | **Missing edit article endpoint**                                     | articles.ts                                  | Feature gap              |
-| 3.7  | **Video room creation lacks appointment validation**                  | video.ts                                     | Anyone can create rooms  |
-| 3.8  | **No appointment time slot conflict validation**                      | `createAppointment` in users.ts              | Double bookings possible |
-| 3.9  | **Cron job authenticate function doesn't return**                     | route.ts                                     | Continues execution      |
-| 3.10 | **Missing reschedule validation** - Can reschedule to past dates      | users.ts                                     | Logic error              |
+### Security Fixes Implemented
+
+| #   | Issue (Was)                                    | Status   | Resolution                                                 |
+| --- | ---------------------------------------------- | -------- | ---------------------------------------------------------- |
+| 1.1 | **No password reset functionality**            | ✅ Fixed | Password reset flow with OTP implemented                   |
+| 1.2 | **No email verification**                      | ✅ Fixed | OTP verification required on signup                        |
+| 1.3 | **OTP returned in API response**               | ✅ Fixed | OTP no longer exposed to client                            |
+| 1.4 | **Session cookie `httpOnly: false`**           | ✅ Fixed | Session tokens use httpOnly: true                          |
+| 1.5 | **Doctor middleware doesn't verify role**      | ✅ Fixed | Role-based procedures in tRPC                              |
+| 1.6 | **Admin middleware doesn't verify admin role** | ✅ Fixed | Admin procedure with role check                            |
+| 1.7 | **No rate limiting on auth endpoints**         | ✅ Fixed | Redis-backed rate limiting (5/min signin, 3/min OTP)       |
+| 2.1 | **No unique constraint on user email**         | ✅ Fixed | Migration 0002 adds unique constraint                      |
+| 2.3 | **Missing updatedAt default value**            | ✅ Fixed | defaultNow() added to all updatedAt columns                |
+| 2.4 | **No indexes on frequently queried fields**    | ✅ Fixed | 17 performance indexes added                               |
+| 2.7 | **Reviews table has nullable doctorId**        | ✅ Fixed | doctorId now required with .notNull()                      |
+| 2.8 | **No soft delete implemented**                 | ✅ Fixed | deletedAt column on users, patients, doctors, appointments |
+
+---
+
+## 🔴 CRITICAL ISSUES (Must Fix Before Production)
+
+### 1. Testing Infrastructure - CRITICAL GAP
+
+| #   | Issue                            | Impact                        | Effort |
+| --- | -------------------------------- | ----------------------------- | ------ |
+| 1.1 | **No unit tests**                | Regression bugs undetected    | L      |
+| 1.2 | **No integration tests**         | API changes break silently    | L      |
+| 1.3 | **No E2E tests**                 | User flows may break          | M      |
+| 1.4 | **No test configuration**        | No Vitest/Jest/Playwright     | S      |
+| 1.5 | **CI pipeline has no test step** | Tests can't run even if added | XS     |
+
+**Recommendation:** Install Vitest + React Testing Library for unit/component tests, Playwright for E2E.
+
+### 2. Error Monitoring - CRITICAL GAP
+
+| #   | Issue                              | Impact                      | Effort |
+| --- | ---------------------------------- | --------------------------- | ------ |
+| 2.1 | **No error tracking (Sentry/etc)** | Production errors invisible | S      |
+| 2.2 | **No performance monitoring**      | Slow pages undetected       | S      |
+| 2.3 | **Console.log statements remain**  | Information leak            | XS     |
+
+### 3. Security Headers - Missing
+
+| #   | Issue                      | Impact                     | Effort |
+| --- | -------------------------- | -------------------------- | ------ |
+| 3.1 | **No CSP headers**         | XSS vulnerability          | S      |
+| 3.2 | **No X-Frame-Options**     | Clickjacking vulnerability | XS     |
+| 3.3 | **No HSTS header**         | Downgrade attacks possible | XS     |
+| 3.4 | **CORS wildcard fallback** | Origin validation bypass   | S      |
 
 ---
 
 ## 🟠 HIGH PRIORITY ISSUES
 
-### 4. User Flow & UX Problems
+### 4. User Personas & Journey Mapping
 
-| #    | Issue                                                                        | Location                                  | Impact                  |
-| ---- | ---------------------------------------------------------------------------- | ----------------------------------------- | ----------------------- |
-| 4.1  | **Appointment confirmation shows login/register but user already logged in** | appointment-confirmation.tsx              | Confusing UX            |
-| 4.2  | **Links point to `/login` and `/sign-up` which don't exist**                 | appointment-confirmation.tsx              | 404 errors              |
-| 4.3  | **Patient can't view their profile/edit details after onboarding**           | No profile page for patients in dashboard | Feature gap             |
-| 4.4  | **No onboarding progress indicator**                                         | Doctor onboarding flow                    | Poor UX                 |
-| 4.5  | **Doctor onboarding requires facility OR office but UI doesn't show this**   | validators.ts                             | Confusing validation    |
-| 4.6  | **No appointment cancellation reason required**                              | `cancelAppointment` functions             | Missing data            |
-| 4.7  | **No appointment reminder system**                                           | Missing entirely                          | Users miss appointments |
-| 4.8  | **TopSpecialists shows static dummy data**                                   | top-specialists.tsx uses data/doctors.ts  | Fake data in prod       |
-| 4.9  | **"Schedule appointment" button in TopSpecialists does nothing**             | top-specialists.tsx                       | Broken feature          |
-| 4.10 | **"Explore more doctors" link has no href**                                  | top-specialists.tsx                       | Dead link               |
-| 4.11 | **Patient dashboard redirects to online-appointments but that's wrong**      | Google callback for patient               | Wrong destination       |
-| 4.12 | **No way for patient to leave a review**                                     | Missing review submission UI              | Feature gap             |
-| 4.13 | **Doctor can't see patient history**                                         | No patient history view                   | Feature gap             |
-| 4.14 | **No search/filter in admin doctors list**                                   | admin.ts                                  | Poor admin UX           |
+#### Identified User Personas
 
-### 5. Form Validation & Edge Cases
+| Persona               | Role                    | Primary Goals                                         | Current Support |
+| --------------------- | ----------------------- | ----------------------------------------------------- | --------------- |
+| **Patient**           | Healthcare seeker       | Find doctors, book appointments, attend consultations | ✅ 80% Complete |
+| **Specialist/Doctor** | Healthcare provider     | Manage schedule, see patients, build reputation       | ✅ 75% Complete |
+| **Admin**             | Platform operator       | Verify doctors, manage platform                       | ⚠️ 50% Complete |
+| **Facility Admin**    | Hospital/Clinic manager | Register facility, manage doctors                     | ⚠️ 30% Complete |
 
-| #    | Issue                                                                      | Location                                                                                                                   | Impact                      |
-| ---- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
-| 5.1  | **Phone validation only works for Kenya (+254)**                           | Multiple validators                                                                                                        | International users blocked |
-| 5.2  | **Date of birth allows future dates in patient form**                      | Only max set, no min                                                                                                       | Invalid data                |
-| 5.3  | **Emergency contact same validation as phone but different context**       | validators.ts                                                                                                              | Confusing                   |
-| 5.4  | **No validation that appointment date is within doctor's operating hours** | `createAppointment`                                                                                                        | Invalid bookings            |
-| 5.5  | **Doctor age validation (25+) too restrictive**                            | personal-details-form.tsx#L184-188/specialist/onboarding/personal-details/\_components/personal-details-form.tsx#L184-188) | Blocks young doctors        |
-| 5.6  | **Bio max 256 chars but no UI character counter**                          | Personal details form                                                                                                      | Truncation surprise         |
-| 5.7  | **Article content min 150 chars but no counter**                           | Article forms                                                                                                              | Poor feedback               |
-| 5.8  | **No file type validation on certificate upload**                          | Professional details                                                                                                       | Malicious uploads           |
-| 5.9  | **Profile picture size limit (5MB) only checked client-side**              | personal-details-form.tsx#L58-67/specialist/onboarding/personal-details/\_components/personal-details-form.tsx#L58-67)     | Server crash                |
-| 5.10 | **No duplicate appointment prevention for same patient/doctor/time**       | createAppointment                                                                                                          | Duplicate bookings          |
+#### Patient Journey Analysis
 
-### 6. Error Handling & Loading States
+| Step            | Feature                 | Status      | Gaps                             |
+| --------------- | ----------------------- | ----------- | -------------------------------- |
+| 1. Discovery    | Landing page, search    | ✅ Complete | -                                |
+| 2. Browse       | Doctor list, filters    | ✅ Complete | No name search                   |
+| 3. View Profile | Doctor details, reviews | ✅ Complete | -                                |
+| 4. Book         | Appointment form        | ✅ Complete | No time slot conflict validation |
+| 5. Confirm      | OTP/Auth if needed      | ✅ Complete | -                                |
+| 6. Prepare      | Appointment reminders   | 🔴 Missing  | No email/SMS reminders           |
+| 7. Attend       | Video consultation      | ✅ Complete | -                                |
+| 8. Follow-up    | Review, reschedule      | ⚠️ Partial  | No patient review UI             |
 
-| #   | Issue                                                            | Location                                                         | Impact                |
-| --- | ---------------------------------------------------------------- | ---------------------------------------------------------------- | --------------------- |
-| 6.1 | **No global error boundary**                                     | Missing                                                          | App crashes unhandled |
-| 6.2 | **API errors show generic "An error occurred"**                  | Multiple components                                              | No debugging info     |
-| 6.3 | **tRPC error messages exposed to client**                        | Error formatter in trpc.ts                                       | Security concern      |
-| 6.4 | **No retry logic for failed API calls**                          | All tRPC calls                                                   | Flaky UX              |
-| 6.5 | **No offline detection/handling**                                | Missing                                                          | Poor mobile UX        |
-| 6.6 | **Video room errors not user-friendly**                          | appointment-room page/specialist/appointment-room/[id]/page.tsx) | Confusing errors      |
-| 6.7 | **Chatbot external API fails silently then shows generic error** | chat-bot.tsx                                                     | Poor UX               |
+#### Specialist Journey Analysis
+
+| Step        | Feature                   | Status      | Gaps                       |
+| ----------- | ------------------------- | ----------- | -------------------------- |
+| 1. Register | Signup                    | ✅ Complete | -                          |
+| 2. Onboard  | Multi-step form           | ✅ Complete | No progress indicator      |
+| 3. Verify   | Admin approval            | ✅ Complete | -                          |
+| 4. Setup    | Profile, schedule         | ✅ Complete | -                          |
+| 5. Receive  | Appointment notifications | ⚠️ Partial  | Only in-app notifications  |
+| 6. Consult  | Video room                | ✅ Complete | -                          |
+| 7. Document | Notes, prescriptions      | 🔴 Missing  | No prescription management |
+| 8. Grow     | Reviews, articles         | ✅ Complete | -                          |
+
+### 5. Page-by-Page Status Analysis
+
+#### Public Pages `(app)` Route Group
+
+| Route                    | Status      | UX Score | Accessibility | Notes                               |
+| ------------------------ | ----------- | -------- | ------------- | ----------------------------------- |
+| `/` (Home)               | ✅ Complete | 8/10     | ⚠️ Partial    | Hero, search, specialists, articles |
+| `/about-us`              | ✅ Complete | 7/10     | ⚠️ Partial    | Static content                      |
+| `/appointments`          | ✅ Complete | 8/10     | ⚠️ Partial    | With pagination                     |
+| `/articles`              | ✅ Complete | 8/10     | ⚠️ Partial    | Blog listing                        |
+| `/articles/[slug]`       | ✅ Complete | 7/10     | ⚠️ Partial    | Article detail                      |
+| `/articles/post`         | ✅ Complete | 7/10     | ⚠️ Partial    | Doctors only                        |
+| `/contact-us`            | ✅ Complete | 6/10     | ⚠️ Partial    | Form present                        |
+| `/faq`                   | ✅ Complete | 7/10     | ⚠️ Partial    | Accordion FAQ                       |
+| `/find-specialists`      | ✅ Complete | 8/10     | ⚠️ Partial    | Search + filters                    |
+| `/find-specialists/[id]` | ✅ Complete | 8/10     | ⚠️ Partial    | Doctor profile                      |
+| `/hospitals`             | 🔴 Stub     | 2/10     | ❌ None       | "Coming Soon" placeholder           |
+| `/laboratories`          | 🔴 Stub     | 2/10     | ❌ None       | "Coming Soon" placeholder           |
+| `/pharmacies`            | 🔴 Stub     | 2/10     | ❌ None       | "Coming Soon" placeholder           |
+| `/profile`               | ✅ Complete | 7/10     | ⚠️ Partial    | User profile                        |
+| `/register-facility`     | ✅ Complete | 7/10     | ⚠️ Partial    | Facility registration               |
+| `/privacy-policy`        | ⚠️ Partial  | 3/10     | ⚠️ Partial    | Needs legal content                 |
+| `/terms-of-service`      | ⚠️ Partial  | 3/10     | ⚠️ Partial    | Needs legal content                 |
+
+#### Patient Dashboard `(patients)` Route Group
+
+| Route                            | Status      | UX Score | Notes             |
+| -------------------------------- | ----------- | -------- | ----------------- |
+| `/patient` (redirect)            | ✅ Complete | -        | Auto-redirects    |
+| `/patient/online-appointments`   | ✅ Complete | 8/10     | Appointment table |
+| `/patient/physical-appointments` | ✅ Complete | 8/10     | Appointment table |
+| `/patient/upcoming-appointments` | ✅ Complete | 8/10     | Filtered view     |
+| `/patient/profile`               | ✅ Complete | 7/10     | Profile editing   |
+| `/patient/onboarding`            | ✅ Complete | 8/10     | Multi-step form   |
+
+#### Specialist Dashboard `(specialists)` Route Group
+
+| Route                               | Status      | UX Score | Notes           |
+| ----------------------------------- | ----------- | -------- | --------------- |
+| `/specialist` (redirect)            | ✅ Complete | -        | Auto-redirects  |
+| `/specialist/online-appointments`   | ✅ Complete | 8/10     | With actions    |
+| `/specialist/physical-appointments` | ✅ Complete | 8/10     | With actions    |
+| `/specialist/upcoming-appointments` | ✅ Complete | 8/10     | Filtered view   |
+| `/specialist/patients`              | ✅ Complete | 7/10     | Patient list    |
+| `/specialist/profile`               | ✅ Complete | 7/10     | Profile editing |
+| `/specialist/appointment-room/[id]` | ✅ Complete | 8/10     | Twilio video    |
+| `/specialist/onboarding/*`          | ✅ Complete | 8/10     | 3-step process  |
+
+#### Admin Dashboard
+
+| Route                 | Status      | UX Score | Notes               |
+| --------------------- | ----------- | -------- | ------------------- |
+| `/admin` (redirect)   | ✅ Complete | -        | Auto-redirects      |
+| `/admin/doctors`      | ✅ Complete | 7/10     | Doctor list table   |
+| `/admin/doctors/[id]` | ✅ Complete | 7/10     | Doctor verification |
 
 ---
 
 ## 🟡 MEDIUM PRIORITY ISSUES
 
-### 7. Missing Features & Incomplete Implementations
+### 6. Component Library Analysis
 
-| #    | Issue                                                                     | Location                      | Impact                       |
-| ---- | ------------------------------------------------------------------------- | ----------------------------- | ---------------------------- |
-| 7.1  | **No payment integration** - README mentions none but healthcare needs it | Missing                       | Can't monetize               |
-| 7.2  | **No prescription management**                                            | Missing                       | Core healthcare feature      |
-| 7.3  | **No medical records storage**                                            | Missing                       | Core healthcare feature      |
-| 7.4  | **Hospitals page says "Coming Soon"**                                     | Not-found page used           | Incomplete feature           |
-| 7.5  | **Laboratories page incomplete**                                          | Not-found placeholder         | Incomplete feature           |
-| 7.6  | **Pharmacies page incomplete**                                            | Not-found placeholder         | Incomplete feature           |
-| 7.7  | **No doctor search by name on home page**                                 | SearchForm only does location | Feature gap                  |
-| 7.8  | **No appointment rescheduling UI for patients**                           | Only API exists               | Feature gap                  |
-| 7.9  | **No notification center UI**                                             | Schema exists but no UI       | Dead feature                 |
-| 7.10 | **No email notifications sent for appointments**                          | Only OTP emails               | Feature gap                  |
-| 7.11 | **SMS notifications not implemented**                                     | Only Twilio video used        | Feature gap                  |
-| 7.12 | **Doctor availability calendar not showing blocked times**                | Only booked slots shown       | Confusing                    |
-| 7.13 | **No multi-language support**                                             | Missing                       | Kenya has multiple languages |
-| 7.14 | **No accessibility (a11y) implementation**                                | ARIA labels missing           | Compliance issue             |
-| 7.15 | **No doctor search by subspecialty on home page**                         | Only specialty dropdown       | Limited search               |
+#### UI Components (shadcn/ui) - 37 Components
 
-### 8. Performance & Scalability Concerns
+| Category         | Components                                                                          | Status      |
+| ---------------- | ----------------------------------------------------------------------------------- | ----------- |
+| **Layout**       | card, separator, sheet, sidebar, scroll-area                                        | ✅ Complete |
+| **Forms**        | button, input, textarea, checkbox, radio-group, select, switch, slider, form, label | ✅ Complete |
+| **Data Display** | table, badge, avatar, calendar, carousel, skeleton                                  | ✅ Complete |
+| **Feedback**     | alert, toast, toaster, tooltip, dialog, popover                                     | ✅ Complete |
+| **Navigation**   | navigation-menu, breadcrumb, tabs, pagination, dropdown-menu                        | ✅ Complete |
+| **Utility**      | command, aspect-ratio, input-otp                                                    | ✅ Complete |
+| **Custom**       | custom-accordion, article                                                           | ✅ Complete |
 
-| #   | Issue                                                        | Location                | Impact                |
-| --- | ------------------------------------------------------------ | ----------------------- | --------------------- |
-| 8.1 | **TODO comment acknowledges unoptimized list query**         | doctors.ts              | Slow at scale         |
-| 8.2 | **No pagination on subspecialties queries**                  | doctors.ts              | Memory issues         |
-| 8.3 | **Profile pictures not cached**                              | Vercel Blob direct URLs | Slow loads            |
-| 8.4 | **No image optimization for article images**                 | 400x400 resize only     | Poor quality          |
-| 8.5 | **Reviews fetched for all doctors on list**                  | doctors.ts              | N+1 query             |
-| 8.6 | **No Redis connection pooling visible**                      | redis.ts                | Connection limits     |
-| 8.7 | **Database queries not using connection pooling explicitly** | db/index.ts             | Connection exhaustion |
+#### Feature Components - Reusability Analysis
 
-### 9. Configuration & Environment Issues
+| Component                  | Purpose          | Reusability         | Theme Adherence | Accessibility |
+| -------------------------- | ---------------- | ------------------- | --------------- | ------------- |
+| `hero-section`             | Landing hero     | Low (page-specific) | ✅ 9/10         | ⚠️ 6/10       |
+| `search-form`              | Doctor search    | Medium              | ✅ 8/10         | ⚠️ 7/10       |
+| `doctor-list`              | Doctor grid      | High                | ✅ 8/10         | ⚠️ 6/10       |
+| `doctor-filters`           | Filter sidebar   | Medium              | ✅ 8/10         | ⚠️ 6/10       |
+| `doctor-details`           | Profile view     | Medium              | ✅ 8/10         | ⚠️ 6/10       |
+| `create-appointment`       | Booking form     | Medium              | ✅ 9/10         | ⚠️ 7/10       |
+| `appointment-confirmation` | Booking dialog   | Medium              | ✅ 8/10         | ⚠️ 7/10       |
+| `auth-form`                | Login/Signup     | High                | ✅ 9/10         | ⚠️ 7/10       |
+| `calendar-component`       | Date picker      | High                | ✅ 9/10         | ✅ 8/10       |
+| `data-table`               | Generic table    | High                | ✅ 9/10         | ⚠️ 7/10       |
+| `navigation-bar`           | Main nav         | Low                 | ✅ 8/10         | ⚠️ 6/10       |
+| `footer`                   | Site footer      | Low                 | ✅ 8/10         | ⚠️ 6/10       |
+| `chat-bot`                 | AI assistant     | Medium              | ✅ 7/10         | ⚠️ 5/10       |
+| `wysiwyg`                  | Rich text editor | High                | ✅ 8/10         | ⚠️ 6/10       |
 
-| #   | Issue                                                     | Location    | Impact                          |
-| --- | --------------------------------------------------------- | ----------- | ------------------------------- |
-| 9.1 | **REDIS_URL and REDIS_TOKEN not in env schema**           | env.js      | Silent failures                 |
-| 9.2 | **AUTH_SECRET/NEXTAUTH_SECRET not in env schema**         | env.js      | NextAuth issues                 |
-| 9.3 | **NEXT_PUBLIC_RESEND_API_KEY should be server-side only** | env.js      | API key exposed                 |
-| 9.4 | **No .env.example file**                                  | Missing     | Setup difficulty                |
-| 9.5 | **Drizzle relations file not imported in index.ts**       | db/index.ts | Relations may not work          |
-| 9.6 | **No health check endpoint**                              | Missing     | Deployment monitoring           |
-| 9.7 | **Vercel cron only runs once per day**                    | vercel.json | Missed appointments not updated |
+### 7. Design System Inventory
 
-### 10. Code Quality & Maintainability
+#### Color Palette (CSS Variables)
 
-| #     | Issue                                             | Location                     | Impact           |
-| ----- | ------------------------------------------------- | ---------------------------- | ---------------- |
-| 10.1  | **No unit tests**                                 | Missing                      | Regression bugs  |
-| 10.2  | **No integration tests**                          | Missing                      | Breaking changes |
-| 10.3  | **No E2E tests**                                  | Missing                      | User flow breaks |
-| 10.4  | **console.log statements in production code**     | Multiple files               | Information leak |
-| 10.5  | **Unused imports and variables**                  | Various                      | Code bloat       |
-| 10.6  | **Mixed auth system (Clerk + NextAuth + custom)** | auth.ts, env.js              | Confusion        |
-| 10.7  | **Lucia auth package imported but not used**      | package.json                 | Dead dependency  |
-| 10.8  | **Payload CMS configured but not integrated**     | package.json scripts         | Dead code        |
-| 10.9  | **Type assertions without validation**            | `ctx.user.id ?? ''` patterns | Runtime errors   |
-| 10.10 | **Inconsistent error handling patterns**          | throw vs return              | Unpredictable    |
+| Token           | Light Mode          | Dark Mode     | Usage                   |
+| --------------- | ------------------- | ------------- | ----------------------- |
+| `--background`  | `0 0% 100%` (white) | `254 10% 5%`  | Page backgrounds        |
+| `--foreground`  | `254 0% 10%`        | `254 5% 90%`  | Text color              |
+| `--primary`     | `254 46.2% 33.5%`   | Same          | Buttons, links, accents |
+| `--secondary`   | `29 100% 96%`       | `254 10% 10%` | Secondary buttons       |
+| `--muted`       | `216 10% 95%`       | `216 10% 15%` | Disabled states         |
+| `--accent`      | `216 10% 90%`       | `216 10% 15%` | Hover states            |
+| `--destructive` | `0 50% 50%`         | `0 50% 30%`   | Error states            |
+| `--border`      | `254 20% 82%`       | `254 20% 18%` | Borders                 |
 
----
+#### Status Colors (Appointment States)
 
-## 🔵 LOW PRIORITY (Nice to Have)
+| Status      | Background | Foreground | Usage                  |
+| ----------- | ---------- | ---------- | ---------------------- |
+| Scheduled   | `#E7F5FF`  | `#0B75C9`  | Confirmed appointments |
+| Pending     | `#FFF9E6`  | `#C9950B`  | Awaiting confirmation  |
+| Rescheduled | `#F3E6FF`  | `#8932C9`  | Changed time           |
+| Completed   | `#E8FCE8`  | `#2D8C2D`  | Finished               |
+| Cancelled   | `#FFE6E6`  | `#C92C2C`  | Cancelled              |
+| No-show     | `#F9E8E0`  | `#C9610B`  | Patient didn't attend  |
+| In-progress | `#E6F9F3`  | `#0B9585`  | Currently active       |
 
-### 11. UI/UX Polish Issues
+#### Typography System
 
-| #     | Issue                                                     | Location                         | Impact               |
-| ----- | --------------------------------------------------------- | -------------------------------- | -------------------- |
-| 11.1  | **No dark mode toggle visible on main site**              | mode-toggle exists but not used  | Consistency          |
-| 11.2  | **Loading states inconsistent across pages**              | Various                          | Jarring UX           |
-| 11.3  | **No empty state illustrations**                          | Doctor list only has basic empty | Poor UX              |
-| 11.4  | **Breadcrumbs not consistent**                            | Various pages                    | Navigation confusion |
-| 11.5  | **No favicon for different devices**                      | Only favicon.ico                 | Missing touch icons  |
-| 11.6  | **No meta tags for SEO**                                  | Layout files                     | Poor SEO             |
-| 11.7  | **No Open Graph images**                                  | Missing                          | Poor social sharing  |
-| 11.8  | **FAQ section is static**                                 | faq-section.tsx                  | Not CMS-driven       |
-| 11.9  | **Contact form destination not configured**               | ContactForm component            | Form goes nowhere    |
-| 11.10 | **Terms of Service/Privacy Policy are placeholder pages** | Not-found placeholders           | Legal compliance     |
+| Token          | Value                 | Usage               |
+| -------------- | --------------------- | ------------------- |
+| `font-sans`    | Geist Sans, system-ui | Body text, UI       |
+| `font-arial`   | Arial, sans-serif     | Fallback            |
+| `font-roboto`  | Roboto, sans-serif    | Alternative         |
+| `font-georgia` | Georgia, serif        | Headings (optional) |
 
-### 12. Documentation & DevOps
+#### Spacing & Border Radius
 
-| #    | Issue                                                   | Location     | Impact                   |
-| ---- | ------------------------------------------------------- | ------------ | ------------------------ |
-| 12.1 | **README mentions Husky/Commitlint but not configured** | package.json | False documentation      |
-| 12.2 | **No API documentation**                                | Missing      | Developer onboarding     |
-| 12.3 | **No deployment guide**                                 | Missing      | Ops difficulty           |
-| 12.4 | **No architecture diagram**                             | Missing      | Understanding difficulty |
-| 12.5 | **No database seed script**                             | Missing      | Dev environment setup    |
-| 12.6 | **CMS app folder exists but empty/unused**              | apps/cms     | Dead code                |
+| Token       | Value                       | Usage              |
+| ----------- | --------------------------- | ------------------ |
+| `--radius`  | `0.5rem`                    | Border radius base |
+| `radius-lg` | `var(--radius)`             | Large elements     |
+| `radius-md` | `calc(var(--radius) - 2px)` | Medium elements    |
+| `radius-sm` | `calc(var(--radius) - 4px)` | Small elements     |
 
----
+### 8. Missing Features & Incomplete Implementations
 
-## 📋 Summary by Priority
-
-| Priority    | Count  | Estimated Fix Time |
-| ----------- | ------ | ------------------ |
-| 🔴 Critical | 19     | 3-4 days           |
-| 🟠 High     | 31     | 3-4 days           |
-| 🟡 Medium   | 31     | 3-4 days           |
-| 🔵 Low      | 17     | 1-2 days           |
-| **Total**   | **98** | **10-14 days**     |
+| #    | Feature                       | Status     | Priority | Effort |
+| ---- | ----------------------------- | ---------- | -------- | ------ |
+| 8.1  | Appointment reminders (email) | 🔴 Missing | P0       | M      |
+| 8.2  | Appointment reminders (SMS)   | 🔴 Missing | P1       | M      |
+| 8.3  | Patient review submission UI  | 🔴 Missing | P1       | S      |
+| 8.4  | Prescription management       | 🔴 Missing | P2       | L      |
+| 8.5  | Medical records storage       | 🔴 Missing | P2       | XL     |
+| 8.6  | Hospitals listing             | ⚠️ Stub    | P2       | M      |
+| 8.7  | Laboratories listing          | ⚠️ Stub    | P2       | M      |
+| 8.8  | Pharmacies listing            | ⚠️ Stub    | P2       | M      |
+| 8.9  | Doctor search by name         | ⚠️ Partial | P1       | S      |
+| 8.10 | Appointment rescheduling UI   | ⚠️ Partial | P1       | S      |
+| 8.11 | Notification center UI        | 🔴 Missing | P1       | M      |
+| 8.12 | Multi-language support        | 🔴 Missing | P3       | L      |
+| 8.13 | Payment integration           | 🔴 Missing | P2       | L      |
 
 ---
 
-## 🎯 Recommended Fix Order for 1-Week Deployment
+## 🔵 LOW PRIORITY (Polish & Enhancements)
 
-### Day 1-2: Security Fixes (MUST DO)
+### 9. UI/UX Polish Issues
 
-1. Fix session cookie `httpOnly: true`
-2. Remove OTP from API response
-3. Implement doctor/admin role verification in middleware
-4. Add rate limiting
-5. Fix email uniqueness constraint
+| #    | Issue                                                     | Location                         | Impact               |
+| ---- | --------------------------------------------------------- | -------------------------------- | -------------------- |
+| 9.1  | **No dark mode toggle visible on main site**              | mode-toggle exists but not used  | Consistency          |
+| 9.2  | **Loading states inconsistent across pages**              | Various                          | Jarring UX           |
+| 9.3  | **No empty state illustrations**                          | Doctor list only has basic empty | Poor UX              |
+| 9.4  | **Breadcrumbs not consistent**                            | Various pages                    | Navigation confusion |
+| 9.5  | **No favicon for different devices**                      | Only favicon.ico                 | Missing touch icons  |
+| 9.6  | **No meta tags for SEO**                                  | Layout files                     | Poor SEO             |
+| 9.7  | **No Open Graph images**                                  | Missing                          | Poor social sharing  |
+| 9.8  | **FAQ section is static**                                 | faq-section.tsx                  | Not CMS-driven       |
+| 9.9  | **Contact form destination not configured**               | ContactForm component            | Form goes nowhere    |
+| 9.10 | **Terms of Service/Privacy Policy are placeholder pages** | Not-found placeholders           | Legal compliance     |
 
-### Day 3-4: Core User Flows
+### 10. Accessibility Improvements
 
-1. Fix broken links (`/login`, `/sign-up`)
-2. Fix appointment time slot conflict validation
-3. Add password reset flow
-4. Fix TopSpecialists with real data
-5. Fix admin authorization
+| Issue                         | WCAG Criterion | Severity | Recommendation                                   |
+| ----------------------------- | -------------- | -------- | ------------------------------------------------ |
+| Missing skip links            | 2.4.1          | Medium   | Add skip-to-main link                            |
+| Inconsistent focus indicators | 2.4.7          | Medium   | Ensure visible focus on all interactive elements |
+| No ARIA landmarks             | 1.3.1          | Low      | Add proper landmark roles                        |
+| Form error announcements      | 4.1.3          | Medium   | Connect errors to inputs with aria-describedby   |
+| Image alt text gaps           | 1.1.1          | Medium   | Audit all images for proper alt text             |
 
-### Day 5-6: Polish & Testing
+---
 
-1. Add basic error boundaries
-2. Fix form validations
-3. Test all user flows manually
-4. Fix environment variables
-5. Add health check endpoint
+## 📋 Summary by Priority (Updated December 2025)
 
-### Day 7: Deployment Prep
+| Priority    | Count  | Status       | Estimated Fix Time |
+| ----------- | ------ | ------------ | ------------------ |
+| 🔴 Critical | 8      | Blocking     | 2-3 days           |
+| 🟠 High     | 15     | Important    | 3-4 days           |
+| 🟡 Medium   | 20     | Desirable    | 3-4 days           |
+| 🔵 Low      | 12     | Nice-to-have | 1-2 days           |
+| **Total**   | **55** | -            | **9-13 days**      |
 
-1. Remove console.logs
-2. Test production build
-3. Verify all environment variables
-4. Run database migrations
-5. Final QA
+**Note:** Many security issues from the original audit have been resolved. The critical path now focuses on testing infrastructure and monitoring.
+
+---
+
+## 🎯 Prioritized Remediation Roadmap
+
+### Phase 1: Critical Path (Week 1)
+
+#### Day 1-2: Testing Infrastructure Setup
+
+```bash
+# Install testing dependencies
+npm install -D vitest @testing-library/react @testing-library/jest-dom jsdom
+npm install -D @playwright/test
+```
+
+**Tasks:**
+
+1. Install Vitest + React Testing Library
+2. Configure test environment
+3. Add first unit tests for auth utilities
+4. Update CI/CD to run tests
+
+#### Day 3-4: Security Headers & Monitoring
+
+1. Add security headers to `next.config.js`
+2. Fix CORS origin whitelist
+3. Set up Sentry for error tracking
+4. Remove console.log statements
+
+#### Day 5: Appointment Reminders
+
+1. Create email reminder service using Resend
+2. Add reminder scheduling with cron
+3. Test reminder flow end-to-end
+
+### Phase 2: High Priority Features (Week 2)
+
+#### Day 1-2: Patient Review System
+
+1. Create review submission UI component
+2. Connect to existing reviews tRPC endpoint
+3. Add review display on doctor profiles
+
+#### Day 3-4: Notification Center
+
+1. Build notification center UI
+2. Connect to existing notifications table
+3. Add real-time notification updates
+
+#### Day 5: Doctor Search Enhancement
+
+1. Add name search to doctor list
+2. Implement subspecialty filtering
+3. Optimize doctor list queries
+
+### Phase 3: Medium Priority (Week 3)
+
+1. Complete hospitals/labs/pharmacies pages
+2. Add prescription management scaffolding
+3. Improve accessibility (skip links, ARIA)
+4. SEO enhancements (sitemap, meta tags)
+
+### Phase 4: Polish (Week 4)
+
+1. Add bundle analyzer
+2. Performance optimization
+3. Final accessibility audit
+4. Documentation updates
+
+---
+
+## 📊 Technology Stack Summary
+
+| Category             | Technology               | Version   |
+| -------------------- | ------------------------ | --------- |
+| **Framework**        | Next.js                  | 15.x      |
+| **Language**         | TypeScript               | 5.7.x     |
+| **UI Components**    | shadcn/ui + Radix        | Latest    |
+| **Styling**          | Tailwind CSS             | 3.4.x     |
+| **State Management** | TanStack Query + Zustand | 5.x       |
+| **API Layer**        | tRPC                     | 11.x (RC) |
+| **Database**         | PostgreSQL + Drizzle ORM | Latest    |
+| **Auth**             | Custom Sessions + Clerk  | 6.x       |
+| **Email**            | Resend API               | Latest    |
+| **Video**            | Twilio Video             | Latest    |
+| **Caching**          | Upstash Redis            | Latest    |
+| **File Storage**     | Vercel Blob              | Latest    |
+| **Maps**             | Google Maps API          | 3.x       |
+| **Deployment**       | Vercel                   | Latest    |
+
+---
+
+## ✅ Production Readiness Checklist
+
+### Before Launch (P0)
+
+- [ ] All critical security issues resolved ✅ (Mostly done)
+- [ ] Testing infrastructure in place (>60% coverage on critical paths)
+- [ ] Error monitoring active (Sentry)
+- [ ] Appointment reminders working
+- [ ] All user journeys tested end-to-end
+
+### Before Scale (P1)
+
+- [ ] Performance monitoring in place
+- [ ] Database connection pooling verified
+- [ ] CDN caching configured
+- [ ] Load testing completed
+- [ ] Backup and recovery tested
+
+### Before Full Release (P2)
+
+- [ ] Accessibility audit passed (WCAG 2.1 AA)
+- [ ] SEO optimization complete
+- [ ] Documentation finalized
+- [ ] Legal pages reviewed by counsel
+- [ ] Support processes documented
+
+---
+
+_Report generated: December 16, 2025_  
+_Next review: Upon completion of Phase 1_ 4. Run database migrations 5. Final QA
