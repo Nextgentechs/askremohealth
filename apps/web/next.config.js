@@ -3,6 +3,7 @@
  * for Docker builds.
  */
 import './src/env.js'
+import { withSentryConfig } from '@sentry/nextjs'
 
 /**
  * Security Headers Configuration
@@ -82,4 +83,46 @@ const config = {
   },
 }
 
-export default config
+/**
+ * Sentry Configuration
+ * @see https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
+ */
+const sentryConfig = {
+  // For all available options, see:
+  // https://github.com/getsentry/sentry-webpack-plugin#options
+
+  // Suppresses source map uploading logs during build
+  silent: true,
+
+  // Org and project from Sentry dashboard
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+
+  // Only upload source maps in production builds
+  // Source maps are used to translate minified code back to original code
+  sourcemaps: {
+    disable: process.env.NODE_ENV !== 'production',
+  },
+
+  // Automatically tree-shake Sentry logger statements to reduce bundle size
+  disableLogger: true,
+
+  // Hides source maps from generated client bundles
+  hideSourceMaps: true,
+
+  // Automatically instrument components for monitoring
+  autoInstrumentServerFunctions: true,
+  autoInstrumentMiddleware: true,
+  autoInstrumentAppDirectory: true,
+
+  // Transpile Sentry SDK for better compatibility
+  transpileClientSDK: true,
+
+  // Route tunneling to avoid ad blockers
+  // tunnelRoute: '/monitoring-tunnel',
+
+  // Widens the scope of code considered for source maps
+  widenClientFileUpload: true,
+}
+
+export default withSentryConfig(config, sentryConfig)
