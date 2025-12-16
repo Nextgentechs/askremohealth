@@ -11,19 +11,61 @@ import {
   CardTitle,
 } from '@web/components/ui/card'
 import { Textarea } from '@web/components/ui/textarea'
-import { ArrowLeft } from 'lucide-react'
+import { toast } from '@web/hooks/use-toast'
+import { api } from '@web/trpc/react'
+import { ArrowLeft, CheckCircle, Loader2 } from 'lucide-react'
 import Link from 'next/link'
+import { useParams } from 'next/navigation'
 import { useState } from 'react'
 
 export function PostCall() {
+  const params = useParams()
+  const appointmentId = params?.id as string
+
   const [rating, setRating] = useState(0)
   const [review, setReview] = useState('')
+  const [submitted, setSubmitted] = useState(false)
+
+  const { mutate: submitReview, isPending } = api.reviews.create.useMutation({
+    onSuccess: () => {
+      setSubmitted(true)
+      toast({ title: 'Thank you for your review!' })
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to submit review',
+        variant: 'destructive',
+      })
+    },
+  })
 
   const handleSubmitReview = () => {
-    console.log({
+    if (!appointmentId || rating === 0) return
+
+    submitReview({
+      appointmentId,
       rating,
-      review,
+      comment: review || undefined,
     })
+  }
+
+  if (submitted) {
+    return (
+      <Card className="mx-auto w-full max-w-xl border shadow-sm">
+        <CardContent className="flex flex-col items-center gap-4 py-12">
+          <CheckCircle className="h-16 w-16 text-green-500" />
+          <h2 className="text-xl font-semibold">Review Submitted!</h2>
+          <p className="text-center text-muted-foreground">
+            Thank you for sharing your experience. Your feedback helps improve
+            healthcare for everyone.
+          </p>
+          <Link href="/patient/appointments" className="mt-4">
+            <Button>View My Appointments</Button>
+          </Link>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
@@ -61,23 +103,28 @@ export function PostCall() {
               value={review}
               onChange={(e) => setReview(e.target.value)}
               rows={4}
+              maxLength={1000}
             />
+            <span className="text-xs text-muted-foreground text-right">
+              {review.length}/1000
+            </span>
           </div>
         </div>
       </CardContent>
       <CardFooter className="flex flex-row items-end justify-between">
-        <Link href="/dashboard" className="w-fit">
+        <Link href="/patient/appointments" className="w-fit">
           <Button variant="link" className="w-fit">
             <ArrowLeft className="" />
-            Home
+            Back to Appointments
           </Button>
         </Link>
 
         <Button
           className="w-fit"
           onClick={handleSubmitReview}
-          disabled={rating === 0}
+          disabled={rating === 0 || isPending}
         >
+          {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Submit Review
         </Button>
       </CardFooter>
