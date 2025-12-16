@@ -13,13 +13,7 @@ import { toast } from '@web/hooks/use-toast'
 import { AppointmentStatus } from '@web/server/api/validators'
 import { api, type RouterOutputs } from '@web/trpc/react'
 import { format } from 'date-fns'
-import {
-  Check,
-  Loader,
-  MoreHorizontal,
-  Video,
-  X,
-} from 'lucide-react'
+import { Check, Loader, MoreHorizontal, Video, X } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
@@ -120,7 +114,7 @@ function ScheduledAppointmentActions({ row }: { row: Appointment }) {
 
   const handleCancelAppointment = async () => {
     try {
-      await cancelAppointment(row.id)
+      await cancelAppointment({ appointmentId: row.id })
       await utils.users.listAppointments.refetch()
       router.refresh()
     } catch (error) {

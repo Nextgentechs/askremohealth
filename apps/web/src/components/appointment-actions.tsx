@@ -52,7 +52,7 @@ export function PendingAppointmentActions({
     })
 
   const handleCancelAppointment = async () => {
-    await cancelAppointment(appointmentId)
+    await cancelAppointment({ appointmentId })
     utils.users.listAppointments.invalidate()
     router.refresh()
   }
@@ -140,7 +140,7 @@ export function VideoAppointmentActions({
         size={'sm'}
         className=" text-destructive border-destructive hover:bg-destructive/10 hover:text-destructive"
         onClick={async () => {
-          await cancelAppointment(appointmentId)
+          await cancelAppointment({ appointmentId })
           utils.users.listAppointments.invalidate()
           router.refresh()
         }}

@@ -1,18 +1,32 @@
 'use client'
 
-import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Check } from 'lucide-react'
-import { Dialog, DialogContent, DialogTitle } from '@web/components/ui/dialog'
+/**
+ * Appointment Confirmation Dialog
+ *
+ * Displayed after successfully booking an appointment.
+ * Provides clear next steps for the user - either login or register.
+ *
+ * @module components/appointment-confirmation
+ */
+
 import { Button } from '@web/components/ui/button'
+import { Dialog, DialogContent, DialogTitle } from '@web/components/ui/dialog'
+import { AnimatePresence, motion } from 'framer-motion'
+import { ArrowLeft, Check } from 'lucide-react'
 import Link from 'next/link'
+
+interface AppointmentConfirmationProps {
+  isOpen: boolean
+  setIsOpen: (isOpen: boolean) => void
+  /** If user is already logged in, hide auth options */
+  isLoggedIn?: boolean
+}
 
 export default function AppointmentConfirmation({
   isOpen,
   setIsOpen,
-}: {
-  isOpen: boolean
-  setIsOpen: (isOpen: boolean) => void
-}) {
+  isLoggedIn = false,
+}: AppointmentConfirmationProps) {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="w-[95%] max-w-[320px] rounded-xl border bg-background p-6 shadow-lg sm:max-w-lg">
@@ -63,8 +77,9 @@ export default function AppointmentConfirmation({
             transition={{ delay: 0.4 }}
             className="mb-6 text-sm text-muted-foreground sm:mb-8 sm:text-base"
           >
-            Log in or complete registration to track and manage your
-            appointments
+            {isLoggedIn
+              ? 'Your appointment has been confirmed. You can view and manage it in your dashboard.'
+              : 'Log in or complete registration to track and manage your appointments'}
           </motion.p>
 
           <motion.div
@@ -73,18 +88,34 @@ export default function AppointmentConfirmation({
             transition={{ delay: 0.5 }}
             className="flex flex-col gap-3 sm:justify-center sm:gap-8"
           >
-            <div className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-8">
-              <Link href="/login" className="w-full sm:w-auto">
-                <Button variant="default" className="w-full sm:w-auto">
-                  Log In
-                </Button>
-              </Link>
-              <Link href="/sign-up" className="w-full sm:w-auto">
-                <Button variant="outline" className="w-full sm:w-auto">
-                  Register
-                </Button>
-              </Link>
-            </div>
+            {!isLoggedIn && (
+              <div className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-8">
+                {/* Fixed: Changed /login to /auth */}
+                <Link href="/auth" className="w-full sm:w-auto">
+                  <Button variant="default" className="w-full sm:w-auto">
+                    Log In
+                  </Button>
+                </Link>
+                {/* Fixed: Changed /sign-up to /auth with signup query param */}
+                <Link href="/auth?mode=signup" className="w-full sm:w-auto">
+                  <Button variant="outline" className="w-full sm:w-auto">
+                    Register
+                  </Button>
+                </Link>
+              </div>
+            )}
+            {isLoggedIn && (
+              <div className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-8">
+                <Link
+                  href="/patient/online-appointments"
+                  className="w-full sm:w-auto"
+                >
+                  <Button variant="default" className="w-full sm:w-auto">
+                    View My Appointments
+                  </Button>
+                </Link>
+              </div>
+            )}
             <Link href="/" className="w-full sm:w-auto">
               <Button variant="link" className="my-0 w-full sm:w-auto">
                 <ArrowLeft className="h-4 w-4" />

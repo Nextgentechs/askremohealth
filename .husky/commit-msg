@@ -1,0 +1,5 @@
+#!/bin/sh
+# Commit-msg hook: Validates commit messages using commitlint
+# Enforces conventional commit format: type(scope): subject
+
+npx --no -- commitlint --edit $1
