@@ -15,6 +15,13 @@
       "when": 1748239864124,
       "tag": "0001_classy_rattler",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1765898345984,
+      "tag": "0002_brave_starbolt",
+      "breakpoints": true
     }
   ]
 }

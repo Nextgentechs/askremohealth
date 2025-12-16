@@ -303,6 +303,9 @@ export const appointments = pgTable(
     status: appointmentsStatusEnum('status').notNull(),
     cancelledBy: varchar('cancelled_by'), // Track who cancelled the appointment
     cancellationReason: varchar('cancellation_reason'), // Required when cancelling
+    // Reminder tracking to prevent duplicate notifications
+    reminder24hSentAt: timestamp('reminder_24h_sent_at'),
+    reminder1hSentAt: timestamp('reminder_1h_sent_at'),
   },
   (table) => ({
     // Performance indexes for appointment queries
