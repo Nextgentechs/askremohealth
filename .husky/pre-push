@@ -1,0 +1,5 @@
+#!/bin/sh
+# Pre-push hook: Runs type checking and linting before push
+# Ensures code quality before changes reach remote
+
+npm run check --workspace=@askvirtualhealthcare/web

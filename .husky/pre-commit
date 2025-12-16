@@ -1,0 +1,5 @@
+#!/bin/sh
+# Pre-commit hook: Runs lint-staged to check staged files
+# This ensures code quality before commits are finalized
+
+npx lint-staged

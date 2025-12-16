@@ -16,44 +16,88 @@ import { useToast } from '@web/hooks/use-toast'
 import { fileToBase64 } from '@web/lib/utils'
 import { api } from '@web/trpc/react'
 import { Loader } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { redirect, useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
-import { redirect } from 'next/navigation'
 
+/** Maximum character length for bio field */
+const BIO_MAX_LENGTH = 256
+
+/**
+ * Validation schema for doctor personal details onboarding
+ * - Phone: International format supported (E.164)
+ * - DOB: Minimum age 21 for medical professionals
+ * - Bio: 10-256 characters with UI counter
+ */
 export const personalDetailsSchema = z.object({
   title: z.string().optional(),
-  firstName: z.string(),
-  lastName: z.string(),
-  gender: z.enum(['male', 'female']),
-  dob: z.string().min(1, 'Date of birth is required'),
-  email: z.string().email(),
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
+  gender: z.enum(['male', 'female'], {
+    required_error: 'Please select a gender',
+  }),
+  dob: z
+    .string()
+    .min(1, 'Date of birth is required')
+    .refine(
+      (val) => {
+        const date = new Date(val)
+        return !isNaN(date.getTime()) && date <= new Date()
+      },
+      { message: 'Date of birth cannot be in the future' },
+    )
+    .refine(
+      (val) => {
+        const date = new Date(val)
+        const today = new Date()
+        const ageInYears =
+          (today.getTime() - date.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
+        return ageInYears >= 21
+      },
+      { message: 'Must be at least 21 years old to register as a doctor' },
+    )
+    .refine(
+      (val) => {
+        const date = new Date(val)
+        const today = new Date()
+        const ageInYears =
+          (today.getTime() - date.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
+        return ageInYears <= 100
+      },
+      { message: 'Please enter a valid date of birth' },
+    ),
+  email: z.string().email('Please enter a valid email address'),
   phone: z
     .string()
-    .refine((val) => /^\d{10}$/.test(val) || /^254\d{9}$/.test(val), {
-      message: 'Invalid phone number',
-    })
+    .transform((val) => val.replace(/[\s\-\(\)]/g, '')) // Remove formatting
     .refine(
-      (val) =>
-        val.startsWith('07') ||
-        val.startsWith('01') ||
-        val.startsWith('2547') ||
-        val.startsWith('2541'),
+      (val) => {
+        // E.164 format: + followed by 7-15 digits
+        if (/^\+[1-9]\d{6,14}$/.test(val)) return true
+        // International without +: 7-15 digits starting with country code
+        if (/^[1-9]\d{6,14}$/.test(val)) return true
+        // Local Kenya format: 07xx or 01xx (10 digits)
+        if (/^0[17]\d{8}$/.test(val)) return true
+        return false
+      },
       {
-        message: 'Invalid phone number',
+        message:
+          'Please enter a valid phone number (e.g., +254712345678 or 0712345678)',
       },
     )
     .transform((val) => {
-      if (val.startsWith('0')) {
-        return `254${val.slice(1)}`
-      }
-      return val
+      // Normalize to E.164 format
+      if (val.startsWith('+')) return val
+      if (val.startsWith('0')) return `+254${val.slice(1)}`
+      return `+${val}`
     }),
 
   bio: z
     .string()
     .min(10, { message: 'Bio must be at least 10 characters long' })
-    .max(256, { message: 'Bio must be at most 256 characters long' }),
+    .max(BIO_MAX_LENGTH, {
+      message: `Bio must be at most ${BIO_MAX_LENGTH} characters long`,
+    }),
 
   profilePicture: z.string().refine(
     (base64) => {
@@ -72,7 +116,7 @@ export type PersonalDetails = z.infer<typeof personalDetailsSchema>
 
 export default function PersonalDetails() {
   const [user] = api.users.currentUser.useSuspenseQuery()
-  
+
   // if (!user) {
   //   redirect('/')
   // }
@@ -174,23 +218,40 @@ export default function PersonalDetails() {
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="phone">Phone Number</Label>
-          <Input {...form.register('phone')} id="phone" type="tel" />
+          <Input
+            {...form.register('phone')}
+            id="phone"
+            type="tel"
+            placeholder="+254712345678 or 0712345678"
+          />
+          <p className="text-[0.8rem] text-muted-foreground">
+            International format supported
+          </p>
           <p className="text-[0.8rem] font-medium text-destructive">
             {form.formState.errors.phone?.message}
           </p>
         </div>
         <div className="flex flex-col gap-2">
-          <Label htmlFor="email">Date of Birth</Label>
+          <Label htmlFor="dob">Date of Birth</Label>
           <Input
             {...form.register('dob')}
             id="dob"
             type="date"
+            // Min: 100 years ago, Max: 21 years ago (minimum age for doctors)
+            min={
+              new Date(Date.now() - 100 * 365.25 * 24 * 60 * 60 * 1000)
+                .toISOString()
+                .split('T')[0]
+            }
             max={
-              new Date(Date.now() - 25 * 365.25 * 24 * 60 * 60 * 1000)
+              new Date(Date.now() - 21 * 365.25 * 24 * 60 * 60 * 1000)
                 .toISOString()
                 .split('T')[0]
             }
           />
+          <p className="text-[0.8rem] text-muted-foreground">
+            Must be at least 21 years old
+          </p>
           <p className="text-[0.8rem] font-medium text-destructive">
             {form.formState.errors.dob?.message}
           </p>
@@ -218,13 +279,24 @@ export default function PersonalDetails() {
           </p>
         </div>
         <div className="col-span-2 flex flex-col gap-2">
-          <Label htmlFor="bio" className="">
-            Bio
-          </Label>
-          <Textarea {...form.register('bio')} id="bio" className="h-24" />
-          <p className="text-[0.8rem] font-medium text-destructive">
-            {form.formState.errors.bio?.message}
-          </p>
+          <Label htmlFor="bio">Bio</Label>
+          <Textarea
+            {...form.register('bio')}
+            id="bio"
+            className="h-24"
+            maxLength={BIO_MAX_LENGTH}
+            placeholder="Tell patients about yourself, your experience, and your approach to healthcare..."
+          />
+          <div className="flex justify-between text-[0.8rem]">
+            <p className="font-medium text-destructive">
+              {form.formState.errors.bio?.message}
+            </p>
+            <p
+              className={`text-muted-foreground ${(form.watch('bio')?.length ?? 0) > BIO_MAX_LENGTH ? 'text-destructive' : ''}`}
+            >
+              {form.watch('bio')?.length ?? 0}/{BIO_MAX_LENGTH}
+            </p>
+          </div>
         </div>
       </div>
 

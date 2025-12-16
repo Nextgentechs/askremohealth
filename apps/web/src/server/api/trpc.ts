@@ -1,6 +1,7 @@
 // server/api/trpc.ts
 import { initTRPC, TRPCError } from '@trpc/server'
 import type { FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch'
+import { auth } from '@web/auth'
 import { redisClient } from '@web/redis/redis'
 import { eq } from 'drizzle-orm'
 import { cookies } from 'next/headers'
@@ -9,7 +10,6 @@ import { ZodError } from 'zod'
 import { db } from '../db'
 import { users } from '../db/schema'
 import { sessionSchema } from '../lib/session'
-import { auth } from '@web/auth'
 
 type CookieOptions = {
   secure?: boolean
@@ -63,9 +63,10 @@ export async function createTRPCContext({ req }: FetchCreateContextFnOptions) {
         value: string,
         options: Partial<CookieOptions> = {},
       ) => {
+        // SECURITY: Default httpOnly to true to prevent XSS attacks
         cookieStore.set(key, value, {
           secure: options.secure ?? true,
-          httpOnly: options.httpOnly ?? false,
+          httpOnly: options.httpOnly ?? true, // SECURITY: Default to httpOnly
           sameSite: options.sameSite ?? 'lax',
           maxAge: options.maxAge,
         })
@@ -131,7 +132,7 @@ export const publicProcedure = t.procedure
 
 /**
  * Reusable middleware that enforces users are logged in before running the
- * procedure
+ * procedure. Throws UNAUTHORIZED if no user is present in context.
  */
 const authMiddleware = t.middleware(({ ctx, next }) => {
   if (!ctx.user) throw new TRPCError({ code: 'UNAUTHORIZED' })
@@ -139,19 +140,51 @@ const authMiddleware = t.middleware(({ ctx, next }) => {
 })
 
 /**
- * this filters out queries and mutations that are only accessible to doctors
+ * Doctor role middleware - filters queries/mutations to only be accessible by doctors.
+ * SECURITY: Verifies both authentication AND doctor role to prevent unauthorized access.
+ *
+ * @throws UNAUTHORIZED - If user is not logged in
+ * @throws FORBIDDEN - If user is not a doctor
  */
-
 const doctorMiddleware = t.middleware(({ ctx, next }) => {
+  if (!ctx.user) {
+    throw new TRPCError({
+      code: 'UNAUTHORIZED',
+      message: 'You must be logged in to access this resource',
+    })
+  }
+
+  if (ctx.user.role !== 'doctor') {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: 'This action is only available to doctors',
+    })
+  }
+
   return next({ ctx: { user: ctx.user } })
 })
 
 /**
- * this filters out queries and mutations that are only accessible to admins
+ * Admin role middleware - filters queries/mutations to only be accessible by admins.
+ * SECURITY: Verifies both authentication AND admin role to prevent unauthorized access.
+ *
+ * @throws UNAUTHORIZED - If user is not logged in
+ * @throws FORBIDDEN - If user is not an admin
  */
-
 const adminMiddleware = t.middleware(({ ctx, next }) => {
-  if (!ctx.user) throw new TRPCError({ code: 'UNAUTHORIZED' })
+  if (!ctx.user) {
+    throw new TRPCError({
+      code: 'UNAUTHORIZED',
+      message: 'You must be logged in to access this resource',
+    })
+  }
+
+  if (ctx.user.role !== 'admin') {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: 'This action is only available to administrators',
+    })
+  }
 
   return next({ ctx: { user: ctx.user } })
 })
