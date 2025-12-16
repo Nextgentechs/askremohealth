@@ -28,6 +28,11 @@ export const env = createEnv({
     REDIS_TOKEN: z.string().optional(),
     // NextAuth secret for session encryption
     AUTH_SECRET: z.string().optional(),
+    // Sentry error monitoring (optional - only needed in production)
+    SENTRY_DSN: z.string().optional(),
+    SENTRY_ORG: z.string().optional(),
+    SENTRY_PROJECT: z.string().optional(),
+    SENTRY_AUTH_TOKEN: z.string().optional(),
   },
 
   /**
@@ -43,6 +48,8 @@ export const env = createEnv({
     NEXT_PUBLIC_FROM_EMAIL: z.string().optional(),
     // App URLs for client-side navigation
     NEXT_PUBLIC_APP_URL: z.string().optional(),
+    // Sentry DSN for client-side error reporting
+    NEXT_PUBLIC_SENTRY_DSN: z.string().optional(),
   },
 
   /**
@@ -85,6 +92,13 @@ export const env = createEnv({
     // Redis (Server-side only)
     REDIS_URL: process.env.REDIS_URL,
     REDIS_TOKEN: process.env.REDIS_TOKEN,
+
+    // Sentry (Error monitoring)
+    SENTRY_DSN: process.env.SENTRY_DSN,
+    SENTRY_ORG: process.env.SENTRY_ORG,
+    SENTRY_PROJECT: process.env.SENTRY_PROJECT,
+    SENTRY_AUTH_TOKEN: process.env.SENTRY_AUTH_TOKEN,
+    NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
     // App URLs
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
