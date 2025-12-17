@@ -81,12 +81,19 @@ function SocialIcon({
 
 export default function Footer() {
   return (
-    <footer className="w-full border-t border-border bg-gradient-to-b from-white to-secondary py-16">
+    <footer
+      role="contentinfo"
+      aria-label="Site footer"
+      className="w-full border-t border-border bg-gradient-to-b from-white to-secondary py-16"
+    >
       <div className="container grid grid-cols-2 justify-between gap-4 gap-y-6 md:grid-cols-4 lg:grid-cols-5">
         <div className="flex flex-col items-start gap-8">
           <Logo />
 
-          <div className="flex flex-row gap-1 sm:gap-2 border-y border-border py-4">
+          <nav
+            aria-label="Social media links"
+            className="flex flex-row gap-1 sm:gap-2 border-y border-border py-4"
+          >
             <SocialIcon
               href="https://facebook.com"
               icon={<Facebook />}
@@ -107,7 +114,7 @@ export default function Footer() {
               icon={<YouTube />}
               label="YouTube"
             />
-          </div>
+          </nav>
 
           <div className="text-center text-sm text-muted-foreground">
             &copy; {new Date().getFullYear()} Askremohealth
@@ -116,7 +123,11 @@ export default function Footer() {
 
         {Object.entries(footerNavOptions).map(
           ([categoryKey, categoryValue]) => (
-            <div key={categoryKey} className="flex flex-col justify-between">
+            <nav
+              key={categoryKey}
+              aria-label={categoryValue[0]?.header}
+              className="flex flex-col justify-between"
+            >
               {categoryValue.map((category, index) => (
                 <div key={index} className="flex flex-col">
                   <h3 className="mb-2 text-lg font-semibold text-primary">
@@ -126,14 +137,14 @@ export default function Footer() {
                     <Link
                       key={linkIndex}
                       href={link.href}
-                      className="mb-1 text-sm text-muted-foreground underline-offset-4 hover:text-primary hover:underline"
+                      className="mb-1 text-sm text-muted-foreground underline-offset-4 hover:text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
                     >
                       {link.title}
                     </Link>
                   ))}
                 </div>
               ))}
-            </div>
+            </nav>
           ),
         )}
       </div>

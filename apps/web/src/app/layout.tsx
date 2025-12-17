@@ -1,5 +1,6 @@
 import '@web/styles/globals.css'
 
+import { SkipToMain } from '@web/components/skip-to-main'
 import { Toaster } from '@web/components/ui/toaster'
 import Provider from '@web/providers/provider'
 import { GeistSans } from 'geist/font/sans'
@@ -7,7 +8,8 @@ import { type Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Ask RemoHealth',
-  description: 'Solutions that help you and your loved ones enjoy Good Health and Long Life',
+  description:
+    'Solutions that help you and your loved ones enjoy Good Health and Long Life',
 }
 
 export default async function RootLayout({
@@ -17,6 +19,7 @@ export default async function RootLayout({
     <html lang="en" className={GeistSans.className} suppressHydrationWarning>
       <body className="bg-background text-foreground antialiased">
         <Provider>
+          <SkipToMain />
           {children}
           <Toaster />
         </Provider>
