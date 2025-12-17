@@ -1,9 +1,9 @@
-import { z } from 'zod'
-import { protectedProcedure, publicProcedure } from '../trpc'
-import { db } from '@web/server/db'
-import { users, adminUser } from '@web/server/db/schema'
-import { eq } from 'drizzle-orm'
 import { adminSchema } from '@web/server/api/validators'
+import { db } from '@web/server/db'
+import { adminUser, users } from '@web/server/db/schema'
+import { eq } from 'drizzle-orm'
+import { z } from 'zod'
+import { protectedProcedure } from '../trpc'
 
 /*---------------------- Update Admin -------------------------- */
 export const updateAdminDetails = protectedProcedure
@@ -77,8 +77,8 @@ export const deleteAdmin = protectedProcedure
   })
 
 /* -------------------------- Export Router -------------------------- */
-export const adminRouter = { 
+export const adminUserRouter = {
   updateAdminDetails,
-  getCurrentAdmin, 
+  getCurrentAdmin,
   deleteAdmin,
 }

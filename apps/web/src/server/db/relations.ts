@@ -1,5 +1,6 @@
 import { relations } from 'drizzle-orm'
 import {
+  adminUser,
   appointmentAttachments,
   appointmentLogs,
   appointments,
@@ -8,6 +9,7 @@ import {
   certificates,
   doctors,
   facilities,
+  labs,
   notifications,
   officeLocation,
   operatingHours,
@@ -66,6 +68,10 @@ export const userRelations = relations(users, ({ one, many }) => ({
   patient: one(patients, {
     fields: [users.id],
     references: [patients.userId],
+  }),
+  lab: one(labs, {
+    fields: [users.id],
+    references: [labs.userId],
   }),
   notifications: many(notifications),
   articles: many(articles),
@@ -201,3 +207,17 @@ export const prescriptionItemRelations = relations(
     }),
   }),
 )
+
+export const labRelations = relations(labs, ({ one }) => ({
+  user: one(users, {
+    fields: [labs.userId],
+    references: [users.id],
+  }),
+}))
+
+export const adminUserRelations = relations(adminUser, ({ one }) => ({
+  user: one(users, {
+    fields: [adminUser.userId],
+    references: [users.id],
+  }),
+}))

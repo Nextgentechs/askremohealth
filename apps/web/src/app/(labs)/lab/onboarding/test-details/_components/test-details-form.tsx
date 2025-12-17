@@ -20,8 +20,8 @@ import {
   Search,
   X,
 } from 'lucide-react'
-import React, { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import React, { useEffect, useMemo, useState } from 'react'
 
 // Types
 export interface Test {
@@ -42,9 +42,11 @@ export interface LabTestAvailable {
 interface StoredLabTest {
   id: string
   labId: string
-  testId: string
-  amount: number
-  collection: 'onsite' | 'home' | 'both'
+  testId: string | null
+  testName: string
+  price: number | null
+  amount: number | null
+  collection: string | null
   createdAt: Date
   updatedAt: Date | null
 }
@@ -64,31 +66,35 @@ export default function TestDetailsForm() {
     new Set(),
   )
   const [showFilters, setShowFilters] = useState(false) // <-- Toggle for filters
-  const router = useRouter();
+  const router = useRouter()
 
   // Fetch tests from backend
-  const { data: tests = [], isLoading } = api.tests.listTests.useQuery();
+  const { data: tests = [], isLoading } = api.tests.listTests.useQuery()
 
   // Fetch already stored lab tests for this lab
-  const { data: storedLabTests = [] } = api.labs.getLabTestsForCurrentLab.useQuery();
+  const { data: storedLabTests = [] } =
+    api.labs.getLabTestsForCurrentLab.useQuery()
 
   // When storedLabTests loads, pre-populate selectedTests with them
   useEffect(() => {
     if (storedLabTests && storedLabTests.length > 0) {
       setSelectedTests(
         new Map(
-          storedLabTests.map((t: StoredLabTest) => [
-            t.testId,
-            {
-              testId: t.testId,
-              amount: t.amount,
-              collection: t.collection,
-            },
-          ])
-        )
-      );
+          storedLabTests
+            .filter((t: StoredLabTest) => t.testId !== null)
+            .map((t: StoredLabTest) => [
+              t.testId!,
+              {
+                testId: t.testId!,
+                amount: t.amount ?? 0,
+                collection:
+                  (t.collection as 'home' | 'onsite' | 'both') ?? 'onsite',
+              },
+            ]),
+        ),
+      )
     }
-  }, [storedLabTests]);
+  }, [storedLabTests])
 
   // Normalize tests: convert nulls to undefined for optional fields
   const normalizedTests = useMemo(
@@ -166,35 +172,35 @@ export default function TestDetailsForm() {
 
   const handleSelectTest = (test: Test) => {
     setSelectedTests((prev) => {
-      const newSelection = new Map(prev);
+      const newSelection = new Map(prev)
       if (newSelection.has(test.id)) {
-        newSelection.delete(test.id);
+        newSelection.delete(test.id)
       } else {
         // Set a valid default collection value
         newSelection.set(test.id, {
           testId: test.id,
           amount: 0,
           collection: 'onsite', // <-- use a valid value
-        });
+        })
       }
-      return newSelection;
+      return newSelection
     })
   }
 
   const handleQuickAddCategory = (category: string) => {
     setSelectedTests((prev) => {
-      const newSelection = new Map(prev);
-      const testsInCat = testsByCategory[category] ?? [];
+      const newSelection = new Map(prev)
+      const testsInCat = testsByCategory[category] ?? []
       testsInCat.forEach((test) => {
         if (!newSelection.has(test.id)) {
           newSelection.set(test.id, {
             testId: test.id,
             amount: 0,
             collection: 'onsite', // <-- use a valid value
-          });
+          })
         }
-      });
-      return newSelection;
+      })
+      return newSelection
     })
     setExpandedCategories((prev) => new Set(prev).add(category)) // Optionally expand category when quick-adding
   }
@@ -209,13 +215,13 @@ export default function TestDetailsForm() {
 
   const addLabTests = api.labs.addLabTests.useMutation({
     onSuccess: () => {
-      router.push('/lab/onboarding/availability-details');
+      router.push('/lab/onboarding/availability-details')
     },
-  });
+  })
 
   const handleSubmit = async () => {
-    const tests = Array.from(selectedTests.values());
-    await addLabTests.mutateAsync({ tests });
+    const tests = Array.from(selectedTests.values())
+    await addLabTests.mutateAsync({ tests })
   }
 
   const toggleCategoryExpansion = (category: string) => {
@@ -277,18 +283,22 @@ export default function TestDetailsForm() {
         <div className="flex flex-col text-base sm:text-lg text-gray-700 text-center max-w-2xl mx-auto mb-2">
           <span>
             <span className="font-semibold text-primary">Step 1:</span> Use the{' '}
-            <span className="font-semibold">Filters</span> to search or browse by category.
+            <span className="font-semibold">Filters</span> to search or browse
+            by category.
           </span>
           <span className="hidden sm:inline">&nbsp;</span>
           <span>
             <span className="font-semibold text-primary">Step 2:</span> Click{' '}
             <span className="font-semibold">Select</span> to add a test, or use{' '}
-            <span className="font-semibold">Add all in [Category]</span> for quick selection.
+            <span className="font-semibold">Add all in [Category]</span> for
+            quick selection.
           </span>
           <span className="hidden sm:inline">&nbsp;</span>
           <span>
-            <span className="font-semibold text-primary">Step 3:</span> Review your selected tests in the sidebar, remove any if needed, and click{' '}
-            <span className="font-semibold">Save Selected Tests</span> to continue.
+            <span className="font-semibold text-primary">Step 3:</span> Review
+            your selected tests in the sidebar, remove any if needed, and click{' '}
+            <span className="font-semibold">Save Selected Tests</span> to
+            continue.
           </span>
         </div>
       </div>
@@ -770,9 +780,25 @@ export default function TestDetailsForm() {
           >
             {addLabTests.status === 'pending' ? (
               <>
-                <svg className="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                <svg
+                  className="animate-spin h-5 w-5 mr-2 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                  ></path>
                 </svg>
                 Saving...
               </>

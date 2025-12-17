@@ -1,30 +1,30 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { api } from '@web/trpc/react';
-import Image from "next/image";
-import { BadgeCheck, Heart, Ellipsis, Trash2 } from "lucide-react";
-import { useOptimistic } from "react";
+import { api } from '@web/trpc/react'
+import { BadgeCheck, Ellipsis, Heart, Trash2 } from 'lucide-react'
+import Image from 'next/image'
+import { useOptimistic, useState } from 'react'
 
 type User = {
-  id: string;
-  firstName: string;
-  lastName: string;
-  role: string;
-};
+  id: string
+  firstName: string
+  lastName: string
+  role: string
+}
 
 type Reply = {
-  id: string;
-  desc: string;
-  createdAt: Date;
-  updatedAt: Date | null;
-  userId: string;
-  postId: string;
-  parentCommentId: string | null;
-  user: User;
-  profilePicture: string | null;
-  parentCommentUser?: User | null;
-};
+  id: string
+  desc: string | null
+  content: string
+  createdAt: Date
+  updatedAt: Date | null
+  userId: string
+  postId: string
+  parentCommentId: string | null
+  user: User
+  profilePicture: string | null
+  parentCommentUser?: User | null
+}
 
 const CommentReplies = ({
   commentId,
@@ -32,27 +32,28 @@ const CommentReplies = ({
   initialReplies,
   parentCommentUser,
 }: {
-  commentId: string;
-  postId: string;
-  initialReplies: Reply[];
-  parentCommentUser: User;
+  commentId: string
+  postId: string
+  initialReplies: Reply[]
+  parentCommentUser: User
 }) => {
-  const { data: user } = api.users.currentUser.useQuery();
-  const { data: doctor } = api.doctors.currentDoctor.useQuery();
-  const addReplyMutation = api.community.addReply.useMutation();
-  const deleteCommentMutation = api.community.deleteComment.useMutation();
+  const { data: user } = api.users.currentUser.useQuery()
+  const { data: doctor } = api.doctors.currentDoctor.useQuery()
+  const addReplyMutation = api.community.addReply.useMutation()
+  const deleteCommentMutation = api.community.deleteComment.useMutation()
 
-  const [showReplies, setShowReplies] = useState(false);
-  const [replyInput, setReplyInput] = useState("");
-  const [repliesState, setRepliesState] = useState(initialReplies);
-  const [showMenu, setShowMenu] = useState<string | null>(null);
+  const [showReplies, setShowReplies] = useState(false)
+  const [replyInput, setReplyInput] = useState('')
+  const [repliesState, setRepliesState] = useState(initialReplies)
+  const [showMenu, setShowMenu] = useState<string | null>(null)
 
   const addReplyAction = async () => {
-    if (!user || !replyInput) return;
+    if (!user || !replyInput) return
 
     addOptimisticReply({
       id: Math.random().toString(),
       desc: replyInput,
+      content: replyInput,
       createdAt: new Date(),
       updatedAt: new Date(),
       userId: user.id,
@@ -60,45 +61,45 @@ const CommentReplies = ({
       parentCommentId: commentId,
       user: {
         id: user.id,
-        firstName: "Sending",
-        lastName: "Please Wait...",
-        role: user.role ?? "patient",
+        firstName: 'Sending',
+        lastName: 'Please Wait...',
+        role: user.role ?? 'patient',
       },
       profilePicture: doctor?.profilePicture?.url ?? null,
       parentCommentUser,
-    });
+    })
 
     try {
       const createdReply = await addReplyMutation.mutateAsync({
         postId,
         parentCommentId: commentId,
-        desc: replyInput
-      });
-      setRepliesState((prev) => [...prev, createdReply as Reply]);
-      setReplyInput("");
+        desc: replyInput,
+      })
+      setRepliesState((prev) => [...prev, createdReply as Reply])
+      setReplyInput('')
     } catch (err) {
-      console.log(err);
+      console.log(err)
     }
-  };
+  }
 
   const deleteReplyAction = async (replyId: string) => {
     try {
-      await deleteCommentMutation.mutateAsync({ commentId: replyId });
-      setRepliesState((prev) => prev.filter(r => r.id !== replyId));
-      setShowMenu(null);
+      await deleteCommentMutation.mutateAsync({ commentId: replyId })
+      setRepliesState((prev) => prev.filter((r) => r.id !== replyId))
+      setShowMenu(null)
     } catch (err) {
-      console.error(err);
+      console.error(err)
     }
-  };
+  }
 
   const [optimisticReplies, addOptimisticReply] = useOptimistic(
     repliesState,
-    (state, value: Reply) => [...state, value]
-  );
+    (state, value: Reply) => [...state, value],
+  )
 
   const getDisplayName = (u: User) => {
-    return u.role === 'patient' ? 'anonymous' : `${u.firstName} ${u.lastName}`;
-  };
+    return u.role === 'patient' ? 'anonymous' : `${u.firstName} ${u.lastName}`
+  }
 
   return (
     <div className="ml-12 mt-2">
@@ -107,7 +108,9 @@ const CommentReplies = ({
           onClick={() => setShowReplies(!showReplies)}
           className="text-sm text-gray-500 hover:text-gray-700 mb-2"
         >
-          {showReplies ? 'Hide replies' : `View replies (${optimisticReplies.length})`}
+          {showReplies
+            ? 'Hide replies'
+            : `View replies (${optimisticReplies.length})`}
         </button>
       )}
 
@@ -116,7 +119,7 @@ const CommentReplies = ({
           {optimisticReplies.map((reply) => (
             <div key={reply.id} className="flex gap-3">
               <Image
-                src={reply.profilePicture ?? "/assets/community/noAvatar.png"}
+                src={reply.profilePicture ?? '/assets/community/noAvatar.png'}
                 alt=""
                 width={32}
                 height={32}
@@ -134,7 +137,10 @@ const CommentReplies = ({
                         </>
                       )}
                       {reply.user.role !== 'patient' && (
-                        <BadgeCheck size={16} className="fill-violet-900 text-white" />
+                        <BadgeCheck
+                          size={16}
+                          className="fill-violet-900 text-white"
+                        />
                       )}
                     </span>
                     {user?.id === reply.userId && (
@@ -142,7 +148,9 @@ const CommentReplies = ({
                         <Ellipsis
                           size={16}
                           className="cursor-pointer"
-                          onClick={() => setShowMenu(showMenu === reply.id ? null : reply.id)}
+                          onClick={() =>
+                            setShowMenu(showMenu === reply.id ? null : reply.id)
+                          }
                         />
                         {showMenu === reply.id && (
                           <div className="absolute top-6 right-0 bg-white shadow-lg rounded-lg p-2 z-10">
@@ -182,7 +190,7 @@ const CommentReplies = ({
         </form>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default CommentReplies;
+export default CommentReplies

@@ -3,6 +3,7 @@ import * as admin from './routers/admin'
 import * as articles from './routers/articles'
 import * as doctors from './routers/doctors'
 import * as facilities from './routers/facilities'
+import { labsRouter } from './routers/labs'
 import * as locations from './routers/location'
 import * as patients from './routers/patients'
 import * as specialties from './routers/specialties'
@@ -10,10 +11,13 @@ import * as users from './routers/users'
 import * as video from './routers/video'
 import { createCallerFactory, createTRPCRouter } from './trpc'
 // import * as auth from './routers/auth'
+import { adminUserRouter } from './routers/adminuser'
+import { communityRouter } from './routers/community'
 import { notificationsRouter } from './routers/notifications'
 import * as officeLocations from './routers/office-locations'
 import { prescriptionsRouter } from './routers/prescriptions'
 import { reviewsRouter } from './routers/reviews'
+import { testsRouter } from './routers/tests'
 
 /**
  * This is the primary router for your server.
@@ -35,6 +39,10 @@ export const appRouter = createTRPCRouter({
   notifications: notificationsRouter,
   reviews: reviewsRouter,
   prescriptions: prescriptionsRouter,
+  labs: createTRPCRouter(labsRouter),
+  community: createTRPCRouter(communityRouter),
+  tests: createTRPCRouter(testsRouter),
+  adminuser: createTRPCRouter(adminUserRouter),
 })
 
 // export type definition of API

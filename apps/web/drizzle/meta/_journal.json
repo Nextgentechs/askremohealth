@@ -57,6 +57,27 @@
       "when": 1765898345984,
       "tag": "0002_brave_starbolt",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1766006391096,
+      "tag": "0003_blushing_bloodscream",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1766006939033,
+      "tag": "0004_magenta_the_professor",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1766007754962,
+      "tag": "0005_spooky_joystick",
+      "breakpoints": true
     }
   ]
 }

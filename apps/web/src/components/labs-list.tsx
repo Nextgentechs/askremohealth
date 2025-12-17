@@ -1,45 +1,47 @@
-"use client"
+'use client'
 
-import { Building2, Globe, MapPin, Phone } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Badge } from "./ui/badge";
-import React from "react";
-import { useRouter } from "next/navigation";
+import { Building2, Globe, MapPin, Phone } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Badge } from './ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 
 // Define the Lab type (adjust fields as needed)
 export type Lab = {
-  placeId: string;
-  name: string;
-  address: string;
-  town?: string;
-  county?: string;
-  phone?: string;
-  website?: string;
-};
+  id?: string
+  placeId?: string | null
+  name: string
+  address?: string | null
+  town?: string | null
+  county?: string | null
+  phone?: string
+  website?: string
+}
 
 function EmptyLabs() {
   return (
     <Card className="flex h-64 w-full flex-col items-center justify-center gap-2 border-none shadow-none text-center">
       <Building2 className="size-12 text-muted-foreground/60" />
       <h3 className="font-medium">No labs found</h3>
-      <p className="text-sm text-muted-foreground">Try adjusting your search filters</p>
+      <p className="text-sm text-muted-foreground">
+        Try adjusting your search filters
+      </p>
     </Card>
-  );
+  )
 }
 
 export default function LabsList({ labs }: { labs: Lab[] }) {
-  const router = useRouter();
+  const router = useRouter()
   if (!labs?.length) {
-    return <EmptyLabs />;
+    return <EmptyLabs />
   }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {labs.map((lab) => (
         <Card
-          key={lab.placeId}
+          key={lab.placeId ?? lab.id ?? lab.name}
           className="hover:shadow-lg transition-shadow duration-200 border-l-4 border-l-primary cursor-pointer"
-          onClick={() => router.push(`/laboratories/${lab.placeId}`)}
+          onClick={() => router.push(`/laboratories/${lab.id ?? lab.placeId}`)}
         >
           <CardHeader className="pb-3">
             <CardTitle className="text-lg font-semibold text-primary flex items-start gap-2">
@@ -62,7 +64,10 @@ export default function LabsList({ labs }: { labs: Lab[] }) {
             {/* County Badge */}
             <div className="flex items-center gap-2">
               {lab.county && (
-                <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20">
+                <Badge
+                  variant="secondary"
+                  className="bg-primary/10 text-primary hover:bg-primary/20"
+                >
                   {lab.county} County
                 </Badge>
               )}
@@ -73,7 +78,11 @@ export default function LabsList({ labs }: { labs: Lab[] }) {
               {lab.phone && (
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <Phone className="h-4 w-4" />
-                  <a href={`tel:${lab.phone}`} className="hover:text-primary transition-colors" onClick={e => e.stopPropagation()}>
+                  <a
+                    href={`tel:${lab.phone}`}
+                    className="hover:text-primary transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     {lab.phone}
                   </a>
                 </div>
@@ -86,7 +95,7 @@ export default function LabsList({ labs }: { labs: Lab[] }) {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hover:text-primary transition-colors truncate"
-                    onClick={e => e.stopPropagation()}
+                    onClick={(e) => e.stopPropagation()}
                   >
                     Visit Website
                   </a>
@@ -97,5 +106,5 @@ export default function LabsList({ labs }: { labs: Lab[] }) {
         </Card>
       ))}
     </div>
-  );
+  )
 }

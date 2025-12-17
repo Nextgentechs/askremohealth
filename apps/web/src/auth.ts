@@ -1,11 +1,11 @@
 import { eq } from 'drizzle-orm'
-import { db } from './server/db'
-import { users, labs } from './server/db/schema'
+import { type ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies'
 import { cookies as nextCookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { NextResponse, type NextRequest } from 'next/server'
+import { db } from './server/db'
+import { users } from './server/db/schema'
 import { getUserSessionById } from './server/lib/session'
-import { NextResponse,NextRequest } from 'next/server'
-import { type ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies'
 
 // Helper to infer user with lab relation
 async function getUserWithLabQuery() {
@@ -15,6 +15,22 @@ async function getUserWithLabQuery() {
 }
 
 type UserWithLab = Awaited<ReturnType<typeof getUserWithLabQuery>>
+
+/**
+ * NextAuth-compatible auth function
+ * Returns session object with user info for tRPC context
+ */
+export async function auth(): Promise<{
+  user: { email: string } | null
+} | null> {
+  try {
+    const currentUser = await getCurrentUser()
+    if (!currentUser) return null
+    return { user: { email: currentUser.email ?? '' } }
+  } catch {
+    return null
+  }
+}
 
 // Google OAuth config
 const GOOGLE_CLIENT_ID = process.env.AUTH_GOOGLE_ID!
@@ -28,7 +44,7 @@ const BASE_URL =
 
 export function getGoogleAuthUrl(
   role: 'doctor' | 'admin' | 'patient' | 'lab' = 'doctor',
-  callbackUrl?: string
+  callbackUrl?: string,
 ) {
   const redirectUri = `${BASE_URL}/api/auth/google/callback`
   const scope = 'email profile'
@@ -66,7 +82,7 @@ async function exchangeCodeForTokens(code: string) {
 
 async function getGoogleUserInfo(accessToken: string) {
   const userResponse = await fetch(
-    `https://www.googleapis.com/oauth2/v2/userinfo?access_token=${accessToken}`
+    `https://www.googleapis.com/oauth2/v2/userinfo?access_token=${accessToken}`,
   )
   if (!userResponse.ok) throw new Error('Failed to get user info from Google')
   return userResponse.json()
@@ -74,20 +90,23 @@ async function getGoogleUserInfo(accessToken: string) {
 
 async function createOrUpdateUser(
   googleUser: { email: string; given_name: string; family_name: string },
-  role: string
+  role: string,
 ) {
   const existingUser = await db.query.users.findFirst({
     where: eq(users.email, googleUser.email),
   })
 
   if (!existingUser) {
-    const [newUser] = await db.insert(users).values({
-      email: googleUser.email,
-      firstName: googleUser.given_name ?? '',
-      lastName: googleUser.family_name ?? '',
-      role: role as 'doctor' | 'patient' | 'admin' | 'lab',
-      password: '',
-    }).returning()
+    const [newUser] = await db
+      .insert(users)
+      .values({
+        email: googleUser.email,
+        firstName: googleUser.given_name ?? '',
+        lastName: googleUser.family_name ?? '',
+        role: role as 'doctor' | 'patient' | 'admin' | 'lab',
+        password: '',
+      })
+      .returning()
 
     return newUser
   }
@@ -98,7 +117,8 @@ async function createOrUpdateUser(
 // --- SESSION HANDLING ---
 
 function setSessionCookie(userId: string, cookieStore: ReadonlyRequestCookies) {
-  const domain = process.env.NODE_ENV === 'production' ? '.askremohealth.com' : '.localhost'
+  const domain =
+    process.env.NODE_ENV === 'production' ? '.askremohealth.com' : '.localhost'
   cookieStore.set('session-id', userId, {
     path: '/',
     secure: process.env.NODE_ENV === 'production',
@@ -173,7 +193,6 @@ export async function signOut(req: NextRequest) {
   }
 }
 
-
 // --- GOOGLE CALLBACK ---
 
 export async function handleGoogleCallback(code: string, state: string) {
@@ -191,7 +210,10 @@ export async function handleGoogleCallback(code: string, state: string) {
     return { success: true, user, callbackUrl }
   } catch (error) {
     console.error('Google OAuth error:', error)
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
   }
 }
 
@@ -203,7 +225,9 @@ export async function requireAuth() {
   return user
 }
 
-export async function requireRole(role: 'doctor' | 'patient' | 'admin' | 'lab') {
+export async function requireRole(
+  role: 'doctor' | 'patient' | 'admin' | 'lab',
+) {
   const user = await getCurrentUser()
   if (!user || user.role !== role) redirect('/')
   return user

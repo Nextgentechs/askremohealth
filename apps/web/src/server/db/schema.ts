@@ -32,7 +32,7 @@ import {
 // ENUMS
 // ============================================================================
 
-export const roleEnum = pgEnum('role', ['patient', 'doctor', 'admin'])
+export const roleEnum = pgEnum('role', ['patient', 'doctor', 'lab', 'admin'])
 
 export const weekDayEnum = pgEnum('week_day', [
   'monday',
@@ -396,6 +396,9 @@ export const articles = pgTable('articles', {
   authorId: varchar('author_id').notNull(),
   title: varchar('title').notNull(),
   content: text('content').notNull(),
+  image: varchar('image'), // Article feature image URL
+  status: varchar('status').default('draft'), // draft, published, archived
+  verified: boolean('verified').default(false), // Whether article is verified by admin
   createdAt: timestamp('created_at').defaultNow().notNull(),
   publishedAt: timestamp('published_at'),
   updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
@@ -491,3 +494,204 @@ export const prescriptionItems = pgTable(
   }),
 )
 export type PrescriptionItem = InferSelectModel<typeof prescriptionItems>
+
+// ============================================================================
+// PLACEHOLDER TABLES FOR INCOMPLETE FEATURES
+// These are stubs to prevent TypeScript errors - to be fully implemented later
+// ============================================================================
+
+/**
+ * Labs Table - Placeholder for laboratory feature
+ * TODO: Full implementation pending
+ */
+export const labs = pgTable('lab', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  name: varchar('name').notNull(),
+  userId: varchar('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  location: jsonb('location').$type<{ lat: number; lng: number }>(), // Added location
+  address: varchar('address'),
+  phone: varchar('phone'),
+  email: varchar('email'),
+  town: varchar('town'),
+  county: varchar('county'),
+  placeId: varchar('place_id'),
+  website: varchar('website'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
+})
+export type Lab = InferSelectModel<typeof labs>
+
+/**
+ * Lab Tests Available Table - Tests offered by labs
+ */
+export const labTestsAvailable = pgTable('lab_test_available', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  labId: uuid('lab_id')
+    .notNull()
+    .references(() => labs.id, { onDelete: 'cascade' }),
+  testId: uuid('test_id').references(() => tests.id),
+  testName: varchar('test_name').notNull(),
+  price: integer('price'),
+  amount: integer('amount'), // Alias for price for compatibility
+  collection: varchar('collection'), // Sample collection method
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
+})
+export type LabTestAvailable = InferSelectModel<typeof labTestsAvailable>
+
+/**
+ * Lab Availability Table - Lab operating hours
+ */
+export const labAvailability = pgTable('lab_availability', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  labId: uuid('lab_id')
+    .notNull()
+    .references(() => labs.id, { onDelete: 'cascade' }),
+  dayOfWeek: weekDayEnum('day_of_week').notNull(),
+  startTime: varchar('start_time').notNull(),
+  endTime: varchar('end_time').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+})
+export type LabAvailability = InferSelectModel<typeof labAvailability>
+
+/**
+ * Tests Table - Medical tests catalog
+ */
+export const tests = pgTable('test', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  name: varchar('name').notNull(),
+  description: text('description'),
+  category: varchar('category'),
+  loincTestId: varchar('loinc_test_id'), // LOINC test identifier
+  generalCategory: varchar('general_category'),
+  specificCategory: varchar('specific_category'),
+  sampleType: varchar('sample_type'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+})
+export type Test = InferSelectModel<typeof tests>
+
+/**
+ * Chats Table - Community chat rooms
+ * TODO: Full implementation pending
+ */
+export const chats = pgTable('chat', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  name: varchar('name'),
+  doctorId: varchar('doctor_id'),
+  patientId: varchar('patient_id'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
+})
+export type Chat = InferSelectModel<typeof chats>
+
+/**
+ * Messages Table - Chat messages
+ * TODO: Full implementation pending
+ */
+export const messages = pgTable('message', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  chatId: uuid('chat_id')
+    .notNull()
+    .references(() => chats.id, { onDelete: 'cascade' }),
+  userId: varchar('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  senderId: varchar('sender_id'), // Alias for userId for compatibility
+  content: text('content').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+})
+export type Message = InferSelectModel<typeof messages>
+
+/**
+ * Comments Table - Community post comments
+ * TODO: Full implementation pending
+ */
+export const comments = pgTable('comment', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  postId: uuid('post_id').notNull(),
+  userId: varchar('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  parentCommentId: uuid('parent_comment_id'), // For nested replies
+  content: text('content').notNull(),
+  desc: text('desc'), // Alias for content for compatibility
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
+})
+export type Comment = InferSelectModel<typeof comments>
+
+/**
+ * Lab Appointments Table - Appointments for laboratory tests
+ * TODO: Full implementation pending
+ */
+export const labAppointments = pgTable('lab_appointment', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  labId: uuid('lab_id')
+    .notNull()
+    .references(() => labs.id, { onDelete: 'cascade' }),
+  patientId: varchar('patient_id')
+    .notNull()
+    .references(() => patients.id, { onDelete: 'cascade' }),
+  testId: uuid('test_id').references(() => tests.id),
+  scheduledAt: timestamp('scheduled_at').notNull(),
+  status: varchar('status').notNull().default('scheduled'),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
+})
+export type LabAppointment = InferSelectModel<typeof labAppointments>
+
+/**
+ * Admin User Table - Extended profile for admin users
+ * TODO: Full implementation pending
+ */
+export const adminUser = pgTable('admin_user', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  userId: varchar('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  phone: varchar('phone'),
+  onboardingComplete: boolean('onboarding_complete').notNull().default(false),
+  permissions: jsonb('permissions')
+    .$type<{ resource?: string; action?: string }[]>()
+    .default([]),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
+})
+export type AdminUser = InferSelectModel<typeof adminUser>
+
+/**
+ * Posts Table - Community posts
+ * TODO: Full implementation pending
+ */
+export const posts = pgTable('post', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  userId: varchar('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  desc: text('desc'),
+  content: text('content'),
+  img: varchar('img'),
+  video: varchar('video'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
+})
+export type Post = InferSelectModel<typeof posts>
+
+/**
+ * Likes Table - Post likes
+ * TODO: Full implementation pending
+ */
+export const likes = pgTable('like', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  postId: uuid('post_id')
+    .notNull()
+    .references(() => posts.id, { onDelete: 'cascade' }),
+  userId: varchar('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+})
+export type Like = InferSelectModel<typeof likes>

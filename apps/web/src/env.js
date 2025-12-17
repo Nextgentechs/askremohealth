@@ -33,6 +33,12 @@ export const env = createEnv({
     SENTRY_ORG: z.string().optional(),
     SENTRY_PROJECT: z.string().optional(),
     SENTRY_AUTH_TOKEN: z.string().optional(),
+    // Object storage configuration (optional - S3 compatible storage)
+    OBJECT_STORAGE_REGION: z.string().optional(),
+    OBJECT_STORAGE_ENDPOINT: z.string().optional(),
+    OBJECT_STORAGE_KEY: z.string().optional(),
+    OBJECT_STORAGE_SECRET: z.string().optional(),
+    OBJECT_STORAGE_BUCKET: z.string().optional(),
   },
 
   /**
@@ -99,6 +105,13 @@ export const env = createEnv({
     SENTRY_PROJECT: process.env.SENTRY_PROJECT,
     SENTRY_AUTH_TOKEN: process.env.SENTRY_AUTH_TOKEN,
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
+
+    // Object Storage (S3 compatible)
+    OBJECT_STORAGE_REGION: process.env.OBJECT_STORAGE_REGION,
+    OBJECT_STORAGE_ENDPOINT: process.env.OBJECT_STORAGE_ENDPOINT,
+    OBJECT_STORAGE_KEY: process.env.OBJECT_STORAGE_KEY,
+    OBJECT_STORAGE_SECRET: process.env.OBJECT_STORAGE_SECRET,
+    OBJECT_STORAGE_BUCKET: process.env.OBJECT_STORAGE_BUCKET,
 
     // App URLs
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,

@@ -1,13 +1,13 @@
-import { Client, AddressType } from '@googlemaps/google-maps-services-js'
+import { AddressType, Client } from '@googlemaps/google-maps-services-js'
 import { env } from '@web/env'
-import { labs } from '@web/server/db/schema'
 import { db } from '@web/server/db'
+import { labs } from '@web/server/db/schema'
 import { KENYA_COUNTIES } from '../data/kenya-counties'
 
 const googleMapsClient = new Client({})
 
 export class LabsService {
-  static async register(placeId: string, user_id: string, phone?: string) {
+  static async register(placeId: string, userId: string, phone?: string) {
     const existingLab = await db.query.labs.findFirst({
       where: (l, { eq }) => eq(l.placeId, placeId),
     })
@@ -49,7 +49,7 @@ export class LabsService {
         .replace('Kaunti ya ', '')
         .trim()
       const matchedCounty = KENYA_COUNTIES.find(
-        (c) => c.name.toLowerCase() === countyName.toLowerCase()
+        (c) => c.name.toLowerCase() === countyName.toLowerCase(),
       )
       county = matchedCounty ? matchedCounty.name : countyName
     }
@@ -75,7 +75,7 @@ export class LabsService {
       const matchedCounty = KENYA_COUNTIES.find(
         (c) =>
           Math.abs(c.coordinates.lat - lat) < 1 &&
-          Math.abs(c.coordinates.lng - lng) < 1
+          Math.abs(c.coordinates.lng - lng) < 1,
       )
       if (matchedCounty) {
         county = matchedCounty.name
@@ -86,9 +86,9 @@ export class LabsService {
       .insert(labs)
       .values({
         placeId,
-        user_id,
+        userId,
         name: place.name ?? '',
-        location: place.geometry?.location ?? null,
+        // location: place.geometry?.location ?? null, // Removed as it is not in schema
         address: place.formatted_address ?? '',
         county,
         town,
@@ -106,25 +106,31 @@ export class LabsService {
   }
 
   // Add: listFiltered for server-side filtering
-  static async listFiltered({ name, county }: { name?: string; county?: string }) {
+  static async listFiltered({
+    name,
+    county,
+  }: {
+    name?: string
+    county?: string
+  }) {
     return db.query.labs.findMany({
       where: (lab, { ilike, and, eq }) => {
-        const conditions = [];
+        const conditions = []
         if (name) {
-          conditions.push(ilike(lab.name, `%${name}%`));
+          conditions.push(ilike(lab.name, `%${name}%`))
         }
         if (county) {
-          conditions.push(eq(lab.county, county));
+          conditions.push(eq(lab.county, county))
         }
-        return conditions.length ? and(...conditions) : undefined;
+        return conditions.length ? and(...conditions) : undefined
       },
-    });
+    })
   }
 
   static async getById(placeId: string) {
     return db.query.labs.findFirst({
       where: (l, { eq }) => eq(l.placeId, placeId),
-    });
+    })
   }
 
   static async getTestsByLabId(labId: string) {
@@ -134,12 +140,12 @@ export class LabsService {
       with: {
         test: true, // assumes a relation is set up in drizzle schema
       },
-    });
+    })
   }
 
   static async getAvailabilityByLabId(labId: string) {
     return db.query.labAvailability.findMany({
-      where: (la, { eq }) => eq(la.lab_id, labId),
-    });
+      where: (la, { eq }) => eq(la.labId, labId),
+    })
   }
 }

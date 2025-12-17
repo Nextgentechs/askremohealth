@@ -132,7 +132,7 @@ export function setCookie(sessionId: string, cookies: Pick<Cookies, 'set'>) {
   cookies.set(COOKIE_SESSION_KEY, sessionId, cookieOptions)
 }
 
-async function getUserSessionById(sessionId: string) {
+export async function getUserSessionById(sessionId: string) {
   const rawUser = await redisClient.get(`session:${sessionId}`)
   if (!rawUser || typeof rawUser !== 'string') return null
 
