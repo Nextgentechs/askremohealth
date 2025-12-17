@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import Logo from './logo'
+import { ModeToggle } from './mode-toggle'
 import { NotificationBell } from './notification-bell'
 import { Button } from './ui/button'
 import {
@@ -221,11 +222,15 @@ function MobileMenu() {
 
         {user ? (
           <div className="flex items-center gap-2 ms-4">
+            <ModeToggle />
             <NotificationBell />
             <CurrentUser user={user} />
           </div>
         ) : (
-          <AuthButtons className="flex flex-col items-start border-t px-4 pt-4" />
+          <div className="flex items-center gap-2 border-t px-4 pt-4">
+            <ModeToggle />
+            <AuthButtons className="flex flex-col items-start" />
+          </div>
         )}
       </SheetContent>
     </Sheet>
@@ -367,8 +372,8 @@ export default function NavigationBar() {
           ) : (
             <AuthButtons className="hidden flex-row items-center gap-4 lg:flex" />
           )}
+          <ModeToggle />
           <MobileMenu />
-          {/* <ModeToggle /> */}
         </div>
       </nav>
     </header>

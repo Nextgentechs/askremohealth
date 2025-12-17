@@ -2,8 +2,17 @@
  * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially useful
  * for Docker builds.
  */
+import bundleAnalyzer from '@next/bundle-analyzer'
 import { withSentryConfig } from '@sentry/nextjs'
 import './src/env.js'
+
+/**
+ * Bundle Analyzer Configuration
+ * Run with ANALYZE=true to generate bundle analysis
+ */
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+})
 
 /**
  * Security Headers Configuration
@@ -125,4 +134,4 @@ const sentryConfig = {
   widenClientFileUpload: true,
 }
 
-export default withSentryConfig(config, sentryConfig)
+export default withSentryConfig(withBundleAnalyzer(config), sentryConfig)
