@@ -1,5 +1,6 @@
-import DoctorDetails from '@web/components/doctor-details'
 import CalendarComponent from '@web/components/calendar-component'
+import DoctorDetails from '@web/components/doctor-details'
+import { JsonLd } from '@web/components/json-ld'
 import { StarRating } from '@web/components/star-rating'
 import { Avatar, AvatarFallback, AvatarImage } from '@web/components/ui/avatar'
 import {
@@ -16,8 +17,52 @@ import {
   CardHeader,
   CardTitle,
 } from '@web/components/ui/card'
+import { generateDoctorJsonLd } from '@web/lib/structured-data'
 import { type RouterOutputs } from '@web/trpc/react'
 import { api } from '@web/trpc/server'
+import { type Metadata } from 'next'
+
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://askremohealth.com'
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}): Promise<Metadata> {
+  const { id } = await params
+  const doctor = await api.doctors.details(id)
+  const name =
+    `Dr. ${doctor.user?.firstName ?? ''} ${doctor.user?.lastName ?? ''}`.trim()
+  const specialtyName = doctor.specialty?.name ?? 'Healthcare Specialist'
+  const description =
+    doctor.bio ??
+    `Book an appointment with ${name} - ${specialtyName} at Ask RemoHealth`
+
+  return {
+    title: `${name} - ${specialtyName}`,
+    description,
+    openGraph: {
+      title: `${name} - ${specialtyName} | Ask RemoHealth`,
+      description,
+      type: 'profile',
+      url: `${BASE_URL}/find-specialists/${id}`,
+      images: doctor.profilePicture?.url
+        ? [{ url: doctor.profilePicture.url, alt: name }]
+        : undefined,
+    },
+    twitter: {
+      card: 'summary',
+      title: `${name} - ${specialtyName}`,
+      description,
+      images: doctor.profilePicture?.url
+        ? [doctor.profilePicture.url]
+        : undefined,
+    },
+    alternates: {
+      canonical: `${BASE_URL}/find-specialists/${id}`,
+    },
+  }
+}
 
 function DoctorCard({
   doctor,
@@ -37,7 +82,7 @@ function DoctorCard({
             {doctor.user?.lastName?.charAt(0)}
           </AvatarFallback>
         </Avatar>
-        <DoctorDetails 
+        <DoctorDetails
           doctor={{
             ...doctor,
             firstName: doctor.user?.firstName,
@@ -45,13 +90,14 @@ function DoctorCard({
             email: doctor.user?.email,
             bookedSlots: [],
             reviewStats: {
-              averageRating: doctor.reviews?.length ? 
-                doctor.reviews.reduce((acc, r) => acc + r.rating, 0) / doctor.reviews.length : 
-                0,
-              totalReviews: doctor.reviews?.length ?? 0
-            }
-          }} 
-          showAllLocations={true} 
+              averageRating: doctor.reviews?.length
+                ? doctor.reviews.reduce((acc, r) => acc + r.rating, 0) /
+                  doctor.reviews.length
+                : 0,
+              totalReviews: doctor.reviews?.length ?? 0,
+            },
+          }}
+          showAllLocations={true}
         />
       </div>
     </Card>
@@ -142,46 +188,81 @@ function PatientsReviews() {
   )
 }
 
-export default async function Page({ 
-  params 
-}: { 
-  params: Promise<{ id: string }> 
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ id: string }>
 }) {
   const { id } = await params
   const doctor = await api.doctors.details(id)
 
-  return (
-    <main className="container mx-auto mb-48 mt-12 flex min-h-screen w-full flex-col gap-12">
-      <Breadcrumb className="lg:ps-3">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/">Home</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/find-specialists">Doctors</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>
-              {doctor.user?.firstName} {doctor.user?.lastName}
-            </BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+  // Prepare locations from facility and office
+  const locations = [
+    doctor.facility && {
+      name: doctor.facility.name,
+      county: doctor.facility.county,
+      address: doctor.facility.address,
+    },
+    doctor.office && {
+      name: doctor.office.name,
+      county: doctor.office.county,
+      address: doctor.office.address,
+    },
+  ].filter(Boolean) as Array<{
+    name: string | null
+    county: string | null
+    address: string | null
+  }>
 
-      <div className="flex flex-col gap-8 lg:flex-row">
-        <DoctorCard doctor={doctor} />
-        <div className="flex flex-1 flex-col gap-8">
-          <AboutDoctor about={doctor.bio} />
-          <CalendarComponent 
-            doctorId={doctor.id}
-            operatingHours={doctor.operatingHours}
-            bookedSlots={(doctor.bookedSlots ?? []).map((d: string) => new Date(d))}
-          />
-          <PatientsReviews />
+  // Prepare structured data
+  const jsonLdData = generateDoctorJsonLd({
+    id: doctor.id,
+    firstName: doctor.user?.firstName,
+    lastName: doctor.user?.lastName,
+    specialization: doctor.specialty?.name,
+    bio: doctor.bio,
+    profilePicture: doctor.profilePicture,
+    locations: locations.length > 0 ? locations : undefined,
+    reviewStats: doctor.reviewStats,
+  })
+
+  return (
+    <>
+      <JsonLd data={jsonLdData} />
+      <main className="container mx-auto mb-48 mt-12 flex min-h-screen w-full flex-col gap-12">
+        <Breadcrumb className="lg:ps-3">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/">Home</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/find-specialists">Doctors</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>
+                {doctor.user?.firstName} {doctor.user?.lastName}
+              </BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+
+        <div className="flex flex-col gap-8 lg:flex-row">
+          <DoctorCard doctor={doctor} />
+          <div className="flex flex-1 flex-col gap-8">
+            <AboutDoctor about={doctor.bio} />
+            <CalendarComponent
+              doctorId={doctor.id}
+              operatingHours={doctor.operatingHours}
+              bookedSlots={(doctor.bookedSlots ?? []).map(
+                (d: string) => new Date(d),
+              )}
+            />
+            <PatientsReviews />
+          </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </>
   )
 }
