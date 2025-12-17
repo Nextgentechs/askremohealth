@@ -4,7 +4,9 @@ import { env } from 'src/env'
 
 export default {
   schema: './src/server/db/schema.ts',
-  //dialect: 'postgresql',
-  connectionString: env.DATABASE_URL,
-  out: './drizzle/migrations', 
+  dialect: 'postgresql',
+  dbCredentials: {
+    url: env.DATABASE_URL,
+  },
+  out: './drizzle',
 } satisfies Config

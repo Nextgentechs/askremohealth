@@ -308,4 +308,45 @@ export class AuthService {
       })
     }
   }
+
+  /**
+   * Admin sign up - creates an admin user account
+   * TODO: Full implementation pending - admin approval flow needed
+   */
+  static async adminSignUp({
+    email,
+    password,
+    firstName,
+    lastName,
+  }: Omit<SignUpInput, 'role'>) {
+    return AuthService.signUp({
+      email,
+      password,
+      firstName,
+      lastName,
+      role: 'admin',
+    })
+  }
+
+  /**
+   * Admin sign in - authenticates an admin user
+   * TODO: Full implementation pending - additional admin verification needed
+   */
+  static async adminSignIn({ email, password }: SignInInput) {
+    const result = await AuthService.signIn({ email, password })
+
+    // Verify the user is an admin
+    const user = await db.query.users.findFirst({
+      where: eq(users.email, email),
+    })
+
+    if (user?.role !== 'admin') {
+      throw new TRPCError({
+        code: 'UNAUTHORIZED',
+        message: 'User is not an admin',
+      })
+    }
+
+    return result
+  }
 }

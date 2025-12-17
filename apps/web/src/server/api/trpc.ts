@@ -18,7 +18,8 @@ type CookieOptions = {
   maxAge?: number
 }
 
-export async function createTRPCContext({ req }: FetchCreateContextFnOptions) {
+export async function createTRPCContext(opts?: FetchCreateContextFnOptions) {
+  const req = opts?.req
   const cookieStore = await cookies()
   let user = null
 
@@ -198,6 +199,7 @@ const adminMiddleware = t.middleware(({ ctx, next }) => {
  * @see https://trpc.io/docs/procedures
  */
 export const procedure = t.procedure.use(authMiddleware)
+export const protectedProcedure = procedure // Alias for backward compatibility
 export const doctorProcedure = t.procedure.use(doctorMiddleware)
 
 export const adminProcedure = t.procedure.use(adminMiddleware)

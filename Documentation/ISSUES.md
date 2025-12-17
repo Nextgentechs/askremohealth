@@ -3,7 +3,6 @@
 **Created:** December 16, 2025  
 **Status:** Active Development
 
-> **Note:** These issues should be created in GitHub when authentication is configured.  
 > For now, track progress here and mark completed items.
 
 ---

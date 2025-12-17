@@ -1,22 +1,21 @@
+import { db } from '@web/server/db'
+import { chats, messages } from '@web/server/db/schema'
 import { api } from '@web/trpc/server'
-import { db } from "@web/server/db";
-import { messages, chats, users } from "@web/server/db/schema";
-import { eq, and, or } from "drizzle-orm";
-import { NextRequest, NextResponse } from "next/server";
-import { Server } from "socket.io";
-import { createServer } from "http";
+import { and, eq, or } from 'drizzle-orm'
+import { type NextRequest, NextResponse } from 'next/server'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ chatId: string }> }
+  { params }: { params: Promise<{ chatId: string }> },
 ) {
-  const user = await api.users.currentUser();
-  const userId = user?.id;
+  const user = await api.users.currentUser()
+  const userId = user?.id
 
-  const { chatId } = await params;
-  const { content } = await request.json();
+  const { chatId } = await params
+  const { content } = await request.json()
 
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!userId)
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   // Verify user is part of this chat
   const [chat] = await db
@@ -25,33 +24,35 @@ export async function POST(
     .where(
       and(
         eq(chats.id, chatId),
-        or(eq(chats.doctorId, userId), eq(chats.patientId, userId))
-      )
-    );
+        or(eq(chats.doctorId, userId), eq(chats.patientId, userId)),
+      ),
+    )
 
-  if (!chat) return NextResponse.json({ error: "Chat not found" }, { status: 404 });
+  if (!chat)
+    return NextResponse.json({ error: 'Chat not found' }, { status: 404 })
 
   // Insert message
   const [newMessage] = await db
     .insert(messages)
     .values({
       content,
+      userId,
       senderId: userId,
       chatId,
     })
-    .returning();
+    .returning()
 
   // Get sender info
   const messageWithSender = {
     ...newMessage,
     senderUsername: `${user.firstName} ${user.lastName}`,
-    };
-
-  // Emit to socket
-  const io = globalThis.ioServer;
-  if (io) {
-    io.to(chatId).emit("new-message", messageWithSender);
   }
 
-  return NextResponse.json(messageWithSender);
+  // Emit to socket
+  const io = globalThis.ioServer
+  if (io) {
+    io.to(chatId).emit('new-message', messageWithSender)
+  }
+
+  return NextResponse.json(messageWithSender)
 }

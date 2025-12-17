@@ -68,7 +68,7 @@ async function handler(req: Request) {
     endpoint: '/api/trpc',
     router: appRouter,
     req,
-    createContext: () => createTRPCContext(),
+    createContext: (opts) => createTRPCContext(opts),
     onError({ error, path }) {
       console.error(
         `❌ tRPC failed on ${path ?? '<no-path>'}: ${error.message}`,
