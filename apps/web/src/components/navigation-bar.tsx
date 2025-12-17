@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import Logo from './logo'
+import { NotificationBell } from './notification-bell'
 import { Button } from './ui/button'
 import {
   DropdownMenu,
@@ -160,7 +161,9 @@ function AuthButtons({
             <DropdownMenuItem className="cursor-pointer">Login as Doctor</DropdownMenuItem>
           </Link> */}
           <Link href="/auth?role=patient">
-            <DropdownMenuItem className="cursor-pointer">Login as Patient</DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer">
+              Login as Patient
+            </DropdownMenuItem>
           </Link>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -217,7 +220,8 @@ function MobileMenu() {
         </div>
 
         {user ? (
-          <div className="ms-4">
+          <div className="flex items-center gap-2 ms-4">
+            <NotificationBell />
             <CurrentUser user={user} />
           </div>
         ) : (
@@ -276,7 +280,7 @@ function CurrentUser({
                 My Profile
               </DropdownMenuItem>
             </Link>
-          ): null }
+          ) : null}
           <>
             {user?.role === 'doctor' ? (
               <Link href="/specialist/profile">
@@ -337,7 +341,10 @@ export default function NavigationBar() {
               </DropdownMenu>
             ) : (
               <Link href={option.href ?? '#'}>
-                <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                <NavigationMenuLink
+                  asChild
+                  className={navigationMenuTriggerStyle()}
+                >
                   <span>{option.label}</span>
                 </NavigationMenuLink>
               </Link>
@@ -348,7 +355,8 @@ export default function NavigationBar() {
 
       <div className="flex items-center gap-4">
         {user ? (
-          <div className="hidden sm:block">
+          <div className="hidden items-center gap-2 sm:flex">
+            <NotificationBell />
             <CurrentUser user={user} />
           </div>
         ) : (
