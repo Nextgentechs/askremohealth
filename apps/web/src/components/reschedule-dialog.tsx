@@ -37,7 +37,7 @@ export function RescheduleDialog({
   appointmentId,
   doctorId,
   currentDate,
-  appointmentType,
+  appointmentType: _appointmentType,
 }: RescheduleDialogProps) {
   const [open, setOpen] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
