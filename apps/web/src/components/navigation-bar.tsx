@@ -314,57 +314,63 @@ export default function NavigationBar() {
   const { user } = useCurrentUser()
 
   return (
-    <div className="flex w-full flex-row items-center justify-between lg:px-5">
-      <Logo />
+    <header role="banner">
+      <nav
+        aria-label="Main navigation"
+        className="flex w-full flex-row items-center justify-between lg:px-5"
+      >
+        <Logo />
 
-      <NavigationMenu className="hidden list-none gap-1 xl:flex">
-        {navOptions.map((option) => (
-          <NavigationMenuItem key={option.label}>
-            {option.dropdownItems ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger
-                  className={`${navigationMenuTriggerStyle()} gap-1`}
-                >
-                  {option.label}
-                  <ChevronDown className="h-4 w-4" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="center">
-                  {option.dropdownItems.map((item) => (
-                    <Link key={item.label} href={item.href}>
-                      <DropdownMenuItem className="gap-2">
-                        <item.icon className="h-4 w-4" />
-                        {item.label}
-                      </DropdownMenuItem>
-                    </Link>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <Link href={option.href ?? '#'}>
-                <NavigationMenuLink
-                  asChild
-                  className={navigationMenuTriggerStyle()}
-                >
-                  <span>{option.label}</span>
-                </NavigationMenuLink>
-              </Link>
-            )}
-          </NavigationMenuItem>
-        ))}
-      </NavigationMenu>
+        <NavigationMenu className="hidden list-none gap-1 xl:flex">
+          {navOptions.map((option) => (
+            <NavigationMenuItem key={option.label}>
+              {option.dropdownItems ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    className={`${navigationMenuTriggerStyle()} gap-1`}
+                    aria-haspopup="true"
+                  >
+                    {option.label}
+                    <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="center">
+                    {option.dropdownItems.map((item) => (
+                      <Link key={item.label} href={item.href}>
+                        <DropdownMenuItem className="gap-2">
+                          <item.icon className="h-4 w-4" aria-hidden="true" />
+                          {item.label}
+                        </DropdownMenuItem>
+                      </Link>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Link href={option.href ?? '#'}>
+                  <NavigationMenuLink
+                    asChild
+                    className={navigationMenuTriggerStyle()}
+                  >
+                    <span>{option.label}</span>
+                  </NavigationMenuLink>
+                </Link>
+              )}
+            </NavigationMenuItem>
+          ))}
+        </NavigationMenu>
 
-      <div className="flex items-center gap-4">
-        {user ? (
-          <div className="hidden items-center gap-2 sm:flex">
-            <NotificationBell />
-            <CurrentUser user={user} />
-          </div>
-        ) : (
-          <AuthButtons className="hidden flex-row items-center gap-4 lg:flex" />
-        )}
-        <MobileMenu />
-        {/* <ModeToggle /> */}
-      </div>
-    </div>
+        <div className="flex items-center gap-4">
+          {user ? (
+            <div className="hidden items-center gap-2 sm:flex">
+              <NotificationBell />
+              <CurrentUser user={user} />
+            </div>
+          ) : (
+            <AuthButtons className="hidden flex-row items-center gap-4 lg:flex" />
+          )}
+          <MobileMenu />
+          {/* <ModeToggle /> */}
+        </div>
+      </nav>
+    </header>
   )
 }
