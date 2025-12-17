@@ -50,6 +50,13 @@
       "when": 1762348923689,
       "tag": "0008_messy_marrow",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1765898345984,
+      "tag": "0002_brave_starbolt",
+      "breakpoints": true
     }
   ]
 }

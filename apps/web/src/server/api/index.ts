@@ -1,19 +1,20 @@
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server'
-import { createCallerFactory, createTRPCRouter } from './trpc'
-import * as specialties from './routers/specialties'
-import * as facilities from './routers/facilities'
-import * as users from './routers/users'
-import * as locations from './routers/location'
-import * as doctors from './routers/doctors'
-import * as video from './routers/video'
 import * as admin from './routers/admin'
 import * as articles from './routers/articles'
+import * as doctors from './routers/doctors'
+import * as facilities from './routers/facilities'
+import * as locations from './routers/location'
 import * as patients from './routers/patients'
-import * as adminuser from './routers/adminuser'
-import {communityRouter} from './routers/community'
+import * as specialties from './routers/specialties'
+import * as users from './routers/users'
+import * as video from './routers/video'
+import { createCallerFactory, createTRPCRouter } from './trpc'
+// import * as auth from './routers/auth'
+import { notificationsRouter } from './routers/notifications'
 import * as officeLocations from './routers/office-locations'
-import { labsRouter } from './routers/labs'
-import * as tests from './routers/tests';
+import { prescriptionsRouter } from './routers/prescriptions'
+import { reviewsRouter } from './routers/reviews'
+
 /**
  * This is the primary router for your server.
  *
@@ -27,13 +28,13 @@ export const appRouter = createTRPCRouter({
   doctors: createTRPCRouter(doctors),
   video: createTRPCRouter(video),
   admin: createTRPCRouter(admin),
-  adminuser: createTRPCRouter(adminuser),
+  // auth: createTRPCRouter(auth),
   officeLocations: createTRPCRouter(officeLocations),
   articles: createTRPCRouter(articles),
   patients: createTRPCRouter(patients),
-  labs: createTRPCRouter(labsRouter),
-  tests: createTRPCRouter(tests),
-  community: createTRPCRouter(communityRouter)
+  notifications: notificationsRouter,
+  reviews: reviewsRouter,
+  prescriptions: prescriptionsRouter,
 })
 
 // export type definition of API

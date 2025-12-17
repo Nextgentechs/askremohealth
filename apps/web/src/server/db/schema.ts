@@ -1,19 +1,38 @@
 import { sql, type InferSelectModel } from 'drizzle-orm'
 import {
+  boolean,
+  index,
   integer,
   jsonb,
   pgEnum,
   pgTable,
+  text,
   timestamp,
   uuid,
   varchar,
-  boolean,
-  text,
-  time,
 } from 'drizzle-orm/pg-core'
-import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 
-export const roleEnum = pgEnum('role', ['patient', 'doctor', 'lab', 'admin'])
+/**
+ * Database Schema for Ask Remo Health
+ *
+ * This file defines the complete database schema using Drizzle ORM.
+ * All tables include proper constraints, indexes, and documentation.
+ *
+ * SECURITY NOTES:
+ * - Soft deletes implemented via deletedAt column for audit trails
+ * - Unique constraints on email to prevent duplicate accounts
+ * - Proper foreign key relationships with cascade deletes
+ *
+ * PERFORMANCE NOTES:
+ * - Indexes added on frequently queried columns
+ * - Composite indexes for common query patterns
+ */
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+export const roleEnum = pgEnum('role', ['patient', 'doctor', 'admin'])
 
 export const weekDayEnum = pgEnum('week_day', [
   'monday',
@@ -48,10 +67,6 @@ export const doctorStatusEnum = pgEnum('doctor_status', [
   'rejected',
 ])
 
-export const collectionMethodEnum = pgEnum('collection', [
-  'onsite', 'home', 'both',
-])
-
 export const specialties = pgTable('specialty', {
   id: uuid('id').primaryKey().notNull().defaultRandom(),
   name: varchar('name').notNull(),
@@ -69,86 +84,118 @@ export const subSpecialties = pgTable('sub_specialty', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
 })
 
-export const users = pgTable('user', {
-  id: varchar('id').primaryKey().notNull().default(sql`gen_random_uuid()`),
-  firstName: varchar('first_name').notNull(),
-  lastName: varchar('last_name').notNull(),
-  email: varchar('email'),
-  phone: varchar('phone').unique(),
-  password: varchar('password').notNull(),
-  role: roleEnum('role').notNull(),
-  onboardingComplete: boolean('onboarding_complete').notNull().default(false),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at')
-    .notNull()
-    .$onUpdate(() => new Date()),
-})
+/**
+ * Users Table - Core user accounts for all roles
+ *
+ * SECURITY: Email has unique constraint to prevent duplicate accounts
+ * AUDIT: Includes deletedAt for soft deletes and audit trail
+ */
+export const users = pgTable(
+  'user',
+  {
+    id: varchar('id')
+      .primaryKey()
+      .notNull()
+      .default(sql`gen_random_uuid()`),
+    firstName: varchar('first_name').notNull(),
+    lastName: varchar('last_name').notNull(),
+    email: varchar('email').unique(), // SECURITY: Unique constraint prevents duplicate accounts
+    emailVerified: boolean('email_verified').default(false), // For email verification flow
+    phone: varchar('phone').unique(),
+    password: varchar('password').notNull(),
+    role: roleEnum('role').notNull(),
+    onboardingComplete: boolean('onboarding_complete').notNull().default(false),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at')
+      .notNull()
+      .defaultNow() // Fix: Added defaultNow() to prevent NOT NULL constraint errors
+      .$onUpdate(() => new Date()),
+    deletedAt: timestamp('deleted_at'), // Soft delete support for audit trail
+  },
+  (table) => ({
+    // Performance indexes for common queries
+    emailIdx: index('users_email_idx').on(table.email),
+    roleIdx: index('users_role_idx').on(table.role),
+  }),
+)
 export type User = InferSelectModel<typeof users>
-//the admin table
-export const adminUser = pgTable('admin_users', {
-  id: varchar('id').primaryKey().notNull(),
-  userId: varchar('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  phone: varchar('phone').unique(),
-  permissions: jsonb('permissions')
-    .$type<Array<{ resource: string; action: string }>>()
-    .default([]),
-  onboardingComplete: boolean('onboarding_complete').notNull().default(false),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at')
-    .notNull()
-    .$onUpdate(() => new Date()),
-});
-export type adminUsers = InferSelectModel<typeof adminUser>
-export const patients = pgTable('patient', {
-  id: varchar('id').primaryKey().notNull(),
-  userId: varchar('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  
-  emergencyContact: varchar('emergency_contact'),
-  phone: varchar('phone').unique(),
-  lastAppointment: timestamp('last_appointment'),
-  dob: timestamp('dob'),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at')
-    .notNull()
-    .$onUpdate(() => new Date()),
-})
+
+/**
+ * Patients Table - Extended profile for patient users
+ */
+export const patients = pgTable(
+  'patient',
+  {
+    id: varchar('id').primaryKey().notNull(),
+    userId: varchar('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+
+    emergencyContact: varchar('emergency_contact'),
+    phone: varchar('phone').unique(),
+    lastAppointment: timestamp('last_appointment'),
+    dob: timestamp('dob'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at')
+      .notNull()
+      .defaultNow() // Fix: Added default to prevent NOT NULL errors
+      .$onUpdate(() => new Date()),
+    deletedAt: timestamp('deleted_at'), // Soft delete support
+  },
+  (table) => ({
+    userIdIdx: index('patients_user_id_idx').on(table.userId),
+  }),
+)
 export type Patient = InferSelectModel<typeof patients>
 
-export const doctors = pgTable('doctor', {
-  id: varchar('id').primaryKey().notNull(),
-  userId: varchar('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  specialty: uuid('specialty_id').references(() => specialties.id, {
-    onDelete: 'set null',
+/**
+ * Doctors Table - Extended profile for doctor/specialist users
+ *
+ * PERFORMANCE: Indexes on specialty, status, and facility for common queries
+ */
+export const doctors = pgTable(
+  'doctor',
+  {
+    id: varchar('id').primaryKey().notNull(),
+    userId: varchar('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    specialty: uuid('specialty_id').references(() => specialties.id, {
+      onDelete: 'set null',
+    }),
+    subSpecialties: jsonb('sub_specialties')
+      .$type<Array<{ id: string }>>()
+      .default([]),
+    experience: integer('experience'),
+    licenseNumber: varchar('registration_number'),
+    facility: varchar('hospital_id').references(() => facilities.placeId, {
+      onDelete: 'set null',
+    }),
+    officeId: varchar('office_id').references(() => officeLocation.placeId, {
+      onDelete: 'set null',
+    }),
+    bio: varchar('bio'),
+    gender: genderEnum('gender'),
+    title: varchar('title'),
+    phone: varchar('phone').unique(),
+    consultationFee: integer('consultation_fee'),
+    status: doctorStatusEnum('status').default('pending'),
+    dob: timestamp('dob'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at')
+      .notNull()
+      .defaultNow() // Fix: Added default to prevent NOT NULL errors
+      .$onUpdate(() => new Date()),
+    deletedAt: timestamp('deleted_at'), // Soft delete support
+  },
+  (table) => ({
+    // Performance indexes for doctor listing and filtering
+    specialtyIdx: index('doctors_specialty_idx').on(table.specialty),
+    statusIdx: index('doctors_status_idx').on(table.status),
+    facilityIdx: index('doctors_facility_idx').on(table.facility),
+    userIdIdx: index('doctors_user_id_idx').on(table.userId),
   }),
-  subSpecialties: jsonb('sub_specialties')
-    .$type<Array<{ id: string }>>()
-    .default([]),
-  experience: integer('experience'),
-  licenseNumber: varchar('registration_number'),
-  facility: varchar('hospital_id').references(() => facilities.placeId, {
-    onDelete: 'set null',
-  }),
-  officeId: varchar('office_id').references(() => officeLocation.placeId, {
-    onDelete: 'set null',
-  }),
-  bio: varchar('bio'),
-  gender: genderEnum('gender'),
-  title: varchar('title'),
-  phone: varchar('phone').unique(),
-  consultationFee: integer('consultation_fee'),
-  status: doctorStatusEnum('status').default('pending'),
-  dob: timestamp('dob'),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at')
-    .notNull()
-    .$onUpdate(() => new Date()),
-})
+)
 export type Doctor = InferSelectModel<typeof doctors>
 
 export const profilePictures = pgTable('profile_picture', {
@@ -228,24 +275,46 @@ export const operatingHours = pgTable('operating_hours', {
   }).$onUpdate(() => new Date()),
 })
 
-export const appointments = pgTable('appointment', {
-  id: uuid('id').primaryKey().notNull().defaultRandom(),
-  doctorId: varchar('doctor_id')
-    .notNull()
-    .references(() => doctors.id, { onDelete: 'cascade' }),
-  patientId: varchar('patient_id')
-    .notNull()
-    .references(() => patients.id, { onDelete: 'cascade' }),
-  appointmentDate: timestamp('appointment_date').notNull(),
-  type: appointmentTypesEnum('type').notNull(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at')
-    .notNull()
-    .$onUpdate(() => new Date()),
-  patientNotes: varchar('patient_notes'),
-  doctorNotes: varchar('doctor_notes'),
-  status: appointmentsStatusEnum('status').notNull(),
-})
+/**
+ * Appointments Table - Patient-Doctor appointment bookings
+ *
+ * PERFORMANCE: Indexes on doctorId, patientId, appointmentDate for common queries
+ * BUSINESS RULE: Unique constraint on doctor+date+time would prevent double bookings
+ */
+export const appointments = pgTable(
+  'appointment',
+  {
+    id: uuid('id').primaryKey().notNull().defaultRandom(),
+    doctorId: varchar('doctor_id')
+      .notNull()
+      .references(() => doctors.id, { onDelete: 'cascade' }),
+    patientId: varchar('patient_id')
+      .notNull()
+      .references(() => patients.id, { onDelete: 'cascade' }),
+    appointmentDate: timestamp('appointment_date').notNull(),
+    type: appointmentTypesEnum('type').notNull(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at')
+      .notNull()
+      .defaultNow() // Fix: Added default to prevent NOT NULL errors
+      .$onUpdate(() => new Date()),
+    patientNotes: varchar('patient_notes'),
+    doctorNotes: varchar('doctor_notes'),
+    status: appointmentsStatusEnum('status').notNull(),
+    cancelledBy: varchar('cancelled_by'), // Track who cancelled the appointment
+    cancellationReason: varchar('cancellation_reason'), // Required when cancelling
+    // Reminder tracking to prevent duplicate notifications
+    reminder24hSentAt: timestamp('reminder_24h_sent_at'),
+    reminder1hSentAt: timestamp('reminder_1h_sent_at'),
+  },
+  (table) => ({
+    // Performance indexes for appointment queries
+    doctorIdIdx: index('appointments_doctor_id_idx').on(table.doctorId),
+    patientIdIdx: index('appointments_patient_id_idx').on(table.patientId),
+    dateIdx: index('appointments_date_idx').on(table.appointmentDate),
+    statusIdx: index('appointments_status_idx').on(table.status),
+  }),
+)
 
 export const appointmentAttachments = pgTable('appointment_attachments', {
   id: uuid('id').primaryKey().notNull().defaultRandom(),
@@ -266,27 +335,61 @@ export const appointmentLogs = pgTable('appointment_log', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
 })
 
-export const reviews = pgTable('review', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  appointmentId: uuid('appointment_id')
-    .notNull()
-    .references(() => appointments.id, { onDelete: 'cascade' }),
-  doctorId: varchar('doctor_id').references(() => doctors.id, {
-    onDelete: 'cascade',
+/**
+ * Reviews Table - Patient reviews for doctors after appointments
+ *
+ * BUSINESS RULE: doctorId is now required to ensure review integrity
+ */
+export const reviews = pgTable(
+  'review',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    appointmentId: uuid('appointment_id')
+      .notNull()
+      .references(() => appointments.id, { onDelete: 'cascade' }),
+    doctorId: varchar('doctor_id')
+      .notNull() // Fix: Made required to prevent orphan reviews
+      .references(() => doctors.id, { onDelete: 'cascade' }),
+    patientId: varchar('patient_id') // Added for tracking who left the review
+      .references(() => patients.id, { onDelete: 'set null' }),
+    rating: integer('rating').notNull(),
+    comment: varchar('comment'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    doctorIdIdx: index('reviews_doctor_id_idx').on(table.doctorId),
+    appointmentIdIdx: index('reviews_appointment_id_idx').on(
+      table.appointmentId,
+    ),
   }),
-  rating: integer('rating').notNull(),
-  comment: varchar('comment'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-})
+)
 
-export const notifications = pgTable('notification', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  userId: varchar('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  title: varchar('title').notNull(),
-  message: varchar('message').notNull(),
-  isRead: boolean('is_read').default(false),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-})
+/**
+ * Notifications Table - User notifications for various events
+ *
+ * Supports appointment reminders, status updates, and system messages
+ */
+export const notifications = pgTable(
+  'notification',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: varchar('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    type: varchar('type'), // 'appointment_reminder', 'appointment_confirmed', 'system', etc.
+    title: varchar('title').notNull(),
+    message: text('message').notNull(),
+    link: varchar('link'), // Optional link to navigate to when clicked
+    metadata: text('metadata'), // JSON string for additional data (appointmentId, etc.)
+    isRead: boolean('is_read').default(false),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    userIdIdx: index('notifications_user_id_idx').on(table.userId),
+    isReadIdx: index('notifications_is_read_idx').on(table.isRead),
+    createdAtIdx: index('notifications_created_at_idx').on(table.createdAt),
+  }),
+)
 
 export const articles = pgTable('articles', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -296,142 +399,95 @@ export const articles = pgTable('articles', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   publishedAt: timestamp('published_at'),
   updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
-  status: varchar('status', { length: 50 }).default('draft'), // 'draft' | 'published' | 'archived'
-  verified: boolean('verified').default(false), 
 })
 
 export const article_images = pgTable('article_images', {
   id: uuid('id').primaryKey().notNull().defaultRandom(),
   articleId: uuid('article_id')
-      .notNull()
-      .unique()
-      .references(() => articles.id, { onDelete: 'cascade' }),
+    .notNull()
+    .unique()
+    .references(() => articles.id, { onDelete: 'cascade' }),
   url: varchar('url').notNull(),
   path: varchar('path').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
 })
 
-export const labs = pgTable('labs', {
-  placeId: varchar('place_id').primaryKey(),
-  user_id: varchar('user_id')
-    .notNull()
-    .unique()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  name: varchar('name').notNull(),
-  location: jsonb('location').$type<{ lat: number; lng: number }>(),
-  address: varchar('address').notNull(),
-  county: varchar('county').notNull(),
-  town: varchar('town').notNull(),
-  phone: varchar('phone'),
-  website: varchar('website'),
-})
+// ============================================================================
+// PRESCRIPTIONS
+// ============================================================================
 
-export const tests = pgTable('test', {
-  id: uuid('id').primaryKey().notNull().defaultRandom(),
-  loincTestId: varchar('loinc_test_id', { length: 100 }),
-  specificCategory: varchar('specific_category', { length: 255 }),
-  sampleType: varchar('sample_type', { length: 255 }),
-  name: varchar('name').notNull(),
-  generalCategory: varchar('general_category', { length: 255 }),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-});
+export const prescriptionStatusEnum = pgEnum('prescription_status', [
+  'active',
+  'dispensed',
+  'expired',
+  'cancelled',
+])
 
+/**
+ * Prescriptions Table - Doctor prescriptions for patients
+ *
+ * Linked to appointments so prescriptions are part of the consultation flow.
+ * Patients can view their prescription history.
+ */
+export const prescriptions = pgTable(
+  'prescription',
+  {
+    id: uuid('id').primaryKey().notNull().defaultRandom(),
+    appointmentId: uuid('appointment_id')
+      .notNull()
+      .references(() => appointments.id, { onDelete: 'cascade' }),
+    doctorId: varchar('doctor_id')
+      .notNull()
+      .references(() => doctors.id, { onDelete: 'cascade' }),
+    patientId: varchar('patient_id')
+      .notNull()
+      .references(() => patients.id, { onDelete: 'cascade' }),
+    diagnosis: text('diagnosis'),
+    notes: text('notes'),
+    status: prescriptionStatusEnum('status').notNull().default('active'),
+    validUntil: timestamp('valid_until'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at')
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => ({
+    doctorIdIdx: index('prescriptions_doctor_id_idx').on(table.doctorId),
+    patientIdIdx: index('prescriptions_patient_id_idx').on(table.patientId),
+    appointmentIdIdx: index('prescriptions_appointment_id_idx').on(
+      table.appointmentId,
+    ),
+    statusIdx: index('prescriptions_status_idx').on(table.status),
+  }),
+)
+export type Prescription = InferSelectModel<typeof prescriptions>
 
-export const labTestsAvailable = pgTable('lab_tests_available', {
-  id: uuid('id').primaryKey().notNull().defaultRandom(),
-  labId: varchar('place_id')
-    .notNull()
-    .references(() => labs.placeId, { onDelete: 'cascade' }),
-  testId: uuid('test_id')
-    .notNull()
-    .references(() => tests.id, { onDelete: 'cascade' }),
-    amount: integer('amount').notNull(),
-  collection: collectionMethodEnum('collection').notNull(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').$onUpdate(() => new Date()), 
-})
-
-export const labAvailability = pgTable('lab_availability', {
-  id: uuid('id').primaryKey().notNull().defaultRandom(),
-  lab_id: varchar('place_id')
-    .notNull()
-    .references(() => labs.placeId, { onDelete: 'cascade' }),
-  day_of_week: weekDayEnum('day_of_week').notNull(),
-  start_time: time('start_time').notNull(),
-  end_time: time('end_time').notNull(), 
-})
-
-export const labAppointments = pgTable('lab_appointments', {
-  id: uuid('id').primaryKey().notNull().defaultRandom(),
-  labId: varchar('place_id')
-    .notNull()
-    .references(() => labs.placeId, { onDelete: 'cascade' }),
-  patientId: varchar('patient_id')
-    .notNull()
-    .references(() => patients.id, { onDelete: 'cascade' }),
-  doctorId: varchar('doctor_id')
-    .references(() => doctors.id, { onDelete: 'set null' }),
-  appointmentDate: timestamp('appointment_date').notNull(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
-  patientNotes: varchar('patient_notes'),
-  doctorNotes: varchar('doctor_notes'),
-  status: appointmentsStatusEnum('status').notNull(),
-})
-
-
-// Community module
-
-export const posts = pgTable('post', {
-  id: uuid('id').primaryKey().notNull().defaultRandom(),
-  desc: text('desc').notNull(),
-  img: text('img'),
-  video: text('video'),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
-  userId: varchar('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-})
-
-export type Post = InferSelectModel<typeof posts>
-
-export const comments = pgTable('comment', {
-  id: uuid('id').primaryKey().notNull().defaultRandom(),
-  desc: text('desc').notNull(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
-  userId: varchar('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  postId: uuid('post_id').notNull().references(() => posts.id, { onDelete: 'cascade' }),
-  parentCommentId: uuid('parent_comment_id').references((): AnyPgColumn => comments.id, { onDelete: 'cascade' }),
-})
-
-export type Comment = InferSelectModel<typeof comments>
-
-export const likes = pgTable('like', {
-  id: uuid('id').primaryKey().notNull().defaultRandom(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  userId: varchar('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  postId: uuid('post_id').references(() => posts.id, { onDelete: 'cascade' }),
-  commentId: uuid('comment_id').references(() => comments.id, { onDelete: 'cascade' }),
-})
-
-export type Like = InferSelectModel<typeof likes>
-
-export const chats = pgTable('chat', {
-  id: varchar('id').primaryKey().notNull().default(sql`gen_random_uuid()`),
-  doctorId: varchar('doctor_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  patientId: varchar('patient_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-})
-
-export type Chat = InferSelectModel<typeof chats>
-
-export const messages = pgTable('message', {
-  id: uuid('id').primaryKey().notNull().defaultRandom(),
-  content: text('content').notNull(),
-  senderId: varchar('sender_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  chatId: varchar('chat_id').notNull().references(() => chats.id, { onDelete: 'cascade' }),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-})
-
-export type Message = InferSelectModel<typeof messages>
+/**
+ * Prescription Items Table - Individual medications in a prescription
+ *
+ * Each prescription can have multiple medication items with dosage instructions.
+ */
+export const prescriptionItems = pgTable(
+  'prescription_item',
+  {
+    id: uuid('id').primaryKey().notNull().defaultRandom(),
+    prescriptionId: uuid('prescription_id')
+      .notNull()
+      .references(() => prescriptions.id, { onDelete: 'cascade' }),
+    medicationName: varchar('medication_name').notNull(),
+    dosage: varchar('dosage').notNull(), // e.g., "500mg"
+    frequency: varchar('frequency').notNull(), // e.g., "3 times daily"
+    duration: varchar('duration').notNull(), // e.g., "7 days"
+    quantity: integer('quantity'), // Number of units to dispense
+    instructions: text('instructions'), // Additional instructions (e.g., "Take after meals")
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    prescriptionIdIdx: index('prescription_items_prescription_id_idx').on(
+      table.prescriptionId,
+    ),
+  }),
+)
+export type PrescriptionItem = InferSelectModel<typeof prescriptionItems>

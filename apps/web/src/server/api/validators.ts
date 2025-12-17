@@ -10,6 +10,124 @@ export enum AppointmentStatus {
   InProgress = 'in_progress',
 }
 
+// ============================================================================
+// SHARED VALIDATION UTILITIES
+// ============================================================================
+
+/**
+ * International phone number validation
+ * Supports formats:
+ * - E.164: +254712345678, +1234567890
+ * - Local: 0712345678 (Kenya), with country code transformation
+ * - Various international formats
+ *
+ * @param allowEmpty - Whether empty strings are valid (for optional fields)
+ */
+export const createPhoneSchema = (
+  options: { allowEmpty?: boolean; defaultCountryCode?: string } = {},
+) => {
+  const { allowEmpty = false, defaultCountryCode = '254' } = options
+
+  return z
+    .string()
+    .transform((val) => val.replace(/[\s\-\(\)]/g, '')) // Remove spaces, dashes, parentheses
+    .refine(
+      (val) => {
+        if (allowEmpty && val === '') return true
+        // E.164 format: + followed by 7-15 digits
+        if (/^\+[1-9]\d{6,14}$/.test(val)) return true
+        // International without +: 7-15 digits starting with country code
+        if (/^[1-9]\d{6,14}$/.test(val)) return true
+        // Local Kenya format: 07xx or 01xx (10 digits)
+        if (/^0[17]\d{8}$/.test(val)) return true
+        return false
+      },
+      {
+        message:
+          'Please enter a valid phone number (e.g., +254712345678 or 0712345678)',
+      },
+    )
+    .transform((val) => {
+      if (val === '') return val
+      // Already has +, return as-is
+      if (val.startsWith('+')) return val
+      // Local Kenya format, add country code
+      if (val.startsWith('0')) {
+        return `+${defaultCountryCode}${val.slice(1)}`
+      }
+      // Already has country code without +
+      return `+${val}`
+    })
+}
+
+/**
+ * Date of birth validation with sensible age limits
+ *
+ * @param minAge - Minimum age in years (default 0)
+ * @param maxAge - Maximum age in years (default 120)
+ */
+export const createDobSchema = (
+  options: { minAge?: number; maxAge?: number } = {},
+) => {
+  const { minAge = 0, maxAge = 120 } = options
+
+  return z
+    .string()
+    .min(1, 'Date of birth is required')
+    .refine(
+      (val) => {
+        const date = new Date(val)
+        return !isNaN(date.getTime())
+      },
+      { message: 'Invalid date format' },
+    )
+    .refine(
+      (val) => {
+        const date = new Date(val)
+        const today = new Date()
+        return date <= today
+      },
+      { message: 'Date of birth cannot be in the future' },
+    )
+    .refine(
+      (val) => {
+        const date = new Date(val)
+        const today = new Date()
+        const ageInYears =
+          (today.getTime() - date.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
+        return ageInYears >= minAge
+      },
+      { message: `Must be at least ${minAge} years old` },
+    )
+    .refine(
+      (val) => {
+        const date = new Date(val)
+        const today = new Date()
+        const ageInYears =
+          (today.getTime() - date.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
+        return ageInYears <= maxAge
+      },
+      { message: `Age cannot exceed ${maxAge} years` },
+    )
+}
+
+/**
+ * Bio/description validation with character limit
+ */
+export const createBioSchema = (maxLength = 256) => {
+  return z
+    .string()
+    .max(maxLength, { message: `Bio must be ${maxLength} characters or less` })
+    .optional()
+}
+
+// Pre-configured schemas for common use cases
+export const phoneSchema = createPhoneSchema()
+export const optionalPhoneSchema = createPhoneSchema({ allowEmpty: true })
+export const patientDobSchema = createDobSchema({ minAge: 0, maxAge: 120 })
+export const doctorDobSchema = createDobSchema({ minAge: 21, maxAge: 100 }) // Doctors must be at least 21
+export const bioSchema = createBioSchema(256)
+
 export const operatingHoursSchema = z.object({
   day: z.enum([
     'Monday',
@@ -30,7 +148,9 @@ export const passwordSchema = z
   .min(8, { message: 'Password must be at least 8 characters long' })
   .regex(/[a-z]/, { message: 'Password must include a lowercase letter' })
   .regex(/[A-Z]/, { message: 'Password must include an uppercase letter' })
-  .regex(/[^a-zA-Z0-9]/, { message: 'Password must include a special character' })
+  .regex(/[^a-zA-Z0-9]/, {
+    message: 'Password must include a special character',
+  })
   .refine((val) => !/\s/.test(val), {
     message: 'Password must not contain spaces',
   })
@@ -139,36 +259,35 @@ export type AppointmentListSchema = z.infer<typeof appointmentListSchema>
 
 export const personalDetailsSchema = z.object({
   title: z.string().optional(),
-  // firstName: z.string(),
-  // lastName: z.string(),
-  // email: z.string().email().optional(),
-  phone: z.string(),
-  dob: z.string(),
+  phone: phoneSchema,
+  dob: doctorDobSchema,
   gender: z.enum(['male', 'female']).optional(),
-  bio: z.string().optional(),
+  bio: bioSchema,
   profilePicture: z.string().optional(),
 })
 export type PersonalDetailsSchema = z.infer<typeof personalDetailsSchema>
 
-export const professionalDetailsSchema = z.object({
-  specialty: z.string(),
-  subSpecialty: z.array(z.string()).optional().default([]),
-  facility: z.string().optional(),
-  officeLocation: z.string().optional(),
-  experience: z.number(),
-  registrationNumber: z.string(),
-  medicalLicense: z.string().optional(),
-}).refine(
-  (data) => {
-    const hasFacility = (data.facility ?? '').trim() !== '';
-    const hasOfficeLocation = (data.officeLocation ?? '').trim() !== '';
-    return hasFacility || hasOfficeLocation;
-  },
-  {
-    message: "Either facility or office location must be provided",
-    path: ["facility"],
-  }
-);
+export const professionalDetailsSchema = z
+  .object({
+    specialty: z.string(),
+    subSpecialty: z.array(z.string()).optional().default([]),
+    facility: z.string().optional(),
+    officeLocation: z.string().optional(),
+    experience: z.number(),
+    registrationNumber: z.string(),
+    medicalLicense: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      const hasFacility = (data.facility ?? '').trim() !== ''
+      const hasOfficeLocation = (data.officeLocation ?? '').trim() !== ''
+      return hasFacility || hasOfficeLocation
+    },
+    {
+      message: 'Either facility or office location must be provided',
+      path: ['facility'],
+    },
+  )
 export type ProfessionalDetailsSchema = z.infer<
   typeof professionalDetailsSchema
 >
@@ -180,68 +299,33 @@ export const availabilityDetailsSchema = z.object({
 })
 export type AvailabilityDetailsSchema = z.infer<
   typeof availabilityDetailsSchema
-  >
+>
 
 export const articleListSchema = z.object({
   page: z.number().default(1),
-  limit: z.number().default(10)
+  limit: z.number().default(10),
 })
 export type ArticleListSchema = z.infer<typeof articleListSchema>
 
 export const articleSchema = z.object({
-  title: z.string().min(1, { message: 'Title is required.' }).max(100, { message: "Title must be at most 100 characters long" }),
-  content: z.string().min(150, { message: "Content must be at least 150 characters long" }),
+  title: z
+    .string()
+    .min(1, { message: 'Title is required.' })
+    .max(100, { message: 'Title must be at most 100 characters long' }),
+  content: z
+    .string()
+    .min(150, { message: 'Content must be at least 150 characters long' }),
 })
 
 export type ArticleSchema = z.infer<typeof articleSchema>
 
 export const patientDetailsSchema = z.object({
-  firstName: z.string(),
-  lastName: z.string(),
-  email: z.string().email(),
-  phone: z
-    .string()
-    .refine((val) => /^\d{10}$/.test(val) || /^254\d{9}$/.test(val), {
-      message: 'Invalid phone number',
-    })
-    .refine(
-      (val) =>
-        val.startsWith('07') ||
-        val.startsWith('01') ||
-        val.startsWith('2547') ||
-        val.startsWith('2541'),
-      {
-        message: 'Invalid phone number',
-      },
-    )
-    .transform((val) => {
-      if (val.startsWith('0')) {
-        return `254${val.slice(1)}`
-      }
-      return val
-    }),
-  dob: z.string().min(1, 'Date of birth is required'),
-  emergencyContact: z
-    .string()
-    .refine((val) => /^\d{10}$/.test(val) || /^254\d{9}$/.test(val), {
-      message: 'Invalid emergency contact',
-    })
-    .refine(
-      (val) =>
-        val.startsWith('07') ||
-        val.startsWith('01') ||
-        val.startsWith('2547') ||
-        val.startsWith('2541'),
-      {
-        message: 'Invalid emergency contact',
-      },
-    )
-    .transform((val) => {
-      if (val.startsWith('0')) {
-        return `254${val.slice(1)}`
-      }
-      return val
-    }),
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
+  email: z.string().email('Please enter a valid email address'),
+  phone: phoneSchema,
+  dob: patientDobSchema,
+  emergencyContact: phoneSchema,
 })
 export type PatientDetails = z.infer<typeof patientDetailsSchema>
 

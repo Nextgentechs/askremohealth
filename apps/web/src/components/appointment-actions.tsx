@@ -1,17 +1,23 @@
 'use client'
 
-import { CalendarClock, Check, Loader, Video, X } from 'lucide-react'
+import { Check, Loader, Video, X } from 'lucide-react'
 
 import { useToast } from '@web/hooks/use-toast'
 import { api } from '@web/trpc/react'
 import { useRouter } from 'next-nprogress-bar'
+import { RescheduleDialog } from './reschedule-dialog'
 import { Button } from './ui/button'
 
 export function PendingAppointmentActions({
   appointmentId,
+  doctorId,
+  appointmentDate,
+  appointmentType,
 }: {
   appointmentId: string
   doctorId: string
+  appointmentDate: Date
+  appointmentType: 'online' | 'physical'
 }) {
   const utils = api.useUtils()
   const { toast } = useToast()
@@ -52,7 +58,7 @@ export function PendingAppointmentActions({
     })
 
   const handleCancelAppointment = async () => {
-    await cancelAppointment(appointmentId)
+    await cancelAppointment({ appointmentId })
     utils.users.listAppointments.invalidate()
     router.refresh()
   }
@@ -68,15 +74,12 @@ export function PendingAppointmentActions({
         <X className="  size-4" />
         Cancel
       </Button>
-      <Button
-        size={'sm'}
-        disabled
-        variant="outline"
-        className="border-primary "
-      >
-        <CalendarClock className="size-4" />
-        Reschedule
-      </Button>
+      <RescheduleDialog
+        appointmentId={appointmentId}
+        doctorId={doctorId}
+        currentDate={appointmentDate}
+        appointmentType={appointmentType}
+      />
     </div>
   )
 }
@@ -140,7 +143,7 @@ export function VideoAppointmentActions({
         size={'sm'}
         className=" text-destructive border-destructive hover:bg-destructive/10 hover:text-destructive"
         onClick={async () => {
-          await cancelAppointment(appointmentId)
+          await cancelAppointment({ appointmentId })
           utils.users.listAppointments.invalidate()
           router.refresh()
         }}

@@ -136,6 +136,8 @@ function AppointmentCard({
             <PendingAppointmentActions
               appointmentId={appointment.id}
               doctorId={appointment.doctor.id}
+              appointmentDate={appointment.appointmentDate}
+              appointmentType={appointment.type}
             />
           )}
           {appointment.type === 'online' &&

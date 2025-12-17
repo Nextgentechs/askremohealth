@@ -1,16 +1,16 @@
-"use client"
+'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@web/components/ui/button'
 import { Input } from '@web/components/ui/input'
 import { Label } from '@web/components/ui/label'
 import { useToast } from '@web/hooks/use-toast'
+import type { PatientDetails } from '@web/server/api/validators'
+import { patientDetailsSchema } from '@web/server/api/validators'
 import { api } from '@web/trpc/react'
 import { Loader } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
-import { patientDetailsSchema } from '@web/server/api/validators'
-import type { PatientDetails } from '@web/server/api/validators'
 
 export default function PatientDetailsForm() {
   const [user] = api.users.currentUser.useSuspenseQuery()
@@ -71,7 +71,15 @@ export default function PatientDetailsForm() {
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="phone">Phone Number</Label>
-          <Input {...form.register('phone')} id="phone" type="tel" />
+          <Input
+            {...form.register('phone')}
+            id="phone"
+            type="tel"
+            placeholder="+254712345678 or 0712345678"
+          />
+          <p className="text-[0.8rem] text-muted-foreground">
+            International format supported
+          </p>
           <p className="text-[0.8rem] font-medium text-destructive">
             {form.formState.errors.phone?.message}
           </p>
@@ -82,11 +90,13 @@ export default function PatientDetailsForm() {
             {...form.register('dob')}
             id="dob"
             type="date"
-            max={
-              new Date(Date.now() - 10 * 365.25 * 24 * 60 * 60 * 1000)
+            // Max: Today (no future dates), Min: 120 years ago
+            min={
+              new Date(Date.now() - 120 * 365.25 * 24 * 60 * 60 * 1000)
                 .toISOString()
                 .split('T')[0]
             }
+            max={new Date().toISOString().split('T')[0]}
           />
           <p className="text-[0.8rem] font-medium text-destructive">
             {form.formState.errors.dob?.message}
@@ -94,7 +104,15 @@ export default function PatientDetailsForm() {
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="emergencyContact">Emergency Contact</Label>
-          <Input {...form.register('emergencyContact')} id="emergencyContact" type="text" />
+          <Input
+            {...form.register('emergencyContact')}
+            id="emergencyContact"
+            type="tel"
+            placeholder="+254712345678 or 0712345678"
+          />
+          <p className="text-[0.8rem] text-muted-foreground">
+            Phone number of a trusted contact
+          </p>
           <p className="text-[0.8rem] font-medium text-destructive">
             {form.formState.errors.emergencyContact?.message}
           </p>

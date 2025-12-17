@@ -1,63 +1,72 @@
-// /api/auth/verifyotp/route.ts
-import { AuthService } from "@web/server/services/auth";
-import { NextResponse } from "next/server";
-
-const COOKIE_NAME = 'session-id';
-const SESSION_MAX_AGE = 60 * 60 * 24 * 7; // one week
+/**
+ * OTP Verification Endpoint
+ *
+ * Verifies the OTP entered by the user during two-factor authentication.
+ *
+ * SECURITY:
+ * - Rate limited to prevent brute force attacks (3 attempts per minute)
+ * - OTP is validated against Redis stored value
+ * - Rate limit is cleared on successful verification
+ */
+import {
+  checkRateLimit,
+  clearRateLimit,
+  getClientIP,
+  RATE_LIMITS,
+} from '@web/server/lib/rate-limiter'
+import { AuthService } from '@web/server/services/auth'
+import { NextResponse } from 'next/server'
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { otp, email } = body;
+    const body = await request.json()
+    const { otp, email } = body
 
     if (!otp || !email) {
       return NextResponse.json(
-        { success: false, message: "OTP and email are required" },
-        { status: 400 }
-      );
+        { success: false, message: 'OTP and email are required' },
+        { status: 400 },
+      )
     }
 
-    const result = await AuthService.verifyOtp(email, otp);
+    // Rate limiting - prevents brute force OTP guessing
+    const clientIP = getClientIP(request)
+    const rateLimitKey = `${clientIP}:${email}`
+    const rateLimitResult = await checkRateLimit(rateLimitKey, RATE_LIMITS.otp)
 
-    if (result?.success) {
-      // ensure verifyOtp returned a sessionId
-      if (!result.sessionId) {
-        console.error('verifyOtp succeeded but no sessionId returned for', email);
-        return NextResponse.json({ success: false, message: 'No session created' }, { status: 500 });
-      }
-
-      // Build JSON response WITHOUT exposing sessionId
-      const response = NextResponse.json({
-        success: true,
-        message: result.message ?? 'OTP verified',
-        userId: result.userId,
-        role: result.role
-      });
-
-      // Set cookie - HttpOnly and SameSite=None in production for cross-subdomain
-      response.cookies.set(COOKIE_NAME, result.sessionId, {
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
-        httpOnly: true, // important for security
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-        maxAge: SESSION_MAX_AGE,
-        domain: process.env.NODE_ENV === 'production' ? '.askremohealth.com' : undefined,
-      });
-
-      return response;
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: `Too many verification attempts. Please try again in ${rateLimitResult.resetInSeconds} seconds.`,
+        },
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': rateLimitResult.limit.toString(),
+            'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+            'X-RateLimit-Reset': rateLimitResult.resetInSeconds.toString(),
+          },
+        },
+      )
     }
 
-    // verification failed (result may contain message)
-    return NextResponse.json(result, { status: 401 });
+    const result = await AuthService.verifyOtp(email, otp)
+
+    // Clear rate limit on successful verification
+    if (result.success) {
+      await clearRateLimit(rateLimitKey, RATE_LIMITS.otp)
+    }
+
+    return NextResponse.json(result)
   } catch (error) {
-    console.error('verifyotp error', error);
     return NextResponse.json(
       {
         success: false,
-        message: "OTP verification failed",
+        message: 'OTP verification failed',
         error: error instanceof Error ? error.message : String(error),
       },
-      { status: 500 }
-    );
+      { status: 500 },
+    )
   }
 }
