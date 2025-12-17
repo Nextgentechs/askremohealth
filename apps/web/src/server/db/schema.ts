@@ -412,3 +412,82 @@ export const article_images = pgTable('article_images', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
 })
+
+// ============================================================================
+// PRESCRIPTIONS
+// ============================================================================
+
+export const prescriptionStatusEnum = pgEnum('prescription_status', [
+  'active',
+  'dispensed',
+  'expired',
+  'cancelled',
+])
+
+/**
+ * Prescriptions Table - Doctor prescriptions for patients
+ *
+ * Linked to appointments so prescriptions are part of the consultation flow.
+ * Patients can view their prescription history.
+ */
+export const prescriptions = pgTable(
+  'prescription',
+  {
+    id: uuid('id').primaryKey().notNull().defaultRandom(),
+    appointmentId: uuid('appointment_id')
+      .notNull()
+      .references(() => appointments.id, { onDelete: 'cascade' }),
+    doctorId: varchar('doctor_id')
+      .notNull()
+      .references(() => doctors.id, { onDelete: 'cascade' }),
+    patientId: varchar('patient_id')
+      .notNull()
+      .references(() => patients.id, { onDelete: 'cascade' }),
+    diagnosis: text('diagnosis'),
+    notes: text('notes'),
+    status: prescriptionStatusEnum('status').notNull().default('active'),
+    validUntil: timestamp('valid_until'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at')
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => ({
+    doctorIdIdx: index('prescriptions_doctor_id_idx').on(table.doctorId),
+    patientIdIdx: index('prescriptions_patient_id_idx').on(table.patientId),
+    appointmentIdIdx: index('prescriptions_appointment_id_idx').on(
+      table.appointmentId,
+    ),
+    statusIdx: index('prescriptions_status_idx').on(table.status),
+  }),
+)
+export type Prescription = InferSelectModel<typeof prescriptions>
+
+/**
+ * Prescription Items Table - Individual medications in a prescription
+ *
+ * Each prescription can have multiple medication items with dosage instructions.
+ */
+export const prescriptionItems = pgTable(
+  'prescription_item',
+  {
+    id: uuid('id').primaryKey().notNull().defaultRandom(),
+    prescriptionId: uuid('prescription_id')
+      .notNull()
+      .references(() => prescriptions.id, { onDelete: 'cascade' }),
+    medicationName: varchar('medication_name').notNull(),
+    dosage: varchar('dosage').notNull(), // e.g., "500mg"
+    frequency: varchar('frequency').notNull(), // e.g., "3 times daily"
+    duration: varchar('duration').notNull(), // e.g., "7 days"
+    quantity: integer('quantity'), // Number of units to dispense
+    instructions: text('instructions'), // Additional instructions (e.g., "Take after meals")
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    prescriptionIdIdx: index('prescription_items_prescription_id_idx').on(
+      table.prescriptionId,
+    ),
+  }),
+)
+export type PrescriptionItem = InferSelectModel<typeof prescriptionItems>
