@@ -2,10 +2,16 @@ import { createEnv } from '@t3-oss/env-nextjs'
 import { z } from 'zod'
 
 export const env = createEnv({
+  /**
+   * Server-side environment variables schema
+   * These are never exposed to the client
+   */
   server: {
     DATABASE_URL: z.string().url(),
     JWT_SECRET: z.string(),
-    NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+    NODE_ENV: z
+      .enum(['development', 'test', 'production'])
+      .default('development'),
     BLOB_READ_WRITE_TOKEN: z.string(),
     GOOGLE_MAPS_API_KEY: z.string(),
     CRON_SECRET: z.string(),
@@ -14,62 +20,97 @@ export const env = createEnv({
     TWILIO_ACCOUNT_SID: z.string(),
     TWILIO_API_KEY_SID: z.string(),
     CLERK_SECRET_KEY: z.string(),
-
-    // Make optional envs always valid strings
-    AUTH_GOOGLE_ID: z.string().default(""),
-    AUTH_GOOGLE_SECRET: z.string().default(""),
-
-    OBJECT_STORAGE_ENDPOINT: z.string().default(""),
-    OBJECT_STORAGE_REGION: z.string().default(""),
-    OBJECT_STORAGE_BUCKET: z.string().default(""),
-    OBJECT_STORAGE_KEY: z.string().default(""),
-    OBJECT_STORAGE_SECRET: z.string().default(""),
-
-    REDIS_URL: z.string().default(""),
-    REDIS_TOKEN: z.string().default(""),
+    // SECURITY: Moved from client to server - API keys should never be exposed to the client
+    RESEND_API_KEY: z.string(),
+    FROM_EMAIL: z.string().default('info@askremohealth.com'),
+    // Redis configuration for session management
+    REDIS_URL: z.string().optional(),
+    REDIS_TOKEN: z.string().optional(),
+    // NextAuth secret for session encryption
+    AUTH_SECRET: z.string().optional(),
+    // Sentry error monitoring (optional - only needed in production)
+    SENTRY_DSN: z.string().optional(),
+    SENTRY_ORG: z.string().optional(),
+    SENTRY_PROJECT: z.string().optional(),
+    SENTRY_AUTH_TOKEN: z.string().optional(),
   },
 
+  /**
+   * Client-side environment variables schema
+   * Only variables prefixed with NEXT_PUBLIC_ are exposed to the client
+   * SECURITY: Never put API keys or secrets here
+   */
   client: {
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string(),
     NEXT_PUBLIC_CLERK_SIGN_IN_URL: z.string(),
     NEXT_PUBLIC_CLERK_SIGN_UP_URL: z.string(),
-    NEXT_PUBLIC_RESEND_API_KEY: z.string(),
-    NEXT_PUBLIC_FROM_EMAIL: z.string(),
+    // SECURITY: Removed NEXT_PUBLIC_RESEND_API_KEY - moved to server-side
+    NEXT_PUBLIC_FROM_EMAIL: z.string().optional(),
+    // App URLs for client-side navigation
+    NEXT_PUBLIC_APP_URL: z.string().optional(),
+    // Sentry DSN for client-side error reporting
+    NEXT_PUBLIC_SENTRY_DSN: z.string().optional(),
   },
 
+  /**
+   * Runtime environment variable mapping
+   * SECURITY: Ensure API keys are only mapped to server-side variables
+   */
   runtimeEnv: {
-    DATABASE_URL: process.env.DATABASE_URL || '',
-    NODE_ENV: process.env.NODE_ENV || 'development',
-    JWT_SECRET: process.env.JWT_SECRET || '',
-    BLOB_READ_WRITE_TOKEN: process.env.BLOB_READ_WRITE_TOKEN || '',
-    GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY || '',
-    CRON_SECRET: process.env.CRON_SECRET || '',
-    TWILIO_AUTH_TOKEN: process.env.TWILIO_AUTH_TOKEN || '',
-    TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID || '',
-    TWILIO_API_KEY_SECRET: process.env.TWILIO_API_KEY_SECRET || '',
-    TWILIO_API_KEY_SID: process.env.TWILIO_API_KEY_SID || '',
-    CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY || '',
+    // Database
+    DATABASE_URL: process.env.DATABASE_URL,
+    NODE_ENV: process.env.NODE_ENV,
 
-    AUTH_GOOGLE_ID: process.env.AUTH_GOOGLE_ID || '',
-    AUTH_GOOGLE_SECRET: process.env.AUTH_GOOGLE_SECRET || '',
+    // Security
+    JWT_SECRET: process.env.JWT_SECRET,
+    AUTH_SECRET: process.env.AUTH_SECRET,
 
-    OBJECT_STORAGE_ENDPOINT: process.env.OBJECT_STORAGE_ENDPOINT || '',
-    OBJECT_STORAGE_REGION: process.env.OBJECT_STORAGE_REGION || '',
-    OBJECT_STORAGE_BUCKET: process.env.OBJECT_STORAGE_BUCKET || '',
-    OBJECT_STORAGE_KEY: process.env.OBJECT_STORAGE_KEY || '',
-    OBJECT_STORAGE_SECRET: process.env.OBJECT_STORAGE_SECRET || '',
+    // External Services (Server-side only)
+    BLOB_READ_WRITE_TOKEN: process.env.BLOB_READ_WRITE_TOKEN,
+    GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY,
+    CRON_SECRET: process.env.CRON_SECRET,
 
-    REDIS_URL: process.env.REDIS_URL || '',
-    REDIS_TOKEN: process.env.REDIS_TOKEN || '',
+    // Twilio (Server-side only)
+    TWILIO_AUTH_TOKEN: process.env.TWILIO_AUTH_TOKEN,
+    TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID,
+    TWILIO_API_KEY_SECRET: process.env.TWILIO_API_KEY_SECRET,
+    TWILIO_API_KEY_SID: process.env.TWILIO_API_KEY_SID,
 
-    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || '',
-    NEXT_PUBLIC_CLERK_SIGN_IN_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL || '',
-    NEXT_PUBLIC_CLERK_SIGN_UP_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL || '',
-    NEXT_PUBLIC_RESEND_API_KEY: process.env.NEXT_PUBLIC_RESEND_API_KEY || '',
-    NEXT_PUBLIC_FROM_EMAIL: process.env.NEXT_PUBLIC_FROM_EMAIL || '',
+    // Clerk (Auth provider)
+    CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
+      process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+    NEXT_PUBLIC_CLERK_SIGN_IN_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL,
+    NEXT_PUBLIC_CLERK_SIGN_UP_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL,
+
+    // Email (Server-side only - SECURITY FIX)
+    RESEND_API_KEY:
+      process.env.RESEND_API_KEY ?? process.env.NEXT_PUBLIC_RESEND_API_KEY, // Fallback for migration
+    FROM_EMAIL: process.env.FROM_EMAIL,
+    NEXT_PUBLIC_FROM_EMAIL: process.env.NEXT_PUBLIC_FROM_EMAIL,
+
+    // Redis (Server-side only)
+    REDIS_URL: process.env.REDIS_URL,
+    REDIS_TOKEN: process.env.REDIS_TOKEN,
+
+    // Sentry (Error monitoring)
+    SENTRY_DSN: process.env.SENTRY_DSN,
+    SENTRY_ORG: process.env.SENTRY_ORG,
+    SENTRY_PROJECT: process.env.SENTRY_PROJECT,
+    SENTRY_AUTH_TOKEN: process.env.SENTRY_AUTH_TOKEN,
+    NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
+
+    // App URLs
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   },
-
-  // Must be false or empty strings will break AWS
-  emptyStringAsUndefined: false,
+  /**
+   * Run build or dev with SKIP_ENV_VALIDATION to skip env validation.
+   * Useful for Docker builds and CI pipelines.
+   */
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
+  /**
+   * Makes it so that empty strings are treated as undefined.
+   * SOME_VAR: z.string() and SOME_VAR='' will throw an error.
+   */
+  emptyStringAsUndefined: true,
 })

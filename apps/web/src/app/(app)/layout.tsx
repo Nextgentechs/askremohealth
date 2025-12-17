@@ -8,7 +8,9 @@ export default async function RootLayout({
       <div className="mx-auto max-w-[1440px] px-4 pt-2 transition-all duration-300 sm:px-6 sm:pt-4 lg:px-8 lg:pt-6 xl:px-16" suppressHydrationWarning={true}>
         <NavigationBar />
       </div>
-      {children}
+      <main id="main-content" role="main" tabIndex={-1}>
+        {children}
+      </main>
     </>
   )
 }

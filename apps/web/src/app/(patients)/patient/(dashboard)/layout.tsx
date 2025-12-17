@@ -9,9 +9,14 @@ export default function layout({ children }: { children: React.ReactNode }) {
       <AppSidebar />
       <SidebarInset className="flex flex-col gap-4">
         <DashboardHeader />
-        <div className="container mx-auto mb-10 max-w-6xl flex-1">
+        <main
+          id="main-content"
+          role="main"
+          tabIndex={-1}
+          className="container mx-auto mb-10 max-w-6xl flex-1"
+        >
           <Suspense fallback={<ProgressBar />}>{children}</Suspense>
-        </div>
+        </main>
       </SidebarInset>
     </SidebarProvider>
   )

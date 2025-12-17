@@ -12,16 +12,18 @@ import {
   FlaskConical,
   Home,
   Hospital,
+  HospitalIcon,
   Info,
   LogOut,
   Menu,
   Pill,
   Stethoscope,
   User,
-  Users,
 } from 'lucide-react'
 import Link from 'next/link'
 import Logo from './logo'
+import { ModeToggle } from './mode-toggle'
+import { NotificationBell } from './notification-bell'
 import { Button } from './ui/button'
 import {
   DropdownMenu,
@@ -57,7 +59,7 @@ const navOptions = [
     icon: Info,
   },
   {
-    label: 'Consult a Doctor',
+    label: 'Find a Doctor',
     href: '/find-specialists',
     icon: Stethoscope,
   },
@@ -67,7 +69,7 @@ const navOptions = [
     icon: FlaskConical,
   },
   {
-    label: 'Healthcare Facilities',
+    label: 'Medical Facilities',
     icon: Hospital,
     dropdownItems: [
       {
@@ -98,25 +100,47 @@ const navOptions = [
     ],
   },
   {
-    label: 'Register Facility',
-    href: '/register-facility',
+    label: 'Join as a Provider',
     icon: Stethoscope,
+    dropdownItems: [
+      {
+        label: 'Doctor Portal',
+        href: 'https://doctors.askremohealth.com/',
+        icon: BriefcaseMedical,
+      },
+      {
+        label: 'Clinic Portal',
+        href: '/hospitals',
+        icon: HospitalIcon,
+      },
+      {
+        label: 'Lab Portal',
+        href: '/labs',
+        icon: FlaskConical,
+      },
+      {
+        label: 'Hospital Portal',
+        href: '/hospitals',
+        icon: Ambulance,
+      },
+      {
+        label: 'Pharmacy Portal',
+        href: '/pharmacies',
+        icon: Pill,
+      },
+    ],
   },
-  {
-    label: 'Community',
-    href: '/community',
-    icon: Users, 
-  },
+
   {
     label: 'Blogs',
     href: '/articles',
     icon: Book,
   },
-  // {
-  //   label: 'Contact Us',
-  //   href: '/contact-us',
-  //   icon: BriefcaseMedical,
-  // },
+  {
+    label: 'Contact Us',
+    href: '/contact-us',
+    icon: BriefcaseMedical,
+  },
 ]
 
 function AuthButtons({
@@ -134,12 +158,14 @@ function AuthButtons({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="min-w-40">
-          <Link href="/auth?role=patient">
-            <DropdownMenuItem className="cursor-pointer">Patient Login</DropdownMenuItem>
-          </Link>
-          {/* <Link href="https://doctors.askremohealth.com/auth?role=doctor">
-            <DropdownMenuItem className="cursor-pointer">Doctor Login</DropdownMenuItem>
+          {/* <Link href="/auth?role=doctor">
+            <DropdownMenuItem className="cursor-pointer">Login as Doctor</DropdownMenuItem>
           </Link> */}
+          <Link href="/auth?role=patient">
+            <DropdownMenuItem className="cursor-pointer">
+              Login as Patient
+            </DropdownMenuItem>
+          </Link>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
@@ -195,11 +221,16 @@ function MobileMenu() {
         </div>
 
         {user ? (
-          <div className="ms-4">
+          <div className="flex items-center gap-2 ms-4">
+            <ModeToggle />
+            <NotificationBell />
             <CurrentUser user={user} />
           </div>
         ) : (
-          <AuthButtons className="flex flex-col items-start border-t px-4 pt-4" />
+          <div className="flex items-center gap-2 border-t px-4 pt-4">
+            <ModeToggle />
+            <AuthButtons className="flex flex-col items-start" />
+          </div>
         )}
       </SheetContent>
     </Sheet>
@@ -254,7 +285,7 @@ function CurrentUser({
                 My Profile
               </DropdownMenuItem>
             </Link>
-          ): null }
+          ) : null}
           <>
             {user?.role === 'doctor' ? (
               <Link href="/specialist/profile">
@@ -272,12 +303,7 @@ function CurrentUser({
             className="cursor-pointer"
             onClick={async () => {
               await fetch('/api/auth/signout', { method: 'POST' })
-              // Redirect to root domain homepage
-              if (process.env.NODE_ENV === 'production') {
-                window.location.href = 'https://askremohealth.com/'
-              } else {
-                window.location.href = 'http://localhost:3000/'
-              }
+              window.location.reload()
             }}
           >
             <LogOut />
@@ -292,56 +318,64 @@ function CurrentUser({
 export default function NavigationBar() {
   const { user } = useCurrentUser()
 
-  console.log(user)
-
   return (
-    <div className="flex w-full flex-row items-center justify-between lg:px-5">
-      <Logo />
+    <header role="banner">
+      <nav
+        aria-label="Main navigation"
+        className="flex w-full flex-row items-center justify-between lg:px-5"
+      >
+        <Logo />
 
-      <NavigationMenu className="hidden list-none gap-1 xl:flex">
-        {navOptions.map((option) => (
-          <NavigationMenuItem key={option.label}>
-            {option.dropdownItems ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger
-                  className={`${navigationMenuTriggerStyle()} gap-1`}
-                >
-                  {option.label}
-                  <ChevronDown className="h-4 w-4" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="center">
-                  {option.dropdownItems.map((item) => (
-                    <Link key={item.label} href={item.href}>
-                      <DropdownMenuItem className="gap-2">
-                        <item.icon className="h-4 w-4" />
-                        {item.label}
-                      </DropdownMenuItem>
-                    </Link>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <Link href={option.href ?? '#'}>
-                <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-                  <span>{option.label}</span>
-                </NavigationMenuLink>
-              </Link>
-            )}
-          </NavigationMenuItem>
-        ))}
-      </NavigationMenu>
+        <NavigationMenu className="hidden list-none gap-1 xl:flex">
+          {navOptions.map((option) => (
+            <NavigationMenuItem key={option.label}>
+              {option.dropdownItems ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    className={`${navigationMenuTriggerStyle()} gap-1`}
+                    aria-haspopup="true"
+                  >
+                    {option.label}
+                    <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="center">
+                    {option.dropdownItems.map((item) => (
+                      <Link key={item.label} href={item.href}>
+                        <DropdownMenuItem className="gap-2">
+                          <item.icon className="h-4 w-4" aria-hidden="true" />
+                          {item.label}
+                        </DropdownMenuItem>
+                      </Link>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Link href={option.href ?? '#'}>
+                  <NavigationMenuLink
+                    asChild
+                    className={navigationMenuTriggerStyle()}
+                  >
+                    <span>{option.label}</span>
+                  </NavigationMenuLink>
+                </Link>
+              )}
+            </NavigationMenuItem>
+          ))}
+        </NavigationMenu>
 
-      <div className="flex items-center gap-4">
-        {user ? (
-          <div className="hidden sm:block">
-            <CurrentUser user={user} />
-          </div>
-        ) : (
-          <AuthButtons className="hidden flex-row items-center gap-4 lg:flex" />
-        )}
-        <MobileMenu />
-        {/* <ModeToggle /> */}
-      </div>
-    </div>
+        <div className="flex items-center gap-4">
+          {user ? (
+            <div className="hidden items-center gap-2 sm:flex">
+              <NotificationBell />
+              <CurrentUser user={user} />
+            </div>
+          ) : (
+            <AuthButtons className="hidden flex-row items-center gap-4 lg:flex" />
+          )}
+          <ModeToggle />
+          <MobileMenu />
+        </div>
+      </nav>
+    </header>
   )
 }
