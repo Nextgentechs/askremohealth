@@ -1,7 +1,8 @@
-import { Client, AddressType } from '@googlemaps/google-maps-services-js'
+import { AddressType, Client } from '@googlemaps/google-maps-services-js'
 import { env } from '@web/env'
-import { facilities } from '@web/server/db/schema'
 import { db } from '@web/server/db'
+import { facilities } from '@web/server/db/schema'
+import { sql } from 'drizzle-orm'
 import { KENYA_COUNTIES } from '../data/kenya-counties'
 
 const googleMapsClient = new Client({})
@@ -43,7 +44,7 @@ export class Facility {
         component.types.includes(AddressType.administrative_area_level_1) ||
         component.types.includes(AddressType.administrative_area_level_2),
     )
-    
+
     if (countyComponent) {
       // Try to match with our known counties
       const countyName = countyComponent.long_name
@@ -51,9 +52,9 @@ export class Facility {
         .replace('Wilaya ya ', '')
         .replace('Kaunti ya ', '')
         .trim()
-      
+
       const matchedCounty = KENYA_COUNTIES.find(
-        (c) => c.name.toLowerCase() === countyName.toLowerCase()
+        (c) => c.name.toLowerCase() === countyName.toLowerCase(),
       )
       county = matchedCounty ? matchedCounty.name : countyName
     }
@@ -65,7 +66,7 @@ export class Facility {
         component.types.includes(AddressType.locality) ||
         component.types.includes(AddressType.sublocality),
     )
-    
+
     if (townComponent) {
       town = townComponent.long_name
     } else {
@@ -85,8 +86,8 @@ export class Facility {
       // geospatial query in a production environment
       const matchedCounty = KENYA_COUNTIES.find(
         (c) =>
-          Math.abs(c.coordinates.lat - lat) < 1 && 
-          Math.abs(c.coordinates.lng - lng) < 1
+          Math.abs(c.coordinates.lat - lat) < 1 &&
+          Math.abs(c.coordinates.lng - lng) < 1,
       )
       if (matchedCounty) {
         county = matchedCounty.name
@@ -176,11 +177,65 @@ export class Facility {
     }))
   }
 
-  static async list() {
-    return db.query.facilities.findMany({
-      with: {
-        doctors: true,
+  static async list(options?: {
+    type?: string
+    county?: string
+    search?: string
+    page?: number
+    pageSize?: number
+  }) {
+    const { type, county, search, page = 1, pageSize = 12 } = options ?? {}
+    const offset = (page - 1) * pageSize
+
+    const baseConditions = []
+
+    if (type) {
+      baseConditions.push(sql`${facilities.type} = ${type}`)
+    }
+    if (county) {
+      baseConditions.push(sql`${facilities.county} = ${county}`)
+    }
+    if (search) {
+      baseConditions.push(
+        sql`(${facilities.name} ILIKE ${`%${search}%`} OR ${facilities.address} ILIKE ${`%${search}%`})`,
+      )
+    }
+
+    const whereClause =
+      baseConditions.length > 0
+        ? sql.join(baseConditions, sql` AND `)
+        : undefined
+
+    const [facilitiesList, countResult] = await Promise.all([
+      db.query.facilities.findMany({
+        where: whereClause ? () => whereClause : undefined,
+        limit: pageSize,
+        offset,
+        orderBy: (f, { desc }) => [desc(f.createdAt)],
+        with: {
+          doctors: {
+            columns: {
+              id: true,
+            },
+          },
+        },
+      }),
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(facilities)
+        .where(whereClause ?? undefined),
+    ])
+
+    const total = countResult[0]?.count ?? 0
+
+    return {
+      facilities: facilitiesList,
+      pagination: {
+        page,
+        pageSize,
+        total,
+        totalPages: Math.ceil(total / pageSize),
       },
-    })
+    }
   }
 }
