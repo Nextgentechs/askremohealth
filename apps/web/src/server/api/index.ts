@@ -12,6 +12,7 @@ import { createCallerFactory, createTRPCRouter } from './trpc'
 // import * as auth from './routers/auth'
 import { notificationsRouter } from './routers/notifications'
 import * as officeLocations from './routers/office-locations'
+import { prescriptionsRouter } from './routers/prescriptions'
 import { reviewsRouter } from './routers/reviews'
 
 /**
@@ -33,6 +34,7 @@ export const appRouter = createTRPCRouter({
   patients: createTRPCRouter(patients),
   notifications: notificationsRouter,
   reviews: reviewsRouter,
+  prescriptions: prescriptionsRouter,
 })
 
 // export type definition of API

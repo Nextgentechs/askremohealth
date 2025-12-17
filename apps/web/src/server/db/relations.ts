@@ -1,22 +1,24 @@
 import { relations } from 'drizzle-orm'
 import {
+  appointmentAttachments,
   appointmentLogs,
   appointments,
+  article_images,
+  articles,
   certificates,
   doctors,
   facilities,
+  notifications,
+  officeLocation,
   operatingHours,
   patients,
+  prescriptionItems,
+  prescriptions,
   profilePictures,
+  reviews,
   specialties,
   subSpecialties,
-  reviews,
-  appointmentAttachments,
   users,
-  articles,
-  article_images,
-  notifications,
-  officeLocation
 } from './schema'
 
 export const doctorRelations = relations(doctors, ({ one, many }) => ({
@@ -44,18 +46,19 @@ export const doctorRelations = relations(doctors, ({ one, many }) => ({
   operatingHours: many(operatingHours),
   appointments: many(appointments),
   reviews: many(reviews),
+  prescriptions: many(prescriptions),
 }))
 
-export const patientRelations = relations(patients, ({ many,one }) => ({
+export const patientRelations = relations(patients, ({ many, one }) => ({
   appointments: many(appointments),
+  prescriptions: many(prescriptions),
   user: one(users, {
     fields: [patients.userId],
     references: [users.id],
   }),
-
 }))
 
-export const userRelations = relations(users, ({ one,many }) => ({
+export const userRelations = relations(users, ({ one, many }) => ({
   doctor: one(doctors, {
     fields: [users.id],
     references: [doctors.userId],
@@ -66,8 +69,7 @@ export const userRelations = relations(users, ({ one,many }) => ({
   }),
   notifications: many(notifications),
   articles: many(articles),
-}));
-
+}))
 
 export const facilityRelations = relations(facilities, ({ many }) => ({
   doctors: many(doctors),
@@ -90,6 +92,10 @@ export const appointmentRelations = relations(
       references: [reviews.appointmentId],
     }),
     attachments: many(appointmentAttachments),
+    prescription: one(prescriptions, {
+      fields: [appointments.id],
+      references: [prescriptions.appointmentId],
+    }),
   }),
 )
 
@@ -166,3 +172,32 @@ export const articleImageRelations = relations(article_images, ({ one }) => ({
     references: [articles.id],
   }),
 }))
+
+export const prescriptionRelations = relations(
+  prescriptions,
+  ({ one, many }) => ({
+    appointment: one(appointments, {
+      fields: [prescriptions.appointmentId],
+      references: [appointments.id],
+    }),
+    doctor: one(doctors, {
+      fields: [prescriptions.doctorId],
+      references: [doctors.id],
+    }),
+    patient: one(patients, {
+      fields: [prescriptions.patientId],
+      references: [patients.id],
+    }),
+    items: many(prescriptionItems),
+  }),
+)
+
+export const prescriptionItemRelations = relations(
+  prescriptionItems,
+  ({ one }) => ({
+    prescription: one(prescriptions, {
+      fields: [prescriptionItems.prescriptionId],
+      references: [prescriptions.id],
+    }),
+  }),
+)
