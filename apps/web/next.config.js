@@ -71,11 +71,18 @@ const securityHeaders = [
 
 /** @type {import("next").NextConfig} */
 const config = {
+  // Enable standalone output for Docker/PM2 deployment
+  output: 'standalone',
+
   images: {
     remotePatterns: [
       {
         protocol: 'https',
         hostname: 'do5q0y4otbt6jaho.public.blob.vercel-storage.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'askremohealth.com',
       },
     ],
   },

@@ -1,420 +1,124 @@
-# Deployment Guide
+# Deployment Guide - Contabo/Self-Hosted Server
 
-## Production Deployment Status
+## 🚀 Production Deployment for askremohealth.com
 
-### ✅ Latest Deployment
-
-- **Date**: December 18, 2025
-- **Commit**: `df83aa5e` - Database schema synchronization
-- **Status**: Ready for Production
-- **Branch**: `main`
-- **Repository**: [Nextgentechs/askremohealth](https://github.com/Nextgentechs/askremohealth)
+**Platform**: Contabo VPS / Self-Hosted Server  
+**Repository**: https://github.com/Nextgentechs/askremohealth  
+**Live Site**: https://askremohealth.com
 
 ---
 
-## Deployment Summary
+## 📋 Quick Start Deployment
 
-### What Was Deployed
+### On Your Contabo Server:
 
-This production release includes comprehensive database schema synchronization and type safety improvements:
+```bash
+# 1. Initial setup (run once)
+curl -o setup.sh https://raw.githubusercontent.com/Nextgentechs/askremohealth/main/scripts/setup-server.sh
+chmod +x setup.sh
+./setup.sh
 
-#### 🔧 Database Schema Fixes
+# 2. Configure environment
+nano /var/www/askremohealth/apps/web/.env
+# Add your actual credentials
 
-- ✅ Fixed 21 TypeScript type errors across routers and services
-- ✅ Synchronized all column names to camelCase (userId, scheduledAt, notes)
-- ✅ Renamed tables to singular form (lab, lab_appointment, lab_test_available)
-- ✅ Fixed roleEnum ordering to match database: `['patient', 'doctor', 'lab', 'admin']`
-- ✅ Added content field to comment insertions
-- ✅ Resolved enum conflicts and migration issues
-
-#### 🚀 Build & Test Results
-
-- **TypeScript Compilation**: ✅ PASSED (0 errors)
-- **Production Build**: ✅ SUCCESS (64 pages generated)
-- **Database Push**: ✅ APPLIED (schema synchronized)
-- **Linting**: ⚠️ Warnings only (no errors)
-
-#### 📦 Build Metrics
-
-```
-Routes Generated: 64 (static + dynamic)
-First Load JS: 218 kB (shared)
-Middleware: 41 kB
-Exit Code: 0 (success)
+# 3. Deploy application
+cd /var/www/askremohealth
+./scripts/deploy.sh production
 ```
 
 ---
 
-## Deployment Platforms
+## 🛠️ Deployment Options
 
-### Vercel (Recommended)
+### Option 1: PM2 (Recommended - Lightweight)
 
-**Status**: Configured via `vercel.json`
-
-#### Automatic Deployment
-
-Vercel automatically deploys when pushing to:
-
-- **Production**: `main` branch → https://askremohealth.vercel.app
-- **Preview**: `dev` branch → https://askremohealth-dev.vercel.app
-
-#### Configuration
-
-```json
-{
-  "crons": [
-    {
-      "path": "/api/cron/update-appointments",
-      "schedule": "0 0 * * *"
-    },
-    {
-      "path": "/api/cron/appointment-reminders",
-      "schedule": "0 * * * *"
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "doctors.askremohealth.com/(.*)",
-      "destination": "/specialist/$1"
-    }
-  ]
-}
+```bash
+cd /var/www/askremohealth/apps/web
+npm ci
+npm run build
+pm2 start ecosystem.config.js
+pm2 save
 ```
 
-#### Environment Variables Required
+### Option 2: Docker Compose (Containerized)
 
-Set these in Vercel Dashboard:
+```bash
+cd /var/www/askremohealth/apps/web
+docker-compose up -d --build
+```
+
+---
+
+## 🔐 Environment Variables
+
+Update `/var/www/askremohealth/apps/web/.env`:
 
 ```bash
 DATABASE_URL=postgresql://cloud_admin@144.91.78.222:5432/neondb
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
-CLERK_SECRET_KEY=sk_test_...
-SENTRY_AUTH_TOKEN=...
-SENTRY_DSN=...
-GOOGLE_MAPS_API_KEY=...
-TWILIO_ACCOUNT_SID=...
-TWILIO_AUTH_TOKEN=...
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_xxxxx
+CLERK_SECRET_KEY=sk_live_xxxxx
+SENTRY_AUTH_TOKEN=xxxxx
+GOOGLE_MAPS_API_KEY=xxxxx
+TWILIO_ACCOUNT_SID=xxxxx
+TWILIO_AUTH_TOKEN=xxxxx
+NODE_ENV=production
+PORT=3000
 ```
 
-### Manual Deployment Steps
+---
 
-#### 1. Via Vercel CLI
+## 🌐 SSL & Nginx
 
 ```bash
-# Install Vercel CLI
-npm i -g vercel
+# Install SSL certificate
+sudo certbot --nginx -d askremohealth.com -d www.askremohealth.com
 
-# Login to Vercel
-vercel login
-
-# Deploy to production
-cd apps/web
-vercel --prod
+# Restart nginx
+sudo systemctl reload nginx
 ```
 
-#### 2. Via Git Push (Automatic)
+---
+
+## 🔄 Update & Redeploy
 
 ```bash
-# Ensure you're on main branch
-git checkout main
-
-# Merge latest changes
-git merge dev
-
-# Push to trigger deployment
-git push origin main
+cd /var/www/askremohealth
+git pull origin main
+./scripts/deploy.sh production
 ```
-
-#### 3. Via GitHub Actions
-
-The workflow automatically runs on push to `main`:
-
-- ✅ Type checks
-- ✅ Builds application
-- ✅ Runs database migrations
-- ✅ Deploys to Vercel
 
 ---
 
-## Database Management
-
-### Current Database
-
-- **Host**: 144.91.78.222:5432
-- **Database**: neondb
-- **User**: cloud_admin
-- **ORM**: Drizzle ORM
-
-### Migration Commands
+## 📊 Monitoring
 
 ```bash
-cd apps/web
+# PM2
+pm2 monit
+pm2 logs askremohealth
 
-# Generate migration from schema changes
-npm run db:generate
+# Docker
+docker-compose logs -f
 
-# Push schema directly to database (force sync)
-npm run db:push
-
-# View current database
-npm run db:studio
+# Nginx
+sudo tail -f /var/log/nginx/askremohealth_error.log
 ```
 
-### Emergency Database Fix
+---
 
-If schema sync fails, use the emergency fix script:
+## 🆘 Troubleshooting
 
 ```bash
-cd apps/web
-node fix-database.mjs
-```
+# Restart application
+pm2 restart askremohealth
 
-This script:
+# Check health
+curl http://localhost:3000/api/health
 
-- Drops and recreates conflicting enums
-- Renames tables to singular form
-- Updates column names to camelCase
-- Adds missing fields
-
----
-
-## Pre-Deployment Checklist
-
-### Before Every Deployment
-
-- [ ] Run `npm run typecheck` - Ensure no TypeScript errors
-- [ ] Run `npm run lint` - Check for linting issues
-- [ ] Run `npm run build` - Verify production build succeeds
-- [ ] Run `npm run db:push` - Sync database schema
-- [ ] Test critical user flows locally
-- [ ] Review environment variables
-- [ ] Check database connection
-
-### Database Safety
-
-- [ ] Backup database before migrations
-- [ ] Test migrations on staging first
-- [ ] Verify enum values match
-- [ ] Check foreign key constraints
-- [ ] Validate data integrity
-
----
-
-## Rollback Procedure
-
-### If Deployment Fails
-
-#### 1. Revert Git Commit
-
-```bash
-git checkout main
-git reset --hard a57dd813  # Previous stable commit
-git push origin main --force
-```
-
-#### 2. Revert Database Changes
-
-```bash
-# Restore from backup
-psql -h 144.91.78.222 -U cloud_admin -d neondb < backup.sql
-
-# Or manually revert schema changes
-node fix-database.mjs
-```
-
-#### 3. Redeploy Previous Version
-
-```bash
-vercel --prod --force
+# View logs
+pm2 logs --lines 100
 ```
 
 ---
 
-## Monitoring & Health Checks
-
-### Application Health
-
-- **Sentry**: Error tracking and performance monitoring
-- **Vercel Analytics**: Page views and performance metrics
-- **Database**: Connection pool monitoring via Drizzle
-
-### Key Endpoints to Monitor
-
-```
-GET /api/health           # Application health
-GET /api/trpc/health      # tRPC server status
-GET /                     # Homepage availability
-```
-
-### Alerts Setup
-
-Configure alerts for:
-
-- 5xx errors > 10/min
-- Response time > 3s
-- Database connection failures
-- Build failures
-
----
-
-## Production URLs
-
-### Main Application
-
-- **Production**: https://askremohealth.vercel.app
-- **Custom Domain**: https://askremohealth.com (if configured)
-- **Doctor Portal**: https://doctors.askremohealth.com
-
-### API Endpoints
-
-- **tRPC**: https://askremohealth.vercel.app/api/trpc
-- **Health**: https://askremohealth.vercel.app/api/health
-- **Webhooks**: https://askremohealth.vercel.app/api/webhooks/*
-
----
-
-## Post-Deployment Verification
-
-### Automated Checks
-
-```bash
-# Test API endpoints
-curl https://askremohealth.vercel.app/api/health
-
-# Test tRPC
-curl https://askremohealth.vercel.app/api/trpc
-
-# Test SSR
-curl https://askremohealth.vercel.app/
-```
-
-### Manual Checks
-
-- [ ] Homepage loads correctly
-- [ ] Authentication works (login/signup)
-- [ ] Doctor dashboard accessible
-- [ ] Lab portal functional
-- [ ] Patient appointments work
-- [ ] Community features operational
-- [ ] Database queries succeed
-
----
-
-## Support & Troubleshooting
-
-### Common Issues
-
-#### Build Fails with Type Errors
-
-```bash
-# Check for type mismatches
-npm run typecheck
-
-# Fix schema synchronization
-npm run db:push
-```
-
-#### Database Connection Errors
-
-```bash
-# Verify environment variables
-echo $DATABASE_URL
-
-# Test connection
-node -e "const { db } = require('./src/server/db'); console.log('Connected!');"
-```
-
-#### Enum Conflicts
-
-```bash
-# Use emergency fix script
-node fix-database.mjs
-
-# Verify enums
-node check-enums.mjs
-```
-
-### Getting Help
-
-- **GitHub Issues**: https://github.com/Nextgentechs/askremohealth/issues
-- **Documentation**: See README.md, API.md
-- **Team Contact**: dev@askremohealth.com
-
----
-
-## Security Notes
-
-### Environment Variables
-
-- Never commit `.env` files
-- Rotate secrets regularly
-- Use Vercel's encrypted environment variables
-- Separate production and development secrets
-
-### Database Security
-
-- Use SSL connections in production
-- Rotate database passwords monthly
-- Implement connection pooling
-- Monitor for suspicious queries
-
-### API Security
-
-- Enable rate limiting
-- Implement CORS properly
-- Use HTTPS everywhere
-- Validate all inputs
-
----
-
-## Performance Optimization
-
-### Current Optimizations
-
-- ✅ Static page generation (64 pages)
-- ✅ Shared JavaScript chunks (218 kB)
-- ✅ Image optimization with Next.js
-- ✅ API response caching
-- ✅ Database connection pooling
-
-### Future Improvements
-
-- [ ] Implement Redis caching
-- [ ] Add CDN for static assets
-- [ ] Enable ISR for dynamic pages
-- [ ] Optimize database queries
-- [ ] Implement lazy loading
-
----
-
-## Changelog
-
-### Version 1.0.0 (December 18, 2025)
-
-- **Database**: Full schema synchronization with frontend
-- **Type Safety**: Fixed 21 TypeScript errors
-- **Build**: Production build optimized (64 pages)
-- **Migrations**: Cleaned up conflicting migration files
-- **Infrastructure**: Added emergency database fix scripts
-
-### Previous Releases
-
-- See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution history
-- See [Documentation/ISSUES.md](Documentation/ISSUES.md) for known issues
-
----
-
-## Next Steps
-
-1. **Monitor Deployment**: Check Vercel dashboard for deployment status
-2. **Verify Application**: Test all critical user flows
-3. **Check Logs**: Monitor Sentry for any errors
-4. **Update Documentation**: Document any new features
-5. **Team Notification**: Inform team of successful deployment
-
----
-
-**Deployment Completed**: ✅  
-**Status**: Production Ready  
-**Deployed By**: GitHub Copilot (Automated)  
-**Approved By**: Development Team
+**Full Documentation**: See complete setup guide in repository
