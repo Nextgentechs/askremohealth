@@ -1,0 +1,23 @@
+---
+deployment:
+  tasks:
+    # Navigate to web app directory
+    - export DEPLOYPATH=/home/deueoltk/public_html/apps/web
+
+    # Create directory if it doesn't exist
+    - mkdir -p $DEPLOYPATH
+
+    # Copy all files to deployment directory
+    - /bin/cp -R * $DEPLOYPATH
+
+    # Navigate to deployment directory
+    - cd $DEPLOYPATH
+
+    # Install dependencies
+    - npm install --production
+
+    # Build the application
+    - npm run build
+
+    # Restart Node.js application
+    - touch $DEPLOYPATH/tmp/restart.txt
