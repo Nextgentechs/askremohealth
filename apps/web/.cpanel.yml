@@ -7,8 +7,8 @@ deployment:
     # Create directory if it doesn't exist
     - mkdir -p $DEPLOYPATH
 
-    # Copy all files to deployment directory
-    - /bin/cp -R * $DEPLOYPATH
+    # Copy all files to deployment directory (excluding .vercel and Vercel-specific files)
+    - /bin/cp -R $(ls | grep -v ".vercel") $DEPLOYPATH
 
     # Navigate to deployment directory
     - cd $DEPLOYPATH
