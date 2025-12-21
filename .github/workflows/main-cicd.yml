@@ -39,20 +39,22 @@ jobs:
             git reset --hard origin/main
             echo "✅ Synced with origin/main"
 
-            # 3. Setup Node.js 20 via NVM (critical for proper route generation)
-            echo "📦 Setting up Node.js 20 via NVM..."
-            export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+            # 3. Check Node.js version and upgrade if needed
+            echo "� Current Node.js version:"
+            node --version || { echo "Node not found"; exit 1; }
+            npm --version || { echo "npm not found"; exit 1; }
 
-            # Install Node.js 20 if not already installed
-            if ! nvm ls 20 > /dev/null 2>&1; then
-              echo "Installing Node.js 20..."
-              nvm install 20
+            # Check if Node.js 20+ is available
+            NODE_MAJOR=$(node --version | cut -d'.' -f1 | tr -d 'v')
+            if [ "$NODE_MAJOR" -lt 20 ]; then
+              echo "⚠️ Node.js $NODE_MAJOR detected, need v20. Attempting upgrade..."
+              # Try using n to upgrade
+              npm install -g n
+              n 20
+              hash -r
+              echo "📋 New Node.js version:"
+              node --version
             fi
-            nvm use 20
-
-            echo "📋 Node.js version: $(node --version)"
-            echo "📋 npm version: $(npm --version)"
 
             # 4. Install Dependencies
             echo "📦 Installing dependencies..."
