@@ -1,23 +1,52 @@
 ---
+# cPanel Git Deployment Configuration for Ask Remo Health
+#
+# This file automates deployment when you push to your Git repository
+# connected via cPanel's Git Version Control.
+#
+# Prerequisites:
+# 1. Set up Node.js application in cPanel's "Setup Node.js App"
+# 2. Connect your Git repo in cPanel's "Git Version Control"
+# 3. Configure environment variables in cPanel
+#
+# Usage:
+# - Push to your connected branch, cPanel will auto-deploy
+# - Or manually deploy from cPanel Git Version Control panel
+
 deployment:
   tasks:
-    # Navigate to web app directory
-    - export DEPLOYPATH=/home/deueoltk/public_html/apps/web
+    # Define paths
+    - export DEPLOYPATH=/home/deueoltk/public_html
+    - export APPPATH=$DEPLOYPATH/apps/web
+    - export NODE_VERSION=18
 
-    # Create directory if it doesn't exist
-    - mkdir -p $DEPLOYPATH
-
-    # Copy all files to deployment directory (excluding .vercel and Vercel-specific files)
-    - /bin/cp -R $(ls | grep -v ".vercel") $DEPLOYPATH
-
-    # Navigate to deployment directory
+    # Navigate to repository root
     - cd $DEPLOYPATH
 
-    # Install dependencies
-    - npm install --production
+    # Pull latest changes (if using cPanel Git Version Control)
+    - git fetch origin
+    - git reset --hard origin/main
 
-    # Build the application
+    # Navigate to web app
+    - cd $APPPATH
+
+    # Activate Node.js virtual environment (cPanel requirement)
+    - source /home/deueoltk/nodevenv/apps/web/$NODE_VERSION/bin/activate
+
+    # Clean install dependencies
+    - npm ci --production=false
+
+    # Build the Next.js application
     - npm run build
 
-    # Restart Node.js application
-    - touch $DEPLOYPATH/tmp/restart.txt
+    # Install production dependencies only
+    - npm prune --production
+
+    # Create logs directory if it doesn't exist
+    - mkdir -p $APPPATH/logs
+
+    # Restart the Node.js application (cPanel method)
+    - touch $APPPATH/tmp/restart.txt
+
+    # Alternative: If using PM2
+    # - pm2 restart ecosystem.config.js --env production || pm2 start ecosystem.config.js --env production

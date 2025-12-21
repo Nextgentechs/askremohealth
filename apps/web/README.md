@@ -25,8 +25,8 @@
 ### 1. Clone the repository
 
 ```bash
-git clone git@github.com:Nextgentechs/askvirtualhealthcare.git
-cd askvirtualhealthcare
+git clone git@github.com:Nextgentechs/askremohealth.git
+cd askremohealth
 ```
 
 ### 2. Install dependencies

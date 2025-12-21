@@ -187,7 +187,7 @@ jobs:
           node-version: '20'
           cache: 'npm'
       - run: npm ci
-      - run: npm run check --workspace=@askvirtualhealthcare/web
+      - run: npm run check --workspace=@askremohealth/web
 
   build:
     name: Build
@@ -202,7 +202,7 @@ jobs:
           node-version: '20'
           cache: 'npm'
       - run: npm ci
-      - run: npm run build --workspace=@askvirtualhealthcare/web
+      - run: npm run build --workspace=@askremohealth/web
 
   # Future: Add when tests exist
   # test:
@@ -269,7 +269,7 @@ hotfix: critical auth bypass vulnerability
 
 ```bash
 # .husky/pre-push
-npm run check --workspace=@askvirtualhealthcare/web
+npm run check --workspace=@askremohealth/web
 ```
 
 ### Phase 6: Deployment Flow
@@ -608,7 +608,7 @@ test:
         node-version: '20'
         cache: 'npm'
     - run: npm ci
-    - run: npm run test --workspace=@askvirtualhealthcare/web -- --run
+    - run: npm run test --workspace=@askremohealth/web -- --run
 ```
 
 ---

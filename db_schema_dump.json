@@ -1,0 +1,1550 @@
+{
+  "admin_user": [
+    {
+      "column": "id",
+      "type": "uuid",
+      "nullable": false,
+      "default": "gen_random_uuid()"
+    },
+    {
+      "column": "user_id",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "phone",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "onboarding_complete",
+      "type": "boolean",
+      "nullable": false,
+      "default": "false"
+    },
+    {
+      "column": "permissions",
+      "type": "jsonb",
+      "nullable": true,
+      "default": "'[]'::jsonb"
+    },
+    {
+      "column": "created_at",
+      "type": "timestamp without time zone",
+      "nullable": false,
+      "default": "now()"
+    },
+    {
+      "column": "updated_at",
+      "type": "timestamp without time zone",
+      "nullable": true,
+      "default": null
+    }
+  ],
+  "appointment": [
+    {
+      "column": "id",
+      "type": "uuid",
+      "nullable": false,
+      "default": "gen_random_uuid()"
+    },
+    {
+      "column": "doctor_id",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "patient_id",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "appointment_date",
+      "type": "timestamp without time zone",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "type",
+      "type": "USER-DEFINED",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "created_at",
+      "type": "timestamp without time zone",
+      "nullable": false,
+      "default": "now()"
+    },
+    {
+      "column": "updated_at",
+      "type": "timestamp without time zone",
+      "nullable": false,
+      "default": "now()"
+    },
+    {
+      "column": "patient_notes",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "doctor_notes",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "status",
+      "type": "USER-DEFINED",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "cancelled_by",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "cancellation_reason",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "reminder_24h_sent_at",
+      "type": "timestamp without time zone",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "reminder_1h_sent_at",
+      "type": "timestamp without time zone",
+      "nullable": true,
+      "default": null
+    }
+  ],
+  "appointment_attachments": [
+    {
+      "column": "id",
+      "type": "uuid",
+      "nullable": false,
+      "default": "gen_random_uuid()"
+    },
+    {
+      "column": "appointment_id",
+      "type": "uuid",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "url",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "path",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "created_at",
+      "type": "timestamp without time zone",
+      "nullable": false,
+      "default": "now()"
+    }
+  ],
+  "appointment_log": [
+    {
+      "column": "id",
+      "type": "uuid",
+      "nullable": false,
+      "default": "gen_random_uuid()"
+    },
+    {
+      "column": "appointment_id",
+      "type": "uuid",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "status",
+      "type": "USER-DEFINED",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "created_at",
+      "type": "timestamp without time zone",
+      "nullable": false,
+      "default": "now()"
+    }
+  ],
+  "article_images": [
+    {
+      "column": "id",
+      "type": "uuid",
+      "nullable": false,
+      "default": "gen_random_uuid()"
+    },
+    {
+      "column": "article_id",
+      "type": "uuid",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "url",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "path",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "created_at",
+      "type": "timestamp without time zone",
+      "nullable": false,
+      "default": "now()"
+    },
+    {
+      "column": "updated_at",
+      "type": "timestamp without time zone",
+      "nullable": true,
+      "default": null
+    }
+  ],
+  "articles": [
+    {
+      "column": "id",
+      "type": "uuid",
+      "nullable": false,
+      "default": "gen_random_uuid()"
+    },
+    {
+      "column": "author_id",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "title",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "content",
+      "type": "text",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "created_at",
+      "type": "timestamp without time zone",
+      "nullable": false,
+      "default": "now()"
+    },
+    {
+      "column": "published_at",
+      "type": "timestamp without time zone",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "updated_at",
+      "type": "timestamp without time zone",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "image",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "status",
+      "type": "character varying",
+      "nullable": true,
+      "default": "'draft'::character varying"
+    },
+    {
+      "column": "verified",
+      "type": "boolean",
+      "nullable": true,
+      "default": "false"
+    }
+  ],
+  "certificate": [
+    {
+      "column": "id",
+      "type": "uuid",
+      "nullable": false,
+      "default": "gen_random_uuid()"
+    },
+    {
+      "column": "doctor_id",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "name",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "url",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "issued_by",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "issued_at",
+      "type": "timestamp without time zone",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "expiry_date",
+      "type": "timestamp without time zone",
+      "nullable": true,
+      "default": null
+    }
+  ],
+  "chat": [
+    {
+      "column": "id",
+      "type": "uuid",
+      "nullable": false,
+      "default": "gen_random_uuid()"
+    },
+    {
+      "column": "name",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "doctor_id",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "patient_id",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "created_at",
+      "type": "timestamp without time zone",
+      "nullable": false,
+      "default": "now()"
+    },
+    {
+      "column": "updated_at",
+      "type": "timestamp without time zone",
+      "nullable": true,
+      "default": null
+    }
+  ],
+  "comment": [
+    {
+      "column": "id",
+      "type": "uuid",
+      "nullable": false,
+      "default": "gen_random_uuid()"
+    },
+    {
+      "column": "content",
+      "type": "text",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "desc",
+      "type": "text",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "user_id",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "post_id",
+      "type": "uuid",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "parent_comment_id",
+      "type": "uuid",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "created_at",
+      "type": "timestamp without time zone",
+      "nullable": false,
+      "default": "now()"
+    },
+    {
+      "column": "updated_at",
+      "type": "timestamp without time zone",
+      "nullable": true,
+      "default": null
+    }
+  ],
+  "doctor": [
+    {
+      "column": "id",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "specialty_id",
+      "type": "uuid",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "sub_specialties",
+      "type": "jsonb",
+      "nullable": true,
+      "default": "'[]'::jsonb"
+    },
+    {
+      "column": "experience",
+      "type": "integer",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "registration_number",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "hospital_id",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "bio",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "gender",
+      "type": "USER-DEFINED",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "title",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "consultation_fee",
+      "type": "integer",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "status",
+      "type": "USER-DEFINED",
+      "nullable": true,
+      "default": "'pending'::doctor_status"
+    },
+    {
+      "column": "dob",
+      "type": "timestamp without time zone",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "created_at",
+      "type": "timestamp without time zone",
+      "nullable": false,
+      "default": "now()"
+    },
+    {
+      "column": "updated_at",
+      "type": "timestamp without time zone",
+      "nullable": false,
+      "default": "now()"
+    },
+    {
+      "column": "user_id",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "phone",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "office_id",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "deleted_at",
+      "type": "timestamp without time zone",
+      "nullable": true,
+      "default": null
+    }
+  ],
+  "facility": [
+    {
+      "column": "place_id",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "name",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "location",
+      "type": "jsonb",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "address",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "county",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "town",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "phone",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "website",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "verified",
+      "type": "boolean",
+      "nullable": true,
+      "default": "false"
+    },
+    {
+      "column": "created_at",
+      "type": "timestamp without time zone",
+      "nullable": false,
+      "default": "now()"
+    },
+    {
+      "column": "type",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    }
+  ],
+  "lab": [
+    {
+      "column": "id",
+      "type": "uuid",
+      "nullable": false,
+      "default": "gen_random_uuid()"
+    },
+    {
+      "column": "name",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "user_id",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "location",
+      "type": "jsonb",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "address",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "phone",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "email",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "town",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "county",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "place_id",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "website",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "created_at",
+      "type": "timestamp without time zone",
+      "nullable": false,
+      "default": "now()"
+    },
+    {
+      "column": "updated_at",
+      "type": "timestamp without time zone",
+      "nullable": true,
+      "default": null
+    }
+  ],
+  "lab_appointment": [
+    {
+      "column": "id",
+      "type": "uuid",
+      "nullable": false,
+      "default": "gen_random_uuid()"
+    },
+    {
+      "column": "lab_id",
+      "type": "uuid",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "patient_id",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "test_id",
+      "type": "uuid",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "scheduled_at",
+      "type": "timestamp without time zone",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "status",
+      "type": "character varying",
+      "nullable": false,
+      "default": "'scheduled'::character varying"
+    },
+    {
+      "column": "notes",
+      "type": "text",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "created_at",
+      "type": "timestamp without time zone",
+      "nullable": false,
+      "default": "now()"
+    },
+    {
+      "column": "updated_at",
+      "type": "timestamp without time zone",
+      "nullable": true,
+      "default": null
+    }
+  ],
+  "lab_availability": [
+    {
+      "column": "id",
+      "type": "uuid",
+      "nullable": false,
+      "default": "gen_random_uuid()"
+    },
+    {
+      "column": "lab_id",
+      "type": "uuid",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "day_of_week",
+      "type": "USER-DEFINED",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "start_time",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "end_time",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "created_at",
+      "type": "timestamp without time zone",
+      "nullable": false,
+      "default": "now()"
+    }
+  ],
+  "lab_test_available": [
+    {
+      "column": "id",
+      "type": "uuid",
+      "nullable": false,
+      "default": "gen_random_uuid()"
+    },
+    {
+      "column": "lab_id",
+      "type": "uuid",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "test_id",
+      "type": "uuid",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "test_name",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "price",
+      "type": "integer",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "amount",
+      "type": "integer",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "collection",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "created_at",
+      "type": "timestamp without time zone",
+      "nullable": false,
+      "default": "now()"
+    },
+    {
+      "column": "updated_at",
+      "type": "timestamp without time zone",
+      "nullable": true,
+      "default": null
+    }
+  ],
+  "like": [
+    {
+      "column": "id",
+      "type": "uuid",
+      "nullable": false,
+      "default": "gen_random_uuid()"
+    },
+    {
+      "column": "post_id",
+      "type": "uuid",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "user_id",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "created_at",
+      "type": "timestamp without time zone",
+      "nullable": false,
+      "default": "now()"
+    }
+  ],
+  "message": [
+    {
+      "column": "id",
+      "type": "uuid",
+      "nullable": false,
+      "default": "gen_random_uuid()"
+    },
+    {
+      "column": "chat_id",
+      "type": "uuid",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "user_id",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "sender_id",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "content",
+      "type": "text",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "created_at",
+      "type": "timestamp without time zone",
+      "nullable": false,
+      "default": "now()"
+    }
+  ],
+  "notification": [
+    {
+      "column": "id",
+      "type": "uuid",
+      "nullable": false,
+      "default": "gen_random_uuid()"
+    },
+    {
+      "column": "user_id",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "title",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "message",
+      "type": "text",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "is_read",
+      "type": "boolean",
+      "nullable": true,
+      "default": "false"
+    },
+    {
+      "column": "created_at",
+      "type": "timestamp without time zone",
+      "nullable": false,
+      "default": "now()"
+    },
+    {
+      "column": "type",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "link",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "metadata",
+      "type": "text",
+      "nullable": true,
+      "default": null
+    }
+  ],
+  "office_location": [
+    {
+      "column": "place_id",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "name",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "location",
+      "type": "jsonb",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "address",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "county",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "town",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "phone",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "website",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "verified",
+      "type": "boolean",
+      "nullable": true,
+      "default": "false"
+    },
+    {
+      "column": "created_at",
+      "type": "timestamp without time zone",
+      "nullable": false,
+      "default": "now()"
+    },
+    {
+      "column": "type",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    }
+  ],
+  "operating_hours": [
+    {
+      "column": "id",
+      "type": "uuid",
+      "nullable": false,
+      "default": "gen_random_uuid()"
+    },
+    {
+      "column": "doctor_id",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "consultation_duration",
+      "type": "integer",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "schedule",
+      "type": "jsonb",
+      "nullable": true,
+      "default": "'[]'::jsonb"
+    },
+    {
+      "column": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": false,
+      "default": "now()"
+    },
+    {
+      "column": "updated_at",
+      "type": "timestamp with time zone",
+      "nullable": true,
+      "default": null
+    }
+  ],
+  "patient": [
+    {
+      "column": "id",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "emergency_contact",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "last_appointment",
+      "type": "timestamp without time zone",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "dob",
+      "type": "timestamp without time zone",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "created_at",
+      "type": "timestamp without time zone",
+      "nullable": false,
+      "default": "now()"
+    },
+    {
+      "column": "updated_at",
+      "type": "timestamp without time zone",
+      "nullable": false,
+      "default": "now()"
+    },
+    {
+      "column": "user_id",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "phone",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "deleted_at",
+      "type": "timestamp without time zone",
+      "nullable": true,
+      "default": null
+    }
+  ],
+  "post": [
+    {
+      "column": "id",
+      "type": "uuid",
+      "nullable": false,
+      "default": "gen_random_uuid()"
+    },
+    {
+      "column": "user_id",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "desc",
+      "type": "text",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "content",
+      "type": "text",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "img",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "video",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "created_at",
+      "type": "timestamp without time zone",
+      "nullable": false,
+      "default": "now()"
+    },
+    {
+      "column": "updated_at",
+      "type": "timestamp without time zone",
+      "nullable": true,
+      "default": null
+    }
+  ],
+  "prescription": [
+    {
+      "column": "id",
+      "type": "uuid",
+      "nullable": false,
+      "default": "gen_random_uuid()"
+    },
+    {
+      "column": "appointment_id",
+      "type": "uuid",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "doctor_id",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "patient_id",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "diagnosis",
+      "type": "text",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "notes",
+      "type": "text",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "status",
+      "type": "USER-DEFINED",
+      "nullable": false,
+      "default": "'active'::prescription_status"
+    },
+    {
+      "column": "valid_until",
+      "type": "timestamp without time zone",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "created_at",
+      "type": "timestamp without time zone",
+      "nullable": false,
+      "default": "now()"
+    },
+    {
+      "column": "updated_at",
+      "type": "timestamp without time zone",
+      "nullable": false,
+      "default": "now()"
+    }
+  ],
+  "prescription_item": [
+    {
+      "column": "id",
+      "type": "uuid",
+      "nullable": false,
+      "default": "gen_random_uuid()"
+    },
+    {
+      "column": "prescription_id",
+      "type": "uuid",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "medication_name",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "dosage",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "frequency",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "duration",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "quantity",
+      "type": "integer",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "instructions",
+      "type": "text",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "created_at",
+      "type": "timestamp without time zone",
+      "nullable": false,
+      "default": "now()"
+    }
+  ],
+  "profile_picture": [
+    {
+      "column": "id",
+      "type": "uuid",
+      "nullable": false,
+      "default": "gen_random_uuid()"
+    },
+    {
+      "column": "doctor_id",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "url",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "path",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "created_at",
+      "type": "timestamp without time zone",
+      "nullable": false,
+      "default": "now()"
+    },
+    {
+      "column": "updated_at",
+      "type": "timestamp without time zone",
+      "nullable": true,
+      "default": null
+    }
+  ],
+  "review": [
+    {
+      "column": "id",
+      "type": "uuid",
+      "nullable": false,
+      "default": "gen_random_uuid()"
+    },
+    {
+      "column": "appointment_id",
+      "type": "uuid",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "doctor_id",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "rating",
+      "type": "integer",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "comment",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "created_at",
+      "type": "timestamp without time zone",
+      "nullable": false,
+      "default": "now()"
+    },
+    {
+      "column": "patient_id",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    }
+  ],
+  "specialty": [
+    {
+      "column": "id",
+      "type": "uuid",
+      "nullable": false,
+      "default": "gen_random_uuid()"
+    },
+    {
+      "column": "name",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "icon",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "created_at",
+      "type": "timestamp without time zone",
+      "nullable": false,
+      "default": "now()"
+    },
+    {
+      "column": "updated_at",
+      "type": "timestamp without time zone",
+      "nullable": true,
+      "default": null
+    }
+  ],
+  "sub_specialty": [
+    {
+      "column": "id",
+      "type": "uuid",
+      "nullable": false,
+      "default": "gen_random_uuid()"
+    },
+    {
+      "column": "name",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "specialty_id",
+      "type": "uuid",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "created_at",
+      "type": "timestamp without time zone",
+      "nullable": false,
+      "default": "now()"
+    }
+  ],
+  "test": [
+    {
+      "column": "id",
+      "type": "uuid",
+      "nullable": false,
+      "default": "gen_random_uuid()"
+    },
+    {
+      "column": "name",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "description",
+      "type": "text",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "category",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "loinc_test_id",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "general_category",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "specific_category",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "sample_type",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "created_at",
+      "type": "timestamp without time zone",
+      "nullable": false,
+      "default": "now()"
+    }
+  ],
+  "user": [
+    {
+      "column": "id",
+      "type": "character varying",
+      "nullable": false,
+      "default": "gen_random_uuid()"
+    },
+    {
+      "column": "first_name",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "last_name",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "email",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "phone",
+      "type": "character varying",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "column": "password",
+      "type": "character varying",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "created_at",
+      "type": "timestamp without time zone",
+      "nullable": false,
+      "default": "now()"
+    },
+    {
+      "column": "updated_at",
+      "type": "timestamp without time zone",
+      "nullable": false,
+      "default": "now()"
+    },
+    {
+      "column": "onboarding_complete",
+      "type": "boolean",
+      "nullable": false,
+      "default": "false"
+    },
+    {
+      "column": "role",
+      "type": "USER-DEFINED",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "column": "email_verified",
+      "type": "boolean",
+      "nullable": true,
+      "default": "false"
+    },
+    {
+      "column": "deleted_at",
+      "type": "timestamp without time zone",
+      "nullable": true,
+      "default": null
+    }
+  ]
+}

@@ -9,7 +9,12 @@
  */
 import { TRPCError } from '@trpc/server'
 import { db } from '@web/server/db'
-import { appointmentLogs, appointments, patients } from '@web/server/db/schema'
+import {
+  appointmentLogs,
+  appointments,
+  patients,
+  users as usersTable,
+} from '@web/server/db/schema'
 import {
   checkDuplicateAppointment,
   validateAppointmentSlot,
@@ -17,6 +22,7 @@ import {
 } from '@web/server/services/appointment-validation'
 import { User } from '@web/server/services/users'
 import { AppointmentStatus } from '@web/server/utils'
+import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { procedure, publicProcedure } from '../trpc'
 import { appointmentListSchema, newAppointmentSchema } from '../validators'
@@ -85,11 +91,28 @@ export const createAppointment = procedure
       })
     }
 
-    // Check if patient exists, create if not
-    const patient = await ctx.db.query.patients.findFirst({
+    // Update User details if changed
+    if (
+      ctx.user?.firstName !== input.firstName ||
+      ctx.user?.lastName !== input.lastName ||
+      ctx.user?.email !== input.email
+    ) {
+      await db
+        .update(usersTable)
+        .set({
+          firstName: input.firstName,
+          lastName: input.lastName,
+          email: input.email,
+        })
+        .where(eq(usersTable.id, ctx.user?.id ?? ''))
+    }
+
+    // Check if patient exists, create or update
+    const existingPatient = await ctx.db.query.patients.findFirst({
       where: (patient, { eq }) => eq(patient.id, ctx.user?.id ?? ''),
     })
-    if (!patient) {
+
+    if (!existingPatient) {
       await ctx.db.insert(patients).values({
         id: ctx.user?.id ?? '',
         userId: ctx.user?.id ?? '',
@@ -97,6 +120,16 @@ export const createAppointment = procedure
         dob: input.dob,
         lastAppointment: input.date,
       })
+    } else {
+      // Update patient details if they exist
+      await ctx.db
+        .update(patients)
+        .set({
+          phone: input.phone,
+          dob: input.dob,
+          lastAppointment: input.date,
+        })
+        .where(eq(patients.id, ctx.user?.id ?? ''))
     }
 
     // Create the appointment
