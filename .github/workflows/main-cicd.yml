@@ -1,7 +1,7 @@
 name: 🚀 Deploy AskRemoHealth-main dormain
 on:
   workflow_run:
-    workflows: ["🚀 Promote Staging → Main (Manual Approval)"]
+    workflows: ['🚀 Promote Staging → Main (Manual Approval)']
     types:
       - completed
   push:
@@ -38,21 +38,18 @@ jobs:
             cd /root/askremohealth
             echo "📁 Changed to /root/askremohealth"
 
-            # 2. Pull Latest Code from main
-            echo "📥 Pulling latest code from origin/main..."
+            # 2. Force sync with origin/main (handles divergent branches)
+            echo "📥 Fetching and resetting to origin/main..."
+            git fetch origin main
             git checkout main
-            git pull origin main
+            git reset --hard origin/main
+            echo "✅ Synced with origin/main"
 
-            # 3. Merge into dev branch
-            echo "🔀 Merging main into dev..."
-            git checkout dev
-            git merge main --no-edit
-
-            # 4. Install Dependencies
+            # 3. Install Dependencies
             echo "📦 Installing npm dependencies..."
             npm install
 
-            # 5. Build the Next.js App
+            # 4. Build the Next.js App
             echo "🧹 Cleaning build caches..."
             rm -rf apps/web/.next
             rm -rf .next
@@ -61,12 +58,12 @@ jobs:
             echo "🛠️ Building Next.js app..."
             npm run build --workspace=@askvirtualhealthcare/web
 
-            # 6. Restart PM2 Process
+            # 5. Restart PM2 Process
             echo "🔄 Restarting PM2 process: askremohealth-web"
             pm2 restart askremohealth-web
             pm2 save
 
-            # 7. Reload Nginx
+            # 6. Reload Nginx
             echo "🔁 Reloading Nginx..."
             nginx -t && systemctl reload nginx
             if [ $? -eq 0 ]; then
@@ -76,10 +73,10 @@ jobs:
               exit 1
             fi
 
-            # 8. Final Health Check
+            # 7. Final Health Check
             echo "⏳ Waiting for app to start..."
             sleep 10
-            
+
             echo "🔍 Checking if app is responding..."
             if curl -f http://localhost:3000; then
               echo "✅ Deployment successful! Site is live."
