@@ -56,7 +56,7 @@ jobs:
             rm -rf .turbo
             rm -rf node_modules/.cache
             echo "🛠️ Building Next.js app..."
-            npm run build --workspace=@askvirtualhealthcare/web
+            npm run build --workspace=@askremohealth/web
 
             # 5. Restart PM2 Process
             echo "🔄 Restarting PM2 process: askremohealth-web"
