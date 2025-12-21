@@ -4,7 +4,11 @@
  */
 import bundleAnalyzer from '@next/bundle-analyzer'
 import { withSentryConfig } from '@sentry/nextjs'
-import './src/env.js'
+
+// Only import env validation if not skipping - this allows builds without all env vars
+if (!process.env.SKIP_ENV_VALIDATION) {
+  await import('./src/env.js')
+}
 
 /**
  * Bundle Analyzer Configuration
