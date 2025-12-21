@@ -58,12 +58,20 @@ jobs:
             echo "🛠️ Building Next.js app..."
             npm run build --workspace=@askremohealth/web
 
-            # 5. Restart PM2 Process
-            echo "🔄 Restarting PM2 process: askremohealth-web"
-            pm2 restart askremohealth-web
-            pm2 save
+            # 5. Setup Standalone Output for PM2
+            echo "📋 Copying static assets to standalone directory..."
+            cp -r apps/web/.next/static apps/web/.next/standalone/apps/web/.next/static
+            cp -r apps/web/public apps/web/.next/standalone/apps/web/public
 
-            # 6. Reload Nginx
+            # 6. Restart PM2 with Standalone Server
+            echo "🔄 Starting PM2 with standalone server..."
+            cd apps/web/.next/standalone/apps/web
+            pm2 delete askremohealth-web 2>/dev/null || true
+            pm2 start server.js --name askremohealth-web --env production
+            pm2 save
+            cd /root/askremohealth
+
+            # 7. Reload Nginx
             echo "🔁 Reloading Nginx..."
             nginx -t && systemctl reload nginx
             if [ $? -eq 0 ]; then
@@ -73,7 +81,7 @@ jobs:
               exit 1
             fi
 
-            # 7. Final Health Check
+            # 8. Final Health Check
             echo "⏳ Waiting for app to start..."
             sleep 30
 
