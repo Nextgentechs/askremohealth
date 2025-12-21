@@ -1,46 +1,46 @@
-"use client"
+'use client'
 
-import { api } from "@web/trpc/react"
-import { Button } from "@web/components/ui/button"
+import { Badge } from '@web/components/ui/badge'
+import { Button } from '@web/components/ui/button'
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "@web/components/ui/card"
-import { Label } from "@web/components/ui/label"
-import { Switch } from "@web/components/ui/switch"
-import { Badge } from "@web/components/ui/badge"
+} from '@web/components/ui/card'
+import { Label } from '@web/components/ui/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@web/components/ui/select"
+} from '@web/components/ui/select'
+import { Switch } from '@web/components/ui/switch'
+import { api } from '@web/trpc/react'
 import {
-  Clock,
+  AlertCircle,
   Calendar,
+  CheckCircle2,
+  Clock,
   Copy,
+  Plus,
   RotateCcw,
   Save,
-  CheckCircle2,
-  Plus,
   Trash2,
-  AlertCircle,
-} from "lucide-react"
-import { useRouter } from "next/navigation"
-import { useState } from "react"
+} from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 
 // Types based on the schema
 export type WeekDay =
-  | "monday"
-  | "tuesday"
-  | "wednesday"
-  | "thursday"
-  | "friday"
-  | "saturday"
-  | "sunday"
+  | 'monday'
+  | 'tuesday'
+  | 'wednesday'
+  | 'thursday'
+  | 'friday'
+  | 'saturday'
+  | 'sunday'
 
 export interface TimeSlot {
   id: string
@@ -62,49 +62,49 @@ export interface DayAvailability {
 }
 
 const weekDays: { value: WeekDay; label: string; short: string }[] = [
-  { value: "monday", label: "Monday", short: "Mon" },
-  { value: "tuesday", label: "Tuesday", short: "Tue" },
-  { value: "wednesday", label: "Wednesday", short: "Wed" },
-  { value: "thursday", label: "Thursday", short: "Thu" },
-  { value: "friday", label: "Friday", short: "Fri" },
-  { value: "saturday", label: "Saturday", short: "Sat" },
-  { value: "sunday", label: "Sunday", short: "Sun" },
+  { value: 'monday', label: 'Monday', short: 'Mon' },
+  { value: 'tuesday', label: 'Tuesday', short: 'Tue' },
+  { value: 'wednesday', label: 'Wednesday', short: 'Wed' },
+  { value: 'thursday', label: 'Thursday', short: 'Thu' },
+  { value: 'friday', label: 'Friday', short: 'Fri' },
+  { value: 'saturday', label: 'Saturday', short: 'Sat' },
+  { value: 'sunday', label: 'Sunday', short: 'Sun' },
 ]
 
 const timeSlots = [
-  "06:00",
-  "06:30",
-  "07:00",
-  "07:30",
-  "08:00",
-  "08:30",
-  "09:00",
-  "09:30",
-  "10:00",
-  "10:30",
-  "11:00",
-  "11:30",
-  "12:00",
-  "12:30",
-  "13:00",
-  "13:30",
-  "14:00",
-  "14:30",
-  "15:00",
-  "15:30",
-  "16:00",
-  "16:30",
-  "17:00",
-  "17:30",
-  "18:00",
-  "18:30",
-  "19:00",
-  "19:30",
-  "20:00",
-  "20:30",
-  "21:00",
-  "21:30",
-  "22:00",
+  '06:00',
+  '06:30',
+  '07:00',
+  '07:30',
+  '08:00',
+  '08:30',
+  '09:00',
+  '09:30',
+  '10:00',
+  '10:30',
+  '11:00',
+  '11:30',
+  '12:00',
+  '12:30',
+  '13:00',
+  '13:30',
+  '14:00',
+  '14:30',
+  '15:00',
+  '15:30',
+  '16:00',
+  '16:30',
+  '17:00',
+  '17:30',
+  '18:00',
+  '18:30',
+  '19:00',
+  '19:30',
+  '20:00',
+  '20:30',
+  '21:00',
+  '21:30',
+  '22:00',
 ]
 
 const generateId = () => Math.random().toString(36).substr(2, 9)
@@ -115,44 +115,44 @@ export default function AvailabilityDetailsForm() {
   >({
     monday: {
       enabled: true,
-      timeSlots: [{ id: generateId(), start_time: "09:00", end_time: "17:00" }],
+      timeSlots: [{ id: generateId(), start_time: '09:00', end_time: '17:00' }],
     },
     tuesday: {
       enabled: true,
-      timeSlots: [{ id: generateId(), start_time: "09:00", end_time: "17:00" }],
+      timeSlots: [{ id: generateId(), start_time: '09:00', end_time: '17:00' }],
     },
     wednesday: {
       enabled: true,
-      timeSlots: [{ id: generateId(), start_time: "09:00", end_time: "17:00" }],
+      timeSlots: [{ id: generateId(), start_time: '09:00', end_time: '17:00' }],
     },
     thursday: {
       enabled: true,
-      timeSlots: [{ id: generateId(), start_time: "09:00", end_time: "17:00" }],
+      timeSlots: [{ id: generateId(), start_time: '09:00', end_time: '17:00' }],
     },
     friday: {
       enabled: true,
-      timeSlots: [{ id: generateId(), start_time: "09:00", end_time: "17:00" }],
+      timeSlots: [{ id: generateId(), start_time: '09:00', end_time: '17:00' }],
     },
     saturday: {
       enabled: false,
-      timeSlots: [{ id: generateId(), start_time: "09:00", end_time: "13:00" }],
+      timeSlots: [{ id: generateId(), start_time: '09:00', end_time: '13:00' }],
     },
     sunday: {
       enabled: false,
-      timeSlots: [{ id: generateId(), start_time: "10:00", end_time: "14:00" }],
+      timeSlots: [{ id: generateId(), start_time: '10:00', end_time: '14:00' }],
     },
   })
 
-  const [copyFromDay, setCopyFromDay] = useState<WeekDay>("monday")
+  const [copyFromDay, setCopyFromDay] = useState<WeekDay>('monday')
   const router = useRouter()
 
   // Add mutation for saving lab availability
   const saveLabAvailability = api.labs.saveLabAvailability.useMutation({
     onSuccess: () => {
       // Redirect to available tests page
-      router.push("/lab/available-tests")
+      router.push('/lab/available-tests')
     },
-    onError: (err) => {
+    onError: (_) => {
       // Optionally show error
     },
   })
@@ -167,15 +167,15 @@ export default function AvailabilityDetailsForm() {
   const handleTimeSlotChange = (
     day: WeekDay,
     slotId: string,
-    field: "start_time" | "end_time",
-    value: string
+    field: 'start_time' | 'end_time',
+    value: string,
   ) => {
     setAvailability((prev) => ({
       ...prev,
       [day]: {
         ...prev[day],
         timeSlots: prev[day].timeSlots.map((slot) =>
-          slot.id === slotId ? { ...slot, [field]: value } : slot
+          slot.id === slotId ? { ...slot, [field]: value } : slot,
         ),
       },
     }))
@@ -184,8 +184,8 @@ export default function AvailabilityDetailsForm() {
   const addTimeSlot = (day: WeekDay) => {
     const newSlot: TimeSlot = {
       id: generateId(),
-      start_time: "09:00",
-      end_time: "17:00",
+      start_time: '09:00',
+      end_time: '17:00',
     }
 
     setAvailability((prev) => ({
@@ -229,11 +229,11 @@ export default function AvailabilityDetailsForm() {
   const copyToWeekdays = () => {
     const sourceDay = availability[copyFromDay]
     const weekdaysList: WeekDay[] = [
-      "monday",
-      "tuesday",
-      "wednesday",
-      "thursday",
-      "friday",
+      'monday',
+      'tuesday',
+      'wednesday',
+      'thursday',
+      'friday',
     ]
     const newAvailability = { ...availability }
 
@@ -255,13 +255,48 @@ export default function AvailabilityDetailsForm() {
 
   const resetToDefaults = () => {
     setAvailability({
-      monday: { enabled: true, timeSlots: [{ id: generateId(), start_time: "09:00", end_time: "17:00" }] },
-      tuesday: { enabled: true, timeSlots: [{ id: generateId(), start_time: "09:00", end_time: "17:00" }] },
-      wednesday: { enabled: true, timeSlots: [{ id: generateId(), start_time: "09:00", end_time: "17:00" }] },
-      thursday: { enabled: true, timeSlots: [{ id: generateId(), start_time: "09:00", end_time: "17:00" }] },
-      friday: { enabled: true, timeSlots: [{ id: generateId(), start_time: "09:00", end_time: "17:00" }] },
-      saturday: { enabled: false, timeSlots: [{ id: generateId(), start_time: "09:00", end_time: "13:00" }] },
-      sunday: { enabled: false, timeSlots: [{ id: generateId(), start_time: "10:00", end_time: "14:00" }] },
+      monday: {
+        enabled: true,
+        timeSlots: [
+          { id: generateId(), start_time: '09:00', end_time: '17:00' },
+        ],
+      },
+      tuesday: {
+        enabled: true,
+        timeSlots: [
+          { id: generateId(), start_time: '09:00', end_time: '17:00' },
+        ],
+      },
+      wednesday: {
+        enabled: true,
+        timeSlots: [
+          { id: generateId(), start_time: '09:00', end_time: '17:00' },
+        ],
+      },
+      thursday: {
+        enabled: true,
+        timeSlots: [
+          { id: generateId(), start_time: '09:00', end_time: '17:00' },
+        ],
+      },
+      friday: {
+        enabled: true,
+        timeSlots: [
+          { id: generateId(), start_time: '09:00', end_time: '17:00' },
+        ],
+      },
+      saturday: {
+        enabled: false,
+        timeSlots: [
+          { id: generateId(), start_time: '09:00', end_time: '13:00' },
+        ],
+      },
+      sunday: {
+        enabled: false,
+        timeSlots: [
+          { id: generateId(), start_time: '10:00', end_time: '14:00' },
+        ],
+      },
     })
   }
 
@@ -295,7 +330,7 @@ export default function AvailabilityDetailsForm() {
     if (!dayData.enabled || dayData.timeSlots.length < 2) return false
 
     const sortedSlots = [...dayData.timeSlots].sort((a, b) =>
-      a.start_time.localeCompare(b.start_time)
+      a.start_time.localeCompare(b.start_time),
     )
 
     for (let i = 0; i < sortedSlots.length - 1; i++) {
@@ -323,7 +358,7 @@ export default function AvailabilityDetailsForm() {
   }
 
   const enabledDaysCount = weekDays.filter(
-    ({ value }) => availability[value].enabled
+    ({ value }) => availability[value].enabled,
   ).length
   const totalHours = weekDays.reduce((total, { value: day }) => {
     const dayData = availability[day]
@@ -364,13 +399,13 @@ export default function AvailabilityDetailsForm() {
               variant="secondary"
               className="text-primary bg-secondary"
             >{`${enabledDaysCount} day${
-              enabledDaysCount !== 1 ? "s" : ""
+              enabledDaysCount !== 1 ? 's' : ''
             } active`}</Badge>
             <Badge
               variant="outline"
               className="border-primary text-primary"
             >{`${totalTimeSlots} time slot${
-              totalTimeSlots !== 1 ? "s" : ""
+              totalTimeSlots !== 1 ? 's' : ''
             }`}</Badge>
             <Badge
               variant="outline"
@@ -461,13 +496,18 @@ export default function AvailabilityDetailsForm() {
                         {dayData.enabled ? (
                           <div className="space-y-1">
                             {dayData.timeSlots.map((slot, _index) => (
-                              <div key={slot.id} className="text-xs text-primary pl-2">
+                              <div
+                                key={slot.id}
+                                className="text-xs text-primary pl-2"
+                              >
                                 {slot.start_time} - {slot.end_time}
                               </div>
                             ))}
                           </div>
                         ) : (
-                          <div className="text-xs text-gray-400 pl-2">Closed</div>
+                          <div className="text-xs text-gray-400 pl-2">
+                            Closed
+                          </div>
                         )}
                       </div>
                     )
@@ -498,19 +538,25 @@ export default function AvailabilityDetailsForm() {
                         <div className="flex items-center space-x-3">
                           <Switch
                             checked={dayData.enabled}
-                            onCheckedChange={(enabled) => handleDayToggle(day, enabled)}
+                            onCheckedChange={(enabled) =>
+                              handleDayToggle(day, enabled)
+                            }
                             className="data-[state=checked]:bg-primary"
                           />
-                          <Label className="text-lg font-semibold">{label}</Label>
+                          <Label className="text-lg font-semibold">
+                            {label}
+                          </Label>
                           {dayData.enabled && (
                             <Badge variant="outline" className="text-xs">
                               {dayData.timeSlots.length} slot
-                              {dayData.timeSlots.length !== 1 ? "s" : ""}
+                              {dayData.timeSlots.length !== 1 ? 's' : ''}
                             </Badge>
                           )}
                           {!isValid && dayData.enabled && (
                             <Badge variant="destructive" className="text-xs">
-                              {hasOverlap ? "Overlapping times" : "Invalid times"}
+                              {hasOverlap
+                                ? 'Overlapping times'
+                                : 'Invalid times'}
                             </Badge>
                           )}
                         </div>
@@ -537,7 +583,10 @@ export default function AvailabilityDetailsForm() {
                             const isSlotValid = validateTimeSlot(slot)
 
                             return (
-                              <div key={slot.id} className="flex items-center space-x-4">
+                              <div
+                                key={slot.id}
+                                className="flex items-center space-x-4"
+                              >
                                 <div className="flex items-center space-x-2 flex-1">
                                   <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
                                     <span className="text-xs font-medium text-primary">
@@ -547,11 +596,18 @@ export default function AvailabilityDetailsForm() {
 
                                   <div className="grid grid-cols-2 gap-3 flex-1">
                                     <div className="space-y-1">
-                                      <Label className="text-sm">Start Time</Label>
+                                      <Label className="text-sm">
+                                        Start Time
+                                      </Label>
                                       <Select
                                         value={slot.start_time}
                                         onValueChange={(value) =>
-                                          handleTimeSlotChange(day, slot.id, "start_time", value)
+                                          handleTimeSlotChange(
+                                            day,
+                                            slot.id,
+                                            'start_time',
+                                            value,
+                                          )
                                         }
                                       >
                                         <SelectTrigger className="h-9">
@@ -568,10 +624,19 @@ export default function AvailabilityDetailsForm() {
                                     </div>
 
                                     <div className="space-y-1">
-                                      <Label className="text-sm">End Time</Label>
+                                      <Label className="text-sm">
+                                        End Time
+                                      </Label>
                                       <Select
                                         value={slot.end_time}
-                                        onValueChange={(value) => handleTimeSlotChange(day, slot.id, "end_time", value)}
+                                        onValueChange={(value) =>
+                                          handleTimeSlotChange(
+                                            day,
+                                            slot.id,
+                                            'end_time',
+                                            value,
+                                          )
+                                        }
                                       >
                                         <SelectTrigger className="h-9">
                                           <SelectValue />
@@ -589,12 +654,16 @@ export default function AvailabilityDetailsForm() {
                                 </div>
 
                                 <div className="flex items-center space-x-2">
-                                  {!isSlotValid && <AlertCircle className="w-4 h-4 text-red-500" />}
+                                  {!isSlotValid && (
+                                    <AlertCircle className="w-4 h-4 text-red-500" />
+                                  )}
                                   {dayData.timeSlots.length > 1 && (
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      onClick={() => removeTimeSlot(day, slot.id)}
+                                      onClick={() =>
+                                        removeTimeSlot(day, slot.id)
+                                      }
                                       className="text-red-600 hover:text-red-700 bg-transparent"
                                     >
                                       <Trash2 className="w-4 h-4" />
@@ -607,7 +676,7 @@ export default function AvailabilityDetailsForm() {
                         </div>
                       )}
 
-                      {day !== "sunday" && <hr className="border-gray-200" />}
+                      {day !== 'sunday' && <hr className="border-gray-200" />}
                     </div>
                   )
                 })}

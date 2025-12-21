@@ -1,134 +1,129 @@
-name: 🚀 Deploy AskRemoHealth-main dormain
+name: 🚀 Deploy AskRemoHealth Production
 on:
-  workflow_run:
-    workflows: ['🚀 Promote Staging → Main (Manual Approval)']
-    types:
-      - completed
   push:
     branches:
       - main
+  workflow_dispatch: # Allow manual trigger
 
 jobs:
-  deploy:
-    name: 📦 Deploy to Askremohealth prod
+  build-and-deploy:
+    name: 🔨 Build & Deploy
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📝 Log trigger reason
-        run: echo "Triggered by workflow_run or push"
       - name: 📥 Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: 🚀 Deploy via SSH
+      - name: 📦 Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 📋 Node.js Version Check
+        run: |
+          echo "Node.js version: $(node --version)"
+          echo "npm version: $(npm --version)"
+
+      - name: 📦 Install Dependencies
+        run: npm ci
+
+      - name: 🔨 Build Next.js (Standalone)
+        run: |
+          cd apps/web
+          SKIP_ENV_VALIDATION=true npx next build
+          echo "📋 Build completed. Routes generated:"
+          ls -la .next/server/app/ 2>/dev/null | head -20 || echo "Checking route structure..."
+          find .next/server/app -maxdepth 2 -type d 2>/dev/null | head -30 || true
+        env:
+          SKIP_ENV_VALIDATION: 'true'
+
+      - name: 📁 Prepare Standalone Package
+        run: |
+          # Copy static assets to standalone
+          cp -r apps/web/.next/static apps/web/.next/standalone/apps/web/.next/static
+          cp -r apps/web/public apps/web/.next/standalone/apps/web/public
+
+          # Create a simple start script
+          echo '#!/bin/bash' > apps/web/.next/standalone/start.sh
+          echo 'cd /root/askremohealth/apps/web/.next/standalone/apps/web' >> apps/web/.next/standalone/start.sh
+          echo 'NODE_ENV=production node server.js' >> apps/web/.next/standalone/start.sh
+          chmod +x apps/web/.next/standalone/start.sh
+
+          # Create tarball for faster transfer
+          tar -czf standalone-build.tar.gz -C apps/web/.next standalone
+          ls -lh standalone-build.tar.gz
+
+      - name: 🚀 Deploy to Server
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # =============================================================================
-            # 🚀 Full Deployment Script for AskRemoHealth
-            # Purpose: Deploy latest code, rebuild, restart PM2, reload Nginx
-            # =============================================================================
-
             set -e
-            echo "🔄 Starting deployment..."
-
-            # 1. Navigate to App Directory
+            echo "🔄 Preparing deployment..."
             cd /root/askremohealth
-            echo "📁 Changed to /root/askremohealth"
 
-            # 2. Force sync with origin/main (handles divergent branches)
-            echo "📥 Fetching and resetting to origin/main..."
+            # Sync code for any non-built files
             git fetch origin main
-            git checkout main
             git reset --hard origin/main
-            echo "✅ Synced with origin/main"
 
-            # 3. Install Dependencies
-            echo "📦 Installing npm dependencies..."
-            npm install
+            echo "✅ Ready for artifact upload"
 
-            # 4. Build the Next.js App
-            echo "🧹 Cleaning build caches..."
-            rm -rf apps/web/.next
-            rm -rf .next
-            rm -rf .turbo
-            rm -rf node_modules/.cache
+      - name: 📤 Upload Build Artifacts
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: 'standalone-build.tar.gz'
+          target: '/root/askremohealth/'
 
-            # Ensure we have an .env file (copy from .env.example if needed)
-            if [ ! -f apps/web/.env ]; then
-              echo "⚠️ No .env file found, checking for .env.local or .env.example..."
-              if [ -f apps/web/.env.local ]; then
-                cp apps/web/.env.local apps/web/.env
-              elif [ -f apps/web/.env.example ]; then
-                cp apps/web/.env.example apps/web/.env
-              fi
-            fi
+      - name: 🔧 Extract & Start Application
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd /root/askremohealth
 
-            # Check Node.js version
-            echo "📋 Node.js version:"
-            node --version
-            echo "📋 npm version:"
-            npm --version
+            echo "📦 Extracting build artifacts..."
+            rm -rf apps/web/.next/standalone
+            tar -xzf standalone-build.tar.gz -C apps/web/.next/
+            rm standalone-build.tar.gz
 
-            echo "🛠️ Building Next.js app DIRECTLY (not via turbo)..."
-            cd apps/web
-            echo "📋 Current directory: $(pwd)"
-            echo "📋 Checking for .env file..."
-            ls -la .env* 2>/dev/null || echo "No .env files found"
-
-            # Build directly with verbose output
-            SKIP_ENV_VALIDATION=true npx next build 2>&1 | tee ../../build.log
-            cd ../..
-            echo "📋 Build completed"
-
-            # Debug: Show generated routes
-            echo "📋 Generated routes in .next/server/app:"
-            ls -la apps/web/.next/server/app/ 2>/dev/null || echo "No app routes found"
-            echo "📋 All HTML files generated:"
-            find apps/web/.next/server/app -type f \( -name "*.html" -o -name "page.js" \) 2>/dev/null | head -30 || true
-            echo "📋 Static pages generated:"
-            ls -la apps/web/.next/static/ 2>/dev/null | head -20 || echo "No static directory"
-
-            # 5. Setup Standalone Output for PM2
-            echo "📋 Copying static assets to standalone directory..."
-            cp -r apps/web/.next/static apps/web/.next/standalone/apps/web/.next/static
-            cp -r apps/web/public apps/web/.next/standalone/apps/web/public
-
-            # 6. Restart PM2 with Standalone Server
-            echo "🔄 Starting PM2 with standalone server..."
+            echo "🔄 Restarting PM2..."
             cd apps/web/.next/standalone/apps/web
             pm2 delete askremohealth-web 2>/dev/null || true
-            pm2 start server.js --name askremohealth-web --env production
+            pm2 start server.js --name askremohealth-web --node-args="--max-old-space-size=512" -e /root/askremohealth/logs/error.log -o /root/askremohealth/logs/output.log
             pm2 save
-            cd /root/askremohealth
 
-            # 7. Reload Nginx
             echo "🔁 Reloading Nginx..."
             nginx -t && systemctl reload nginx
-            if [ $? -eq 0 ]; then
-              echo "✅ Nginx reloaded successfully"
-            else
-              echo "❌ Nginx config error! Check with: nginx -t"
-              exit 1
-            fi
 
-            # 8. Final Health Check
             echo "⏳ Waiting for app to start..."
-            sleep 30
+            sleep 10
 
-            echo "🔍 Checking PM2 status..."
+            echo "🔍 Health check..."
             pm2 status askremohealth-web
 
-            echo "🔍 Checking if app is responding on port 3000..."
-            # Accept any response (including 404) - app is running if we get a response
-            if curl -s -o /dev/null -w "%{http_code}" http://localhost:3000 | grep -E "^[2345]"; then
-              echo "✅ Deployment successful! App is responding."
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000 || echo "000")
+            if [[ "$HTTP_CODE" =~ ^[2345] ]]; then
+              echo "✅ Deployment successful! HTTP Status: $HTTP_CODE"
             else
-              echo "⚠️ Port 3000 not responding. Checking PM2 logs..."
-              pm2 logs askremohealth-web --lines 20 --nostream
+              echo "⚠️ App not responding properly. HTTP Status: $HTTP_CODE"
+              pm2 logs askremohealth-web --lines 30 --nostream
               exit 1
             fi
 
-            echo "🎉 Deployment completed."
+            # Test homepage specifically
+            if curl -s http://localhost:3000 | grep -q "html"; then
+              echo "✅ Homepage rendering HTML content!"
+            else
+              echo "⚠️ Homepage may not be rendering correctly"
+            fi
+
+            echo "🎉 Deployment completed successfully!"

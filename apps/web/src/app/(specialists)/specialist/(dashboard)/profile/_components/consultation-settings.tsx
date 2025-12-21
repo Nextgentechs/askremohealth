@@ -1,11 +1,6 @@
 'use client'
 
-import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { api } from '@web/trpc/react'
-import { useToast } from '@web/hooks/use-toast'
-import { availabilityDetailsSchema } from '@web/server/api/validators'
-import { Input } from '@web/components/ui/input'
 import { Button } from '@web/components/ui/button'
 import {
   Card,
@@ -14,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@web/components/ui/card'
+import { Input } from '@web/components/ui/input'
 import { Label } from '@web/components/ui/label'
 import {
   Select,
@@ -23,7 +19,11 @@ import {
   SelectValue,
 } from '@web/components/ui/select'
 import { Switch } from '@web/components/ui/switch'
-import React, { useEffect } from 'react'
+import { useToast } from '@web/hooks/use-toast'
+import { availabilityDetailsSchema } from '@web/server/api/validators'
+import { api } from '@web/trpc/react'
+import { useEffect } from 'react'
+import { Controller, useForm } from 'react-hook-form'
 
 function OnlineStatus() {
   return (
@@ -56,9 +56,14 @@ export default function ConsultationSettings() {
   const updateMutation = api.doctors.updateAvailabilityDetails.useMutation()
 
   const form = useForm<{
-    consultationFee: string;
-    appointmentDuration: string;
-    operatingHours: { day: string; opening: string; closing: string; isOpen: boolean }[];
+    consultationFee: string
+    appointmentDuration: string
+    operatingHours: {
+      day: string
+      opening: string
+      closing: string
+      isOpen: boolean
+    }[]
   }>({
     resolver: zodResolver(availabilityDetailsSchema),
     defaultValues: {
@@ -80,18 +85,38 @@ export default function ConsultationSettings() {
   useEffect(() => {
     if (doctor?.consultationFee && doctor?.operatingHours?.[0]) {
       form.reset({
-        consultationFee: doctor.consultationFee != null ? String(doctor.consultationFee) : '',
-        appointmentDuration: doctor.operatingHours[0].consultationDuration != null ? String(doctor.operatingHours[0].consultationDuration) : '',
-        operatingHours: (doctor.operatingHours[0].schedule ?? []).map((d: { day: string; opening: string | null; closing: string | null; isOpen: boolean }) => ({
-          ...d,
-          opening: d.opening ?? '',
-          closing: d.closing ?? '',
-        })),
+        consultationFee:
+          doctor.consultationFee != null ? String(doctor.consultationFee) : '',
+        appointmentDuration:
+          doctor.operatingHours[0].consultationDuration != null
+            ? String(doctor.operatingHours[0].consultationDuration)
+            : '',
+        operatingHours: (doctor.operatingHours[0].schedule ?? []).map(
+          (d: {
+            day: string
+            opening: string | null
+            closing: string | null
+            isOpen: boolean
+          }) => ({
+            ...d,
+            opening: d.opening ?? '',
+            closing: d.closing ?? '',
+          }),
+        ),
       })
     }
   }, [doctor, form])
 
-  const onSubmit = async (values: { consultationFee: string; appointmentDuration: string; operatingHours: { day: string; opening: string; closing: string; isOpen: boolean }[] }) => {
+  const onSubmit = async (values: {
+    consultationFee: string
+    appointmentDuration: string
+    operatingHours: {
+      day: string
+      opening: string
+      closing: string
+      isOpen: boolean
+    }[]
+  }) => {
     try {
       await updateMutation.mutateAsync({
         ...values,
@@ -111,8 +136,11 @@ export default function ConsultationSettings() {
       })
       toast({ description: 'Consultation settings updated!' })
       utils.doctors.currentDoctor.invalidate()
-    } catch (e) {
-      toast({ description: 'Failed to update settings', variant: 'destructive' })
+    } catch (_) {
+      toast({
+        description: 'Failed to update settings',
+        variant: 'destructive',
+      })
     }
   }
 
@@ -128,7 +156,9 @@ export default function ConsultationSettings() {
           <Input type="number" {...form.register('consultationFee')} />
         </div>
         <div>
-          <Label htmlFor="appointmentDuration">Average Appointment Duration</Label>
+          <Label htmlFor="appointmentDuration">
+            Average Appointment Duration
+          </Label>
           <Controller
             control={form.control}
             name="appointmentDuration"
@@ -158,15 +188,26 @@ export default function ConsultationSettings() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {(field.value as { day: string; opening: string; closing: string; isOpen: boolean }[]).map((dayHours, index) => (
-                    <div key={dayHours.day} className="flex items-center space-x-4">
+                  {(
+                    field.value as {
+                      day: string
+                      opening: string
+                      closing: string
+                      isOpen: boolean
+                    }[]
+                  ).map((dayHours, index) => (
+                    <div
+                      key={dayHours.day}
+                      className="flex items-center space-x-4"
+                    >
                       <div className="w-24 text-sm">{dayHours.day}</div>
                       <Input
                         type="time"
                         value={dayHours.opening}
-                        onChange={event => {
+                        onChange={(event) => {
                           const updated = [...field.value]
-                          if (updated[index]) updated[index].opening = event.target.value
+                          if (updated[index])
+                            updated[index].opening = event.target.value
                           field.onChange(updated)
                         }}
                         className="w-24"
@@ -175,9 +216,10 @@ export default function ConsultationSettings() {
                       <Input
                         type="time"
                         value={dayHours.closing}
-                        onChange={event => {
+                        onChange={(event) => {
                           const updated = [...field.value]
-                          if (updated[index]) updated[index].closing = event.target.value
+                          if (updated[index])
+                            updated[index].closing = event.target.value
                           field.onChange(updated)
                         }}
                         className="w-24"
@@ -185,7 +227,7 @@ export default function ConsultationSettings() {
                       />
                       <Switch
                         checked={dayHours.isOpen}
-                        onCheckedChange={checked => {
+                        onCheckedChange={(checked) => {
                           const updated = [...field.value]
                           if (updated[index]) updated[index].isOpen = checked
                           field.onChange(updated)

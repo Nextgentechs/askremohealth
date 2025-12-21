@@ -121,7 +121,7 @@ export default function BasicDetailsForm() {
         phone: data.phone,
       })
       router.push('/lab/onboarding/test-details')
-    } catch (error) {
+    } catch (_) {
       form.setError('location', {
         type: 'manual',
         message: 'Failed to register lab',

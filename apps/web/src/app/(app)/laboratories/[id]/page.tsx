@@ -207,7 +207,7 @@ export default async function Page({
   let tests: LabTestAvailable[] = []
   try {
     tests = await api.labs.getLabTestsByLabId({ labId: id })
-  } catch (e) {
+  } catch (_) {
     tests = []
   }
 
@@ -215,7 +215,7 @@ export default async function Page({
   let availability: LabAvailability[] = []
   try {
     availability = await api.labs.getLabAvailabilityByLabId({ labId: id })
-  } catch (e) {
+  } catch (_) {
     availability = []
   }
 
