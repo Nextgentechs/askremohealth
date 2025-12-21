@@ -66,9 +66,22 @@ jobs:
               fi
             fi
 
-            echo "🛠️ Building Next.js app with SKIP_ENV_VALIDATION..."
-            echo "📋 Build output:"
-            SKIP_ENV_VALIDATION=true npm run build --workspace=@askremohealth/web 2>&1 | tee build.log
+            # Check Node.js version
+            echo "📋 Node.js version:"
+            node --version
+            echo "📋 npm version:"
+            npm --version
+
+            echo "🛠️ Building Next.js app DIRECTLY (not via turbo)..."
+            cd apps/web
+            echo "📋 Current directory: $(pwd)"
+            echo "📋 Checking for .env file..."
+            ls -la .env* 2>/dev/null || echo "No .env files found"
+
+            # Build directly with verbose output
+            SKIP_ENV_VALIDATION=true npx next build 2>&1 | tee ../../build.log
+            cd ../..
+            echo "📋 Build completed"
 
             # Debug: Show generated routes
             echo "📋 Generated routes in .next/server/app:"
