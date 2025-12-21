@@ -55,8 +55,13 @@ jobs:
             rm -rf .next
             rm -rf .turbo
             rm -rf node_modules/.cache
-            echo "🛠️ Building Next.js app..."
-            npm run build --workspace=@askremohealth/web
+            echo "🛠️ Building Next.js app with SKIP_ENV_VALIDATION..."
+            SKIP_ENV_VALIDATION=true npm run build --workspace=@askremohealth/web
+
+            # Debug: Show generated routes
+            echo "📋 Generated routes:"
+            ls -la apps/web/.next/server/app/ 2>/dev/null || echo "No app routes found"
+            find apps/web/.next/server/app -type f -name "*.html" 2>/dev/null | head -20 || true
 
             # 5. Setup Standalone Output for PM2
             echo "📋 Copying static assets to standalone directory..."
