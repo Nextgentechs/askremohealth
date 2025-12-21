@@ -6,140 +6,107 @@ on:
   workflow_dispatch: # Allow manual trigger
 
 jobs:
-  build-and-deploy:
-    name: 🔨 Build & Deploy
+  deploy:
+    name: 📦 Deploy to Production
     runs-on: ubuntu-latest
 
     steps:
+      - name: 📝 Log trigger
+        run: echo "Deploying AskRemoHealth to production..."
+
       - name: 📥 Checkout Code
         uses: actions/checkout@v4
 
-      - name: 📦 Setup Node.js 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: 📋 Node.js Version Check
-        run: |
-          echo "Node.js version: $(node --version)"
-          echo "npm version: $(npm --version)"
-
-      - name: 📦 Install Dependencies
-        run: npm ci
-
-      - name: 🔨 Build Next.js (Standalone)
-        run: |
-          cd apps/web
-          SKIP_ENV_VALIDATION=true npx next build
-          echo "📋 Build completed. Routes generated:"
-          ls -la .next/server/app/ 2>/dev/null | head -20 || echo "Checking route structure..."
-          find .next/server/app -maxdepth 2 -type d 2>/dev/null | head -30 || true
-        env:
-          SKIP_ENV_VALIDATION: 'true'
-          # Required for build - these are used by API routes during page data collection
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
-          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
-          NEXT_PUBLIC_CLERK_SIGN_IN_URL: '/auth'
-          NEXT_PUBLIC_CLERK_SIGN_UP_URL: '/auth'
-          BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
-          GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
-          CRON_SECRET: ${{ secrets.CRON_SECRET }}
-          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
-          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
-          TWILIO_API_KEY_SECRET: ${{ secrets.TWILIO_API_KEY_SECRET }}
-          TWILIO_API_KEY_SID: ${{ secrets.TWILIO_API_KEY_SID }}
-          FROM_EMAIL: 'info@askremohealth.com'
-
-      - name: 📁 Prepare Standalone Package
-        run: |
-          # Copy static assets to standalone
-          cp -r apps/web/.next/static apps/web/.next/standalone/apps/web/.next/static
-          cp -r apps/web/public apps/web/.next/standalone/apps/web/public
-
-          # Create a simple start script
-          echo '#!/bin/bash' > apps/web/.next/standalone/start.sh
-          echo 'cd /root/askremohealth/apps/web/.next/standalone/apps/web' >> apps/web/.next/standalone/start.sh
-          echo 'NODE_ENV=production node server.js' >> apps/web/.next/standalone/start.sh
-          chmod +x apps/web/.next/standalone/start.sh
-
-          # Create tarball for faster transfer
-          tar -czf standalone-build.tar.gz -C apps/web/.next standalone
-          ls -lh standalone-build.tar.gz
-
-      - name: 🚀 Deploy to Server
+      - name: 🚀 Deploy via SSH
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: 20m
           script: |
             set -e
-            echo "🔄 Preparing deployment..."
-            cd /root/askremohealth
+            echo "🔄 Starting deployment..."
 
-            # Sync code for any non-built files
+            # 1. Navigate to App Directory
+            cd /root/askremohealth
+            echo "📁 Working in /root/askremohealth"
+
+            # 2. Force sync with origin/main
+            echo "📥 Syncing with origin/main..."
             git fetch origin main
+            git checkout main
             git reset --hard origin/main
+            echo "✅ Synced with origin/main"
 
-            echo "✅ Ready for artifact upload"
+            # 3. Setup Node.js 20 via NVM (critical for proper route generation)
+            echo "📦 Setting up Node.js 20 via NVM..."
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 
-      - name: 📤 Upload Build Artifacts
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: 'standalone-build.tar.gz'
-          target: '/root/askremohealth/'
+            # Install Node.js 20 if not already installed
+            if ! nvm ls 20 > /dev/null 2>&1; then
+              echo "Installing Node.js 20..."
+              nvm install 20
+            fi
+            nvm use 20
 
-      - name: 🔧 Extract & Start Application
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            set -e
-            cd /root/askremohealth
+            echo "📋 Node.js version: $(node --version)"
+            echo "📋 npm version: $(npm --version)"
 
-            echo "📦 Extracting build artifacts..."
-            rm -rf apps/web/.next/standalone
-            tar -xzf standalone-build.tar.gz -C apps/web/.next/
-            rm standalone-build.tar.gz
+            # 4. Install Dependencies
+            echo "📦 Installing dependencies..."
+            npm install
 
+            # 5. Build the Next.js App
+            echo "🧹 Cleaning build caches..."
+            rm -rf apps/web/.next
+            rm -rf .turbo
+            rm -rf node_modules/.cache
+
+            echo "🛠️ Building Next.js..."
+            cd apps/web
+            SKIP_ENV_VALIDATION=true npx next build 2>&1 | tee ../../build.log
+
+            # Show what routes were generated
+            echo "📋 Generated routes:"
+            find .next/server/app -maxdepth 2 -type d 2>/dev/null | head -30 || true
+
+            cd ../..
+
+            # 6. Setup Standalone Output for PM2
+            echo "📋 Preparing standalone deployment..."
+            cp -r apps/web/.next/static apps/web/.next/standalone/apps/web/.next/static
+            cp -r apps/web/public apps/web/.next/standalone/apps/web/public
+
+            # 7. Restart PM2 with Standalone Server
             echo "🔄 Restarting PM2..."
             cd apps/web/.next/standalone/apps/web
             pm2 delete askremohealth-web 2>/dev/null || true
-            pm2 start server.js --name askremohealth-web --node-args="--max-old-space-size=512" -e /root/askremohealth/logs/error.log -o /root/askremohealth/logs/output.log
+            pm2 start server.js --name askremohealth-web --env production
             pm2 save
+            cd /root/askremohealth
 
+            # 8. Reload Nginx
             echo "🔁 Reloading Nginx..."
             nginx -t && systemctl reload nginx
+            echo "✅ Nginx reloaded"
 
+            # 9. Health Check
             echo "⏳ Waiting for app to start..."
-            sleep 10
+            sleep 15
 
-            echo "🔍 Health check..."
             pm2 status askremohealth-web
 
             HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000 || echo "000")
-            if [[ "$HTTP_CODE" =~ ^[2345] ]]; then
-              echo "✅ Deployment successful! HTTP Status: $HTTP_CODE"
+            if [[ "$HTTP_CODE" == "200" ]]; then
+              echo "✅ SUCCESS! Homepage returns HTTP 200!"
+            elif [[ "$HTTP_CODE" =~ ^[2345] ]]; then
+              echo "⚠️ App responding with HTTP $HTTP_CODE (may need route fixes)"
             else
-              echo "⚠️ App not responding properly. HTTP Status: $HTTP_CODE"
+              echo "❌ App not responding. HTTP Status: $HTTP_CODE"
               pm2 logs askremohealth-web --lines 30 --nostream
               exit 1
             fi
 
-            # Test homepage specifically
-            if curl -s http://localhost:3000 | grep -q "html"; then
-              echo "✅ Homepage rendering HTML content!"
-            else
-              echo "⚠️ Homepage may not be rendering correctly"
-            fi
-
-            echo "🎉 Deployment completed successfully!"
+            echo "🎉 Deployment completed!"
