@@ -1,4 +1,4 @@
-import { RawCommands } from '@tiptap/core'
+// Type augmentation for @tiptap/core
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {

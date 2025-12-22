@@ -154,7 +154,7 @@ export const addComment = async (postId: string, desc: string) => {
 export const initiateConsult = async (doctorId: string, patientId: string) => {
   const chatId = `${patientId}-${doctorId}`
 
-  const result = await db
+  await db
     .insert(chats)
     .values({
       id: chatId,
@@ -162,7 +162,6 @@ export const initiateConsult = async (doctorId: string, patientId: string) => {
       patientId,
     })
     .onConflictDoNothing()
-    .returning()
 
   redirect(`/community/chats/${chatId}`)
 }

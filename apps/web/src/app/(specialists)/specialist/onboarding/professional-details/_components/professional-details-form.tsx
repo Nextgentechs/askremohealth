@@ -1,21 +1,7 @@
-'use client';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '@web/components/ui/button';
-import { Checkbox } from '@web/components/ui/checkbox';
-import { Input } from '@web/components/ui/input';
-import { Label } from '@web/components/ui/label';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@web/components/ui/popover';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@web/components/ui/select';
+'use client'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { Button } from '@web/components/ui/button'
+import { Checkbox } from '@web/components/ui/checkbox'
 import {
   Command,
   CommandEmpty,
@@ -23,65 +9,81 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '@web/components/ui/command';
-import { Skeleton } from '@web/components/ui/skeleton';
-import { toast } from '@web/hooks/use-toast';
-import { fileToBase64 } from '@web/lib/utils';
-import { api } from '@web/trpc/react';
-import { Check, ChevronDown, ChevronsUpDown, Loader } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import React from 'react';
-import { FormProvider, useForm, useFormContext } from 'react-hook-form';
-import { z } from 'zod';
-import { useDebounce } from 'use-debounce';
-import axios from "axios";
+} from '@web/components/ui/command'
+import { Input } from '@web/components/ui/input'
+import { Label } from '@web/components/ui/label'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@web/components/ui/popover'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@web/components/ui/select'
+import { Skeleton } from '@web/components/ui/skeleton'
+import { toast } from '@web/hooks/use-toast'
+// fileToBase64 import removed - using Cloudinary upload instead
+import { api } from '@web/trpc/react'
+import axios from 'axios'
+import { Check, ChevronDown, ChevronsUpDown, Loader } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import React from 'react'
+import { FormProvider, useForm, useFormContext } from 'react-hook-form'
+import { useDebounce } from 'use-debounce'
+import { z } from 'zod'
 
 // Add type for location suggestions
 type LocationSuggestion = {
-  placeId: string;
-  name: string;
-  address?: string;
-};
+  placeId: string
+  name: string
+  address?: string
+}
 
-export const professionalDetailsSchema = z.object({
-  specialty: z.string().min(1, { message: 'Specialty is required' }),
-  subSpecialty: z.array(z.string()).optional().default([]),
-  experience: z
-    .string()
-    .refine((value) => parseInt(value) > 0, {
-      message: 'Experience must be greater than 0',
-    })
-    .transform((value) => parseInt(value)),
-  registrationNumber: z
-    .string()
-    .min(1, { message: 'Registration number is required' }),
-  medicalLicense: z
-    .string()
-    .min(1, { message: 'Medical license is required' })
-    .refine(
-      (base64) => {
-        if (!base64) return false; // Should not happen with .min(1) but for safety
-        const sizeInBytes = (base64.length * 3) / 4;
-        return sizeInBytes <= 5 * 1024 * 1024;
-      },
-      {
-        message: 'Medical license must be less than 5MB',
-      },
-    ),
-  facility: z.string().optional(),
-  officeLocation: z.string().optional(),
-}).refine(
-  (data) => {
-    const hasFacility = (data.facility ?? '').trim() !== '';
-    const hasOfficeLocation = (data.officeLocation ?? '').trim() !== '';
-    return hasFacility || hasOfficeLocation;
-  },
-  {
-    message: "Either facility or office location must be provided",
-    path: ["facility"],
-  }
-);
-export type ProfessionalDetails = z.infer<typeof professionalDetailsSchema>;
+export const professionalDetailsSchema = z
+  .object({
+    specialty: z.string().min(1, { message: 'Specialty is required' }),
+    subSpecialty: z.array(z.string()).optional().default([]),
+    experience: z
+      .string()
+      .refine((value) => parseInt(value) > 0, {
+        message: 'Experience must be greater than 0',
+      })
+      .transform((value) => parseInt(value)),
+    registrationNumber: z
+      .string()
+      .min(1, { message: 'Registration number is required' }),
+    medicalLicense: z
+      .string()
+      .min(1, { message: 'Medical license is required' })
+      .refine(
+        (base64) => {
+          if (!base64) return false // Should not happen with .min(1) but for safety
+          const sizeInBytes = (base64.length * 3) / 4
+          return sizeInBytes <= 5 * 1024 * 1024
+        },
+        {
+          message: 'Medical license must be less than 5MB',
+        },
+      ),
+    facility: z.string().optional(),
+    officeLocation: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      const hasFacility = (data.facility ?? '').trim() !== ''
+      const hasOfficeLocation = (data.officeLocation ?? '').trim() !== ''
+      return hasFacility || hasOfficeLocation
+    },
+    {
+      message: 'Either facility or office location must be provided',
+      path: ['facility'],
+    },
+  )
+export type ProfessionalDetails = z.infer<typeof professionalDetailsSchema>
 
 function SelectSkeleton() {
   return (
@@ -92,13 +94,13 @@ function SelectSkeleton() {
       <Skeleton className="mb-2 h-4 w-full rounded-sm" />
       <Skeleton className="h-4 w-full rounded-sm" />
     </div>
-  );
+  )
 }
 
 function SubSpecialtySelect({ specialty }: { specialty: string }) {
-  const [open, setOpen] = React.useState(false);
-  const { setValue, watch } = useFormContext<ProfessionalDetails>();
-  const selectedSubSpecialties = watch('subSpecialty');
+  const [open, setOpen] = React.useState(false)
+  const { setValue, watch } = useFormContext<ProfessionalDetails>()
+  const selectedSubSpecialties = watch('subSpecialty')
 
   const { data: subspecialties, isPending } =
     api.specialties.listSubSpecialties.useQuery(
@@ -108,17 +110,17 @@ function SubSpecialtySelect({ specialty }: { specialty: string }) {
       {
         enabled: !!specialty,
       },
-    );
+    )
 
   const selected = React.useMemo(() => {
-    if (!subspecialties) return '';
+    if (!subspecialties) return ''
     const names = subspecialties
       .filter((sub) => selectedSubSpecialties.includes(sub.id))
-      .map((sub) => sub.name);
-    if (names.length === 0) return '';
-    const joined = names.join(', ');
-    return joined.length > 30 ? joined.slice(0, 30) + '...' : joined;
-  }, [subspecialties, selectedSubSpecialties]);
+      .map((sub) => sub.name)
+    if (names.length === 0) return ''
+    const joined = names.join(', ')
+    return joined.length > 30 ? joined.slice(0, 30) + '...' : joined
+  }, [subspecialties, selectedSubSpecialties])
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -155,7 +157,7 @@ function SubSpecialtySelect({ specialty }: { specialty: string }) {
                         : selectedSubSpecialties.filter(
                             (id) => id !== option.id,
                           ),
-                    );
+                    )
                   }}
                 />
                 <span>{option.name}</span>
@@ -165,26 +167,32 @@ function SubSpecialtySelect({ specialty }: { specialty: string }) {
         </div>
       </PopoverContent>
     </Popover>
-  );
+  )
 }
 
 export default function ProfessionalDetailsForm() {
-  const [selectedSpecialty, setSelectedSpecialty] = React.useState('');
-  const [facilityQuery, setFacilityQuery] = React.useState('');
-  const [officeLocationQuery, setOfficeLocationQuery] = React.useState('');
-  const [selectedFacility, setSelectedFacility] = React.useState<{
-    placeId: string;
-    name: string;
-    address: string | undefined;
-  } | undefined>();
-  const [selectedOfficeLocation, setSelectedOfficeLocation] = React.useState<{
-    placeId: string;
-    name: string;
-    address: string | undefined;
-  } | undefined>();
-  const [openFacility, setOpenFacility] = React.useState(false);
-  const [openOfficeLocation, setOpenOfficeLocation] = React.useState(false);
-  const router = useRouter();
+  const [selectedSpecialty, setSelectedSpecialty] = React.useState('')
+  const [facilityQuery, setFacilityQuery] = React.useState('')
+  const [officeLocationQuery, setOfficeLocationQuery] = React.useState('')
+  const [selectedFacility, setSelectedFacility] = React.useState<
+    | {
+        placeId: string
+        name: string
+        address: string | undefined
+      }
+    | undefined
+  >()
+  const [selectedOfficeLocation, setSelectedOfficeLocation] = React.useState<
+    | {
+        placeId: string
+        name: string
+        address: string | undefined
+      }
+    | undefined
+  >()
+  const [openFacility, setOpenFacility] = React.useState(false)
+  const [openOfficeLocation, setOpenOfficeLocation] = React.useState(false)
+  const router = useRouter()
   const form = useForm<ProfessionalDetails>({
     resolver: zodResolver(professionalDetailsSchema),
     mode: 'onChange',
@@ -197,143 +205,147 @@ export default function ProfessionalDetailsForm() {
       facility: '',
       officeLocation: '',
     },
-  });
+  })
 
-  const [debouncedFacilityQuery] = useDebounce(facilityQuery, 300);
-  const [debouncedOfficeLocationQuery] = useDebounce(officeLocationQuery, 300);
+  const [debouncedFacilityQuery] = useDebounce(facilityQuery, 300)
+  const [debouncedOfficeLocationQuery] = useDebounce(officeLocationQuery, 300)
 
   const { data: specialties, isPending: isPendingSpecialties } =
-    api.specialties.listSpecialties.useQuery();
+    api.specialties.listSpecialties.useQuery()
   const { data: facilitySuggestions, isPending: isPendingFacilities } =
     api.facilities.searchFacilitiesByName.useQuery(
       { query: debouncedFacilityQuery },
       { enabled: !!debouncedFacilityQuery },
-    );
-  const { data: officeLocationSuggestions, isPending: isPendingOfficeLocations } =
-    api.officeLocations.searchOfficeLocationsByName.useQuery(
-      { query: debouncedOfficeLocationQuery },
-      { enabled: !!debouncedOfficeLocationQuery },
-    );
+    )
+  const {
+    data: officeLocationSuggestions,
+    isPending: isPendingOfficeLocations,
+  } = api.officeLocations.searchOfficeLocationsByName.useQuery(
+    { query: debouncedOfficeLocationQuery },
+    { enabled: !!debouncedOfficeLocationQuery },
+  )
   const { mutateAsync: updateProfessionalDetails } =
-    api.doctors.updateProfessionalDetails.useMutation();
+    api.doctors.updateProfessionalDetails.useMutation()
 
   const onSubmit = form.handleSubmit(async (data) => {
     try {
-      console.log("Initial form data:", data);
-      console.log("Selected facility:", selectedFacility);
-      console.log("Selected office location:", selectedOfficeLocation);
+      console.log('Initial form data:', data)
+      console.log('Selected facility:', selectedFacility)
+      console.log('Selected office location:', selectedOfficeLocation)
 
       // Ensure at least one location is selected
       if (!selectedFacility && !selectedOfficeLocation) {
-        form.setError("facility", {
-          type: "manual",
-          message: "Either facility or office location must be provided",
-        });
-        form.setError("officeLocation", {
-          type: "manual",
-          message: "Either facility or office location must be provided",
-        });
-        return;
+        form.setError('facility', {
+          type: 'manual',
+          message: 'Either facility or office location must be provided',
+        })
+        form.setError('officeLocation', {
+          type: 'manual',
+          message: 'Either facility or office location must be provided',
+        })
+        return
       }
 
       // Set the values based on selections
-      data.facility = selectedFacility?.placeId ?? "";
-      data.officeLocation = selectedOfficeLocation?.placeId ?? "";
+      data.facility = selectedFacility?.placeId ?? ''
+      data.officeLocation = selectedOfficeLocation?.placeId ?? ''
 
       // Prepare data for API
       const apiData = {
         ...data,
-        facility: data.facility ?? "",
-        officeLocation: data.officeLocation ?? "",
-      };
+        facility: data.facility ?? '',
+        officeLocation: data.officeLocation ?? '',
+      }
 
-      console.log("Submitting data:", apiData);
+      console.log('Submitting data:', apiData)
 
-      await updateProfessionalDetails(apiData);
+      await updateProfessionalDetails(apiData)
       toast({
-        title: "Success",
-        description: "Professional details updated successfully",
-      });
-      router.push("/specialist/onboarding/availability-details");
+        title: 'Success',
+        description: 'Professional details updated successfully',
+      })
+      router.push('/specialist/onboarding/availability-details')
     } catch (error) {
-      console.error("Error submitting form:", error);
+      console.error('Error submitting form:', error)
       toast({
-        title: "Error",
-        description: "Failed to update professional details",
-        variant: "destructive",
-      });
+        title: 'Error',
+        description: 'Failed to update professional details',
+        variant: 'destructive',
+      })
     }
-  });
+  })
 
   React.useEffect(() => {
-    console.log('Facility Query:', debouncedFacilityQuery);
-    console.log('Facility Suggestions:', facilitySuggestions);
-    console.log('Selected Facility:', selectedFacility);
-  }, [debouncedFacilityQuery, facilitySuggestions, selectedFacility]);
+    console.log('Facility Query:', debouncedFacilityQuery)
+    console.log('Facility Suggestions:', facilitySuggestions)
+    console.log('Selected Facility:', selectedFacility)
+  }, [debouncedFacilityQuery, facilitySuggestions, selectedFacility])
 
   // File upload handler
   const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const file = e.target.files?.[0]
     if (file) {
       try {
         // Upload to backend API route
-        const formData = new FormData();
-        formData.append("file", file);
+        const formData = new FormData()
+        formData.append('file', file)
 
-        const res = await axios.post("/api/upload-medical-license", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        const res = await axios.post('/api/upload-medical-license', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        })
 
         if (res.data?.url) {
-          form.setValue("medicalLicense", res.data.url);
+          form.setValue('medicalLicense', res.data.url)
           toast({
-            title: "File uploaded",
-            description: "Medical license uploaded successfully.",
-          });
+            title: 'File uploaded',
+            description: 'Medical license uploaded successfully.',
+          })
         } else {
-          throw new Error("No URL returned from upload");
+          throw new Error('No URL returned from upload')
         }
       } catch (error) {
-        console.error("Error uploading file:", error);
+        console.error('Error uploading file:', error)
         toast({
-          title: "Upload failed",
-          description: "Could not upload medical license. Please try again.",
-          variant: "destructive",
-        });
+          title: 'Upload failed',
+          description: 'Could not upload medical license. Please try again.',
+          variant: 'destructive',
+        })
       }
     }
-  };
+  }
 
   return (
     <form onSubmit={onSubmit} className="space-y-8">
       <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2 sm:gap-4">
         <div className="flex flex-col gap-2">
-        <Label htmlFor="specialty">Specialty <span className="text-destructive">*</span></Label>
-        <Select
-          onValueChange={(value) => {
-            setSelectedSpecialty(value);
-            form.setValue('specialty', value);
-          }}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select" />
-          </SelectTrigger>
-          <SelectContent>
-            {isPendingSpecialties ? (
-              <SelectSkeleton />
-            ) : (
-              specialties?.map((specialty) => (
-                <SelectItem key={specialty.id} value={specialty.id}>
-                  {specialty.name}
-                </SelectItem>
-              ))
-            )}
-          </SelectContent>
-        </Select>
-        <p className="text-[0.8rem] font-medium text-destructive">
-          {form.formState.errors.specialty?.message}
-        </p>
-      </div>
+          <Label htmlFor="specialty">
+            Specialty <span className="text-destructive">*</span>
+          </Label>
+          <Select
+            onValueChange={(value) => {
+              setSelectedSpecialty(value)
+              form.setValue('specialty', value)
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select" />
+            </SelectTrigger>
+            <SelectContent>
+              {isPendingSpecialties ? (
+                <SelectSkeleton />
+              ) : (
+                specialties?.map((specialty) => (
+                  <SelectItem key={specialty.id} value={specialty.id}>
+                    {specialty.name}
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
+          <p className="text-[0.8rem] font-medium text-destructive">
+            {form.formState.errors.specialty?.message}
+          </p>
+        </div>
 
         <div className="flex flex-col gap-2">
           <Label htmlFor="subSpecialty">Sub Specialty (Optional)</Label>
@@ -379,20 +391,24 @@ export default function ProfessionalDetailsForm() {
                             key={facility.placeId}
                             onSelect={(value) => {
                               const selected = facilitySuggestions.find(
-                                (f) => f.name.toLowerCase() === value.toLowerCase(),
-                              );
+                                (f) =>
+                                  f.name.toLowerCase() === value.toLowerCase(),
+                              )
                               if (selected) {
-                                setSelectedFacility(selected);
-                                form.setValue('facility', selected.placeId);
-                                setFacilityQuery(selected.name);
+                                setSelectedFacility(selected)
+                                form.setValue('facility', selected.placeId)
+                                setFacilityQuery(selected.name)
                               }
-                              setOpenFacility(false);
+                              setOpenFacility(false)
                             }}
                           >
-                            {facility.name}{facility.address ? `, ${facility.address}` : ''}
+                            {facility.name}
+                            {facility.address ? `, ${facility.address}` : ''}
                             <Check
                               className="ml-auto h-4 w-4 opacity-0 data-[selected=true]:opacity-100"
-                              data-selected={facility.placeId === selectedFacility?.placeId}
+                              data-selected={
+                                facility.placeId === selectedFacility?.placeId
+                              }
                             />
                           </CommandItem>
                         ))}
@@ -410,7 +426,10 @@ export default function ProfessionalDetailsForm() {
 
         <div className="flex flex-col gap-2">
           <Label htmlFor="officeLocation">Office Location (Optional)</Label>
-          <Popover open={openOfficeLocation} onOpenChange={setOpenOfficeLocation}>
+          <Popover
+            open={openOfficeLocation}
+            onOpenChange={setOpenOfficeLocation}
+          >
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
@@ -418,7 +437,8 @@ export default function ProfessionalDetailsForm() {
                 className="w-full justify-between text-muted-foreground data-[state=true]:text-foreground"
                 data-state={selectedOfficeLocation ? 'true' : 'false'}
               >
-                {selectedOfficeLocation?.name ?? 'Search for an office location'}
+                {selectedOfficeLocation?.name ??
+                  'Search for an office location'}
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
@@ -436,29 +456,40 @@ export default function ProfessionalDetailsForm() {
                     <>
                       <CommandEmpty>No office locations found.</CommandEmpty>
                       <CommandGroup>
-                        {officeLocationSuggestions?.map((location: LocationSuggestion) => (
-                          <CommandItem
-                            value={location.name}
-                            key={location.placeId}
-                            onSelect={(value) => {
-                              const selected = officeLocationSuggestions.find(
-                                (l: LocationSuggestion) => l.name.toLowerCase() === value.toLowerCase(),
-                              );
-                              if (selected) {
-                                setSelectedOfficeLocation(selected);
-                                form.setValue('officeLocation', selected.placeId);
-                                setOfficeLocationQuery(selected.name);
-                              }
-                              setOpenOfficeLocation(false);
-                            }}
-                          >
-                            {location.name}{location.address ? `, ${location.address}` : ''}
-                            <Check
-                              className="ml-auto h-4 w-4 opacity-0 data-[selected=true]:opacity-100"
-                              data-selected={location.placeId === selectedOfficeLocation?.placeId}
-                            />
-                          </CommandItem>
-                        ))}
+                        {officeLocationSuggestions?.map(
+                          (location: LocationSuggestion) => (
+                            <CommandItem
+                              value={location.name}
+                              key={location.placeId}
+                              onSelect={(value) => {
+                                const selected = officeLocationSuggestions.find(
+                                  (l: LocationSuggestion) =>
+                                    l.name.toLowerCase() ===
+                                    value.toLowerCase(),
+                                )
+                                if (selected) {
+                                  setSelectedOfficeLocation(selected)
+                                  form.setValue(
+                                    'officeLocation',
+                                    selected.placeId,
+                                  )
+                                  setOfficeLocationQuery(selected.name)
+                                }
+                                setOpenOfficeLocation(false)
+                              }}
+                            >
+                              {location.name}
+                              {location.address ? `, ${location.address}` : ''}
+                              <Check
+                                className="ml-auto h-4 w-4 opacity-0 data-[selected=true]:opacity-100"
+                                data-selected={
+                                  location.placeId ===
+                                  selectedOfficeLocation?.placeId
+                                }
+                              />
+                            </CommandItem>
+                          ),
+                        )}
                       </CommandGroup>
                     </>
                   )}
@@ -472,36 +503,39 @@ export default function ProfessionalDetailsForm() {
         </div>
 
         <div className="flex flex-col gap-2">
-        <Label htmlFor="experience">Years of Experience <span className="text-destructive">*</span></Label>
-        <Input
-          {...form.register('experience')}
-          id="experience"
-          type="number"
-        />
-        <p className="text-[0.8rem] font-medium text-destructive">
-          {form.formState.errors.experience?.message}
-        </p>
-      </div>
-
-        <div className="flex flex-col gap-2">
-        <Label htmlFor="registrationNumber">Medical Registration Number <span className="text-destructive">*</span></Label>
-        <Input
-          {...form.register('registrationNumber')}
-          id="registrationNumber"
-          type="text"
-        />
-        <p className="text-[0.8rem] font-medium text-destructive">
-          {form.formState.errors.registrationNumber?.message}
-        </p>
-      </div>
-
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="medicalLicense">Medical License (pdf) <span className="text-destructive">*</span></Label>
+          <Label htmlFor="experience">
+            Years of Experience <span className="text-destructive">*</span>
+          </Label>
           <Input
-            type="file"
-            accept=".pdf"
-            onChange={onFileChange}
+            {...form.register('experience')}
+            id="experience"
+            type="number"
           />
+          <p className="text-[0.8rem] font-medium text-destructive">
+            {form.formState.errors.experience?.message}
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="registrationNumber">
+            Medical Registration Number{' '}
+            <span className="text-destructive">*</span>
+          </Label>
+          <Input
+            {...form.register('registrationNumber')}
+            id="registrationNumber"
+            type="text"
+          />
+          <p className="text-[0.8rem] font-medium text-destructive">
+            {form.formState.errors.registrationNumber?.message}
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="medicalLicense">
+            Medical License (pdf) <span className="text-destructive">*</span>
+          </Label>
+          <Input type="file" accept=".pdf" onChange={onFileChange} />
           <p className="text-[0.8rem] font-medium text-destructive">
             {form.formState.errors.medicalLicense?.message}
           </p>
@@ -520,5 +554,5 @@ export default function ProfessionalDetailsForm() {
         </Button>
       </div>
     </form>
-  );
+  )
 }

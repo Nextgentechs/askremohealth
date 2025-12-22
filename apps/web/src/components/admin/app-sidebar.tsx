@@ -1,6 +1,15 @@
 'use client'
 
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@web/components/ui/dropdown-menu'
+import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -12,6 +21,7 @@ import {
   SidebarRail,
   useSidebar,
 } from '@web/components/ui/sidebar'
+import { useCurrentUser } from '@web/hooks/use-current-user'
 import {
   ChevronsUpDown,
   CircleUserRound,
@@ -20,20 +30,9 @@ import {
   Users,
 } from 'lucide-react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { usePathname } from 'next/navigation'
-import Logo from '../logo'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@web/components/ui/dropdown-menu'
-import { useCurrentUser } from '@web/hooks/use-current-user'
 import * as React from 'react'
+import Logo from '../logo'
 
 interface AdminUser {
   firstName?: string
@@ -44,7 +43,6 @@ interface AdminUser {
 function NavUser() {
   const { isMobile } = useSidebar()
   const { user } = useCurrentUser() as { user: AdminUser | null }
-  const router = useRouter()
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -59,7 +57,9 @@ function NavUser() {
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">
-                  {user ? `${user.firstName ?? ''} ${user.lastName ?? ''}` : 'Admin'}
+                  {user
+                    ? `${user.firstName ?? ''} ${user.lastName ?? ''}`
+                    : 'Admin'}
                 </span>
                 <span className="truncate text-xs">{user?.email ?? ''}</span>
               </div>
@@ -80,7 +80,9 @@ function NavUser() {
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">
-                    {user ? `${user.firstName ?? ''} ${user.lastName ?? ''}` : 'Admin'}
+                    {user
+                      ? `${user.firstName ?? ''} ${user.lastName ?? ''}`
+                      : 'Admin'}
                   </span>
                   <span className="truncate text-xs">{user?.email ?? ''}</span>
                 </div>
@@ -101,7 +103,7 @@ function NavUser() {
                   try {
                     const res = await fetch('/api/auth/signout', {
                       method: 'POST',
-                      credentials: 'include'
+                      credentials: 'include',
                     })
                     const data = await res.json()
 

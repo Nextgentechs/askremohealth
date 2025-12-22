@@ -1,4 +1,4 @@
-import { NextResponse, NextRequest } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(req: NextRequest) {
   const sessionId = req.cookies.get('session-id')?.value ?? null
@@ -10,8 +10,8 @@ export async function middleware(req: NextRequest) {
   const isSpecialistRoute = pathname.startsWith('/specialist')
 
   const publicPaths = ['/', '/auth', '/about', '/contact', '/adminAuth']
-  const isPublic = publicPaths.some((p) =>
-    pathname === p || pathname.startsWith(p + '/')
+  const isPublic = publicPaths.some(
+    (p) => pathname === p || pathname.startsWith(p + '/'),
   )
 
   // ---------------------------------------------------
@@ -47,7 +47,6 @@ export async function middleware(req: NextRequest) {
   // DOCTORS SUBDOMAIN RULES
   // ---------------------------------------------------
   if (isDoctorsSubdomain) {
-
     // Unauthenticated → redirect to /auth?role=doctor
     if (!sessionId && !isPublic) {
       const url = new URL(req.url)
@@ -59,7 +58,7 @@ export async function middleware(req: NextRequest) {
     // Root → specialist dashboard
     if (pathname === '/') {
       return NextResponse.redirect(
-        new URL('/specialist/upcoming-appointments', req.url)
+        new URL('/specialist/upcoming-appointments', req.url),
       )
     }
 

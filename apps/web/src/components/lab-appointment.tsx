@@ -524,7 +524,7 @@ export default function LabAppointment() {
         title: 'Appointment booked!',
         description: 'Your lab appointment has been scheduled.',
       })
-    } catch (_error) {
+    } catch {
       toast({
         title: 'Booking failed',
         description: 'Could not book appointment. Please try again.',

@@ -293,15 +293,7 @@ export const bookLabAppointment = protectedProcedure
       }
     }
     if (!patient) throw new Error('Failed to create or find patient')
-    // DoctorId is set if user is doctor, else null
-    let doctorId: string | null = null
-    if (ctx.user?.role === 'doctor') {
-      // Find doctor by user id
-      const doctor = await db.query.doctors.findFirst({
-        where: (d, { eq }) => eq(d.userId, ctx.user.id),
-      })
-      doctorId = doctor?.id ?? null
-    }
+    // Note: doctorId for referrals could be added here in the future if needed
     // Combine date and time into a JS Date
     const appointmentDate = new Date(`${input.date}T${input.time}`)
     // Insert appointment

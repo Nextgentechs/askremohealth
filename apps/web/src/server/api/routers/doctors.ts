@@ -1,15 +1,18 @@
-import { patients as patientsTable } from '@web/server/db/schema'
-import Appointments from '@web/server/services/appointments'
-import { Doctors } from '@web/server/services/doctors'
+import { Client } from '@googlemaps/google-maps-services-js'
+import { env } from '@web/env'
+import { KENYA_COUNTIES } from '@web/server/data/kenya-counties'
+import { db } from '@web/server/db'
 import {
-  users as usersTable,
   doctors as doctorsTable,
   facilities as facilitiesTable,
-  officeLocation as officeLocationTable  
+  officeLocation as officeLocationTable,
+  patients as patientsTable,
+  users as usersTable,
 } from '@web/server/db/schema'
+import Appointments from '@web/server/services/appointments'
+import { Doctors } from '@web/server/services/doctors'
 import assert from 'assert'
-import { db } from '@web/server/db'
-import { eq, ilike, or, and, inArray, sql, between, gte } from 'drizzle-orm'
+import { and, between, eq, gte, ilike, inArray, or, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { doctorProcedure, protectedProcedure, publicProcedure } from '../trpc'
 import {
@@ -19,9 +22,6 @@ import {
   personalDetailsSchema,
   professionalDetailsSchema,
 } from '../validators'
-import { KENYA_COUNTIES } from '@web/server/data/kenya-counties'
-import { Client } from '@googlemaps/google-maps-services-js'
-import { env } from '@web/env'
 
 const googleMapsClient = new Client({})
 
@@ -56,7 +56,7 @@ export const updateAvailabilityDetails = protectedProcedure
 export const currentDoctor = publicProcedure.query(async ({ ctx }) => {
   if (!ctx.user) return null
   const userId = ctx.user.id ?? ''
-  
+
   const doctor = await db.query.doctors.findFirst({
     where: (doctor) => eq(doctor.id, userId),
     with: {
@@ -177,7 +177,7 @@ export const patients = doctorProcedure
 
 export const searchPatient = doctorProcedure
   .input(z.object({ query: z.string() }))
-  .query(async ({ ctx, input }) => {
+  .query(async ({ input }) => {
     return db
       .select({
         id: patientsTable.id,
@@ -215,7 +215,15 @@ export const searchByLocation = publicProcedure
     }),
   )
   .query(async ({ input }) => {
-    const { countyCode, townId, specialtyId, query, subSpecialties, experiences, genders } = input
+    const {
+      countyCode,
+      townId,
+      specialtyId,
+      query,
+      subSpecialties,
+      experiences,
+      genders,
+    } = input
 
     // Build base conditions
     const conditions = []
@@ -242,18 +250,16 @@ export const searchByLocation = publicProcedure
               ? [
                   eq(
                     facilitiesTable.county,
-                    KENYA_COUNTIES.find((c) => c.code === countyCode)?.name
-                      ?.replace(' County', '')
+                    KENYA_COUNTIES.find((c) => c.code === countyCode)
+                      ?.name?.replace(' County', '')
                       .replace('Wilaya ya ', '')
                       .replace('Kaunti ya ', '')
-                      .trim() ?? ''
+                      .trim() ?? '',
                   ),
                 ]
               : []),
-            ...(townName
-              ? [eq(facilitiesTable.town, townName)]
-              : [])
-          )
+            ...(townName ? [eq(facilitiesTable.town, townName)] : []),
+          ),
         )
 
       const officeSubquery = db
@@ -265,25 +271,23 @@ export const searchByLocation = publicProcedure
               ? [
                   eq(
                     officeLocationTable.county,
-                    KENYA_COUNTIES.find((c) => c.code === countyCode)?.name
-                      ?.replace(' County', '')
+                    KENYA_COUNTIES.find((c) => c.code === countyCode)
+                      ?.name?.replace(' County', '')
                       .replace('Wilaya ya ', '')
                       .replace('Kaunti ya ', '')
-                      .trim() ?? ''
+                      .trim() ?? '',
                   ),
                 ]
               : []),
-            ...(townName
-              ? [eq(officeLocationTable.town, townName)]
-              : [])
-          )
+            ...(townName ? [eq(officeLocationTable.town, townName)] : []),
+          ),
         )
 
       conditions.push(
         or(
           inArray(doctorsTable.facility, facilitySubquery),
-          inArray(doctorsTable.officeId, officeSubquery)
-        )
+          inArray(doctorsTable.officeId, officeSubquery),
+        ),
       )
     }
 
@@ -298,8 +302,8 @@ export const searchByLocation = publicProcedure
         .where(
           or(
             ilike(usersTable.firstName, `%${query}%`),
-            ilike(usersTable.lastName, `%${query}%`)
-          )
+            ilike(usersTable.lastName, `%${query}%`),
+          ),
         )
 
       const facilitySubquery = db
@@ -310,8 +314,8 @@ export const searchByLocation = publicProcedure
       conditions.push(
         or(
           inArray(doctorsTable.userId, userSubquery),
-          inArray(doctorsTable.facility, facilitySubquery)
-        )
+          inArray(doctorsTable.facility, facilitySubquery),
+        ),
       )
     }
 

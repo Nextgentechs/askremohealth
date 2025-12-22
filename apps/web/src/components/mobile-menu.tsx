@@ -1,6 +1,5 @@
 'use client'
 
-import Logo from '@web/components/logo'
 import { Button } from '@web/components/ui/button'
 import {
   DropdownMenu,
@@ -16,8 +15,7 @@ import {
   SheetContent,
   SheetTitle,
   SheetTrigger,
-}
-from '@web/components/ui/sheet'
+} from '@web/components/ui/sheet'
 import { useCurrentUser } from '@web/hooks/use-current-user'
 import {
   Book,
@@ -34,7 +32,6 @@ import {
   User,
 } from 'lucide-react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 
 const navOptions = [
   {

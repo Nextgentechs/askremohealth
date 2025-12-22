@@ -1,19 +1,26 @@
-import { db } from "@web/server/db";
-import { posts, users, likes, comments, doctors, profilePictures } from "@web/server/db/schema";
-import { eq, desc, count } from "drizzle-orm";
-import Image from "next/image";
-import Comments from "@web/components/community/feed/Comments";
-import PostInteraction from "@web/components/community/feed/PostInteraction";
-import { Suspense } from "react";
-import PostInfo from "@web/components/community/feed/PostInfo";
-import { api } from '@web/trpc/server';
-import PostVideo from "@web/components/community/feed/PostVideo";
-import { BadgeCheck, ArrowLeft } from "lucide-react";
-import Link from "next/link";
-import { notFound } from "next/navigation";
+import Comments from '@web/components/community/feed/Comments'
+import PostInfo from '@web/components/community/feed/PostInfo'
+import PostInteraction from '@web/components/community/feed/PostInteraction'
+import PostVideo from '@web/components/community/feed/PostVideo'
+import { db } from '@web/server/db'
+import {
+  comments,
+  doctors,
+  likes,
+  posts,
+  profilePictures,
+  users,
+} from '@web/server/db/schema'
+import { api } from '@web/trpc/server'
+import { count, eq } from 'drizzle-orm'
+import { ArrowLeft, BadgeCheck } from 'lucide-react'
+import Image from 'next/image'
+import Link from 'next/link'
+import { notFound } from 'next/navigation'
+import { Suspense } from 'react'
 
 interface SinglePostProps {
-  postId: string;
+  postId: string
 }
 
 const SinglePost = async ({ postId }: SinglePostProps) => {
@@ -39,23 +46,23 @@ const SinglePost = async ({ postId }: SinglePostProps) => {
     .leftJoin(doctors, eq(users.id, doctors.userId))
     .leftJoin(profilePictures, eq(doctors.id, profilePictures.doctorId))
     .where(eq(posts.id, postId))
-    .limit(1);
+    .limit(1)
 
   if (!rawPost.length) {
-    notFound();
+    notFound()
   }
 
-  const postBase = rawPost[0]!;
+  const postBase = rawPost[0]!
 
   const postLikes = await db
     .select({ userId: likes.userId })
     .from(likes)
-    .where(eq(likes.postId, postBase.id));
+    .where(eq(likes.postId, postBase.id))
 
   const commentCount = await db
     .select({ count: count() })
     .from(comments)
-    .where(eq(comments.postId, postBase.id));
+    .where(eq(comments.postId, postBase.id))
 
   const post = {
     ...postBase,
@@ -63,17 +70,15 @@ const SinglePost = async ({ postId }: SinglePostProps) => {
     _count: {
       comments: commentCount[0]?.count ?? 0,
     },
-  };
+  }
 
-  const user = await api.users.currentUser();
-  const userId = user?.id;
+  const user = await api.users.currentUser()
+  const userId = user?.id
 
   return (
     <div className="p-4 bg-white shadow-md rounded-lg">
       <div className="flex items-center gap-6 mb-6">
-        <Link 
-          href="/community" 
-        >
+        <Link href="/community">
           <ArrowLeft size={20} />
         </Link>
         <div className="text-xl font-semibold">Post</div>
@@ -85,20 +90,18 @@ const SinglePost = async ({ postId }: SinglePostProps) => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Image
-              src={post.profilePicture ?? "/assets/community/noAvatar2.png"}
+              src={post.profilePicture ?? '/assets/community/noAvatar2.png'}
               width={40}
               height={40}
               alt=""
               className="w-9 h-9 rounded-full"
             />
             <span className="font-medium flex items-center gap-1">
-              
-              {post.user.role === 'patient' 
-                  ? 'anonymous' 
-                  : `${post.user.firstName} ${post.user.lastName}`
-              }
+              {post.user.role === 'patient'
+                ? 'anonymous'
+                : `${post.user.firstName} ${post.user.lastName}`}
               {post.user.role !== 'patient' && (
-              <BadgeCheck size={20} className="fill-violet-900 text-white" />
+                <BadgeCheck size={20} className="fill-violet-900 text-white" />
               )}
             </span>
           </div>
@@ -119,19 +122,19 @@ const SinglePost = async ({ postId }: SinglePostProps) => {
             </div>
           )}
           {post.video && (
-              <PostVideo
-                  id={`video-${post.id}`}
-                  src={
-                    post.video
-                      ? (
-                          post.video
-                            .split("/upload/")[1]
-                            ?.split("/").slice(1).join("/")
-                            .replace(/\.[^/.]+$/, "") ?? ""
-                        )
-                      : ""
-                  }
-              />
+            <PostVideo
+              id={`video-${post.id}`}
+              src={
+                post.video
+                  ? (post.video
+                      .split('/upload/')[1]
+                      ?.split('/')
+                      .slice(1)
+                      .join('/')
+                      .replace(/\.[^/.]+$/, '') ?? '')
+                  : ''
+              }
+            />
           )}
         </div>
 
@@ -146,11 +149,11 @@ const SinglePost = async ({ postId }: SinglePostProps) => {
 
         {/* COMMENTS */}
         <Suspense fallback="Loading...">
-          <Comments postId={post.id} postAuthorId={post.user.id}/>
+          <Comments postId={post.id} postAuthorId={post.user.id} />
         </Suspense>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default SinglePost;
+export default SinglePost

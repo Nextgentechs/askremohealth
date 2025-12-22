@@ -1,104 +1,104 @@
-"use client";
+'use client'
 
 import { api } from '@web/trpc/react'
-import Image from "next/image";
-import { useState, useRef } from "react";
-import AddPostButton from "@web/components/community/AddPostButton";
-import { ImageIcon, Video, X } from "lucide-react";
+import imageCompression from 'browser-image-compression'
+import { ImageIcon, Video, X } from 'lucide-react'
+import Image from 'next/image'
+import { useRef, useState } from 'react'
 import toast from 'react-hot-toast'
-import imageCompression from 'browser-image-compression';
-
 
 const AddPost = () => {
-  const { data: user, isLoading } = api.users.currentUser.useQuery()
-  
-  const utils = api.useUtils();
-  
+  const {} = api.users.currentUser.useQuery()
+
+  const utils = api.useUtils()
+
   const addPostMutation = api.community.addPost.useMutation({
     onSuccess: async () => {
-      utils.community.loadPosts.invalidate();
-    }
-  });
+      utils.community.loadPosts.invalidate()
+    },
+  })
 
-  const [desc, setDesc] = useState("");
-  const [img, setImg] = useState<{ secure_url: string } | null>(null);
-  const [video, setVideo] = useState<{ secure_url: string } | null>(null);
-  const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const [isUploadingVideo, setIsUploadingVideo] = useState(false);
+  const [desc, setDesc] = useState('')
+  const [img, setImg] = useState<{ secure_url: string } | null>(null)
+  const [video, setVideo] = useState<{ secure_url: string } | null>(null)
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
+  const [isUploadingVideo, setIsUploadingVideo] = useState(false)
 
-  const [imageFileName, setImageFileName] = useState<string>("");
-  const [videoFileName, setVideoFileName] = useState<string>("");
-  
-  const imageInputRef = useRef<HTMLInputElement>(null);
-  const videoInputRef = useRef<HTMLInputElement>(null);
+  const [imageFileName, setImageFileName] = useState<string>('')
+  const [videoFileName, setVideoFileName] = useState<string>('')
+
+  const imageInputRef = useRef<HTMLInputElement>(null)
+  const videoInputRef = useRef<HTMLInputElement>(null)
 
   const compressImage = async (file: File) => {
     const options = {
       maxSizeMB: 2,
       maxWidthOrHeight: 1920,
       useWebWorker: true,
-    };
-    
-    try {
-      return await imageCompression(file, options);
-    } catch (error) {
-      console.error('Compression failed:', error);
-      return file;
     }
-  };
 
-  const uploadToCloudinary = async (file: File, resourceType: 'image' | 'video') => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('resource_type', resourceType);
+    try {
+      return await imageCompression(file, options)
+    } catch (error) {
+      console.error('Compression failed:', error)
+      return file
+    }
+  }
+
+  const uploadToCloudinary = async (
+    file: File,
+    resourceType: 'image' | 'video',
+  ) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('resource_type', resourceType)
 
     const response = await fetch('/api/community/upload', {
       method: 'POST',
       body: formData,
-    });
+    })
 
     if (!response.ok) {
-      throw new Error('Upload failed');
+      throw new Error('Upload failed')
     }
 
-    return response.json();
-  };
+    return response.json()
+  }
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const file = e.target.files?.[0]
+    if (!file) return
 
-    setIsUploadingImage(true);
+    setIsUploadingImage(true)
     try {
-      const compressedFile = await compressImage(file);
-      const result = await uploadToCloudinary(compressedFile, 'image');
-      setImg({ secure_url: result.secure_url });
-      setImageFileName(file.name);
+      const compressedFile = await compressImage(file)
+      const result = await uploadToCloudinary(compressedFile, 'image')
+      setImg({ secure_url: result.secure_url })
+      setImageFileName(file.name)
     } catch (error) {
-      toast.error('Image upload failed');
-      console.error('Upload error:', error);
+      toast.error('Image upload failed')
+      console.error('Upload error:', error)
     } finally {
-      setIsUploadingImage(false);
+      setIsUploadingImage(false)
     }
-  };
+  }
 
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const file = e.target.files?.[0]
+    if (!file) return
 
-    setIsUploadingVideo(true);
+    setIsUploadingVideo(true)
     try {
-      const result = await uploadToCloudinary(file, 'video');
-      setVideo({ secure_url: result.secure_url });
-      setVideoFileName(file.name);
+      const result = await uploadToCloudinary(file, 'video')
+      setVideo({ secure_url: result.secure_url })
+      setVideoFileName(file.name)
     } catch (error) {
-      toast.error('Video upload failed');
-      console.error('Upload error:', error);
+      toast.error('Video upload failed')
+      console.error('Upload error:', error)
     } finally {
-      setIsUploadingVideo(false);
+      setIsUploadingVideo(false)
     }
-  };
-
+  }
 
   return (
     <div className="p-4 bg-white shadow-md rounded-lg flex gap-3 justify-between text-sm">
@@ -113,33 +113,34 @@ const AddPost = () => {
       {/* POST */}
       <div className="flex-1">
         {/* TEXT INPUT */}
-        <form onSubmit={async (e) => { 
-          e.preventDefault();
-          
-          try {
-            await addPostMutation.mutateAsync({
-              desc,
-              img: img?.secure_url,
-              video: video?.secure_url
-            });
-            
-            toast.success('Your post was sent');
-            setDesc("");
-            setImg(null);
-            setVideo(null);
-            setImageFileName("");
-            setVideoFileName("");
-            
-            
-          } catch (error) {
-            toast.error('Failed to create post');
-          }
-        }} className="flex gap-4">
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault()
+
+            try {
+              await addPostMutation.mutateAsync({
+                desc,
+                img: img?.secure_url,
+                video: video?.secure_url,
+              })
+
+              toast.success('Your post was sent')
+              setDesc('')
+              setImg(null)
+              setVideo(null)
+              setImageFileName('')
+              setVideoFileName('')
+            } catch {
+              toast.error('Failed to create post')
+            }
+          }}
+          className="flex gap-4"
+        >
           <textarea
             placeholder="Make a new post anonymously"
             className="flex-1 bg-slate-100 rounded-lg p-2"
             name="desc"
-            value={desc} 
+            value={desc}
             onChange={(e) => setDesc(e.target.value)}
           ></textarea>
           <div className="">
@@ -154,7 +155,7 @@ const AddPost = () => {
                   Sending
                 </div>
               ) : (
-                "Send"
+                'Send'
               )}
             </button>
           </div>
@@ -166,12 +167,12 @@ const AddPost = () => {
               <div className="flex items-center gap-2">
                 <span className="text-gray-500">Image:</span>
                 <span className="text-violet-900">{imageFileName}</span>
-                <X 
-                  className="w-4 h-4 text-gray-500 cursor-pointer hover:text-red-500" 
+                <X
+                  className="w-4 h-4 text-gray-500 cursor-pointer hover:text-red-500"
                   onClick={() => {
-                    setImageFileName("");
-                    setImg(null);
-                    if (imageInputRef.current) imageInputRef.current.value = "";
+                    setImageFileName('')
+                    setImg(null)
+                    if (imageInputRef.current) imageInputRef.current.value = ''
                   }}
                 />
               </div>
@@ -179,20 +180,22 @@ const AddPost = () => {
             {videoFileName && (
               <div className="flex items-center gap-2">
                 <span className="text-gray-500">Video:</span>
-                <span className="text-violet-900 underline">{videoFileName}</span>
-                <X 
-                  className="w-4 h-4 text-gray-500 cursor-pointer hover:text-red-500" 
+                <span className="text-violet-900 underline">
+                  {videoFileName}
+                </span>
+                <X
+                  className="w-4 h-4 text-gray-500 cursor-pointer hover:text-red-500"
                   onClick={() => {
-                    setVideoFileName("");
-                    setVideo(null);
-                    if (videoInputRef.current) videoInputRef.current.value = "";
+                    setVideoFileName('')
+                    setVideo(null)
+                    if (videoInputRef.current) videoInputRef.current.value = ''
                   }}
                 />
               </div>
             )}
           </div>
         )}
-        
+
         {/* POST OPTIONS */}
         <div className="flex items-center gap-4 mt-4 text-gray-500 flex-wrap">
           {/* Hidden file inputs */}
@@ -210,14 +213,14 @@ const AddPost = () => {
             onChange={handleVideoUpload}
             className="hidden"
           />
-          
+
           {/* Image upload button */}
           <div
             className="flex items-center gap-2 cursor-pointer"
             onClick={() => imageInputRef.current?.click()}
           >
-            <ImageIcon className="text-green-500"/>
-            {isUploadingImage ? "Uploading..." : "Photo"}
+            <ImageIcon className="text-green-500" />
+            {isUploadingImage ? 'Uploading...' : 'Photo'}
           </div>
 
           {/* Video upload button */}
@@ -225,13 +228,13 @@ const AddPost = () => {
             className="flex items-center gap-2 cursor-pointer"
             onClick={() => videoInputRef.current?.click()}
           >
-            <Video className="text-red-500"/>
-            {isUploadingVideo ? "Uploading..." : "Video"}
+            <Video className="text-red-500" />
+            {isUploadingVideo ? 'Uploading...' : 'Video'}
           </div>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default AddPost;
+export default AddPost

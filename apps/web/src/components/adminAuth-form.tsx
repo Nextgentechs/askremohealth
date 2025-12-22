@@ -1,6 +1,5 @@
 'use client'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@web/components/ui/button'
 import {
   Card,
@@ -10,9 +9,12 @@ import {
   CardTitle,
 } from '@web/components/ui/card'
 import { Input } from '@web/components/ui/input'
+import { useCurrentUser } from '@web/hooks/use-current-user'
 import { toast } from '@web/hooks/use-toast'
+import { passwordSchema } from '@web/server/api/validators'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Loader } from 'lucide-react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import React, { useState, type SVGProps } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -25,16 +27,12 @@ import {
   FormMessage,
 } from './ui/form'
 import { InputOTP, InputOTPGroup, InputOTPSlot } from './ui/input-otp'
-import { passwordSchema } from '@web/server/api/validators'
-import { useCurrentUser } from '@web/hooks/use-current-user'
 
 export default function AuthForm() {
   const [currentStep, setCurrentStep] = useState<'login' | 'signup' | 'otp'>(
     'login',
   )
   const [loggedInEmail, setLoggedInEmail] = useState<string>('')
-  
-
 
   return (
     <AnimatePresence mode="wait">
@@ -68,7 +66,10 @@ export default function AuthForm() {
           exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.2 }}
         >
-          <Login setLoggedInEmail={setLoggedInEmail} setCurrentStep={setCurrentStep} />
+          <Login
+            setLoggedInEmail={setLoggedInEmail}
+            setCurrentStep={setCurrentStep}
+          />
         </motion.div>
       )}
     </AnimatePresence>
@@ -76,7 +77,7 @@ export default function AuthForm() {
 }
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
-  password: passwordSchema
+  password: passwordSchema,
 })
 
 type LoginFormData = z.infer<typeof loginSchema>
@@ -85,8 +86,8 @@ function Login({
   setLoggedInEmail,
   setCurrentStep,
 }: {
-    setLoggedInEmail: React.Dispatch<React.SetStateAction<string>>,
-    setCurrentStep: (step: 'login' | 'signup' | 'otp') => void
+  setLoggedInEmail: React.Dispatch<React.SetStateAction<string>>
+  setCurrentStep: (step: 'login' | 'signup' | 'otp') => void
 }) {
   const [isLoading, setIsLoading] = useState(false)
   const searchParams = useSearchParams()
@@ -95,8 +96,7 @@ function Login({
     defaultValues: {
       email: '',
       password: '',
-    }
-
+    },
   })
 
   async function onSubmit(data: LoginFormData) {
@@ -164,7 +164,6 @@ function Login({
     }
   }
 
-
   async function handleGoogleSignIn() {
     setIsLoading(true)
     try {
@@ -178,7 +177,7 @@ function Login({
       })
 
       const result = await response.json()
-      
+
       if (result.url) {
         window.location.href = result.url
       } else {
@@ -212,7 +211,11 @@ function Login({
             disabled={isLoading}
           >
             <Google className="h-5 w-5" />
-            {isLoading ? <Loader className="h-4 w-4 animate-spin" /> : 'Sign in with Google'}
+            {isLoading ? (
+              <Loader className="h-4 w-4 animate-spin" />
+            ) : (
+              'Sign in with Google'
+            )}
           </Button>
           <div className="relative my-2 text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
             <span className="relative z-10 bg-background px-2 text-muted-foreground">
@@ -228,7 +231,12 @@ function Login({
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="you@example.com" autoComplete='email' {...field} />
+                      <Input
+                        type="email"
+                        placeholder="you@example.com"
+                        autoComplete="email"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -242,7 +250,12 @@ function Login({
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="********" autoComplete='new-password' {...field} />
+                      <Input
+                        type="password"
+                        placeholder="********"
+                        autoComplete="new-password"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -269,20 +282,19 @@ function Login({
   )
 }
 
-
 const signUpSchema = z
   .object({
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
-  email: z.string().email('Invalid email address'),
-  password: passwordSchema,
-  confirmPassword: passwordSchema,
-  role:z.string()
+    firstName: z.string().min(1, 'First name is required'),
+    lastName: z.string().min(1, 'Last name is required'),
+    email: z.string().email('Invalid email address'),
+    password: passwordSchema,
+    confirmPassword: passwordSchema,
+    role: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
-    path: ['confirmPassword']
-  });
+    path: ['confirmPassword'],
+  })
 
 type SignUpFormData = z.infer<typeof signUpSchema>
 
@@ -293,7 +305,6 @@ function SignUp({
 }) {
   const [isLoading, setIsLoading] = useState(false)
   const searchParams = useSearchParams()
-  const role = searchParams.get("role")
 
   const form = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
@@ -302,27 +313,26 @@ function SignUp({
       lastName: '',
       email: '',
       password: '',
-      confirmPassword:'',
-      role : 'admin'
-    }
-    
+      confirmPassword: '',
+      role: 'admin',
+    },
   })
 
   async function onSubmit(data: SignUpFormData) {
     setIsLoading(true)
-    console.log('Form data being submitted:', data);
-    
+    console.log('Form data being submitted:', data)
+
     try {
       // Only send the fields that the API expects
       const apiData = {
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
-        password: data.password
+        password: data.password,
         // Don't send confirmPassword or role - the API sets role to 'admin' automatically
       }
 
-      console.log('Sending to API:', apiData);
+      console.log('Sending to API:', apiData)
 
       const res = await fetch('/api/auth/adminsignup', {
         method: 'POST',
@@ -332,10 +342,10 @@ function SignUp({
       })
 
       const result = await res.json()
-      console.log('API response:', result);
+      console.log('API response:', result)
 
       if (!res.ok) {
-        throw new Error(result.message || `HTTP error! status: ${res.status}`);
+        throw new Error(result.message || `HTTP error! status: ${res.status}`)
       }
 
       if (result.success) {
@@ -346,7 +356,7 @@ function SignUp({
           credentials: 'include', // <- important
           body: JSON.stringify({
             email: data.email,
-            otp: result.otp
+            otp: result.otp,
           }),
         })
 
@@ -380,7 +390,7 @@ function SignUp({
         })
       }
     } catch (error: any) {
-      console.error('Signup error:', error);
+      console.error('Signup error:', error)
       toast({
         title: 'Error',
         description: error.message || 'An unknown error occurred',
@@ -405,7 +415,7 @@ function SignUp({
       })
 
       const result = await response.json()
-      
+
       if (result.url) {
         window.location.href = result.url
       } else {
@@ -439,7 +449,11 @@ function SignUp({
             disabled={isLoading}
           >
             <Google className="h-5 w-5" />
-            {isLoading ? <Loader className="h-4 w-4 animate-spin" /> : 'Sign up with Google'}
+            {isLoading ? (
+              <Loader className="h-4 w-4 animate-spin" />
+            ) : (
+              'Sign up with Google'
+            )}
           </Button>
           <div className="relative my-2 text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
             <span className="relative z-10 bg-background px-2 text-muted-foreground">
@@ -455,7 +469,11 @@ function SignUp({
                   <FormItem>
                     <FormLabel>First Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="John" autoComplete="given-name" {...field} />
+                      <Input
+                        placeholder="John"
+                        autoComplete="given-name"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -469,7 +487,11 @@ function SignUp({
                   <FormItem>
                     <FormLabel>Last Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Doe" autoComplete="family-name" {...field} />
+                      <Input
+                        placeholder="Doe"
+                        autoComplete="family-name"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -483,7 +505,12 @@ function SignUp({
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="you@example.com" autoComplete="email" {...field} />
+                      <Input
+                        type="email"
+                        placeholder="you@example.com"
+                        autoComplete="email"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -497,7 +524,12 @@ function SignUp({
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="********" autoComplete="new-password" {...field} />
+                      <Input
+                        type="password"
+                        placeholder="********"
+                        autoComplete="new-password"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -510,7 +542,12 @@ function SignUp({
                   <FormItem>
                     <FormLabel>Confirm Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="********" autoComplete="new-password" {...field} />
+                      <Input
+                        type="password"
+                        placeholder="********"
+                        autoComplete="new-password"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -541,7 +578,7 @@ const FormSchema = z.object({
   pin: z.string().min(6, { message: 'Invalid OTP' }),
 })
 
-function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
+function InputOTPForm({ loggedInEmail }: { loggedInEmail: string }) {
   const [isLoading, setIsLoading] = useState(false)
   const [resendIsLoading, setResendIsLoading] = useState(false)
   const router = useRouter()
@@ -554,90 +591,89 @@ function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
     onboardingComplete: boolean
   }
 
-  const { user } = useCurrentUser() as { user: User | null }
+  const {} = useCurrentUser() as { user: User | null }
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: { pin: '' },
   })
 
-
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-  setIsLoading(true)
-  try {
-    const res = await fetch('/api/auth/verifyotp', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include', // ensure the cookie sent/accepted
-      body: JSON.stringify({ otp: data.pin, email: loggedInEmail }),
-    })
+    setIsLoading(true)
+    try {
+      const res = await fetch('/api/auth/verifyotp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // ensure the cookie sent/accepted
+        body: JSON.stringify({ otp: data.pin, email: loggedInEmail }),
+      })
 
-    const result = await res.json()
-    if (!res.ok || !result?.success) {
+      const result = await res.json()
+      if (!res.ok || !result?.success) {
+        toast({
+          title: 'Error',
+          description: result?.message ?? 'OTP verification failed',
+          variant: 'destructive',
+        })
+        return
+      }
+
+      // OTP verified successfully — now fetch current user using the session cookie
+      const meResp = await fetch('/api/auth/me', {
+        method: 'GET',
+        credentials: 'include',
+      })
+
+      const me = await meResp.json()
+      if (!meResp.ok || !me?.success || !me.user) {
+        // fallback: force a full reload that will pick up cookie & server-rendered auth
+        window.location.reload()
+        return
+      }
+
+      const user = me.user as {
+        role: 'patient' | 'doctor' | 'admin' | 'lab'
+        onboardingComplete?: boolean
+      }
+
+      // redirect based on the freshly fetched user
+      if (user.role === 'patient') {
+        if (!user.onboardingComplete) {
+          router.push('/patient/onboarding/patient-details')
+        } else {
+          router.push('/patient/upcoming-appointments')
+        }
+      } else if (user.role === 'doctor') {
+        if (!user.onboardingComplete) {
+          router.push('/specialist/onboarding/personal-details')
+        } else {
+          router.push('/specialist/upcoming-appointments')
+        }
+      } else if (user.role === 'admin') {
+        // navigate to admin subdomain path on the current origin
+        // If you need to land on admin.askremohealth domain specifically:
+        // window.location.href = 'https://admin.askremohealth/admin/doctors'
+        router.push('/admin/doctors')
+      } else {
+        router.push('/')
+      }
+    } catch (err: any) {
+      console.error('OTP submit error', err)
       toast({
         title: 'Error',
-        description: result?.message ?? 'OTP verification failed',
+        description: err?.message ?? 'An error occurred',
         variant: 'destructive',
       })
-      return
+    } finally {
+      setIsLoading(false)
     }
-
-    // OTP verified successfully — now fetch current user using the session cookie
-    const meResp = await fetch('/api/auth/me', {
-      method: 'GET',
-      credentials: 'include',
-    })
-
-    const me = await meResp.json()
-    if (!meResp.ok || !me?.success || !me.user) {
-      // fallback: force a full reload that will pick up cookie & server-rendered auth
-      window.location.reload()
-      return
-    }
-
-    const user = me.user as {
-      role: 'patient' | 'doctor' | 'admin' | 'lab'
-      onboardingComplete?: boolean
-    }
-
-    // redirect based on the freshly fetched user
-    if (user.role === 'patient') {
-      if (!user.onboardingComplete) {
-        router.push('/patient/onboarding/patient-details')
-      } else {
-        router.push('/patient/upcoming-appointments')
-      }
-    } else if (user.role === 'doctor') {
-      if (!user.onboardingComplete) {
-        router.push('/specialist/onboarding/personal-details')
-      } else {
-        router.push('/specialist/upcoming-appointments')
-      }
-    } else if (user.role === 'admin') {
-      // navigate to admin subdomain path on the current origin
-      // If you need to land on admin.askremohealth domain specifically:
-      // window.location.href = 'https://admin.askremohealth/admin/doctors'
-      router.push('/admin/doctors')
-    } else {
-      router.push('/')
-    }
-  } catch (err: any) {
-    console.error('OTP submit error', err)
-    toast({
-      title: 'Error',
-      description: err?.message ?? 'An error occurred',
-      variant: 'destructive',
-    })
-  } finally {
-    setIsLoading(false)
   }
-}
-
 
   async function handleResend() {
     setResendIsLoading(true)
     try {
-      const response = await fetch('/api/auth/resendotp', { // leading slash
+      const response = await fetch('/api/auth/resendotp', {
+        // leading slash
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include', // <- important
@@ -667,7 +703,6 @@ function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
       setResendIsLoading(false)
     }
   }
-
 
   return (
     <div className="flex flex-col gap-6">
@@ -702,14 +737,21 @@ function InputOTPForm({loggedInEmail}:{loggedInEmail:string}) {
                   </FormItem>
                 )}
               />
-              <div className='flex justify-between w-full'>
-                <Button onClick={handleResend} variant="outline" disabled={isLoading ?? resendIsLoading}>
-                  {resendIsLoading ? <Loader className="animate-spin" /> : 'Resend'}
+              <div className="flex justify-between w-full">
+                <Button
+                  onClick={handleResend}
+                  variant="outline"
+                  disabled={isLoading ?? resendIsLoading}
+                >
+                  {resendIsLoading ? (
+                    <Loader className="animate-spin" />
+                  ) : (
+                    'Resend'
+                  )}
                 </Button>
                 <Button type="submit" disabled={isLoading ?? resendIsLoading}>
                   {isLoading ? <Loader className="animate-spin" /> : 'Submit'}
                 </Button>
-
               </div>
             </form>
           </Form>

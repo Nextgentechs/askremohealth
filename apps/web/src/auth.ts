@@ -7,14 +7,10 @@ import { db } from './server/db'
 import { users } from './server/db/schema'
 import { getUserSessionById } from './server/lib/session'
 
-// Helper to infer user with lab relation
-async function getUserWithLabQuery() {
-  return await db.query.users.findFirst({
-    with: { lab: true },
-  })
-}
-
-type UserWithLab = Awaited<ReturnType<typeof getUserWithLabQuery>>
+// Type definition for user with lab relation from database query
+type UserWithLab = Awaited<
+  ReturnType<typeof db.query.users.findFirst<{ with: { lab: true } }>>
+>
 
 /**
  * NextAuth-compatible auth function

@@ -1,11 +1,10 @@
-import { publicProcedure } from '../trpc';
-import { db } from '../../db';
-import { tests } from '../../db/schema';
+import { db } from '../../db'
+import { publicProcedure } from '../trpc'
 
 export const listTests = publicProcedure.query(async () => {
-  return db.query.tests.findMany();
-});
+  return db.query.tests.findMany()
+})
 
 export const testsRouter = {
   listTests,
-}; 
+}

@@ -1,39 +1,30 @@
 'use client'
 
 import { ArrowRight, Users } from 'lucide-react'
-import { Button } from './ui/button'
 import Link from 'next/link'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from './ui/card'
+import { Button } from './ui/button'
+import { Card, CardContent, CardFooter, CardHeader } from './ui/card'
 
 export default function ProvidersSection() {
   return (
-    <section id="providers-cta" className="bg-gray-50 container mx-auto flex w-full flex-col items-center justify-center gap-10 py-16">
+    <section
+      id="providers-cta"
+      className="bg-gray-50 container mx-auto flex w-full flex-col items-center justify-center gap-10 py-16"
+    >
       <div className="mx-auto flex w-full flex-col items-center justify-center gap-2">
-        <h2 className="section-title text-center">
-        Register as a Provider
-        </h2>
+        <h2 className="section-title text-center">Register as a Provider</h2>
         <p className="section-description text-center">
-          Distinguish your healthcare brand with our strategic approach. Doctors, Clinics, Hospitals & Labs - Join our network and
-          start serving patients today
+          Distinguish your healthcare brand with our strategic approach.
+          Doctors, Clinics, Hospitals & Labs - Join our network and start
+          serving patients today
         </p>
       </div>
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 gap-8  items-center">
-          
-
           <Card className="border-2 border-[#FFF4EB] bg-white shadow-lg max-w-4xl mx-auto overflow-hidden">
             <div className="md:flex">
               <div className="md:w-3/5 p-6 md:p-8">
-                <CardHeader className="p-0 mb-4">
-                  
-                </CardHeader>
+                <CardHeader className="p-0 mb-4"></CardHeader>
                 <CardContent className="p-0 space-y-4">
                   <ul className="space-y-2">
                     {[
@@ -55,13 +46,13 @@ export default function ProvidersSection() {
                 </CardContent>
                 <CardFooter className="p-0 mt-6">
                   <Link href="/register-facility">
-                  <Button
-                    size="lg"
-                    className="w-full md:w-auto bg-[#402E7D] text-white"
-                  >
-                    Register Now
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
+                    <Button
+                      size="lg"
+                      className="w-full md:w-auto bg-[#402E7D] text-white"
+                    >
+                      Register Now
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
                   </Link>
                 </CardFooter>
               </div>

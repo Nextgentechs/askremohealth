@@ -136,7 +136,7 @@ export default function ConsultationSettings() {
       })
       toast({ description: 'Consultation settings updated!' })
       utils.doctors.currentDoctor.invalidate()
-    } catch (_) {
+    } catch {
       toast({
         description: 'Failed to update settings',
         variant: 'destructive',
