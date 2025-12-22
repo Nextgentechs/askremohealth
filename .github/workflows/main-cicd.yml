@@ -1,4 +1,4 @@
-name: 🚀 Deploy AskRemoHealth Production
+name: 🚀 Deploy AskRemoHealth to cPanel
 on:
   push:
     branches:
@@ -6,137 +6,103 @@ on:
   workflow_dispatch: # Allow manual trigger
 
 jobs:
-  deploy:
-    name: 📦 Deploy to Production
+  build-and-deploy:
+    name: 📦 Build & Deploy to cPanel
     runs-on: ubuntu-latest
 
     steps:
       - name: 📝 Log trigger
-        run: echo "Deploying AskRemoHealth to production..."
+        run: echo "Building and deploying AskRemoHealth to cPanel..."
 
       - name: 📥 Checkout Code
         uses: actions/checkout@v4
 
-      - name: 🚀 Deploy via SSH
-        uses: appleboy/ssh-action@master
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          command_timeout: 20m
-          script: |
-            set -e
-            echo "🔄 Starting deployment..."
+          node-version: '20'
+          cache: 'npm'
 
-            # 1. Navigate to App Directory
-            cd /root/askremohealth
-            echo "📁 Working in /root/askremohealth"
+      - name: 📦 Install Dependencies
+        run: npm install
 
-            # 2. Force sync with origin/main
-            echo "📥 Syncing with origin/main..."
-            git fetch origin main
-            git checkout main
-            git reset --hard origin/main
-            echo "✅ Synced with origin/main"
+      - name: 📝 Create production .env file
+        run: |
+          cat > apps/web/.env << 'EOF'
+          # Production Environment for AskRemoHealth
+          DATABASE_URL="${{ secrets.DATABASE_URL }}"
+          JWT_SECRET="${{ secrets.JWT_SECRET }}"
+          GOOGLE_MAPS_API_KEY="${{ secrets.GOOGLE_MAPS_API_KEY }}"
+          CRON_SECRET="${{ secrets.CRON_SECRET }}"
+          TWILIO_API_KEY_SECRET="${{ secrets.TWILIO_API_KEY_SECRET }}"
+          TWILIO_API_KEY_SID="${{ secrets.TWILIO_API_KEY_SID }}"
+          TWILIO_ACCOUNT_SID="${{ secrets.TWILIO_ACCOUNT_SID }}"
+          TWILIO_AUTH_TOKEN="${{ secrets.TWILIO_AUTH_TOKEN }}"
+          CLERK_SECRET_KEY="${{ secrets.CLERK_SECRET_KEY }}"
+          RESEND_API_KEY="${{ secrets.RESEND_API_KEY }}"
+          FROM_EMAIL="info@askremohealth.com"
+          OBJECT_STORAGE_ENDPOINT="https://eu2.contabostorage.com"
+          OBJECT_STORAGE_REGION="eu2"
+          OBJECT_STORAGE_BUCKET="askremohealth"
+          OBJECT_STORAGE_KEY="${{ secrets.OBJECT_STORAGE_KEY }}"
+          OBJECT_STORAGE_SECRET="${{ secrets.OBJECT_STORAGE_SECRET }}"
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}"
+          NEXT_PUBLIC_CLERK_SIGN_IN_URL="/auth"
+          NEXT_PUBLIC_CLERK_SIGN_UP_URL="/auth"
+          NEXT_PUBLIC_RESEND_API_KEY="${{ secrets.RESEND_API_KEY }}"
+          NEXT_PUBLIC_FROM_EMAIL="info@askremohealth.com"
+          NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME="${{ secrets.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME }}"
+          NEXT_PUBLIC_CLOUDINARY_API_KEY="${{ secrets.NEXT_PUBLIC_CLOUDINARY_API_KEY }}"
+          CLOUDINARY_API_SECRET="${{ secrets.CLOUDINARY_API_SECRET }}"
+          NODE_ENV="production"
+          EOF
+          echo "✅ .env file created"
 
-            # 3. Check Node.js version and upgrade if needed
-            echo "📋 Current Node.js version:"
-            node --version || { echo "Node not found"; exit 1; }
-            npm --version || { echo "npm not found"; exit 1; }
+      - name: 🛠️ Build Next.js
+        run: |
+          cd apps/web
+          SKIP_ENV_VALIDATION=true npx next build
+          echo "✅ Build completed"
 
-            NODE_MAJOR=$(node --version | cut -d'.' -f1 | tr -d 'v')
-            if [ "$NODE_MAJOR" -lt 20 ]; then
-              echo "⚠️ Node.js $NODE_MAJOR detected, need v20. Attempting upgrade..."
-              npm install -g n
-              n 20
-              hash -r
-              echo "📋 New Node.js version:"
-              node --version
-            fi
+      - name: 📋 Prepare Standalone Deployment
+        run: |
+          cd apps/web/.next/standalone
+          # Copy static files and public folder
+          cp -r ../../static apps/web/.next/static
+          cp -r ../../public apps/web/public
 
-            # 4. Install Dependencies
-            echo "📦 Installing dependencies..."
-            npm install
+          # Create .env file in standalone
+          cp ../../.env apps/web/.env
 
-            # 5. Write production .env file using echo
-            echo "📝 Creating production .env file..."
-            ENV_FILE="apps/web/.env"
-            echo '# Production Environment for AskRemoHealth' > $ENV_FILE
-            echo 'DATABASE_URL="postgresql://cloud_admin:yaZM4jvs2TOk@144.91.78.222:5432/neondb"' >> $ENV_FILE
-            echo 'JWT_SECRET="ScuSC9jnl4hhddwOq1y1aBkkJdTB/tTFlfLkdhLA/LY="' >> $ENV_FILE
-            echo 'GOOGLE_MAPS_API_KEY="AIzaSyD6JVbLf5nXDl5fx1jo9dv6Jr2BSgeco8s"' >> $ENV_FILE
-            echo 'CRON_SECRET="vfM45mySUstta0ZqJK3XASfs8jSycQUBHaGQIBFTGAo="' >> $ENV_FILE
-            echo 'TWILIO_API_KEY_SECRET="a8VOzNfLBUyvayeSk9P3PqMAmBKZWoN8"' >> $ENV_FILE
-            echo 'TWILIO_API_KEY_SID="SK9625a3109fe9a14189185ee1b55d4525"' >> $ENV_FILE
-            echo 'TWILIO_ACCOUNT_SID="ACeaa72b53048874aad1796ccf5e5a9afe"' >> $ENV_FILE
-            echo 'TWILIO_AUTH_TOKEN="7cedff7adb5ed19d41f43ebd7fbde0fe"' >> $ENV_FILE
-            echo 'CLERK_SECRET_KEY="sk_test_n9vAZe5I3rcLgt2r67nSli5UJZZjaR8Nf18EOWB1Ea"' >> $ENV_FILE
-            echo 'RESEND_API_KEY="re_hCSsNrEd_4NxqKN5Gm4fZGPEhbzF1tjg5"' >> $ENV_FILE
-            echo 'FROM_EMAIL="info@askremohealth.com"' >> $ENV_FILE
-            echo 'OBJECT_STORAGE_ENDPOINT="https://eu2.contabostorage.com"' >> $ENV_FILE
-            echo 'OBJECT_STORAGE_REGION="eu2"' >> $ENV_FILE
-            echo 'OBJECT_STORAGE_BUCKET="askremohealth"' >> $ENV_FILE
-            echo 'OBJECT_STORAGE_KEY="997b965dbef4e600b8fd719b3f9bd240"' >> $ENV_FILE
-            echo 'OBJECT_STORAGE_SECRET="3656d6e6b23663fe194359018323f4be"' >> $ENV_FILE
-            echo 'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_test_c3RpcnJpbmctZHVjay03OC5jbGVyay5hY2NvdW50cy5kZXYk"' >> $ENV_FILE
-            echo 'NEXT_PUBLIC_CLERK_SIGN_IN_URL="/auth"' >> $ENV_FILE
-            echo 'NEXT_PUBLIC_CLERK_SIGN_UP_URL="/auth"' >> $ENV_FILE
-            echo 'NEXT_PUBLIC_RESEND_API_KEY="re_hCSsNrEd_4NxqKN5Gm4fZGPEhbzF1tjg5"' >> $ENV_FILE
-            echo 'NEXT_PUBLIC_FROM_EMAIL="info@askremohealth.com"' >> $ENV_FILE
-            echo 'NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME="db5s5c20v"' >> $ENV_FILE
-            echo 'NEXT_PUBLIC_CLOUDINARY_API_KEY="611215542583156"' >> $ENV_FILE
-            echo 'CLOUDINARY_API_SECRET="mvdNw1tKrJt5OXpPJ0JULFHlFKk"' >> $ENV_FILE
-            echo 'NODE_ENV="production"' >> $ENV_FILE
-            echo "✅ .env file created"
+          echo "✅ Standalone deployment prepared"
+          ls -la apps/web/
 
-            # 6. Build the Next.js App
-            echo "🧹 Cleaning build caches..."
-            rm -rf apps/web/.next
-            rm -rf .turbo
-            rm -rf node_modules/.cache
+      - name: 📦 Create deployment package
+        run: |
+          cd apps/web/.next/standalone/apps/web
+          # Create a compressed archive
+          tar -czf ../../../../../../deploy-package.tar.gz .
+          echo "✅ Deployment package created"
+          ls -la ../../../../../../deploy-package.tar.gz
 
-            echo "🛠️ Building Next.js..."
-            cd apps/web
-            SKIP_ENV_VALIDATION=true npx next build 2>&1 | tee ../../build.log
+      - name: 🚀 Deploy to cPanel via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.CPANEL_FTP_HOST }}
+          username: ${{ secrets.CPANEL_FTP_USER }}
+          password: ${{ secrets.CPANEL_FTP_PASSWORD }}
+          local-dir: ./apps/web/.next/standalone/apps/web/
+          server-dir: /repositories/askremohealth/
+          dangerous-clean-slate: false
+          exclude: |
+            **/.git*
+            **/node_modules/**
+            **/.next/cache/**
 
-            echo "📋 Generated routes:"
-            find .next/server/app -maxdepth 2 -type d 2>/dev/null | head -30 || true
-
-            cd ../..
-
-            # 7. Setup Standalone Output for PM2
-            echo "📋 Preparing standalone deployment..."
-            cp -r apps/web/.next/static apps/web/.next/standalone/apps/web/.next/static
-            cp -r apps/web/public apps/web/.next/standalone/apps/web/public
-
-            # 8. Restart PM2 with Standalone Server
-            echo "🔄 Restarting PM2..."
-            cd apps/web/.next/standalone/apps/web
-            pm2 delete askremohealth-web 2>/dev/null || true
-            pm2 start server.js --name askremohealth-web --env production
-            pm2 save
-            cd /root/askremohealth
-
-            # 9. Reload Nginx
-            echo "🔁 Reloading Nginx..."
-            nginx -t && systemctl reload nginx
-            echo "✅ Nginx reloaded"
-
-            # 10. Health Check
-            echo "⏳ Waiting for app to start..."
-            sleep 15
-
-            pm2 status askremohealth-web
-
-            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000 || echo "000")
-            if [[ "$HTTP_CODE" == "200" ]]; then
-              echo "✅ SUCCESS! Homepage returns HTTP 200!"
-            elif [[ "$HTTP_CODE" =~ ^[2345] ]]; then
-              echo "⚠️ App responding with HTTP $HTTP_CODE"
-            else
-              echo "❌ App not responding. HTTP Status: $HTTP_CODE"
-              pm2 logs askremohealth-web --lines 30 --nostream
-              exit 1
-            fi
-
-            echo "🎉 Deployment completed!"
+      - name: 📝 Deployment Summary
+        run: |
+          echo "🎉 Deployment to cPanel completed!"
+          echo ""
+          echo "Deployed to: https://askremohealth.com"
+          echo "FTP Server: ${{ secrets.CPANEL_FTP_HOST }}"
+          echo "Deploy Path: /repositories/askremohealth/"
