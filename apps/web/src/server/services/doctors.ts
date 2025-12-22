@@ -1,5 +1,4 @@
 import { TRPCError } from '@trpc/server'
-import { del, put } from '@vercel/blob'
 import { db } from '@web/server/db'
 import {
   appointmentAttachments,
@@ -13,6 +12,7 @@ import {
   profilePictures,
   users as usersTable,
 } from '@web/server/db/schema'
+import { deleteFile, uploadFile } from '@web/server/lib/storage'
 import {
   and,
   between,
@@ -96,9 +96,9 @@ export class Doctors {
 
       const fileName = `profile-picture-${userId}.webp`
 
-      const { url, pathname } = await put(fileName, buffer, {
+      const { url, pathname } = await uploadFile(fileName, buffer, {
+        contentType: 'image/webp',
         access: 'public',
-        contentType: `image/webp`,
       })
 
       await trx.insert(profilePictures).values({
@@ -130,7 +130,7 @@ export class Doctors {
     }
 
     if (doctor.profilePicture) {
-      await del(doctor.profilePicture.url)
+      await deleteFile(doctor.profilePicture.url)
     }
 
     const base64Data = input.profilePicture.replace(
@@ -142,12 +142,12 @@ export class Doctors {
       .webp({ quality: 80 })
       .toBuffer()
 
-    const { url, pathname } = await put(
+    const { url, pathname } = await uploadFile(
       `profile-picture-${input.userId}.webp`,
       buffer,
       {
+        contentType: 'image/webp',
         access: 'public',
-        contentType: `image/webp`,
       },
     )
 
@@ -179,9 +179,13 @@ export class Doctors {
       }
 
       // Only register facility if one is provided
-      const facility = input.facility ? await Facility.register(input.facility) : null;
+      const facility = input.facility
+        ? await Facility.register(input.facility)
+        : null
       // Register office location if provided
-      const officeLocation = input.officeLocation ? await OfficeLocation.register(input.officeLocation) : null;
+      const officeLocation = input.officeLocation
+        ? await OfficeLocation.register(input.officeLocation)
+        : null
 
       await trx
         .update(doctorsTable)
@@ -198,20 +202,20 @@ export class Doctors {
 
       if (input.medicalLicense) {
         // The medicalLicense field already contains the URL from the initial upload
-        const uploadedUrl = input.medicalLicense;
+        const uploadedUrl = input.medicalLicense
         // Extract the pathname from the URL
-        const urlParts = uploadedUrl.split('/');
-        const pathname = urlParts.slice(3).join('/'); // Assuming URL format: endpoint/bucket/path/to/file
+        const urlParts = uploadedUrl.split('/')
+        const pathname = urlParts.slice(3).join('/') // Assuming URL format: endpoint/bucket/path/to/file
 
         await trx.insert(certificates).values({
           doctorId: userId,
           name: pathname, // Store the path/filename
           url: uploadedUrl, // Store the full URL
-        });
-        await trx.update(doctorsTable)
-         .set({ status: 'pending' })
-         .where(eq(doctorsTable.id, userId))
-                  
+        })
+        await trx
+          .update(doctorsTable)
+          .set({ status: 'pending' })
+          .where(eq(doctorsTable.id, userId))
       }
     })
 
@@ -521,7 +525,7 @@ export class Doctors {
     }
 
     // Fetch booked slots (future, non-cancelled appointments)
-    const now = new Date();
+    const now = new Date()
     const bookedAppointments = await db.query.appointments.findMany({
       where: (appointment, { eq, gte, inArray }) =>
         eq(appointment.doctorId, id) &&
@@ -535,8 +539,10 @@ export class Doctors {
       columns: {
         appointmentDate: true,
       },
-    });
-    const bookedSlots = bookedAppointments.map((a) => a.appointmentDate.toISOString());
+    })
+    const bookedSlots = bookedAppointments.map((a) =>
+      a.appointmentDate.toISOString(),
+    )
 
     const subSpecialties = await db.query.subSpecialties.findMany({
       where: (subSpecialty, { inArray }) =>
@@ -552,7 +558,8 @@ export class Doctors {
       .filter((r): r is number => r !== null)
 
     const averageRating = reviews.length
-      ? reviews.reduce((acc: number, rating: number) => acc + rating, 0) / reviews.length
+      ? reviews.reduce((acc: number, rating: number) => acc + rating, 0) /
+        reviews.length
       : 0
 
     return {
@@ -567,7 +574,7 @@ export class Doctors {
         totalReviews: reviews.length,
       },
       bookedSlots,
-    };
+    }
   }
 
   static async appointmentDetails(id: string) {
@@ -725,12 +732,12 @@ export class Doctors {
         'base64',
       )
 
-      const { url, pathname } = await put(
-        `documents/${doctorId}/${'appointment-attachment'}`,
+      const { url, pathname } = await uploadFile(
+        `documents/${doctorId}/appointment-attachment`,
         buffer,
         {
+          contentType: 'application/pdf',
           access: 'public',
-          contentType: `application/pdf`,
         },
       )
 

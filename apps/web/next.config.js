@@ -65,7 +65,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "img-src 'self' data: blob: https: http:",
       "font-src 'self' https://fonts.gstatic.com",
-      "connect-src 'self' https://*.clerk.accounts.dev https://clerk.askremohealth.com https://*.vercel-storage.com wss://*.clerk.accounts.dev",
+      "connect-src 'self' https://*.clerk.accounts.dev https://clerk.askremohealth.com https://*.contabostorage.com wss://*.clerk.accounts.dev",
       "frame-src 'self' https://*.clerk.accounts.dev",
       "frame-ancestors 'none'",
       "form-action 'self'",
@@ -84,11 +84,15 @@ const config = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'do5q0y4otbt6jaho.public.blob.vercel-storage.com',
+        hostname: 'eu2.contabostorage.com',
       },
       {
         protocol: 'https',
         hostname: 'askremohealth.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
       },
     ],
   },

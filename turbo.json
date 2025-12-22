@@ -4,7 +4,11 @@
   "globalEnv": [
     "DATABASE_URL",
     "JWT_SECRET",
-    "BLOB_READ_WRITE_TOKEN",
+    "OBJECT_STORAGE_ENDPOINT",
+    "OBJECT_STORAGE_REGION",
+    "OBJECT_STORAGE_BUCKET",
+    "OBJECT_STORAGE_KEY",
+    "OBJECT_STORAGE_SECRET",
     "POSTGRES_HOST",
     "POSTGRES_URL_NO_SSL",
     "PGUSER",
@@ -36,7 +40,7 @@
       "dependsOn": ["^build"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
-     "@repo/eslint-config#build": {
+    "@repo/eslint-config#build": {
       "outputs": []
     },
     "lint": {},

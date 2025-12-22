@@ -1,19 +1,30 @@
 'use client'
 
-import { useEffect, useCallback, useState } from 'react'
+import BulletList from '@tiptap/extension-bullet-list'
+import FontFamily from '@tiptap/extension-font-family'
+import Link from '@tiptap/extension-link'
+import ListItem from '@tiptap/extension-list-item'
+import OrderedList from '@tiptap/extension-ordered-list'
+import TextStyle from '@tiptap/extension-text-style'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import BulletList from '@tiptap/extension-bullet-list'
-import OrderedList from '@tiptap/extension-ordered-list'
-import ListItem from '@tiptap/extension-list-item'
-import FontFamily from '@tiptap/extension-font-family'
-import TextStyle from '@tiptap/extension-text-style'
-import Link from '@tiptap/extension-link'
-import DOMPurify from 'dompurify'
 import { Button } from '@web/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@web/components/ui/select'
-import { Bold as BoldIcon, Italic as ItalicIcon, List, ListOrdered, Link as LinkIcon } from 'lucide-react'
-import type { Command, CommandProps, RawCommands } from '@tiptap/core'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@web/components/ui/select'
+import DOMPurify from 'dompurify'
+import {
+  Bold as BoldIcon,
+  Italic as ItalicIcon,
+  Link as LinkIcon,
+  List,
+  ListOrdered,
+} from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
 
 interface WysiwygProps {
   content: string
@@ -27,32 +38,46 @@ const FontSize = TextStyle.extend({
     return {
       fontSize: {
         default: '16px',
-        parseHTML: (element) => element.style.fontSize?.replace(/['"]+/g, '') || '16px',
-        renderHTML: (attributes) => {
+        parseHTML: (element: HTMLElement) =>
+          element.style.fontSize?.replace(/['"]+/g, '') || '16px',
+        renderHTML: (attributes: Record<string, string>) => {
           if (!attributes.fontSize) return {}
           return { style: `font-size: ${attributes.fontSize}` }
         },
       },
     }
   },
-  addCommands(): Partial<RawCommands> {
+  addCommands() {
     return {
       setFontSize:
-        (fontSize: string): Command =>
-        ({ commands, state, dispatch }: CommandProps): boolean => {
-          console.log('Executing setFontSize', { fontSize, selection: state.selection })
+        (fontSize: string) =>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ({
+          commands,
+          state,
+          dispatch,
+        }: {
+          commands: any
+          state: any
+          dispatch: any
+        }) => {
+          console.log('Executing setFontSize', {
+            fontSize,
+            selection: (state as { selection: unknown }).selection,
+          })
           if (dispatch) {
             // Clear existing textStyle marks to avoid conflicts
             commands.unsetMark('textStyle')
             const result = commands.setMark('textStyle', { fontSize })
-            console.log('setFontSize result', { result, activeMarks: state.selection.$head.marks() })
+            console.log('setFontSize result', { result })
             return result
           }
           return false
         },
       unsetFontSize:
-        (): Command =>
-        ({ commands }: CommandProps): boolean => {
+        () =>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ({ commands }: { commands: any }) => {
           console.log('Executing unsetFontSize')
           return commands.resetAttributes('textStyle', 'fontSize')
         },
@@ -88,7 +113,9 @@ export default function Wysiwyg({ content, onChange }: WysiwygProps) {
       Link.configure({
         openOnClick: false,
         autolink: true,
-        HTMLAttributes: { class: 'text-blue-600 underline hover:text-blue-800' },
+        HTMLAttributes: {
+          class: 'text-blue-600 underline hover:text-blue-800',
+        },
       }),
     ],
     content: content || '<p></p>',
@@ -98,7 +125,8 @@ export default function Wysiwyg({ content, onChange }: WysiwygProps) {
           'prose prose-sm max-w-none min-h-[200px] p-4 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring',
       },
     },
-    onUpdate: ({ editor }) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onUpdate: ({ editor }: { editor: any }) => {
       let html = editor.getHTML()
       html = html.replace(/<p>\s*<\/p>/g, '')
       const sanitizedHtml = DOMPurify.sanitize(html, {
@@ -108,10 +136,19 @@ export default function Wysiwyg({ content, onChange }: WysiwygProps) {
       console.log('Editor updated', { html, sanitizedHtml })
       onChange(sanitizedHtml)
     },
-    onCreate: ({ editor }) => {
-      console.log('Editor created, extensions:', editor.extensionManager.extensions.map((ext) => ext.name))
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onCreate: ({ editor }: { editor: any }) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      console.log(
+        'Editor created, extensions:',
+        editor.extensionManager.extensions.map((ext: any) => ext.name),
+      )
       // Apply initial font size to cursor
-      editor.chain().focus().setMark('textStyle', { fontSize: currentFontSize }).run()
+      editor
+        .chain()
+        .focus()
+        .setMark('textStyle', { fontSize: currentFontSize })
+        .run()
     },
     immediatelyRender: false,
   })
@@ -120,24 +157,28 @@ export default function Wysiwyg({ content, onChange }: WysiwygProps) {
     if (editor) {
       console.log('Editor initialized, state:', editor.state)
       // Apply font size and link state on cursor movement or state change
-      editor.on('selectionUpdate', ({ editor }) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      editor.on('selectionUpdate', ({ editor: selE }: { editor: any }) => {
         console.log('Selection updated', { currentFontSize, currentLinkActive })
         // Apply font size
-        editor.commands.unsetMark('textStyle')
-        editor.commands.setMark('textStyle', { fontSize: currentFontSize })
+        selE.commands.unsetMark('textStyle')
+        selE.commands.setMark('textStyle', { fontSize: currentFontSize })
         // Apply or remove link mark based on currentLinkActive
         if (currentLinkActive) {
           // Keep link mark active if state is true
-          if (!editor.isActive('link')) {
+          if (!selE.isActive('link')) {
             console.log('Applying link mark for future text')
             // Use a dummy href; will be updated when setting a real link
-            editor.commands.setMark('link', { href: 'https://placeholder.com', target: '_blank' })
+            selE.commands.setMark('link', {
+              href: 'https://placeholder.com',
+              target: '_blank',
+            })
           }
         } else {
           // Remove link mark for future text
-          if (editor.isActive('link')) {
+          if (selE.isActive('link')) {
             console.log('Removing link mark for future text')
-            editor.commands.unsetMark('link')
+            selE.commands.unsetMark('link')
           }
         }
       })
@@ -154,7 +195,10 @@ export default function Wysiwyg({ content, onChange }: WysiwygProps) {
       console.warn('Bold button clicked, but editor is null')
       return
     }
-    console.log('Toggling bold', { canToggle: editor.can().toggleBold(), state: editor.state })
+    console.log('Toggling bold', {
+      canToggle: editor.can().toggleBold(),
+      state: editor.state,
+    })
     editor.chain().focus().toggleBold().run()
   }, [editor])
 
@@ -163,7 +207,10 @@ export default function Wysiwyg({ content, onChange }: WysiwygProps) {
       console.warn('Italic button clicked, but editor is null')
       return
     }
-    console.log('Toggling italic', { canToggle: editor.can().toggleItalic(), state: editor.state })
+    console.log('Toggling italic', {
+      canToggle: editor.can().toggleItalic(),
+      state: editor.state,
+    })
     editor.chain().focus().toggleItalic().run()
   }, [editor])
 
@@ -173,7 +220,11 @@ export default function Wysiwyg({ content, onChange }: WysiwygProps) {
       return
     }
     const isActive = editor.isActive('bulletList')
-    console.log('Toggling bullet list', { isActive, canToggle: editor.can().toggleBulletList(), state: editor.state })
+    console.log('Toggling bullet list', {
+      isActive,
+      canToggle: editor.can().toggleBulletList(),
+      state: editor.state,
+    })
     if (isActive) {
       editor.chain().focus().toggleBulletList().liftListItem('listItem').run()
     } else {
@@ -187,7 +238,11 @@ export default function Wysiwyg({ content, onChange }: WysiwygProps) {
       return
     }
     const isActive = editor.isActive('orderedList')
-    console.log('Toggling ordered list', { isActive, canToggle: editor.can().toggleOrderedList(), state: editor.state })
+    console.log('Toggling ordered list', {
+      isActive,
+      canToggle: editor.can().toggleOrderedList(),
+      state: editor.state,
+    })
     if (isActive) {
       editor.chain().focus().toggleOrderedList().liftListItem('listItem').run()
     } else {
@@ -203,7 +258,12 @@ export default function Wysiwyg({ content, onChange }: WysiwygProps) {
     const { from, to } = editor.state.selection
     const hasSelection = from !== to
     const isActive = editor.isActive('link')
-    console.log('Link button clicked', { hasSelection, isActive, currentLinkActive, selection: { from, to } })
+    console.log('Link button clicked', {
+      hasSelection,
+      isActive,
+      currentLinkActive,
+      selection: { from, to },
+    })
 
     // Toggle link active state for future typing
     if (isActive || currentLinkActive) {
@@ -233,7 +293,11 @@ export default function Wysiwyg({ content, onChange }: WysiwygProps) {
       alert('Please enter a valid URL starting with http:// or https://')
       return
     }
-    console.log('Setting link', { url, currentLinkActive: true, state: editor.state })
+    console.log('Setting link', {
+      url,
+      currentLinkActive: true,
+      state: editor.state,
+    })
     editor.chain().focus().setLink({ href: url, target: '_blank' }).run()
     setCurrentLinkActive(true)
   }, [editor, currentLinkActive])
@@ -247,7 +311,7 @@ export default function Wysiwyg({ content, onChange }: WysiwygProps) {
       console.log('Setting font family', { font, state: editor.state })
       editor.chain().focus().setFontFamily(font).run()
     },
-    [editor]
+    [editor],
   )
 
   const setFontSize = useCallback(
@@ -259,10 +323,18 @@ export default function Wysiwyg({ content, onChange }: WysiwygProps) {
       console.log('Setting font size', { size, state: editor.state })
       setCurrentFontSize(size)
       // Apply font size to cursor or selection
-      editor.chain().focus().unsetMark('textStyle').setMark('textStyle', { fontSize: size }).run()
-      console.log('After setFontSize, active marks:', editor.state.selection.$head.marks())
+      editor
+        .chain()
+        .focus()
+        .unsetMark('textStyle')
+        .setMark('textStyle', { fontSize: size })
+        .run()
+      console.log(
+        'After setFontSize, active marks:',
+        editor.state.selection.$head.marks(),
+      )
     },
-    [editor]
+    [editor],
   )
 
   if (!editor) {
@@ -273,10 +345,11 @@ export default function Wysiwyg({ content, onChange }: WysiwygProps) {
   return (
     <div className="space-y-2">
       <style jsx>{`
-        .tiptap span[style*="font-size"] {
+        .tiptap span[style*='font-size'] {
           font-size: inherit !important;
         }
-        .tiptap p, .tiptap li {
+        .tiptap p,
+        .tiptap li {
           font-size: inherit;
         }
       `}</style>
@@ -301,7 +374,11 @@ export default function Wysiwyg({ content, onChange }: WysiwygProps) {
         </Button>
         <Button
           type="button"
-          variant={editor.isActive('link') || currentLinkActive ? 'secondary' : 'outline'}
+          variant={
+            editor.isActive('link') || currentLinkActive
+              ? 'secondary'
+              : 'outline'
+          }
           size="sm"
           onClick={setLink}
           aria-label="Toggle link"

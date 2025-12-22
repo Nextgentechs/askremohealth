@@ -12,7 +12,6 @@ export const env = createEnv({
     NODE_ENV: z
       .enum(['development', 'test', 'production'])
       .default('development'),
-    BLOB_READ_WRITE_TOKEN: z.string(),
     GOOGLE_MAPS_API_KEY: z.string(),
     CRON_SECRET: z.string(),
     TWILIO_API_KEY_SECRET: z.string(),
@@ -72,7 +71,6 @@ export const env = createEnv({
     AUTH_SECRET: process.env.AUTH_SECRET,
 
     // External Services (Server-side only)
-    BLOB_READ_WRITE_TOKEN: process.env.BLOB_READ_WRITE_TOKEN,
     GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY,
     CRON_SECRET: process.env.CRON_SECRET,
 

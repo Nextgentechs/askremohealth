@@ -64,7 +64,6 @@ jobs:
             echo '# Production Environment for AskRemoHealth' > $ENV_FILE
             echo 'DATABASE_URL="postgresql://cloud_admin:yaZM4jvs2TOk@144.91.78.222:5432/neondb"' >> $ENV_FILE
             echo 'JWT_SECRET="ScuSC9jnl4hhddwOq1y1aBkkJdTB/tTFlfLkdhLA/LY="' >> $ENV_FILE
-            echo 'BLOB_READ_WRITE_TOKEN="vercel_blob_rw_dO5q0y4OTbt6jaHO_AYaY7SBVkbZFvCPfFIFmM1EdzH8Ows"' >> $ENV_FILE
             echo 'GOOGLE_MAPS_API_KEY="AIzaSyD6JVbLf5nXDl5fx1jo9dv6Jr2BSgeco8s"' >> $ENV_FILE
             echo 'CRON_SECRET="vfM45mySUstta0ZqJK3XASfs8jSycQUBHaGQIBFTGAo="' >> $ENV_FILE
             echo 'TWILIO_API_KEY_SECRET="a8VOzNfLBUyvayeSk9P3PqMAmBKZWoN8"' >> $ENV_FILE
