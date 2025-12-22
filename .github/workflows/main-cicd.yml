@@ -86,18 +86,19 @@ jobs:
           ls -la ../../../../../../deploy-package.tar.gz
 
       - name: 🚀 Deploy to cPanel via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.CPANEL_FTP_HOST }}
-          username: ${{ secrets.CPANEL_FTP_USER }}
-          password: ${{ secrets.CPANEL_FTP_PASSWORD }}
-          local-dir: ./apps/web/.next/standalone/apps/web/
-          server-dir: /repositories/askremohealth/
-          dangerous-clean-slate: false
-          exclude: |
-            **/.git*
-            **/node_modules/**
-            **/.next/cache/**
+        run: |
+          # Install lftp
+          sudo apt-get update && sudo apt-get install -y lftp
+
+          # Deploy using lftp (better handling of special chars)
+          cd apps/web/.next/standalone/apps/web
+
+          echo "📂 Uploading files to cPanel..."
+          lftp -u "${{ secrets.CPANEL_FTP_USER }},${{ secrets.CPANEL_FTP_PASSWORD }}" \
+               -e "set ssl:verify-certificate no; set ftp:passive-mode yes; mirror -R --verbose --exclude-glob .git* --exclude-glob node_modules/ --exclude-glob .next/cache/ . /repositories/askremohealth/; bye" \
+               "ftp://${{ secrets.CPANEL_FTP_HOST }}"
+
+          echo "✅ FTP Upload completed!"
 
       - name: 📝 Deployment Summary
         run: |
