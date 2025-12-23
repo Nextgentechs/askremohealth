@@ -90,31 +90,36 @@ jobs:
           cp -r ../../static apps/web/.next/static
           cp -r ../../public apps/web/public
 
-          # Create .env file in standalone
+          # Create .env file in standalone root and app directory for safety
           cp ../../.env apps/web/.env
+          cp ../../.env .env
+
+          # Copy ecosystem.config.js if exists
+          cp ../../ecosystem.config.js .
 
           echo "✅ Standalone deployment prepared"
-          ls -la apps/web/
+          ls -la
 
       - name: 📦 Create deployment package
         run: |
-          cd apps/web/.next/standalone/apps/web
-          # Create a compressed archive
-          tar -czf ../../../../../../deploy-package.tar.gz .
+          cd apps/web/.next/standalone
+          # Create a compressed archive of the ROOT standalone directory
+          tar -czf ../../../../deploy-package.tar.gz .
           echo "✅ Deployment package created"
-          ls -la ../../../../../../deploy-package.tar.gz
+          ls -la ../../../../deploy-package.tar.gz
 
       - name: 🚀 Deploy to cPanel via FTP
         run: |
           # Install lftp
           sudo apt-get update && sudo apt-get install -y lftp
 
-          # Deploy using lftp (better handling of special chars)
-          cd apps/web/.next/standalone/apps/web
+          # Deploy using lftp from the STANDALONE ROOT
+          cd apps/web/.next/standalone
 
           echo "📂 Uploading files to cPanel..."
+          # Note: Mirroring the standalone root which includes node_modules, server.js, and apps/web
           lftp -u "${{ secrets.CPANEL_FTP_USER }},${{ secrets.CPANEL_FTP_PASSWORD }}" \
-               -e "set ssl:verify-certificate no; set ftp:passive-mode yes; mirror -R --verbose --exclude-glob .git* --exclude-glob node_modules/ --exclude-glob .next/cache/ . /repositories/askremohealth/; bye" \
+               -e "set ssl:verify-certificate no; set ftp:passive-mode yes; mirror -R --verbose --exclude-glob .git* --exclude-glob .next/cache/ --parallel=10 . /repositories/askremohealth/; bye" \
                "ftp://${{ secrets.CPANEL_FTP_HOST }}"
 
           echo "✅ FTP Upload completed!"
@@ -126,3 +131,4 @@ jobs:
           echo "Deployed to: https://askremohealth.com"
           echo "FTP Server: ${{ secrets.CPANEL_FTP_HOST }}"
           echo "Deploy Path: /repositories/askremohealth/"
+          echo "Entry Point: server.js (at root)"
