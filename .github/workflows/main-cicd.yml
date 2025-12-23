@@ -38,6 +38,9 @@ jobs:
           TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
           CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          # Redis (Upstash)
+          REDIS_URL: ${{ secrets.REDIS_URL }}
+          REDIS_TOKEN: ${{ secrets.REDIS_TOKEN }}
           OBJECT_STORAGE_KEY: ${{ secrets.OBJECT_STORAGE_KEY }}
           OBJECT_STORAGE_SECRET: ${{ secrets.OBJECT_STORAGE_SECRET }}
           NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
@@ -57,6 +60,10 @@ jobs:
           TWILIO_AUTH_TOKEN="${TWILIO_AUTH_TOKEN}"
           CLERK_SECRET_KEY="${CLERK_SECRET_KEY}"
           RESEND_API_KEY="${RESEND_API_KEY}"
+          # Redis Configuration
+          REDIS_URL="${REDIS_URL}"
+          REDIS_TOKEN="${REDIS_TOKEN}"
+
           FROM_EMAIL="info@askremohealth.com"
           OBJECT_STORAGE_ENDPOINT="https://eu2.contabostorage.com"
           OBJECT_STORAGE_REGION="eu2"
@@ -86,8 +93,9 @@ jobs:
       - name: 📋 Prepare Standalone Deployment
         run: |
           cd apps/web/.next/standalone
-          # Copy static files and public folder
-          cp -r ../../static apps/web/.next/static
+          # Copy static files (from .next/static to standalone/.../static)
+          # Note: ../static refers to apps/web/.next/static
+          cp -r ../static apps/web/.next/static
           cp -r ../../public apps/web/public
 
           # Create .env file in standalone root and app directory for safety
