@@ -2,8 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'askremohealth',
-      script: 'npm',
-      args: 'start',
+      script: 'server.js',
       cwd: './',
       instances: 'max',
       exec_mode: 'cluster',
